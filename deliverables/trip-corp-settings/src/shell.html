@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>출장 관리 · 법인별 세팅 (화면설계)</title>
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body class="desc-on">
+<div class="specbar">
+  <b>화면설계</b><span>업무관리자 › 출장 관리 › 법인별 세팅</span><span class="sid" id="sid"></span>
+  <span class="sp"></span>
+  <span class="hint">샘플 데이터로 동작하는 프로토타입 · 새로고침 시 초기화</span>
+  <label><input type="checkbox" id="mk-toggle" checked> 마커</label>
+  <label><input type="checkbox" id="desc-toggle" checked> Description</label>
+</div>
+<div class="frame">
+  <aside class="side" aria-label="전역 메뉴">
+    <div class="logo"><span class="ham"></span>HYBENET</div>
+    <nav>
+      <div class="m1"><span class="ic"></span>홈</div>
+      <div class="m1"><span class="ic"></span>커뮤니티</div>
+      <div class="m1"><span class="ic"></span>업무공간<span class="car">▼</span></div>
+      <div class="m1"><span class="ic"></span>조직<span class="car">▼</span></div>
+      <div class="m1 on"><span class="ic"></span>업무관리자<span class="car">▲</span></div>
+      <div class="sub">
+        <div class="m2">계약 관리</div><div class="m2">공문 관리</div><div class="m2 on">출장 관리</div><div class="m2">하이브 사다리 관리</div>
+        <div class="m2">카페 관리</div><div class="m2">컨시어지 공통 자원</div><div class="m2">컨디셔닝 운영 관리</div><div class="m2">P.A.T 어워즈 관리</div>
+      </div>
+    </nav>
+    <div class="foot">관리자</div>
+  </aside>
+  <div class="main">
+    <header class="gnb"><span class="ext">HYPLE</span><span class="ext">ONHYBE</span><span>협업지원 ▾</span><span class="me"><i></i>차영록 <span>서비스전략팀(HYB)</span></span></header>
+    <main class="page">
+      <div class="crumb">업무관리자 / <b>출장</b></div>
+      <h1 class="ptitle">출장 관리</h1>
+      <div class="tabs"><span class="t">일별 출장자</span><span class="t">출장 신청</span><span class="t">출장 알림</span><span class="t">출장지 관리</span><span class="t">규정 예외 신청</span><span class="t on">법인별 세팅</span></div>
+      <div class="split">
+        <div id="corp-side"></div>
+        <div id="view"></div>
+      </div>
+    </main>
+  </div>
+  <aside class="desc" id="desc" aria-label="Description"></aside>
+</div>
+<script>
+/*__JS__*/
+App.init();
+</script>
+</body>
+</html>

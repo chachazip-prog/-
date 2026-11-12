@@ -1,0 +1,600 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>출장 관리 · 법인별 세팅 (화면설계)</title>
+<style>
+/* ===== HYBENET 출장 관리 · 법인별 세팅 — 공통 스타일 (레퍼런스 톤앤매너) ===== */
+:root{
+  --side:#1f1f1f; --side-sub:#2b2b2b; --side-active:#4b4b4b; --side-text:#c9c9c9;
+  --yellow:#f5ff00;
+  --ink:#111; --text:#222; --sub:#666; --mute:#999; --faint:#bbb;
+  --line:#ebebeb; --line-strong:#d9d9d9; --bg-head:#f7f7f7; --bg-panel:#f5f5f5; --bg-chip:#f2f2f2;
+  --blue:#1a8cff; --blue-bg:#e5f2ff;
+  --green:#2fa800; --green-bg:#e4f8d6;
+  --red:#f0433a; --red-bg:#ffe9e7;
+  --orange:#ff8a00; --orange-bg:#fff3e0;
+  --gray-bg:#efefef;
+  --mk:#ff4d00;
+  --radius:3px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  font-size:13px;line-height:1.5;color:var(--text);background:#fff;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+table{border-collapse:collapse;width:100%}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- 화면설계 툴바 (제품 UI 아님) ---------- */
+.specbar{height:36px;background:#2d2a26;color:#eee;display:flex;align-items:center;gap:14px;padding:0 14px;font-size:12px;position:sticky;top:0;z-index:60}
+.specbar b{color:#fff}
+.specbar .sid{background:#47423c;border-radius:2px;padding:1px 7px;font-family:ui-monospace,Menlo,monospace;font-size:11px}
+.specbar .sp{flex:1}
+.specbar label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.specbar .hint{color:#aaa}
+
+/* ---------- 레이아웃 ---------- */
+.frame{display:grid;grid-template-columns:188px minmax(0,1fr);min-height:calc(100vh - 36px)}
+body.desc-on .frame{grid-template-columns:188px minmax(0,1fr) 360px}
+.side{background:var(--side);color:var(--side-text);font-size:12px;display:flex;flex-direction:column}
+.side .logo{height:40px;display:flex;align-items:center;gap:22px;padding:0 16px;color:#fff;font-weight:800;letter-spacing:.14em;font-size:13px}
+.side .logo .ham{width:12px;height:9px;border-top:1.5px solid #ddd;border-bottom:1.5px solid #ddd;position:relative}
+.side .logo .ham:after{content:"";position:absolute;left:0;right:0;top:2.2px;border-top:1.5px solid #ddd}
+.side nav{padding-top:18px;flex:1}
+.side .m1{display:flex;align-items:center;gap:14px;padding:11px 16px;font-weight:600}
+.side .m1 .ic{width:13px;height:13px;border:1.5px solid currentColor;border-radius:3px;opacity:.8}
+.side .m1 .car{margin-left:auto;font-size:8px}
+.side .m1.on{background:var(--yellow);color:#111}
+.side .sub{background:var(--side-sub)}
+.side .m2{padding:8px 16px 8px 40px;color:#b5b5b5}
+.side .m2.on{background:var(--side-active);color:#fff}
+.side .foot{padding:12px 16px;border-top:1px solid #333}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.gnb{height:40px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:flex-end;gap:22px;padding:0 14px;font-size:12px;font-weight:700}
+.gnb .ext:after{content:"↗";font-size:10px;margin-left:5px;font-weight:400}
+.gnb .me{display:flex;align-items:center;gap:8px}
+.gnb .me i{width:20px;height:20px;border-radius:50%;background:#ddd;display:inline-block}
+.gnb .me span{font-weight:400;color:var(--sub)}
+.page{padding:14px 16px 60px;min-width:0}
+.crumb{font-size:11px;color:var(--mute)}
+.crumb b{color:var(--text);font-weight:500}
+.ptitle{font-size:17px;font-weight:800;margin:8px 0 14px;color:var(--ink)}
+.tabs{display:flex;gap:30px;border-bottom:1px solid var(--line);padding:0 6px;border-top:1px solid var(--line);padding-top:8px}
+.tabs .t{padding:10px 0 12px;font-size:12px;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs .t.on{color:var(--ink);font-weight:800;border-bottom-color:var(--ink)}
+
+/* ---------- 법인별 세팅 2단 ---------- */
+.split{display:grid;grid-template-columns:212px minmax(0,1fr);gap:18px;margin-top:22px;align-items:start}
+.h3{font-size:13px;font-weight:800;color:var(--ink);margin:0 0 12px}
+.h3 em{font-style:normal;color:var(--blue);margin-left:2px}
+.corp-panel{background:var(--bg-panel);border-radius:4px;padding:14px}
+.corp-panel .tools{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:8px}
+.corp-item{display:block;width:100%;text-align:left;background:#fff;border:1px solid transparent;border-radius:var(--radius);padding:9px 12px;margin-bottom:6px;position:relative}
+.corp-item:hover{border-color:var(--line-strong)}
+.corp-item.on{border:1.5px solid var(--ink);font-weight:700}
+.corp-item .cd{font-weight:800;font-size:12px;color:var(--ink)}
+.corp-item .nm{font-size:11px;color:var(--sub);font-weight:400;margin-left:6px}
+.corp-item .st{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.corp-panel .sync{font-size:11px;color:var(--mute);line-height:1.6;margin-top:10px}
+
+.corp-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.corp-head .cd{font-size:16px;font-weight:800;color:var(--ink)}
+.corp-head .nm{font-size:13px;color:var(--sub)}
+.subtabs{display:flex;gap:6px;margin:14px 0 18px;border-bottom:1px solid var(--line)}
+.subtabs .s{background:none;border:0;padding:8px 12px 10px;font-size:12px;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.subtabs .s.on{color:var(--ink);font-weight:800;border-bottom-color:var(--ink)}
+.subtabs .s .cnt{color:var(--blue);margin-left:3px}
+
+/* ---------- 컴포넌트 ---------- */
+.btn{height:30px;padding:0 12px;border:1px solid var(--line-strong);background:#fff;border-radius:var(--radius);font-size:12px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{border-color:#999}
+.btn.pri{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.sm{height:26px;padding:0 9px;font-size:11px}
+.btn.ghost{border-color:transparent;color:var(--sub)}
+.btn.danger{color:var(--red)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,.corp-item:focus-visible,.subtabs .s:focus-visible,.tg:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+
+.inp,.sel,.ta{height:30px;border:1px solid var(--line-strong);border-radius:var(--radius);padding:0 9px;font-size:12px;background:#fff;min-width:0}
+.ta{height:auto;padding:7px 9px;width:100%;resize:vertical;line-height:1.5}
+.inp:focus,.sel:focus,.ta:focus{outline:none;border-color:var(--ink)}
+.inp:disabled,.sel:disabled{background:var(--bg-head);color:var(--faint)}
+.inp.cell{width:100%;height:26px;text-align:right}
+.inp.cell.l{text-align:left}
+
+.badge{display:inline-flex;align-items:center;height:17px;padding:0 6px;border-radius:2px;font-size:10px;font-weight:700;white-space:nowrap;line-height:1}
+.badge.blue{background:var(--blue-bg);color:var(--blue)}
+.badge.green{background:var(--green-bg);color:var(--green)}
+.badge.red{background:var(--red-bg);color:var(--red)}
+.badge.orange{background:var(--orange-bg);color:var(--orange)}
+.badge.gray{background:var(--gray-bg);color:#555}
+.badge.line{background:#fff;border:1px solid var(--line-strong);color:var(--sub);font-weight:600}
+
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg-chip);border-radius:var(--radius);padding:4px 9px;font-size:11px;color:var(--sub)}
+.chip b{color:var(--ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+
+/* 토글 스위치 */
+.tg{appearance:none;-webkit-appearance:none;width:34px;height:20px;border-radius:10px;background:#cfcfcf;position:relative;border:0;padding:0;flex:none;transition:background .15s;cursor:pointer;vertical-align:middle}
+.tg:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tg[aria-checked="true"]{background:var(--ink)}
+.tg[aria-checked="true"]:after{transform:translateX(14px)}
+.tg:disabled{opacity:.4;cursor:not-allowed}
+.tg-label{font-size:11px;font-weight:700;margin-left:6px;color:var(--mute)}
+.tg[aria-checked="true"] + .tg-label{color:var(--ink)}
+
+/* 테이블 (레퍼런스 목록형) */
+.tbl-wrap{overflow-x:auto}
+.tbl th{background:var(--bg-head);font-size:11px;font-weight:700;color:var(--text);text-align:left;padding:9px 10px;white-space:nowrap}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:12px;vertical-align:middle}
+.tbl tr.click:hover td{background:#fafafa;cursor:pointer}
+.tbl .c{text-align:center}.tbl .r{text-align:right}
+.tbl .dim{color:var(--mute)}
+/* 매트릭스형 (규정 값) */
+.mx th,.mx td{border:1px solid var(--line);padding:7px 10px;font-size:12px}
+.mx th{background:var(--bg-head);font-size:11px;font-weight:700;text-align:center;white-space:nowrap}
+.mx td{text-align:right}
+.mx td.l,.mx th.l{text-align:left}
+.mx td.rh{background:#fcfcfc;font-weight:700;text-align:left;white-space:nowrap}
+
+/* 폼 행 (기안 화면 레퍼런스의 라벨-값 행) */
+.frow{display:grid;grid-template-columns:116px minmax(0,1fr);gap:8px;padding:11px 0;border-bottom:1px solid var(--line);align-items:center;font-size:12px}
+.frow > .lb{color:var(--text)}
+.frow > .lb.req:before{content:"•";color:var(--red);margin-right:3px}
+
+.sec{padding:22px 0;border-top:1px solid var(--line)}
+.sec:first-child{border-top:0;padding-top:0}
+.sec-title{font-size:15px;font-weight:800;color:var(--ink);margin:0 0 4px}
+.sec-desc{font-size:11px;color:var(--sub);margin:0 0 10px}
+.card{border:1px solid var(--line);border-radius:4px;background:#fff}
+.note{font-size:11px;color:var(--orange)}
+.note:before{content:"● ";font-size:7px;vertical-align:middle}
+.help{font-size:11px;color:var(--mute)}
+.empty{padding:44px 16px;text-align:center;color:var(--mute);font-size:12px;background:var(--bg-head);border-radius:4px}
+.empty b{display:block;color:var(--text);font-size:13px;margin-bottom:4px}
+.row{display:flex;align-items:center;gap:8px}
+.row.between{justify-content:space-between}
+.row.wrap{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.link{color:var(--blue);text-decoration:underline;cursor:pointer;background:none;border:0;padding:0;font-size:inherit}
+.hl-blue{color:var(--blue);font-weight:700}
+
+/* 모달 · 토스트 */
+.dim-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:80;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:4px;width:480px;max-width:100%;max-height:calc(100vh - 60px);display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.modal .mh{padding:16px 20px 10px;font-size:15px;font-weight:800;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
+.modal .mh button{border:0;background:none;font-size:18px;color:var(--mute);line-height:1}
+.modal .mb{padding:4px 20px 16px;overflow:auto;font-size:12px}
+.modal .mf{padding:12px 20px 16px;display:flex;justify-content:flex-end;gap:6px;border-top:1px solid var(--line)}
+.toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);background:#222;color:#fff;font-size:12px;padding:10px 18px;border-radius:4px;z-index:90;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+
+/* ---------- Description 패널 · 마커 ---------- */
+.mk{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--mk);color:#fff;font-size:10px;font-weight:800;font-style:normal;line-height:1;margin:0 4px;vertical-align:middle;cursor:help;letter-spacing:0;flex:none}
+body.mk-off .mk{display:none}
+.mk.hot,.desc-item.hot .mk{box-shadow:0 0 0 3px rgba(255,77,0,.28)}
+.desc{display:none;border-left:1px solid var(--line-strong);background:#fbfaf7;font-size:12px;min-width:0}
+body.desc-on .desc{display:block}
+.desc-in{position:sticky;top:36px;max-height:calc(100vh - 36px);overflow:auto;padding:16px 16px 40px}
+.desc h2{font-size:13px;margin:0 0 2px;font-weight:800;color:var(--ink)}
+.desc .dsub{color:var(--sub);font-size:11px;margin-bottom:12px}
+.desc h4{font-size:11px;margin:18px 0 6px;color:var(--sub);font-weight:800;letter-spacing:.04em}
+.desc-item{display:grid;grid-template-columns:26px minmax(0,1fr);gap:4px;padding:9px 6px;border-top:1px solid #e9e5dc;border-radius:3px}
+.desc-item.hot{background:#fff3ea}
+.desc-item .mk{margin:1px 0 0}
+.desc-item .dt{font-weight:800;color:var(--ink);margin-bottom:2px}
+.desc-item .db{color:#444;line-height:1.6}
+.desc-item .db ul{margin:3px 0 0;padding-left:15px}
+.desc-item .db li{margin:1px 0}
+.desc .issue{background:#fff;border:1px solid #f0d9b5;border-left:3px solid var(--orange);border-radius:3px;padding:8px 10px;margin-top:6px;line-height:1.6}
+.desc .issue b{color:#b25f00}
+.desc code{background:#efece4;border-radius:2px;padding:0 4px;font-size:11px}
+
+@media (max-width:1100px){body.desc-on .frame{grid-template-columns:188px minmax(0,1fr)}body.desc-on .desc{grid-column:1/-1;border-left:0;border-top:1px solid var(--line-strong)}.desc-in{position:static;max-height:none}}
+@media (max-width:760px){.frame,body.desc-on .frame{grid-template-columns:minmax(0,1fr)}.side{display:none}.split{grid-template-columns:minmax(0,1fr)}.tabs{overflow-x:auto;gap:20px}}
+
+</style>
+</head>
+<body class="desc-on">
+<div class="specbar">
+  <b>화면설계</b><span>업무관리자 › 출장 관리 › 법인별 세팅</span><span class="sid" id="sid"></span>
+  <span class="sp"></span>
+  <span class="hint">샘플 데이터로 동작하는 프로토타입 · 새로고침 시 초기화</span>
+  <label><input type="checkbox" id="mk-toggle" checked> 마커</label>
+  <label><input type="checkbox" id="desc-toggle" checked> Description</label>
+</div>
+<div class="frame">
+  <aside class="side" aria-label="전역 메뉴">
+    <div class="logo"><span class="ham"></span>HYBENET</div>
+    <nav>
+      <div class="m1"><span class="ic"></span>홈</div>
+      <div class="m1"><span class="ic"></span>커뮤니티</div>
+      <div class="m1"><span class="ic"></span>업무공간<span class="car">▼</span></div>
+      <div class="m1"><span class="ic"></span>조직<span class="car">▼</span></div>
+      <div class="m1 on"><span class="ic"></span>업무관리자<span class="car">▲</span></div>
+      <div class="sub">
+        <div class="m2">계약 관리</div><div class="m2">공문 관리</div><div class="m2 on">출장 관리</div><div class="m2">하이브 사다리 관리</div>
+        <div class="m2">카페 관리</div><div class="m2">컨시어지 공통 자원</div><div class="m2">컨디셔닝 운영 관리</div><div class="m2">P.A.T 어워즈 관리</div>
+      </div>
+    </nav>
+    <div class="foot">관리자</div>
+  </aside>
+  <div class="main">
+    <header class="gnb"><span class="ext">HYPLE</span><span class="ext">ONHYBE</span><span>협업지원 ▾</span><span class="me"><i></i>차영록 <span>서비스전략팀(HYB)</span></span></header>
+    <main class="page">
+      <div class="crumb">업무관리자 / <b>출장</b></div>
+      <h1 class="ptitle">출장 관리</h1>
+      <div class="tabs"><span class="t">일별 출장자</span><span class="t">출장 신청</span><span class="t">출장 알림</span><span class="t">출장지 관리</span><span class="t">규정 예외 신청</span><span class="t on">법인별 세팅</span></div>
+      <div class="split">
+        <div id="corp-side"></div>
+        <div id="view"></div>
+      </div>
+    </main>
+  </div>
+  <aside class="desc" id="desc" aria-label="Description"></aside>
+</div>
+<script>
+
+/* ==== data.js ==== */
+/* 샘플 데이터 — HBA/HBL(T&E Policy 2025.12.15), HBJ(出張旅費規程 2024.03.29)는 유첨 규정 문서 기준.
+   HYB는 화면 예시용 가상 값(확정 규정 아님). HBC/HBI는 규정 미등록 상태 예시. */
+window.DATA = (function () {
+  const TODAY = '2026.11.12';
+
+  const corps = [
+    { code: 'HYB', name: '(주)하이브', country: '대한민국', cur: 'KRW', headcount: 1524, sample: true,
+      draft: { budget: { on: true, at: '2026.03.09', by: '서준석' }, card: { on: true, at: '2026.03.09', by: '서준석' }, attendance: { on: true, at: '2026.03.09', by: '서준석' } } },
+    { code: 'HBA', name: 'HYBE AMERICA', country: '미국', cur: 'USD', headcount: 412,
+      draft: { budget: { on: false, at: '2026.10.20', by: '윤채희' }, card: { on: false, at: '2026.10.20', by: '윤채희' }, attendance: { on: false, at: '2026.10.20', by: '윤채희' } } },
+    { code: 'HBL', name: 'HYBE LATIN AMERICA', country: '멕시코', cur: 'USD', headcount: 96,
+      draft: { budget: { on: false, at: '2026.10.20', by: '윤채희' }, card: { on: false, at: '2026.10.20', by: '윤채희' }, attendance: { on: false, at: '2026.10.20', by: '윤채희' } } },
+    { code: 'HBJ', name: 'HYBE JAPAN', country: '일본', cur: 'JPY', headcount: 268,
+      draft: { budget: { on: true, at: '2026.10.27', by: '윤채희' }, card: { on: false, at: '2026.10.20', by: '윤채희' }, attendance: { on: true, at: '2026.10.27', by: '윤채희' } } },
+    { code: 'HBC', name: 'HYBE CHINA', country: '중국', cur: 'CNY', headcount: 41,
+      draft: { budget: { on: false, at: null, by: null }, card: { on: false, at: null, by: null }, attendance: { on: false, at: null, by: null } } },
+    { code: 'HBI', name: 'HYBE INDIA', country: '인도', cur: 'INR', headcount: 23,
+      draft: { budget: { on: false, at: null, by: null }, card: { on: false, at: null, by: null }, attendance: { on: false, at: null, by: null } } },
+  ];
+
+  /* 기안 항목 정의 (구성원 '출장 기안' 화면의 섹션) */
+  const draftItems = [
+    { key: 'budget', name: '출장 예산', desc: '승인된 출장 예산 불러오기, 신규 WBS 예산 / 판관·자산 예산 신청',
+      link: '예산(업무공간 > 예산) 연동', offEffect: '기안 화면에서 [출장 예산] 섹션 미노출. 예산 연결 없이 결재 상신' },
+    { key: 'card', name: '법인카드 한도 증액', desc: '출장 비용 결제용 법인카드의 한도 증액 신청 (카드 추가)',
+      link: '법인카드 한도 관리 연동', offEffect: '기안 화면에서 [법인카드 한도 증액] 섹션 미노출' },
+    { key: 'attendance', name: '출장 근태 신청', desc: '출장 기간에 대한 근태(출장) 자동 신청 — 근태코드·구분·지역·근태 신청자',
+      link: '근태 시스템 연동', offEffect: '기안 화면에서 [출장 근태 신청] 섹션 미노출. 근태는 법인 자체 절차로 처리' },
+  ];
+
+  /* 구성원 등급 (법인별 정의, 인사정보 직급/직책 코드 매핑) */
+  const grades = {
+    HYB: [
+      { id: 'g1', name: '임원', desc: 'C-Level, 사내이사, 임원급 리더', hr: ['CEO', 'C-Level', '사내이사', '임원'], count: 38 },
+      { id: 'g2', name: '리더', desc: '실장·팀장 등 조직장', hr: ['실장', '팀장', '파트장'], count: 214 },
+      { id: 'g3', name: '구성원', desc: '그 외 전 구성원', hr: ['구성원(전체 직급)'], count: 1272, isDefault: true },
+    ],
+    HBA: [
+      { id: 'g1', name: 'Tier 1', desc: 'C-Suite and President-level employee', hr: ['C-Suite', 'President'], count: 9 },
+      { id: 'g2', name: 'Tier 2', desc: 'VP, SVP and EVPs', hr: ['EVP', 'SVP', 'VP'], count: 37 },
+      { id: 'g3', name: 'Tier 3', desc: 'Below VP', hr: ['Senior Director', 'Director', 'Manager', 'Staff'], count: 366, isDefault: true },
+    ],
+    HBL: [
+      { id: 'g1', name: 'Tier 1', desc: 'C-Suite and President-level employee', hr: ['C-Suite', 'President'], count: 3 },
+      { id: 'g2', name: 'Tier 2', desc: 'VP, SVP and EVPs', hr: ['EVP', 'SVP', 'VP'], count: 8 },
+      { id: 'g3', name: 'Tier 3', desc: 'Below VP', hr: ['Director', 'Manager', 'Staff'], count: 85, isDefault: true },
+    ],
+    HBJ: [
+      { id: 'g1', name: '리더그룹·SP 이상', desc: '経営リーダー·事業リーダー·専門家リーダー 및 SP(Sr. Professional) 이상', hr: ['経営リーダー', '事業リーダー', '専門家リーダー', 'SP'], count: 31 },
+      { id: 'g2', name: '일반 구성원', desc: 'チーム員·職責者(チーム長 이상, 리더그룹 제외)', hr: ['職責者', 'チーム員'], count: 237, isDefault: true },
+    ],
+    HBC: [], HBI: [],
+  };
+
+  /* 개인 예외 지정 (직급 매핑과 다른 등급을 개별 부여) */
+  const gradeExceptions = {
+    HYB: [], HBL: [], HBC: [], HBI: [],
+    HBA: [
+      { empNo: 'A100231', name: 'Jordan Lee', dept: 'Artist Relations', hrTitle: 'Senior Director', from: 'g3', to: 'g2', reason: '아티스트 동행 상시 업무 (CFO 승인)', start: '2026.01.01', end: '2026.12.31', by: '윤채희', at: '2025.12.22' },
+      { empNo: 'A100518', name: 'Maria Santos', dept: 'Global Touring', hrTitle: 'Director', from: 'g3', to: 'g2', reason: '2026 월드투어 총괄 기간 한시 적용', start: '2026.03.01', end: '2026.11.30', by: '윤채희', at: '2026.02.24' },
+    ],
+    HBJ: [
+      { empNo: 'J200077', name: '佐藤 美咲', dept: 'Artist Management', hrTitle: 'チーム員', from: 'g2', to: 'g1', reason: '아티스트 운영 담당 — 동급 좌석 동승(규정 제5조 2-1-②)', start: '2026.04.01', end: '', by: '서준석', at: '2026.03.28' },
+    ],
+  };
+
+  /* 지역 그룹 (법인별 정의. 출장지 관리의 국가·도시를 묶어 규정 값의 열로 사용) */
+  const regions = {
+    HYB: [
+      { id: 'r1', name: '국내', places: ['대한민국 전체'] },
+      { id: 'r2', name: '일본·동남아', places: ['일본', '대만', '홍콩', '마카오', '태국', '싱가포르', '베트남', '필리핀', '인도네시아', '말레이시아'] },
+      { id: 'r3', name: '미주·유럽', places: ['미국', '캐나다', '멕시코', '영국', '프랑스', '독일'] },
+      { id: 'r9', name: '그 외 지역', places: [], isDefault: true },
+    ],
+    HBA: [
+      { id: 'r1', name: 'New York', places: ['미국 - 뉴욕'] },
+      { id: 'r2', name: 'Major US Cities', places: ['미국 - 보스턴', '미국 - 시카고', '미국 - 샌프란시스코', '미국 - LA', '미국 - 마이애미', '미국 - 워싱턴 DC'] },
+      { id: 'r3', name: 'Other US', places: ['미국 (그 외 도시)'] },
+      { id: 'r4', name: 'Mexico City', places: ['멕시코 - 멕시코시티'] },
+      { id: 'r5', name: 'Bogota', places: ['콜롬비아 - 보고타'] },
+      { id: 'r6', name: 'United Kingdom', places: ['영국 전체'] },
+      { id: 'r7', name: 'Korea / Japan', places: ['대한민국 전체', '일본 전체'] },
+      { id: 'r9', name: 'Other International', places: [], isDefault: true },
+    ],
+    HBJ: [
+      { id: 'r1', name: '일본(국내출장)', places: ['일본 전체 (도쿄·가나가와·지바·사이타마는 숙박 동반 + 담당 리더 사전 허가 시에만 국내출장)'] },
+      { id: 'r2', name: '한국', places: ['대한민국 전체'] },
+      { id: 'r3', name: '미국', places: ['미국 전체'] },
+      { id: 'r4', name: '유럽', places: ['영국', '프랑스', '독일', '스페인', '이탈리아'] },
+      { id: 'r9', name: '그 외 지역', places: [], isDefault: true },
+    ],
+    HBC: [], HBI: [],
+  };
+  regions.HBL = JSON.parse(JSON.stringify(regions.HBA));
+
+  /* 여비규정 (법인별 개정 버전 목록, 최신순)
+     item.type : 'class'(좌석·차량·객실 등급 텍스트) | 'cap'(한도 금액, 실비 지급) | 'flat'(정액 지급) | 'actual'(실비, 한도 없음)
+     item.table: { colHead, cols:[label], rows:[{ label, cells:[값] }] }  — 등급별 차등이면 rows=등급, 지역별 차등이면 cols=지역 그룹
+     cells 값이 null 이면 '미정의'(규정 문서에 값 없음) */
+  const HBA_REGION_COLS = ['New York', 'Major US Cities', 'Other US', 'Mexico City', 'Bogota', 'United Kingdom', 'Korea / Japan', 'Other International'];
+  const hbaItems = () => [
+    { key: 'air', cat: '교통', name: '항공', on: true, type: 'class', byGrade: true, byRegion: false, cur: null, unit: '좌석 등급',
+      table: { colHead: '비행 시간(경유·환승 대기 제외)', cols: ['5시간 미만', '5시간 이상'],
+        rows: [ { label: 'Tier 1', cells: ['Business (미운영 시 First)', 'Business (미운영 시 First)'] }, { label: 'Tier 2', cells: ['Economy', 'Business'] }, { label: 'Tier 3', cells: ['Economy', 'Economy'] } ] },
+      guide: '출발 14일 전까지 예약을 권장합니다. 아티스트 동행 시 아티스트와 동급으로 조정할 수 있으며 Finance 책임자의 사전 승인이 필요합니다.' },
+    { key: 'rail', cat: '교통', name: '철도', on: true, type: 'class', byGrade: true, byRegion: false, cur: null, unit: '좌석 등급',
+      table: { colHead: '', cols: ['좌석 등급'], rows: [ { label: 'Tier 1', cells: ['First'] }, { label: 'Tier 2', cells: ['Standard / Business'] }, { label: 'Tier 3', cells: ['Standard / Business'] } ] },
+      guide: '위약 운임(penalty fare)은 회사가 부담하지 않습니다.' },
+    { key: 'rental', cat: '교통', name: '렌터카', on: true, type: 'class', byGrade: true, byRegion: false, cur: null, unit: '차량 등급',
+      table: { colHead: '', cols: ['차량 등급'], rows: [ { label: 'Tier 1', cells: ['Intermediate'] }, { label: 'Tier 2', cells: ['Intermediate'] }, { label: 'Tier 3', cells: ['Standard'] } ] },
+      guide: '3인 이상 동행, 업무용 초과 수하물, 아티스트·고객 탑승 등의 경우 Full-size/SUV를 이용할 수 있습니다. 렌터카 이용 시 택시·라이드셰어 비용은 지급하지 않습니다.' },
+    { key: 'hotel', cat: '숙박', name: '숙박', on: true, type: 'cap', byGrade: true, byRegion: true, cur: 'USD', unit: '1박 상한 (세금·수수료 포함)',
+      table: { colHead: '지역 그룹', cols: HBA_REGION_COLS,
+        rows: [ { label: 'Tier 1', cells: [600, 570, 440, 400, 350, 575, 420, 440] }, { label: 'Tier 2', cells: [480, 450, 380, 300, 250, 450, 350, 380] }, { label: 'Tier 3', cells: [400, 390, 350, 250, 200, 400, 300, 350] } ] },
+      guide: '스탠다드 객실 이용이 원칙입니다. 항공권과 함께 온라인 예약 도구 또는 지정 여행사를 통해 예약해 주세요. Mexico City는 법인 협약 호텔(3곳)을 우선 이용합니다.' },
+    { key: 'meal', cat: '일비·식비', name: '식비', on: true, type: 'cap', byGrade: false, byRegion: true, cur: 'USD', unit: '1인 1일 한도 (세금·팁 포함, 실비 지급)',
+      table: { colHead: '지역 그룹', cols: HBA_REGION_COLS, rows: [ { label: '전체 구성원', cells: [100, 90, 75, 70, 60, 90, 75, 90] } ] },
+      guide: '정액(per diem)이 아닌 실비 한도입니다. 구성원이 함께 식사한 경우 1인당 금액이 각자의 일 한도에 포함됩니다.' },
+    { key: 'allowance', cat: '일비·식비', name: '출장 수당(일당)', on: false, type: 'flat', byGrade: false, byRegion: false, cur: 'USD', unit: '1일 정액',
+      table: { colHead: '', cols: ['1일 지급액'], rows: [ { label: '전체 구성원', cells: [null] } ] }, guide: '' },
+    { key: 'laundry', cat: '기타', name: '세탁비', on: true, type: 'cap', byGrade: false, byRegion: false, cur: 'USD', unit: '1일 한도 (실비 지급)',
+      table: { colHead: '', cols: ['1일 한도'], rows: [ { label: '전체 구성원', cells: [20] } ] },
+      cond: '출장 기간 10일 초과 시', guide: '영수증 첨부 시 한도 내 실비로 지급합니다.' },
+    { key: 'telecom', cat: '기타', name: '통신비', on: true, type: 'cap', byGrade: false, byRegion: false, cur: 'USD', unit: '월 한도 (실비 지급)',
+      table: { colHead: '', cols: ['월 한도'], rows: [ { label: '전체 구성원', cells: [100] } ] },
+      cond: '출장 기간 10일 초과 시 현지 USIM 구매·이용료', guide: '기내 Wi-Fi는 기내 업무 수행 시 지급합니다. 공항 라운지 이용료는 지급하지 않습니다.' },
+    { key: 'mileage', cat: '교통', name: '자가용(마일리지)', on: true, type: 'flat', byGrade: false, byRegion: false, cur: 'USD', unit: '1마일당 정액',
+      table: { colHead: '', cols: ['1마일당'], rows: [ { label: '전체 구성원', cells: [0.7] } ] },
+      guide: 'IRS 표준 마일리지 요율(2025년 기준)을 적용합니다. 통상 출퇴근 거리는 제외합니다.' },
+  ];
+
+  const policies = {
+    HBA: [
+      { ver: 'v4', status: 'active', title: 'HBA & HBL Travel & Expense Policy Update', from: '2025.12.15', to: '', doc: 'HBAHBL_TE_Policy_Update_December_2025.pdf', by: '윤채희', at: '2025.12.10', items: hbaItems() },
+      { ver: 'v3', status: 'ended', title: 'HBA & HBL Travel & Expense Policy', from: '2024.07.01', to: '2025.12.14', doc: 'HBA_TE_Policy_2024.pdf', by: '서준석', at: '2024.06.20', items: null },
+    ],
+    HBL: [
+      { ver: 'v2', status: 'active', title: 'HBA & HBL Travel & Expense Policy Update', from: '2025.12.15', to: '', doc: 'HBAHBL_TE_Policy_Update_December_2025.pdf', by: '윤채희', at: '2025.12.10', copiedFrom: 'HBA v4', items: hbaItems() },
+    ],
+    HBJ: [
+      { ver: 'v3', status: 'scheduled', title: '出張旅費規程 (2027 개정안)', from: '2027.01.01', to: '', doc: 'HBJ-HR-006_出張旅費規程_20270101.pdf', by: '윤채희', at: '2026.11.05', items: null },
+      { ver: 'v2', status: 'active', title: '出張旅費規程 (HBJ-HR-006)', from: '2024.03.29', to: '2026.12.31', doc: 'HBJ-HR-006_出張旅費規程_20240329.pdf', by: '서준석', at: '2024.03.25',
+        items: [
+          { key: 'air', cat: '교통', name: '항공', on: true, type: 'class', byGrade: true, byRegion: false, cur: null, unit: '좌석 등급',
+            table: { colHead: '', cols: ['좌석 등급'], rows: [ { label: '리더그룹·SP 이상', cells: ['Business'] }, { label: '일반 구성원', cells: ['Economy'] } ] },
+            guide: '아티스트 운영 담당자는 아티스트의 안전·보안을 위해 동급 좌석에 동승할 수 있습니다(항공기 1기당 1명, 추가 인원은 레이블 리더 승인). 해당 등급 이용이 곤란한 경우 CHRO 전결로 조정합니다.' },
+          { key: 'rail', cat: '교통', name: '철도·버스', on: true, type: 'class', byGrade: true, byRegion: false, cur: null, unit: '좌석 등급',
+            table: { colHead: '', cols: ['철도', '버스'], rows: [ { label: '리더그룹·SP 이상', cells: ['신칸센 그린샤', '일반'] }, { label: '일반 구성원', cells: ['일반', '일반'] } ] }, guide: '' },
+          { key: 'rental', cat: '교통', name: '렌터카', on: true, type: 'class', byGrade: false, byRegion: false, cur: null, unit: '차량 등급',
+            table: { colHead: '', cols: ['차량 등급'], rows: [ { label: '전체 구성원', cells: ['스탠다드형 또는 1일 ¥10,000 미만 차종'] } ] },
+            cond: '해외 출장 중 대중교통·택시 이용이 곤란하거나 장기 출장인 경우', guide: '렌터카 보험은 렌터카 비용에 포함합니다. 해당 등급 이용이 곤란한 경우 담당 리더 전결이 필요합니다.' },
+          { key: 'hotel', cat: '숙박', name: '숙박', on: true, type: 'cap', byGrade: false, byRegion: true, cur: 'JPY', unit: '1박 상한 (회사 지정 호텔 제외)',
+            table: { colHead: '지역 그룹', cols: ['일본(국내출장)', '한국', '미국', '유럽', '그 외 지역'],
+              rows: [ { label: '전체 구성원', cells: ['3~4성급 또는 ¥30,000 미만', '3~4성급 또는 ₩300,000 미만', '3~4성급 또는 ¥30,000 미만', '3~4성급 또는 ¥30,000 미만', '3~4성급 또는 ¥30,000 미만'] } ] },
+            guide: '회사 지정 숙박처 이용이 원칙입니다. 민박·airbnb 등 개인 운영 숙박시설은 이용할 수 없습니다.' },
+          { key: 'meal', cat: '일비·식비', name: '식비', on: true, type: 'cap', byGrade: false, byRegion: true, cur: 'JPY', unit: '1인 1일 한도 (실비 지급)',
+            table: { colHead: '지역 그룹', cols: ['일본(국내출장)', '한국', '미국', '유럽', '그 외 지역'], rows: [ { label: '전체 구성원', cells: ['¥6,000', '₩60,000', 'US$60', 'US$60', null] } ] },
+            guide: '외부 파트너·고객과의 식사 비용은 제외합니다(접대비는 담당 리더 사전 승인).' },
+          { key: 'allowance', cat: '일비·식비', name: '출장 수당(일당)', on: true, type: 'flat', byGrade: false, byRegion: false, cur: 'JPY', unit: '1일 정액',
+            table: { colHead: '', cols: ['1일 지급액'], rows: [ { label: '전체 구성원', cells: [5000] } ] },
+            cond: '국내·해외 구분 없음. 오전 6시 기산 24시간 경과 시 1일분 발생', guide: '24시간 미만이라도 숙박을 동반하거나 왕복 이동 시간이 8시간 이상이면 지급합니다.' },
+          { key: 'laundry', cat: '기타', name: '세탁비', on: true, type: 'cap', byGrade: false, byRegion: false, cur: 'JPY', unit: '1일 한도 (실비 지급)',
+            table: { colHead: '', cols: ['1일 한도'], rows: [ { label: '전체 구성원', cells: [2000] } ] }, cond: '장기 출장(10일 이상 60일 미만)에 한함', guide: '비용 신청 시 증빙 자료를 첨부해야 합니다.' },
+          { key: 'telecom', cat: '기타', name: '통신비', on: true, type: 'actual', byGrade: false, byRegion: false, cur: 'JPY', unit: '실비',
+            table: { colHead: '', cols: ['지급 기준'], rows: [ { label: '전체 구성원', cells: ['음성 통화·데이터 로밍 실비 / 장기 출장 시 현지 USIM 월 US$100 이내'] } ] },
+            guide: '사내 구성원 간 해외 통화는 Slack Call 등 보이스톡 사용을 기본으로 합니다.' },
+        ] },
+      { ver: 'v1', status: 'ended', title: '出張旅費規程 (제정)', from: '2020.07.14', to: '2024.03.28', doc: 'HBJ-HR-006_出張旅費規程_20200714.pdf', by: '서준석', at: '2020.07.10', items: null },
+    ],
+    HYB: [
+      { ver: 'v5', status: 'active', title: '출장 여비 규정 (화면 예시용 샘플 값)', from: '2026.03.09', to: '', doc: 'HYB_출장여비규정_2026.pdf', by: '서준석', at: '2026.03.02',
+        items: [
+          { key: 'air', cat: '교통', name: '항공', on: true, type: 'class', byGrade: true, byRegion: false, cur: null, unit: '좌석 등급',
+            table: { colHead: '비행 시간', cols: ['6시간 미만', '6시간 이상'], rows: [ { label: '임원', cells: ['Business', 'Business'] }, { label: '리더', cells: ['Economy', 'Premium Economy'] }, { label: '구성원', cells: ['Economy', 'Economy'] } ] }, guide: '' },
+          { key: 'hotel', cat: '숙박', name: '숙박', on: true, type: 'cap', byGrade: true, byRegion: true, cur: 'KRW', unit: '1박 상한',
+            table: { colHead: '지역 그룹', cols: ['국내', '일본·동남아', '미주·유럽', '그 외 지역'], rows: [ { label: '임원', cells: [250000, 350000, 500000, 400000] }, { label: '리더', cells: [180000, 280000, 400000, 320000] }, { label: '구성원', cells: [150000, 250000, 350000, 280000] } ] }, guide: '' },
+          { key: 'meal', cat: '일비·식비', name: '식비', on: true, type: 'cap', byGrade: false, byRegion: true, cur: 'KRW', unit: '1인 1일 한도',
+            table: { colHead: '지역 그룹', cols: ['국내', '일본·동남아', '미주·유럽', '그 외 지역'], rows: [ { label: '전체 구성원', cells: [40000, 70000, 90000, 80000] } ] }, guide: '' },
+          { key: 'telecom', cat: '기타', name: '통신비', on: true, type: 'cap', byGrade: false, byRegion: false, cur: 'KRW', unit: '1일 한도', table: { colHead: '', cols: ['1일 한도'], rows: [ { label: '전체 구성원', cells: [15000] } ] }, guide: '' },
+        ] },
+    ],
+    HBC: [], HBI: [],
+  };
+
+  /* 변경 이력 (최신순). cat: '기안 항목' | '여비규정' | '구성원 등급' | '지역 그룹' */
+  const history = [
+    { at: '2026.11.05 14:22', corp: 'HBJ', cat: '여비규정', text: 'v3 개정안 등록 — 적용 시작일 2027.01.01 (적용 예정)', by: '윤채희' },
+    { at: '2026.10.27 10:05', corp: 'HBJ', cat: '기안 항목', text: '출장 예산 OFF → ON', by: '윤채희' },
+    { at: '2026.10.27 10:05', corp: 'HBJ', cat: '기안 항목', text: '출장 근태 신청 OFF → ON', by: '윤채희' },
+    { at: '2026.10.20 16:40', corp: 'HBA', cat: '기안 항목', text: '법인 최초 설정 — 출장 예산 OFF, 법인카드 한도 증액 OFF, 출장 근태 신청 OFF', by: '윤채희' },
+    { at: '2026.10.20 16:38', corp: 'HBL', cat: '기안 항목', text: '법인 최초 설정 — 출장 예산 OFF, 법인카드 한도 증액 OFF, 출장 근태 신청 OFF', by: '윤채희' },
+    { at: '2026.03.28 09:12', corp: 'HBJ', cat: '구성원 등급', text: '개인 예외 지정 추가 — 佐藤 美咲 (일반 구성원 → 리더그룹·SP 이상)', by: '서준석' },
+    { at: '2026.02.24 11:30', corp: 'HBA', cat: '구성원 등급', text: '개인 예외 지정 추가 — Maria Santos (Tier 3 → Tier 2, ~2026.11.30)', by: '윤채희' },
+    { at: '2025.12.22 15:02', corp: 'HBA', cat: '구성원 등급', text: '개인 예외 지정 추가 — Jordan Lee (Tier 3 → Tier 2)', by: '윤채희' },
+    { at: '2025.12.10 17:45', corp: 'HBL', cat: '여비규정', text: 'v2 등록 (HBA v4에서 복사) — 적용 시작일 2025.12.15', by: '윤채희' },
+    { at: '2025.12.10 17:20', corp: 'HBA', cat: '여비규정', text: 'v4 등록 — 적용 시작일 2025.12.15', by: '윤채희' },
+    { at: '2025.12.10 16:58', corp: 'HBA', cat: '지역 그룹', text: '지역 그룹 추가 — Other US (식비 한도 구분용)', by: '윤채희' },
+    { at: '2026.03.09 09:00', corp: 'HYB', cat: '기안 항목', text: '법인 최초 설정 — 출장 예산 ON, 법인카드 한도 증액 ON, 출장 근태 신청 ON', by: '서준석' },
+  ];
+
+  /* 인사정보 구성원 검색용 샘플 (개인 예외 지정 추가 모달) */
+  const people = {
+    HBA: [ { empNo: 'A100744', name: 'Chris Park', dept: 'Label Operations', hrTitle: 'Director' }, { empNo: 'A100802', name: 'Emily Chen', dept: 'Finance', hrTitle: 'Manager' }, { empNo: 'A100913', name: 'David Kim', dept: 'A&R', hrTitle: 'Senior Director' } ],
+    HBL: [ { empNo: 'L300045', name: 'Sofía Ramírez', dept: 'Marketing', hrTitle: 'Manager' }, { empNo: 'L300078', name: 'Diego Torres', dept: 'Artist Development', hrTitle: 'Director' } ],
+    HBJ: [ { empNo: 'J200145', name: '田中 健', dept: 'Concert Business', hrTitle: 'チーム員' }, { empNo: 'J200162', name: '鈴木 花', dept: 'Artist Management', hrTitle: '職責者' } ],
+    HYB: [ { empNo: '10004684', name: '차영록', dept: '서비스전략팀(HYB)', hrTitle: '구성원' }, { empNo: '10003321', name: '김민지', dept: '뮤직라이츠실(HYB)', hrTitle: '구성원' } ],
+    HBC: [ { empNo: 'C400012', name: '王 丽', dept: 'Business Development', hrTitle: 'Manager' } ],
+    HBI: [ { empNo: 'I500007', name: 'Priya Sharma', dept: 'Operations', hrTitle: 'Manager' } ],
+  };
+
+  return { TODAY, admin: '차영록', hrSyncAt: '2026.11.12 06:00', corps, draftItems, grades, gradeExceptions, regions, policies, history, people,
+    curSymbol: { KRW: '₩', USD: 'US$', JPY: '¥', CNY: 'CN¥', INR: '₹' } };
+})();
+
+/* ==== app.js ==== */
+/* 셸 · 라우팅 · 공용 UI. 각 화면은 App.views[key] = { render(ctx), mount?(root, ctx), desc(ctx) } 로 등록한다. */
+window.App = (function () {
+  const D = window.DATA;
+  const state = { corp: 'ALL', tab: 'draft' };
+  const SUBTABS = [
+    { key: 'draft', label: '기안 항목 설정', sid: 'TRIP-ADM-CORP-02' },
+    { key: 'policy', label: '여비규정', sid: 'TRIP-ADM-CORP-03' },
+    { key: 'criteria', label: '등급 · 지역 기준', sid: 'TRIP-ADM-CORP-04' },
+    { key: 'history', label: '변경 이력', sid: 'TRIP-ADM-CORP-05' },
+  ];
+  const views = {};
+
+  /* ---------- helpers ---------- */
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const h = {
+    esc,
+    mk: (n) => `<i class="mk" data-mk="${n}" title="Description ${n}">${n}</i>`,
+    badge: (color, text) => `<span class="badge ${color}">${esc(text)}</span>`,
+    /* 토글 스위치. attrs 는 data-* 등 추가 속성 문자열 */
+    toggle: (on, attrs = '', label = true) => `<button type="button" class="tg" role="switch" aria-checked="${on ? 'true' : 'false'}" ${attrs}></button>${label ? `<span class="tg-label">${on ? 'ON' : 'OFF'}</span>` : ''}`,
+    money: (v, cur) => (v == null || v === '' ? '' : typeof v === 'number' ? (D.curSymbol[cur] || '') + v.toLocaleString('en-US') : String(v)),
+    corp: (code) => D.corps.find((c) => c.code === code),
+    /* 여비규정 상태: 현재 적용 버전 / 예정 버전 */
+    policyState(code) {
+      const list = D.policies[code] || [];
+      return { active: list.find((p) => p.status === 'active') || null, scheduled: list.find((p) => p.status === 'scheduled') || null, draft: list.find((p) => p.status === 'draft') || null, count: list.length };
+    },
+    policyBadge(code) {
+      const s = h.policyState(code);
+      if (s.active) return h.badge('green', '적용 중 ' + s.active.ver) + (s.scheduled ? ' ' + h.badge('blue', '적용 예정 ' + s.scheduled.ver) : '');
+      if (s.scheduled) return h.badge('blue', '적용 예정 ' + s.scheduled.ver);
+      if (s.draft) return h.badge('gray', '임시저장');
+      return h.badge('orange', '미등록');
+    },
+    now() { const d = new Date(); const p = (n) => String(n).padStart(2, '0'); return `${D.TODAY} ${p(d.getHours())}:${p(d.getMinutes())}`; },
+  };
+
+  /* ---------- 공용 UI ---------- */
+  const ui = {
+    toast(msg) {
+      document.querySelectorAll('.toast').forEach((e) => e.remove());
+      const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2600);
+    },
+    /* modal({ title, body(html), width, actions:[{ label, primary, danger, keep, onClick(modalEl) }] }) — onClick 이 false 를 반환하면 닫지 않음 */
+    modal({ title, body, width, actions }) {
+      ui.closeModal();
+      const bg = document.createElement('div'); bg.className = 'dim-bg';
+      bg.innerHTML = `<div class="modal" role="dialog" aria-modal="true" style="${width ? 'width:' + width + 'px' : ''}"><div class="mh"><span>${esc(title)}</span><button type="button" aria-label="닫기" data-x>×</button></div><div class="mb">${body}</div><div class="mf"></div></div>`;
+      const mf = bg.querySelector('.mf');
+      (actions || [{ label: '확인', primary: true }]).forEach((a) => {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'btn' + (a.primary ? ' pri' : '') + (a.danger ? ' danger' : ''); b.textContent = a.label;
+        b.onclick = () => { const r = a.onClick ? a.onClick(bg.querySelector('.modal')) : undefined; if (r !== false) ui.closeModal(); };
+        mf.appendChild(b);
+      });
+      bg.querySelector('[data-x]').onclick = ui.closeModal;
+      bg.addEventListener('mousedown', (e) => { if (e.target === bg) ui.closeModal(); });
+      document.body.appendChild(bg);
+      const f = bg.querySelector('.mb input,.mb select,.mb textarea,.mf .btn.pri'); if (f) f.focus();
+      return bg.querySelector('.modal');
+    },
+    closeModal() { document.querySelectorAll('.dim-bg').forEach((e) => e.remove()); },
+    confirm(title, body, okLabel, onOk) { return ui.modal({ title, body, actions: [{ label: '취소' }, { label: okLabel || '확인', primary: true, onClick: onOk }] }); },
+  };
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') ui.closeModal(); });
+
+  /* 변경 이력 기록 */
+  function log(corp, cat, text) { D.history.unshift({ at: h.now(), corp, cat, text, by: D.admin }); }
+
+  /* ---------- 렌더 ---------- */
+  function ctx() { return { corp: state.corp === 'ALL' ? null : h.corp(state.corp), code: state.corp, tab: state.tab, D, h, ui }; }
+  function currentView() { return state.corp === 'ALL' ? views.overview : views[state.tab]; }
+
+  function corpPanel() {
+    const item = (code, inner) => `<button type="button" class="corp-item ${state.corp === code ? 'on' : ''}" data-corp="${code}">${inner}</button>`;
+    return `<h3 class="h3">법인 <em>${D.corps.length}</em>${h.mk('A')}</h3>
+      <div class="corp-panel">
+        <div class="tools"><span>인사정보 연동</span><span class="num">${D.hrSyncAt}</span></div>
+        ${item('ALL', '<span class="cd">전체 법인</span>')}
+        ${D.corps.map((c) => {
+          const on = D.draftItems.filter((i) => c.draft[i.key].on).length;
+          return item(c.code, `<span class="cd">${c.code}</span><span class="nm">${esc(c.name)}</span><div class="st">${h.policyBadge(c.code)} <span class="badge line">기안 항목 ${on}/${D.draftItems.length}</span></div>`);
+        }).join('')}
+        <p class="sync">법인 목록은 인사정보의 법인 코드를 그대로 사용하며, 이 화면에서 추가·삭제할 수 없습니다.</p>
+      </div>`;
+  }
+
+  function corpHead(c) {
+    return `<div class="corp-head"><span class="cd">${c.code}</span><span class="nm">${esc(c.name)}</span>${c.sample ? h.badge('gray', '샘플 값') : ''}</div>
+      <div class="chips"><span class="chip">국가 <b>${esc(c.country)}</b></span><span class="chip">기준 통화 <b>${c.cur}</b></span><span class="chip">구성원 <b class="num">${c.headcount.toLocaleString()}명</b></span></div>
+      <div class="subtabs" role="tablist">${SUBTABS.map((s) => `<button type="button" role="tab" aria-selected="${state.tab === s.key}" class="s ${state.tab === s.key ? 'on' : ''}" data-tab="${s.key}">${s.label}</button>`).join('')}${h.mk('B')}</div>`;
+  }
+
+  function renderDesc(v, c) {
+    const d = (v && v.desc ? v.desc(c) : null) || {};
+    const common = [
+      { no: 'A', title: '법인 목록 (좌측 패널)', body: '인사정보의 법인 코드를 연동해 노출한다(매일 06:00 동기화, 추가·삭제 불가). 법인별로 <b>여비규정 상태</b>(적용 중/적용 예정/임시저장/미등록)와 <b>기안 항목 사용 수</b>를 배지로 보여준다. [전체 법인] 선택 시 전 법인 현황 표를 노출한다.' },
+    ];
+    if (c.corp) common.push({ no: 'B', title: '법인 상세 탭', body: '선택한 법인의 설정을 <code>기안 항목 설정</code> · <code>여비규정</code> · <code>등급 · 지역 기준</code> · <code>변경 이력</code> 4개 탭으로 나눠 관리한다. 탭을 바꿔도 좌측 법인 선택은 유지된다.' });
+    const item = (i) => `<div class="desc-item" data-d="${i.no}"><i class="mk">${i.no}</i><div><div class="dt">${i.title}</div><div class="db">${i.body}</div></div></div>`;
+    const sid = state.corp === 'ALL' ? 'TRIP-ADM-CORP-01' : SUBTABS.find((s) => s.key === state.tab).sid;
+    document.getElementById('sid').textContent = sid;
+    document.getElementById('desc').innerHTML = `<div class="desc-in"><h2>${d.title || ''}</h2><div class="dsub">${sid} · ${d.summary || ''}</div>
+      <h4>공통 영역</h4>${common.map(item).join('')}
+      <h4>화면 상세</h4>${(d.items || []).map(item).join('')}
+      ${(d.policies || []).length ? '<h4>정책</h4><div class="desc-item" style="grid-template-columns:1fr"><div class="db"><ul>' + d.policies.map((p) => `<li>${p}</li>`).join('') + '</ul></div></div>' : ''}
+      ${(d.issues || []).length ? '<h4>확인 필요 사항</h4>' + d.issues.map((p) => `<div class="issue">${p}</div>`).join('') : ''}</div>`;
+  }
+
+  function render() {
+    const c = ctx(); const v = currentView();
+    const body = v ? v.render(c) : '<div class="empty"><b>화면 준비 중</b></div>';
+    document.getElementById('corp-side').innerHTML = corpPanel();
+    const root = document.getElementById('view');
+    root.innerHTML = (c.corp ? corpHead(c.corp) : '') + `<div id="view-body">${body}</div>`;
+    if (v && v.mount) v.mount(document.getElementById('view-body'), c);
+    renderDesc(v, c);
+  }
+  function go(corp, tab) { if (corp) state.corp = corp; if (tab) state.tab = tab; ui.closeModal(); render(); window.scrollTo(0, 0); }
+
+  function init() {
+    document.getElementById('corp-side').addEventListener('click', (e) => { const b = e.target.closest('[data-corp]'); if (b) go(b.dataset.corp); });
+    document.getElementById('view').addEventListener('click', (e) => { const b = e.target.closest('.subtabs [data-tab]'); if (b) go(null, b.dataset.tab); });
+    const dOn = document.getElementById('desc-toggle'), mOn = document.getElementById('mk-toggle');
+    dOn.onchange = () => document.body.classList.toggle('desc-on', dOn.checked);
+    mOn.onchange = () => document.body.classList.toggle('mk-off', !mOn.checked);
+    /* 마커 ↔ Description 하이라이트 */
+    document.addEventListener('mouseover', (e) => {
+      const m = e.target.closest('.mk[data-mk], .desc-item[data-d]'); document.querySelectorAll('.hot').forEach((x) => x.classList.remove('hot')); if (!m) return;
+      const no = m.dataset.mk || m.dataset.d;
+      document.querySelectorAll(`.mk[data-mk="${no}"], .desc-item[data-d="${no}"]`).forEach((x) => x.classList.add('hot'));
+    });
+    document.addEventListener('click', (e) => { const m = e.target.closest('.mk[data-mk]'); if (!m) return; const t = document.querySelector(`.desc-item[data-d="${m.dataset.mk}"]`); if (t) t.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+    render();
+  }
+
+  return { state, views, h, ui, log, go, render, init, D, SUBTABS };
+})();
+
+App.init();
+</script>
+</body>
+</html>
