@@ -46,7 +46,7 @@
   const lastOf = (code) => H.find((x) => x.corp === code) || null;
 
   /* ---------- 상태 ---------- */
-  const S = { view: 'grid', q: '', f: 'all', hist: { corp: '', cat: '', q: '' }, m: null, cf: null };
+  const S = { view: 'grid', q: '', f: 'all', hist: { corp: '', cat: '', q: '' }, m: null, cf: null, org: null };
 
   /* ---------- 등급·여비규정 공용 로직 ---------- */
   const defGrade = (grades) => grades.find((g) => g.isDefault) || null;
@@ -65,6 +65,50 @@
   const newItem = (cat, grades) => { const it = { id: uid('i'), cat, name: '', on: true, type: 'cap', byGrade: false, cur: null, unit: '', cond: '', guide: '', table: { colHead: '', cols: ['기준'], rows: [{ label: '전체 구성원', cells: [null] }] } }; return it; };
   const TEMPLATE = [['교통', '항공', 'class'], ['교통', '철도', 'class'], ['숙박', '숙박', 'cap'], ['일비·식비', '식비', 'cap'], ['일비·식비', '출장 수당(일당)', 'flat'], ['기타', '통신비', 'cap']];
 
+
+  /* ---------- 조직도 (인사정보 연동 가정, 샘플) : [조직 경로, 사번, 이름, 직책] ---------- */
+  const ORG_SRC = {
+    HYB: [['서비스전략실/서비스전략팀', '10004684', '차영록', '구성원'], ['서비스전략실/서비스전략팀', '10004120', '박지훈', '팀장'], ['서비스전략실/서비스기획팀', '10005231', '정하윤', '구성원'], ['뮤직라이츠실', '10003321', '김민지', '구성원'], ['뮤직라이츠실', '10002087', '오세진', '실장'], ['재무실/재무회계팀', '10003876', '이서연', '팀장'], ['재무실/자금팀', '10005542', '최도현', '구성원']],
+    HBA: [['Music Division/A&R', 'A100913', 'David Kim', 'Senior Director'], ['Music Division/A&R', 'A101022', 'Olivia Brown', 'Manager'], ['Music Division/Label Operations', 'A100744', 'Chris Park', 'Director'], ['Music Division/Label Operations', 'A101187', 'Noah Wilson', 'Staff'], ['Business Division/Artist Relations', 'A100231', 'Jordan Lee', 'Senior Director'], ['Business Division/Artist Relations', 'A101305', 'Mia Johnson', 'Associate'], ['Business Division/Global Touring', 'A100518', 'Maria Santos', 'Director'], ['Business Division/Global Touring', 'A100977', 'Ethan Clark', 'Manager'], ['Corporate/Finance', 'A100802', 'Emily Chen', 'Manager'], ['Corporate/Finance', 'A100066', 'Robert Hall', 'VP'], ['Corporate/People', 'A100458', 'Grace Lewis', 'Director']],
+    HBL: [['Marketing', 'L300045', 'Sofía Ramírez', 'Manager'], ['Marketing', 'L300102', 'Lucas Fernández', 'Staff'], ['Artist Development', 'L300078', 'Diego Torres', 'Director'], ['Finance', 'L300031', 'Ana López', 'Manager']],
+    HBJ: [['Artist Business/Artist Management', 'J200077', '佐藤 美咲', 'チーム員'], ['Artist Business/Artist Management', 'J200162', '鈴木 花', '職責者'], ['Artist Business/Concert Business', 'J200145', '田中 健', 'チーム員'], ['Artist Business/Concert Business', 'J200033', '伊藤 大輔', '事業リーダー'], ['Corporate/財務会計チーム', 'J200210', '山本 翔', 'チーム員'], ['Corporate/People Experience', 'J200098', '高橋 優', 'SP']],
+    HBC: [['Business Development', 'C400012', '王 丽', 'Manager'], ['Business Development', 'C400003', '陈 伟', 'Director'], ['Operations', 'C400027', '李 强', 'Staff']],
+    HBI: [['Operations', 'I500007', 'Priya Sharma', 'Manager'], ['Marketing', 'I500015', 'Arjun Mehta', 'Staff']],
+  };
+  function orgTree(c) {
+    const root = { id: c.code, name: c.name, children: [], members: [] };
+    (ORG_SRC[c.code] || []).forEach(([path, empNo, name, hrTitle]) => {
+      let node = root; const segs = path.split('/');
+      segs.forEach((seg, i) => { const id = c.code + '/' + segs.slice(0, i + 1).join('/'); let ch = node.children.find((n) => n.id === id); if (!ch) { ch = { id, name: seg, children: [], members: [] }; node.children.push(ch); } node = ch; });
+      node.members.push({ empNo, name, hrTitle, dept: segs[segs.length - 1], path });
+    });
+    return root;
+  }
+  const allMembers = (n) => n.members.concat(...n.children.map(allMembers));
+  const findNode = (n, id) => (n.id === id ? n : n.children.map((c) => findNode(c, id)).find(Boolean));
+  function orgListHtml() {
+    const o = S.org, w = S.m.w, q = o.q.trim().toLowerCase();
+    const list = q ? allMembers(o.tree).filter((p) => (p.name + p.empNo).toLowerCase().includes(q)) : allMembers(findNode(o.tree, o.sel) || o.tree);
+    if (!list.length) return `<div class="empty">${q ? '검색 결과가 없습니다.' : '이 조직에 소속된 구성원이 없습니다.'}</div>`;
+    return list.map((p) => { const taken = w.exc.some((x) => x.empNo === p.empNo), g = mappedGrade(w.grades, p.hrTitle);
+      return `<label class="org-mem ${taken ? 'dis' : ''}"><input type="checkbox" data-a="o-pick" value="${p.empNo}" ${o.picked.has(p.empNo) ? 'checked' : ''} ${taken ? 'disabled' : ''}>
+        <span><b>${esc(p.name)}</b> <span class="sub num">${esc(p.empNo)}</span><div class="sub">${esc(p.path.replace(/\//g, ' › '))} · ${esc(p.hrTitle)}</div></span>
+        <span>${taken ? badge('gray', '지정됨') : `<span class="sub">매핑 등급</span> <b>${esc(g ? g.name : '-')}</b>`}</span></label>`; }).join('');
+  }
+  const orgPickedHtml = () => { const o = S.org, all = allMembers(o.tree); return o.picked.size ? `선택 ${o.picked.size}명 ` + [...o.picked].map((e) => { const p = all.find((x) => x.empNo === e); return `<span class="tchip">${esc(p.name)}<button type="button" aria-label="${esc(p.name)} 선택 해제" data-a="o-unpick" data-e="${e}">×</button></span>`; }).join('') : '선택한 구성원이 없습니다.'; };
+  function orgHtml() {
+    const o = S.org, c = corpOf(S.m.code);
+    const node = (n, depth) => { const open = o.open.has(n.id), has = n.children.length > 0;
+      return `<button type="button" class="org-node ${o.sel === n.id && !o.q ? 'on' : ''}" style="padding-left:${6 + depth * 14}px" data-a="o-node" data-id="${esc(n.id)}" aria-expanded="${has ? open : ''}"><span class="car">${has ? (open ? '▾' : '▸') : ''}</span>${esc(n.name)}<span class="cnt num">${allMembers(n).length}</span></button>${has && open ? n.children.map((ch) => node(ch, depth + 1)).join('') : ''}`; };
+    return `<div class="ov top" data-ov="o"><div class="cmodal" role="dialog" aria-modal="true" aria-label="조직도에서 구성원 선택" style="width:780px">
+      <div class="xh"><div><div class="t">조직도에서 구성원 선택${mk(1)}</div><div class="s"><b>${c.code}</b> ${esc(c.name)} 조직도 · 개인 예외를 지정할 구성원을 선택합니다.</div></div><button type="button" class="x" aria-label="닫기" data-a="o-close">×</button></div>
+      <div class="xb"><div class="row"><input class="inp grow" id="org-q" value="${esc(o.q)}" placeholder="이름 또는 사번으로 검색" maxlength="30" aria-label="구성원 검색">${mk(2)}</div>
+        <div class="org"><div class="org-box"><h5>조직${mk(3)}</h5>${node(o.tree, 0)}</div>
+          <div class="org-box"><h5>구성원${mk(4)}</h5><div id="org-list">${orgListHtml()}</div></div></div>
+        <div class="org-picked" id="org-picked">${orgPickedHtml()}</div></div>
+      <div class="xf"><span class="sp"></span><button type="button" class="btn" data-a="o-close">취소</button><button type="button" class="btn pri" data-a="o-ok" ${o.picked.size ? '' : 'disabled'}>선택 완료</button>${mk(5)}</div></div></div>`;
+  }
+
   /* ================= 마스터 그리드 ================= */
   function gridView() {
     const q = S.q.trim().toLowerCase();
@@ -80,6 +124,7 @@
         <button type="button" class="btn" data-a="history">변경 이력</button>${mk(7)}
       </div>
       <div class="grid-wrap"><table class="grid">
+        <colgroup><col style="width:3%"><col style="width:11%"><col style="width:5%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:10%"><col style="width:5%"><col style="width:9%"><col style="width:7%"><col style="width:9%"><col style="width:7%"><col style="width:10%"></colgroup>
         <thead>
           <tr><th rowspan="2" class="c">번호</th><th rowspan="2">법인${mk(3)}</th><th rowspan="2" class="c">구성원</th>
             <th colspan="3" class="grp">기안 항목${mk(4)}</th><th colspan="2" class="grp">등급 규정${mk(5)}</th><th colspan="4" class="grp">여비규정 (등록 항목)${mk(6)}</th>
@@ -96,7 +141,7 @@
             <td>${c.grades.length ? `<div class="gtags">${c.grades.map((g) => `<span class="badge line">${esc(g.name)}</span>`).join('')}</div>` : badge('orange', '미등록')}</td>
             <td class="c num">${c.exc.length ? c.exc.length + '건' : '<span class="dim">-</span>'}</td>
             ${c.items.length ? CATS.map((cat) => `<td>${catCell(c, cat)}</td>`).join('') : `<td colspan="4">${badge('orange', '미등록')} <span class="sm">등록된 여비규정이 없습니다</span></td>`}
-            <td class="num" style="white-space:nowrap">${last ? `${esc(last.at.slice(0, 10))}<div class="sm">${esc(last.by)}</div>` : '<span class="dim">-</span>'}
+            <td class="num">${last ? `${esc(last.at.slice(0, 10))}<div class="sm">${esc(last.by)}</div>` : '<span class="dim">-</span>'}
               ${c.meta.from ? `<div class="sm">시행 ${esc(c.meta.from)}</div>` : ''}${c.pending ? `<div>${badge('blue', '적용 예정 ' + c.pending.from)}</div>` : ''}${ud ? `<div>${badge('orange', '미정의 ' + ud + '칸')}</div>` : ''}</td>
             <td class="c stick"><button type="button" class="btn sm" data-a="manage" data-code="${c.code}">관리</button></td></tr>`;
         }).join('') : '<tr><td colspan="13"><div class="empty"><b>검색 결과가 없습니다</b>법인 코드 또는 법인명을 다시 확인해 주세요.</div></td></tr>'}</tbody>
@@ -117,10 +162,11 @@
         <select class="sel" data-h="cat" aria-label="구분"><option value="">전체 구분</option>${Object.keys(catColor).map((c) => `<option ${f.cat === c ? 'selected' : ''}>${c}</option>`).join('')}</select>
         <input class="inp" data-h="q" value="${esc(f.q)}" placeholder="변경 내용, 사유, 수정자 검색" maxlength="30" style="width:210px" aria-label="이력 검색">${mk(2)}
       </div>
-      <div class="tbl-wrap"><table class="tbl" style="min-width:900px">
-        <thead><tr><th class="c">번호</th><th>변경 일시</th><th>법인</th><th>구분</th><th>변경 내용${mk(3)}</th><th style="width:30%">변경 전 → 변경 후</th><th>변경 사유</th><th>수정자</th><th>저장 번호${mk(4)}</th></tr></thead>
+      <div class="tbl-wrap"><table class="tbl hist-tbl">
+        <colgroup><col style="width:5%"><col style="width:11%"><col style="width:6%"><col style="width:8%"><col style="width:19%"><col style="width:26%"><col style="width:12%"><col style="width:6%"><col style="width:7%"></colgroup>
+        <thead><tr><th class="c">번호</th><th>변경 일시</th><th>법인</th><th>구분</th><th>변경 내용${mk(3)}</th><th>변경 전 → 변경 후</th><th>변경 사유</th><th>수정자</th><th>저장 번호${mk(4)}</th></tr></thead>
         <tbody>${rows.length ? rows.map((x, i) => `<tr>
-          <td class="c dim num">${rows.length - i}</td><td class="num" style="white-space:nowrap">${esc(x.at)}</td><td><b>${x.corp}</b></td><td>${badge(catColor[x.cat] || 'gray', x.cat)}</td>
+          <td class="c dim num">${rows.length - i}</td><td class="num">${esc(x.at)}</td><td><b>${x.corp}</b></td><td>${badge(catColor[x.cat] || 'gray', x.cat)}</td>
           <td>${esc(x.text)}</td><td><div class="hist-ba"><span class="b">${esc(x.before)}</span><span class="dim">→</span><span class="a">${esc(x.after)}</span></div></td>
           <td class="dim">${esc(x.reason)}</td><td style="white-space:nowrap">${esc(x.by)}</td><td class="num dim">${esc(x.sid)}</td></tr>`).join('') : '<tr><td colspan="9"><div class="empty"><b>조건에 맞는 변경 이력이 없습니다</b>필터를 바꾸거나 검색어를 지워 보세요.</div></td></tr>'}</tbody>
       </table></div>`;
@@ -149,7 +195,6 @@
   function tabGrade(c, w) {
     const used = new Map(); w.grades.forEach((g) => g.hr.forEach((t) => used.set(t, g.id)));
     const free = c.titles.filter((t) => !used.has(t));
-    const people = D.people[c.code] || [];
     return `<div class="row between"><div><h4 class="sec-title">구성원 등급 <span class="hl-blue">${w.grades.length}</span>${mk(4)}</h4><p class="sec-desc">인사정보 직책을 등급에 매핑합니다. 등급은 여비규정 표의 행으로 쓰이며, 추가·삭제·이름 변경은 여비규정 표에 즉시 반영됩니다.</p></div><button type="button" class="btn sm" data-a="g-add">+ 등급 추가</button></div>
       ${w.grades.length ? `<table class="etbl"><thead><tr><th style="width:44px" class="c">기본${mk(6)}</th><th style="width:170px">등급명</th><th style="width:230px">설명</th><th>매핑 직책${mk(5)}</th><th style="width:96px"></th></tr></thead><tbody>
         ${w.grades.map((g, i) => `<tr><td class="c"><input type="radio" name="gdef" ${g.isDefault ? 'checked' : ''} data-a="g-def" data-id="${g.id}" aria-label="${esc(g.name)} 기본 등급"></td>
@@ -161,17 +206,17 @@
         </tbody></table>${free.length ? `<p class="note" style="margin-top:8px">미매핑 직책 ${free.length}개(${esc(free.join(', '))})는 기본 등급 <b>${esc((defGrade(w.grades) || {}).name || '-')}</b>이(가) 적용됩니다.</p>` : ''}`
         : `<div class="empty"><b>등록된 등급이 없습니다</b>등급이 없으면 여비규정의 모든 항목이 '전체 구성원' 단일 기준으로 적용됩니다.</div>`}
 
-      <div class="row between" style="margin-top:26px"><div><h4 class="sec-title">개인 예외 지정 <span class="hl-blue">${w.exc.length}</span>${mk(7)}</h4><p class="sec-desc">직책 매핑과 다른 등급을 특정 구성원에게 개별 지정합니다. 적용 기간 동안 직책 매핑보다 우선합니다.</p></div><button type="button" class="btn sm" data-a="x-add" ${w.grades.length > 1 ? '' : 'disabled'}>+ 예외 지정 추가</button></div>
+      <div class="row between" style="margin-top:26px"><div><h4 class="sec-title">개인 예외 지정 <span class="hl-blue">${w.exc.length}</span>${mk(7)}</h4><p class="sec-desc">직책 매핑과 다른 등급을 특정 구성원에게 개별 지정합니다. 적용 기간 동안 직책 매핑보다 우선합니다.</p></div><button type="button" class="btn sm" data-a="x-add" ${w.grades.length > 1 ? '' : 'disabled'}>+ 조직도에서 구성원 선택</button></div>
       ${w.exc.length ? `<table class="etbl"><thead><tr><th style="width:190px">구성원</th><th style="width:120px">매핑 등급</th><th style="width:150px">적용 등급</th><th>사유</th><th style="width:218px">적용 기간 (종료일 비우면 무기한)${mk(8)}</th><th style="width:52px"></th></tr></thead><tbody>
         ${w.exc.map((x) => { const cur = x.empNo ? mappedGrade(w.grades, x.hrTitle) : null; const end = x.end && x.end < D.TODAY;
-          return `<tr><td>${x.isNew ? `<select class="sel" data-x="${x.id}" data-f="empNo" aria-label="구성원 선택"><option value="">구성원 선택</option>${people.filter((p) => p.empNo === x.empNo || !w.exc.some((e) => e.empNo === p.empNo)).map((p) => `<option value="${p.empNo}" ${p.empNo === x.empNo ? 'selected' : ''}>${esc(p.name)} (${p.empNo})</option>`).join('')}</select>` : `<b>${esc(x.name)}</b> <span class="help num">${esc(x.empNo)}</span>`}
+          return `<tr><td><b>${esc(x.name)}</b> <span class="help num">${esc(x.empNo)}</span>${x.isNew ? ' ' + badge('blue', '신규') : ''}
             <div class="help">${esc([x.dept, x.hrTitle].filter(Boolean).join(' · '))}</div></td>
           <td style="vertical-align:middle">${cur ? esc(cur.name) : '<span class="help">-</span>'}</td>
           <td><select class="sel" data-x="${x.id}" data-f="to" aria-label="적용 등급"><option value="">선택</option>${w.grades.map((g) => `<option value="${g.id}" ${g.id === x.to ? 'selected' : ''} ${cur && cur.id === g.id ? 'disabled' : ''}>${esc(g.name)}</option>`).join('')}</select></td>
           <td><input class="inp" value="${esc(x.reason || '')}" maxlength="100" placeholder="사유 (필수)" data-x="${x.id}" data-f="reason" aria-label="사유"></td>
           <td><div class="row" style="gap:4px"><input class="inp num" value="${esc(x.start || '')}" placeholder="YYYY.MM.DD" maxlength="10" data-x="${x.id}" data-f="start" aria-label="시작일"><span>~</span><input class="inp num" value="${esc(x.end || '')}" placeholder="무기한" maxlength="10" data-x="${x.id}" data-f="end" aria-label="종료일"></div>${end ? badge('gray', '만료') : ''}</td>
           <td class="act"><button type="button" class="btn sm danger" data-a="x-del" data-id="${x.id}">삭제</button></td></tr>`; }).join('')}
-        </tbody></table>` : `<div class="empty">${w.grades.length > 1 ? '개인 예외 지정이 없습니다. 모든 구성원에게 직책 매핑 등급이 적용됩니다.' : '등급이 2개 이상일 때 개인 예외를 지정할 수 있습니다.'}</div>`}`;
+        </tbody></table>` : `<div class="empty">${w.grades.length > 1 ? '개인 예외 지정이 없습니다. [조직도에서 구성원 선택]으로 추가할 수 있습니다.' : '등급이 2개 이상일 때 개인 예외를 지정할 수 있습니다.'}</div>`}`;
   }
 
   function itemBlock(it, w) {
@@ -184,9 +229,9 @@
         <input class="inp" value="${esc(it.unit || '')}" maxlength="30" placeholder="단위 (예: 1박 상한)" style="width:170px" data-i="${it.id}" data-f="unit" aria-label="단위">
         <label><input type="checkbox" ${it.byGrade ? 'checked' : ''} ${w.grades.length ? '' : 'disabled'} data-a="i-bygrade" data-id="${it.id}"> 등급별 차등</label>` : '<span class="help">사용 안 함 — 구성원에게 안내되지 않습니다</span>'}
         <span class="grow"></span><button type="button" class="btn sm ghost danger" data-a="i-del" data-id="${it.id}">항목 삭제</button></div>
-      ${it.on ? `<div class="pb"><div class="mx-wrap"><table class="mx"><thead><tr><th class="l" style="min-width:120px">${it.byGrade ? '구성원 등급' : '대상'}</th>
-          ${t.cols.map((col, ci) => `<th class="colh"><input class="inp" value="${esc(col)}" maxlength="24" placeholder="열 이름" data-col="${it.id}" data-ci="${ci}" aria-label="열 이름">${t.cols.length > 1 ? `<button type="button" class="cx" aria-label="${esc(col)} 열 삭제" data-a="c-del" data-id="${it.id}" data-ci="${ci}">×</button>` : ''}</th>`).join('')}
-          <th style="width:54px"><button type="button" class="btn sm ghost" data-a="c-add" data-id="${it.id}">+ 열</button></th></tr></thead>
+      ${it.on ? `<div class="pb"><div><table class="mx"><thead><tr><th class="l" style="width:112px">${it.byGrade ? '구성원 등급' : '대상'}</th>
+          ${t.cols.map((col, ci) => `<th class="colh"><input class="inp" value="${esc(col)}" title="${esc(col)}" maxlength="24" placeholder="열 이름" data-col="${it.id}" data-ci="${ci}" aria-label="열 이름">${t.cols.length > 1 ? `<button type="button" class="cx" aria-label="${esc(col)} 열 삭제" data-a="c-del" data-id="${it.id}" data-ci="${ci}">×</button>` : ''}</th>`).join('')}
+          <th style="width:50px"><button type="button" class="btn sm ghost" style="padding:0 4px" data-a="c-add" data-id="${it.id}">+ 열</button></th></tr></thead>
         <tbody>${t.rows.map((r, ri) => `<tr><td class="rh">${esc(r.label)}</td>${r.cells.map((v, ci) => `<td><input class="inp ${money && typeof v === 'number' ? 'cell' : 'l'} ${v == null || v === '' ? 'undef' : ''}" value="${v == null ? '' : esc(v)}" maxlength="60" placeholder="미정의" data-cell="${it.id}" data-ri="${ri}" data-ci="${ci}" aria-label="${esc(r.label)} · ${esc(t.cols[ci])}"></td>`).join('')}<td></td></tr>`).join('')}</tbody></table></div>
         <div class="line"><span>적용 조건</span><input class="inp" value="${esc(it.cond || '')}" maxlength="80" placeholder="선택 — 예: 출장 기간 10일 초과 시" data-i="${it.id}" data-f="cond" aria-label="적용 조건"></div>
         <div class="line"><span>구성원 안내</span><input class="inp" value="${esc(it.guide || '')}" maxlength="300" placeholder="선택 — 구성원에게 함께 보여줄 안내 문구" data-i="${it.id}" data-f="guide" aria-label="구성원 안내"></div></div>` : ''}</div>`;
@@ -329,6 +374,13 @@
   /* ================= Description ================= */
   const item = (i) => `<div class="desc-item" data-d="${i[0]}"><i class="mk">${i[0]}</i><div><div class="dt">${i[1]}</div><div class="db">${i[2]}</div></div></div>`;
   function descData() {
+    if (S.org) return { sid: 'TRIP-ADM-POL-02b-1', title: '조직도 구성원 선택 팝업', sum: '개인 예외 지정 대상 구성원을 조직도 트리에서 찾아 선택한다. 등급 규정 탭의 [+ 조직도에서 구성원 선택]으로 호출한다.', items: [
+      [1, '팝업', '관리 모달 위에 겹쳐 뜬다. 관리 중인 법인의 조직도만 보여준다(다른 법인 구성원은 선택 불가). 열릴 때 최상위(법인)와 1단계 조직이 펼쳐져 있고 법인 전체 구성원이 목록에 나온다. ×·취소·Esc는 선택을 버리고 닫는다.'],
+      [2, '검색', '이름 또는 사번 부분 일치(30자, 대소문자 무시, 입력 즉시 반영). 검색어가 있으면 조직 선택과 무관하게 법인 전체에서 찾고, 지우면 선택한 조직의 목록으로 돌아간다. 결과가 없으면 "검색 결과가 없습니다."'],
+      [3, '조직 트리', '법인 › 상위 조직 › 하위 조직 순의 트리. 조직명 옆 숫자는 하위 조직을 포함한 구성원 수. 조직을 누르면 선택(검정 반전)되고 하위가 펼쳐지며, 선택된 조직을 다시 누르면 접힌다. 조직을 선택하면 하위 조직 구성원까지 우측 목록에 나온다.'],
+      [4, '구성원 목록', '체크박스로 여러 명을 선택할 수 있다. 행마다 이름·사번, 조직 경로·직책, 현재 매핑 등급을 보여준다. 이미 개인 예외가 지정된(또는 이번에 추가해 둔) 구성원은 "지정됨" 배지와 함께 비활성. 선택한 구성원은 하단에 칩으로 모아 보여주고 ×로 해제한다. 조직·검색을 바꿔도 선택은 유지된다.'],
+      [5, '선택 완료', '1명 이상 선택 시 활성. 누르면 팝업을 닫고 개인 예외 지정 표에 선택한 순서대로 행을 추가한 뒤 첫 신규 행의 적용 등급으로 포커스를 옮긴다. 이 시점에는 저장되지 않으며, 적용 등급·사유를 입력하고 관리 모달의 [저장] → 컨펌 팝업을 거쳐야 반영된다.'],
+    ], pol: ['개인 예외 지정 대상은 조직도 트리에서 선택한다. 직접 입력은 받지 않는다.', '구성원의 소속·직책은 인사정보 값을 그대로 쓰며 이 화면에서 수정하지 않는다.'], iss: ['<b>조직도 컴포넌트</b> — HYBENET 공통 조직도 컴포넌트 재사용 여부와 조직 단계(depth) 표시 범위.', '<b>조회 범위</b> — 관리 중인 법인만 보여주도록 가정했다. 겸직·파견 구성원의 소속 법인 기준 확인 필요.', '<b>퇴직·휴직자</b> — 조직도에서 제외할지, 기존 예외 지정은 어떻게 처리할지.'] };
     if (S.cf && S.cf.kind === 'save') return { sid: 'TRIP-ADM-POL-03', title: '변경 내용 확인 팝업', sum: '관리 모달의 [저장]을 누르면 뜨는 최종 확인 단계. 모든 수정은 이 팝업을 거쳐야 저장된다.', items: [
       [1, '팝업 호출', '관리 모달에서 변경이 1건 이상이고 입력 검증을 통과했을 때만 뜬다. 검증 실패 시 팝업 없이 해당 탭으로 이동해 토스트로 사유를 알린다. 팝업은 관리 모달 위에 겹쳐 뜨고, 바깥 클릭으로는 닫히지 않는다.'],
       [2, '변경 내역 표', '3개 탭의 변경을 한 번에 모아 구분(기안 항목 / 등급 규정 / 개인 예외 / 여비규정) 순으로 보여준다. 값 변경은 항목 단위로 묶어 "값 N칸 변경"으로 표기하고 앞 3건의 전·후 값을 보여준다. 이 표의 행이 그대로 변경 이력 1건씩이 된다.'],
@@ -349,9 +401,9 @@
         [4, '구성원 등급 표', '<ul><li><code>+ 등급 추가</code>: 표 맨 아래에 빈 행 추가(첫 등급은 자동으로 기본 등급).</li><li>등급명: 필수, 20자, 법인 내 중복 불가. 설명: 선택, 60자.</li><li>▲▼로 순서를 바꾸며, 이 순서가 여비규정 표의 행 순서가 된다.</li><li><code>삭제</code>: 개인 예외 지정의 적용 등급으로 쓰이고 있으면 삭제 불가(토스트). 기본 등급은 다른 등급을 기본으로 지정한 뒤 삭제.</li><li>등급 추가·삭제·이름 변경은 같은 모달의 여비규정 표(등급별 차등 항목)에 즉시 반영된다. 추가된 등급의 값은 미정의.</li></ul>'],
         [5, '매핑 직책', '인사정보 직책을 칩으로 표시. <code>+ 직책</code> 선택 상자에는 아직 어느 등급에도 매핑되지 않은 직책만 나온다(한 직책은 한 등급에만). 칩의 ×로 해제. 미매핑 직책은 표 아래에 개수·목록과 함께 "기본 등급 적용"으로 안내한다.'],
         [6, '기본 등급', '라디오로 법인당 1개 지정(필수). 어느 등급에도 매핑되지 않은 직책의 구성원에게 적용된다.'],
-        [7, '개인 예외 지정', '<ul><li><code>+ 예외 지정 추가</code>: 등급이 2개 이상일 때 활성. 빈 행이 추가되고 구성원을 선택하면 소속·직책·매핑 등급이 자동 표시된다. 이미 지정된 구성원은 선택 목록에서 제외.</li><li>적용 등급: 매핑 등급과 같은 등급은 선택 불가. 사유: 필수, 100자.</li><li>기존 건은 구성원을 바꿀 수 없고 적용 등급·사유·기간만 수정한다. <code>삭제</code>는 행을 제거한다.</li></ul>'],
+        [7, '개인 예외 지정', '<ul><li><code>+ 조직도에서 구성원 선택</code>: 등급이 2개 이상일 때 활성. 조직도 선택 팝업(TRIP-ADM-POL-02b-1)을 띄우고, 선택한 구성원 수만큼 행이 추가된다. 추가된 행에는 "신규" 배지와 소속·직책·매핑 등급이 자동 표시되고 시작일은 오늘로 채워진다.</li><li>적용 등급: 매핑 등급과 같은 등급은 선택 불가. 사유: 필수, 100자.</li><li>기존 건은 구성원을 바꿀 수 없고 적용 등급·사유·기간만 수정한다. <code>삭제</code>는 행을 제거한다.</li></ul>'],
         [8, '적용 기간', '시작일 필수, 종료일 선택(비우면 무기한). YYYY.MM.DD, 종료일은 시작일 이후. 종료일이 지난 건은 "만료" 배지를 표시하고 직책 매핑 등급으로 돌아간다. 과거 시작일(소급)도 허용.'], common[1]],
-        pol: ['등급은 법인별로 정의하고 인사정보 직책에 매핑해 자동 판정한다. 개인 예외 지정은 적용 기간 동안 직책 매핑보다 우선한다.', '등급 기준 변경은 여비규정 표에 즉시 반영한다(추가=미정의 행, 삭제=행과 값 삭제, 이름 변경=값 유지).', '입력 검증은 [저장] 시점에 한 번에 한다.'], iss: ['<b>매핑 키</b> — 인사정보에서 가져오는 값이 직책인지 직급인지, 법인별 코드 체계 확인 필요.', '<b>구성원 선택 방식</b> — 프로토타입은 샘플 목록 선택 상자다. 실제는 인사정보 구성원 검색(이름·사번) 컴포넌트가 필요하다.', '<b>예외 지정 승인</b> — 관리자 등록만으로 충분한지, 별도 승인·증빙이 필요한지.', '<b>직책 변경 시 예외 지정 유지 여부</b> — 발령으로 직책이 바뀐 구성원의 예외 지정 처리.'] };
+        pol: ['등급은 법인별로 정의하고 인사정보 직책에 매핑해 자동 판정한다. 개인 예외 지정은 적용 기간 동안 직책 매핑보다 우선한다.', '등급 기준 변경은 여비규정 표에 즉시 반영한다(추가=미정의 행, 삭제=행과 값 삭제, 이름 변경=값 유지).', '입력 검증은 [저장] 시점에 한 번에 한다.'], iss: ['<b>매핑 키</b> — 인사정보에서 가져오는 값이 직책인지 직급인지, 법인별 코드 체계 확인 필요.', '<b>조직도 컴포넌트</b> — HYBENET 공통 조직도 컴포넌트를 재사용하는지, 관리 중인 법인의 조직만 보여주는지(프로토타입 가정), 겸직·파견 구성원을 어느 법인 소속으로 볼지 확인 필요.', '<b>예외 지정 승인</b> — 관리자 등록만으로 충분한지, 별도 승인·증빙이 필요한지.', '<b>직책 변경 시 예외 지정 유지 여부</b> — 발령으로 직책이 바뀐 구성원의 예외 지정 처리.'] };
       return { sid: 'TRIP-ADM-POL-02c', title: '관리 모달 — 여비규정 설정', sum: '교통 / 숙박 / 일비·식비 / 기타 4개 분류로 항목과 값을 입력한다. 기준 정보 관리·구성원 안내용이며 자동 검증·차단은 없다.', items: [common[0],
         [9, '여비규정 설정', '원문 문서(선택, 파일명 80자 — 실제는 파일 첨부)를 함께 관리한다. 개정 버전 목록은 두지 않고 현재 값 1벌만 편집한다. 과거 값은 변경 이력에서 확인한다.'],
         [10, '분류 선택', '교통 / 숙박 / 일비·식비 / 기타. 분류별 항목 수를 함께 표시하고, 선택한 분류의 항목만 아래에 나열한다. 값이 빈 칸이 있으면 우측에 "미정의 N칸"을 주황색으로 표시한다.'],
@@ -383,16 +435,16 @@
     $('#desc').innerHTML = `<div class="desc-in"><h2>${d.title}</h2><div class="dsub">${d.sid} · ${d.sum}</div><h4>화면 상세</h4>${d.items.map(item).join('')}
       ${d.pol.length ? '<h4>정책</h4><div class="desc-item" style="grid-template-columns:1fr"><div class="db"><ul>' + d.pol.map((p) => `<li>${p}</li>`).join('') + '</ul></div></div>' : ''}
       ${d.iss.length ? '<h4>확인 필요 사항</h4>' + d.iss.map((p) => `<div class="issue">${p}</div>`).join('') : ''}
-      <h4>화면 목록</h4><div class="desc-item" style="grid-template-columns:1fr"><div class="db"><ul><li><code>POL-01</code> 마스터 그리드</li><li><code>POL-02a~c</code> 관리 모달 (기안 항목 관리 / 등급 규정 / 여비규정 설정)</li><li><code>POL-03</code> 변경 내용 확인 팝업</li><li><code>POL-04</code> 변경 이력</li></ul></div></div></div>`;
+      <h4>화면 목록</h4><div class="desc-item" style="grid-template-columns:1fr"><div class="db"><ul><li><code>POL-01</code> 마스터 그리드</li><li><code>POL-02a~c</code> 관리 모달 (기안 항목 관리 / 등급 규정 / 여비규정 설정)</li><li><code>POL-02b-1</code> 조직도 구성원 선택 팝업</li><li><code>POL-03</code> 변경 내용 확인 팝업</li><li><code>POL-04</code> 변경 이력</li></ul></div></div></div>`;
   }
 
   /* ================= 렌더 · 이벤트 ================= */
   function toast(msg) { document.querySelectorAll('.toast').forEach((e) => e.remove()); const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 3000); }
   function render(keep) {
-    const xb = $('#xb'), st = xb ? xb.scrollTop : 0, ae = document.activeElement, sel = ae && ae.dataset && ae.dataset.a === 'q' ? '[data-a="q"]' : ae && ae.dataset && ae.dataset.h === 'q' ? '[data-h="q"]' : null;
+    const xb = $('[data-ov="m"]'), st = xb ? xb.scrollTop : 0, ae = document.activeElement, sel = ae && ae.dataset && ae.dataset.a === 'q' ? '[data-a="q"]' : ae && ae.dataset && ae.dataset.h === 'q' ? '[data-h="q"]' : null;
     if (!keep) $('#view').innerHTML = S.view === 'history' ? historyView() : gridView();
-    $('#layer').innerHTML = (S.m ? modalHtml() : '') + (S.cf ? confirmHtml() : '');
-    if ($('#xb')) $('#xb').scrollTop = st;
+    $('#layer').innerHTML = (S.m ? modalHtml() : '') + (S.m && S.org ? orgHtml() : '') + (S.cf ? confirmHtml() : '');
+    if ($('[data-ov="m"]')) $('[data-ov="m"]').scrollTop = st;
     if (S.m && S.m.tab === 'policy' && S.m.ro) $('#xb').querySelectorAll('.pitem input,.pitem select,.pitem button,[data-a="i-add"],[data-a="p-copy"],[data-a="p-template"],[data-meta]').forEach((e) => { e.disabled = true; });
     const fm = $('.pitem'); if (fm && !$('.pitem .mk')) { const ph = $('.pitem .ph .inp.nm'); if (ph) ph.insertAdjacentHTML('afterend', mk(11)); }
     if (sel && !S.m) { const e = $(sel); if (e) { e.focus(); e.setSelectionRange(e.value.length, e.value.length); } }
@@ -406,7 +458,7 @@
     manage: (d) => openManage(d.code),
     history: () => { S.view = 'history'; S.hist = { corp: '', cat: '', q: '' }; render(); window.scrollTo(0, 0); },
     grid: () => { S.view = 'grid'; render(); },
-    'm-tab': (d) => { S.m.tab = d.v; mrender(); $('#xb').scrollTop = 0; },
+    'm-tab': (d) => { S.m.tab = d.v; mrender(); $('[data-ov="m"]').scrollTop = 0; },
     'm-close': () => closeModal(),
     'm-history': () => { const code = S.m.code; closeModal(() => { S.view = 'history'; S.hist = { corp: code, cat: '', q: '' }; }); },
     'm-save': () => { const v = validate(); if (v) { S.m.tab = v[0]; if (v[2]) S.m.cat = v[2]; mrender(); return toast(v[1]); } S.cf = { kind: 'save', diffs: diffs(), when: corpOf(S.m.code).pending ? 'date' : 'now', date: corpOf(S.m.code).pending ? corpOf(S.m.code).pending.from : '', reason: '', err: '' }; mrender(); $('#cf-reason').focus(); },
@@ -418,7 +470,13 @@
     'g-def': (d) => { S.m.w.grades.forEach((g) => { if (g.id === d.id) g.isDefault = true; else delete g.isDefault; }); mrender(); },
     'g-unmap': (d) => { const g = S.m.w.grades.find((x) => x.id === d.id); g.hr = g.hr.filter((t) => t !== d.t); mrender(); },
     // 개인 예외
-    'x-add': () => { S.m.w.exc.push({ id: uid('x'), isNew: true, empNo: '', name: '', dept: '', hrTitle: '', to: '', reason: '', start: D.TODAY, end: '' }); mrender(); },
+    'x-add': () => { const tree = orgTree(corpOf(S.m.code)); S.org = { tree, open: new Set([tree.id].concat(tree.children.map((n) => n.id))), sel: tree.id, q: '', picked: new Set() }; mrender(); $('#org-q').focus(); },
+    'o-node': (d) => { const o = S.org, n = findNode(o.tree, d.id); if (o.sel === d.id && n.children.length) { if (o.open.has(d.id)) o.open.delete(d.id); else o.open.add(d.id); } else { o.sel = d.id; o.open.add(d.id); } o.q = ''; mrender(); const b = document.querySelector('.org-node.on'); if (b) b.focus(); },
+    'o-unpick': (d) => { S.org.picked.delete(d.e); mrender(); },
+    'o-close': () => { S.org = null; mrender(); },
+    'o-ok': () => { const o = S.org, all = allMembers(o.tree), w = S.m.w; let first = null;
+      [...o.picked].forEach((e) => { const p = all.find((x) => x.empNo === e), id = uid('x'); first = first || id; w.exc.push({ id, isNew: true, empNo: p.empNo, name: p.name, dept: p.dept, hrTitle: p.hrTitle, to: '', reason: '', start: D.TODAY, end: '' }); });
+      const n = o.picked.size; S.org = null; mrender(); const el = $(`[data-x="${first}"][data-f="to"]`); if (el) { el.focus(); el.scrollIntoView({ block: 'center' }); } toast(`구성원 ${n}명을 추가했습니다. 적용 등급과 사유를 입력해 주세요.`); },
     'x-del': (d) => { const l = S.m.w.exc; l.splice(l.findIndex((x) => x.id === d.id), 1); mrender(); },
     // 여비규정
     'p-cat': (d) => { S.m.cat = d.v; mrender(); },
@@ -452,6 +510,7 @@
     if (d.a === 'f') { S.f = t.value; render(); }
     else if (d.h && d.h !== 'q') { S.hist[d.h] = t.value; render(); }
     else if (d.a === 'g-def') ACT['g-def'](d);
+    else if (d.a === 'o-pick') { if (t.checked) S.org.picked.add(t.value); else S.org.picked.delete(t.value); $('#org-picked').innerHTML = orgPickedHtml(); $('[data-a="o-ok"]').disabled = !S.org.picked.size; }
     else if (d.a === 'g-map' && t.value) { S.m.w.grades.find((g) => g.id === d.id).hr.push(t.value); mrender(); }
     else if (d.a === 'i-type') { const it = wItem(d.id); it.type = t.value; if ((it.type === 'cap' || it.type === 'flat') && !it.cur) it.cur = corpOf(S.m.code).cur; mrender(); }
     else if (d.a === 'i-cur') { wItem(d.id).cur = t.value; mrender(); }
@@ -463,6 +522,7 @@
     const t = e.target, d = t.dataset;
     if (d.a === 'q') { S.q = t.value; render(); }
     else if (d.h === 'q') { S.hist.q = t.value; render(); }
+    else if (t.id === 'org-q') { S.org.q = t.value; $('#org-list').innerHTML = orgListHtml(); document.querySelectorAll('.org-node.on').forEach((n) => n.classList.toggle('on', !t.value.trim())); return; }
     else if (!S.m) return;
     else if (d.g) { const g = S.m.w.grades.find((v) => v.id === d.g); g[d.f] = t.value; if (d.f === 'name') syncRows(S.m.w.items, S.m.w.grades); }
     else if (d.x) S.m.w.exc.find((v) => v.id === d.x)[d.f] = t.value;
@@ -472,7 +532,7 @@
     else if (d.meta) S.m.w.meta[d.meta] = t.value;
     if (S.m && !S.cf) { const sv = $('[data-a="m-save"]'); if (sv) { sv.disabled = !dirty(); sv.previousElementSibling.previousElementSibling.textContent = dirty() ? '저장하지 않은 변경이 있습니다' : '변경 없음'; } $('.xtabs').innerHTML = tabsHtml(); }
   });
-  document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; const extra = document.querySelector('#layer > .ov.top:last-child'); if (S.cf) { S.cf = null; mrender(); } else if (extra && !extra.dataset.ov) extra.remove(); else if (S.m) closeModal(); });
+  document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; const extra = document.querySelector('#layer > .ov.top:last-child'); if (S.org) { S.org = null; mrender(); } else if (S.cf) { S.cf = null; mrender(); } else if (extra && !extra.dataset.ov) extra.remove(); else if (S.m) closeModal(); });
   document.addEventListener('mouseover', (e) => { const m = e.target.closest('.mk[data-mk], .desc-item[data-d]'); document.querySelectorAll('.hot').forEach((x) => x.classList.remove('hot')); if (!m) return; const no = m.dataset.mk || m.dataset.d; document.querySelectorAll(`.mk[data-mk="${no}"], .desc-item[data-d="${no}"]`).forEach((x) => x.classList.add('hot')); });
   $('#desc-toggle').onchange = (e) => document.body.classList.toggle('desc-on', e.target.checked);
   $('#mk-toggle').onchange = (e) => document.body.classList.toggle('mk-off', !e.target.checked);
