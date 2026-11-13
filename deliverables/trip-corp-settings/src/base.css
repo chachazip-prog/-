@@ -78,7 +78,7 @@ body.desc-on .frame{grid-template-columns:188px minmax(0,1fr) 360px}
 .corp-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
 .corp-head .cd{font-size:16px;font-weight:800;color:var(--ink)}
 .corp-head .nm{font-size:13px;color:var(--sub)}
-.subtabs{display:flex;gap:6px;margin:14px 0 18px;border-bottom:1px solid var(--line)}
+.subtabs{display:flex;align-items:center;gap:6px;margin:14px 0 18px;border-bottom:1px solid var(--line)}
 .subtabs .s{background:none;border:0;padding:8px 12px 10px;font-size:12px;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
 .subtabs .s.on{color:var(--ink);font-weight:800;border-bottom-color:var(--ink)}
 .subtabs .s .cnt{color:var(--blue);margin-left:3px}

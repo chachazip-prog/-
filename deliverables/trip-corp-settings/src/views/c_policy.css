@@ -1,0 +1,123 @@
+/* ===== 여비규정 (TRIP-ADM-CORP-03) ===== */
+.policy-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:12px}
+.policy-top .sec-desc{margin-bottom:0}
+.policy-acts{display:flex;gap:6px;align-items:center;flex:none}
+
+/* 현재 적용 요약 */
+.policy-now{background:var(--bg-panel);border-radius:4px;padding:12px 14px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 18px;align-items:start}
+.policy-now .policy-nowv{grid-row:1 / span 2;min-width:92px}
+.policy-now .policy-nowv .k{font-size:11px;color:var(--sub);display:block;margin-bottom:2px}
+.policy-now .policy-nowv b{font-size:20px;font-weight:800;color:var(--ink);line-height:1.2;margin-right:6px}
+.policy-now .policy-nowt{font-size:13px;font-weight:700;color:var(--ink)}
+.policy-meta{display:flex;flex-wrap:wrap;gap:3px 18px;font-size:11px;color:var(--sub)}
+.policy-meta b{color:var(--text);font-weight:600}
+.policy-sched{margin-top:8px;padding:8px 12px;border:1px solid #cfe5ff;background:var(--blue-bg);border-radius:var(--radius);font-size:12px;color:#0b5cad}
+.policy-sched b{color:var(--blue)}
+.policy-warn{margin-top:8px;padding:8px 12px;border:1px solid #f0d9b5;background:var(--orange-bg);border-radius:var(--radius);font-size:12px;color:#8a4b00;display:flex;gap:10px;align-items:center;justify-content:space-between}
+.policy-warn .btn{flex:none}
+
+/* 개정 버전 목록 */
+.policy-vers{margin-top:14px}
+.policy-vers td:first-child,.policy-vers th:first-child{width:34px;text-align:center;padding-right:0}
+.policy-vers tr.sel td{background:#fafafa}
+.policy-vers tr.sel td:first-child{box-shadow:inset 2px 0 0 var(--ink)}
+.policy-vers tr.sel .policy-vno{font-weight:800}
+.policy-vers .policy-vno{color:var(--ink);font-weight:600}
+.policy-vers .policy-vt{max-width:250px}
+.policy-vers .policy-from{display:block;font-size:11px;color:var(--mute)}
+.policy-vers input[type=radio]{accent-color:#111;margin:0;vertical-align:middle}
+
+/* 선택 버전 헤더 */
+.policy-vh{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:6px}
+.policy-vh .sec-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.policy-lock{font-size:11px;color:var(--mute);text-align:right;line-height:1.6;max-width:300px}
+
+/* 분류 · 항목 */
+.policy-cat{margin-top:22px}
+.policy-cat > .h3{margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--ink)}
+.policy-item{padding:14px 0 16px;border-bottom:1px solid var(--line)}
+.policy-item.off{padding:10px 0}
+.policy-item.off .policy-ih .policy-nm,.policy-item.off .policy-body{opacity:.5}
+.policy-ih{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.policy-nm{font-size:13px;font-weight:800;color:var(--ink);margin-right:4px}
+.policy-unit{font-size:11px;color:var(--sub);margin-left:6px}
+.policy-ih .policy-r{margin-left:auto;display:flex;align-items:center;gap:8px}
+.policy-body{margin-top:10px}
+.policy-kv{display:grid;grid-template-columns:76px minmax(0,1fr);gap:8px;font-size:12px;margin-top:8px;line-height:1.6}
+.policy-kv .k{font-size:11px;color:var(--sub);padding-top:1px}
+.policy-kv .v.none{color:var(--faint)}
+
+/* 값 매트릭스 */
+.policy-mxw{overflow-x:auto;max-width:100%}
+.policy-mx{border-collapse:separate;border-spacing:0;border-top:1px solid var(--line);border-left:1px solid var(--line)}
+.policy-mx th,.policy-mx td{border-width:0 1px 1px 0}
+.policy-mx th:first-child,.policy-mx td.rh{position:sticky;left:0;z-index:1;min-width:128px;width:128px;text-align:left}
+.policy-mx th:first-child{background:var(--bg-head)}
+.policy-mx td{min-width:86px}
+.policy-mx.narrow{width:auto;min-width:340px}
+.policy-mx.narrow td{min-width:160px}
+.policy-mx td.policy-undef{background:var(--orange-bg);color:#b25f00;font-weight:700;font-size:11px;text-align:center}
+.policy-mx.edit td{padding:4px 5px}
+.policy-mx.edit td.rh{padding:7px 10px}
+.policy-mx.edit th{padding:5px 6px}
+.policy-mx.edit th:first-child{padding:7px 10px}
+.policy-mx.edit .inp.cell{min-width:82px}
+.policy-mx.edit .inp.cell::placeholder{color:#d08a2e;font-size:11px}
+.policy-colin{display:flex;align-items:center;gap:2px;min-width:130px}
+.policy-x{border:0;background:none;color:var(--mute);font-size:15px;line-height:1;width:22px;height:26px;padding:0;border-radius:var(--radius);flex:none}
+.policy-x:hover{color:var(--red)}
+.policy-x:focus-visible,.policy-vers input:focus-visible,.policy-seg button:focus-visible,.policy-pick:focus-within{outline:2px solid var(--blue);outline-offset:1px}
+.policy-tfoot{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-top:6px}
+
+/* 편집 */
+.policy-bar{position:sticky;top:36px;z-index:5;background:#fff;border-bottom:1px solid var(--ink);padding:10px 0 12px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:-6px}
+.policy-bar .t{font-size:15px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.policy-bar .s{font-size:11px;color:var(--sub);margin-top:2px}
+.policy-item.edit{padding:16px 0 18px}
+.policy-eh{display:flex;align-items:center;gap:8px}
+.policy-eh .inp.nm{width:200px;font-weight:700}
+.policy-eh .policy-r{margin-left:auto;display:flex;align-items:center;gap:4px}
+.policy-set{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin:12px 0 10px;padding:10px 12px;background:var(--bg-head);border-radius:var(--radius)}
+.policy-f{display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--sub);min-width:0}
+.policy-f .sel{width:118px}
+.policy-f .inp{width:210px}
+.policy-f.sw{min-height:49px;justify-content:space-between}
+.policy-f.sw .row{height:30px;gap:0}
+.policy-f.wide{flex:1 1 100%}
+.policy-f.wide .inp{width:100%}
+.policy-cnt{font-size:11px;color:var(--mute);text-align:right;margin-top:2px}
+.policy-add{margin-top:18px;padding:14px;border:1px dashed var(--line-strong);border-radius:4px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+
+/* 빈 상태 */
+.policy-empty .row{justify-content:center;margin-top:14px}
+.policy-pre{margin-top:14px;border:1px solid var(--line);border-radius:4px;padding:14px 16px}
+.policy-pre .t{font-size:13px;font-weight:800;color:var(--ink);margin-bottom:6px}
+.policy-pre ol{margin:0;padding-left:18px;font-size:12px;line-height:1.9}
+.policy-pre li b{margin-right:6px}
+
+/* 모달 */
+.policy-box{background:var(--bg-head);border-radius:var(--radius);padding:10px 12px;margin-top:12px;font-size:12px;line-height:1.7}
+.policy-box ul{margin:2px 0 0;padding-left:16px}
+.policy-box b{color:var(--ink)}
+.policy-err{color:var(--red);font-size:11px;margin-top:8px;min-height:16px}
+.policy-pick{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;padding:10px 4px;border-bottom:1px solid var(--line);cursor:pointer;align-items:start}
+.policy-pick input{margin:2px 0 0;accent-color:#111}
+.policy-pick .n{font-weight:700;color:var(--ink)}
+.policy-pick .d{font-size:11px;color:var(--sub)}
+.policy-pick.dis{cursor:not-allowed;opacity:.5}
+.policy-seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden}
+.policy-seg button{border:0;background:#fff;height:28px;padding:0 12px;font-size:12px;border-right:1px solid var(--line-strong)}
+.policy-seg button:last-child{border-right:0}
+.policy-seg button[aria-pressed="true"]{background:var(--ink);color:#fff;font-weight:700}
+.policy-pv h5{font-size:12px;font-weight:800;color:var(--ink);margin:18px 0 0;padding-bottom:6px;border-bottom:1px solid var(--ink)}
+.policy-pvi{padding:10px 0;border-bottom:1px solid var(--line)}
+.policy-pvi .hd{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.policy-pvi .hd b{color:var(--ink)}
+.policy-pvi .hd span{font-size:11px;color:var(--sub)}
+.policy-pvl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 20px;margin-top:6px}
+.policy-pvl > div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px dotted var(--line);font-size:12px}
+.policy-pvl > div span{color:var(--sub)}
+.policy-pvl > div b{color:var(--ink);text-align:right}
+.policy-pvl.one{grid-template-columns:minmax(0,1fr)}
+.policy-pvl .u{color:#b25f00;font-weight:700}
+.policy-pvg{font-size:11px;color:var(--sub);margin-top:6px;line-height:1.6}

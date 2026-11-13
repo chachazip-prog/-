@@ -1,0 +1,14 @@
+/* 변경 이력 (TRIP-ADM-CORP-05) */
+.history-cnt{font-style:normal;color:var(--blue);margin-left:2px}
+.history-filters{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:12px 0}
+.history-f{height:28px;padding:0 11px;border:1px solid var(--line-strong);background:#fff;border-radius:var(--radius);font-size:12px;color:var(--sub);white-space:nowrap}
+.history-f .num{color:var(--mute);margin-left:2px}
+.history-f:hover{border-color:#999}
+.history-f.on{border-color:var(--ink);background:var(--ink);color:#fff;font-weight:700}
+.history-f.on .num{color:#ccc}
+.history-f:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+.history-tbl .history-no{width:52px}
+.history-tbl .history-at{width:128px;white-space:nowrap}
+.history-tbl .history-cat{width:92px}
+.history-tbl .history-by{width:80px}
+.history-wrap .empty .link{margin-top:4px}

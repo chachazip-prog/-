@@ -1,0 +1,61 @@
+/* 기안 항목 설정 (TRIP-ADM-CORP-02) */
+.draft-wrap{container-type:inline-size}
+.draft-head{align-items:flex-start;gap:4px}
+.draft-head .sec-desc{margin-bottom:0}
+.draft-chips{margin:12px 0 0}
+.draft-notice{display:flex;align-items:center;gap:12px;margin-top:12px;padding:11px 14px;background:var(--orange-bg);border-radius:var(--radius);font-size:12px;line-height:1.6;color:#6b4a14}
+.draft-notice b{color:#8a4b00}
+.draft-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,350px);gap:22px;margin-top:18px;align-items:start}
+@container (max-width:760px){.draft-cols{grid-template-columns:minmax(0,1fr)}}
+.draft-tbl td{vertical-align:top;padding:14px 10px}
+.draft-tbl .draft-tgc{width:96px;white-space:nowrap}
+.draft-tbl .draft-chg{width:104px;font-size:11px;line-height:1.6}
+.draft-nm{font-size:13px;font-weight:800;color:var(--ink)}
+.draft-off .draft-nm{color:var(--sub)}
+.draft-ds{font-size:11px;color:var(--sub);margin-top:2px}
+.draft-meta{margin-top:7px}
+.draft-eff{font-size:11px;color:var(--mute);margin-top:7px}
+.draft-eff b{font-weight:700;margin-right:3px}
+.draft-eff.now{color:var(--orange)}
+.draft-foot{margin:10px 0 0}
+/* 미리보기 */
+.draft-pv-head{margin-bottom:8px;min-height:20px}
+.draft-pv-h{font-size:13px;font-weight:800;color:var(--ink);margin:0}
+.draft-pv-opt{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--sub);cursor:pointer;white-space:nowrap}
+.draft-pv-opt input{margin:0}
+.draft-pv{border:1px solid var(--line-strong);border-radius:4px;padding:14px 14px 12px;font-size:11px;background:#fff}
+.draft-pv-top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.draft-pv-title{font-size:13px;font-weight:800;color:var(--ink)}
+.draft-pv-acts{display:flex;gap:4px}
+.draft-pv-btn{display:inline-flex;align-items:center;height:22px;padding:0 7px;border:1px solid var(--line-strong);border-radius:2px;font-size:10px;font-weight:600;white-space:nowrap;background:#fff}
+.draft-pv-btn.pri{background:var(--ink);border-color:var(--ink);color:#fff}
+.draft-pv-row{display:grid;grid-template-columns:72px minmax(0,1fr);gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}
+.draft-pv-row .lb.req:before{content:"•";color:var(--red);margin-right:3px}
+.draft-pv-inp{display:block;border:1px solid var(--line-strong);border-radius:2px;padding:3px 7px;color:var(--mute);min-width:0}
+.draft-pv-inp.dis{background:var(--bg-head);color:var(--faint);border-color:var(--line)}
+.draft-pv-two{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.draft-pv-lnk{text-decoration:underline}
+.draft-pv-sec{padding:14px 0 12px;border-bottom:1px solid var(--line)}
+.draft-pv-sec .draft-pv-row:last-child{border-bottom:0;padding-bottom:0}
+.draft-pv-st{font-size:13px;font-weight:800;color:var(--ink);display:flex;align-items:center;gap:6px}
+.draft-pv-sd{margin:3px 0 8px;color:var(--sub);font-size:10px;line-height:1.5}
+.draft-pv-line{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;align-items:center}
+.draft-pv-line .chip{font-size:10px;padding:3px 7px}
+.draft-pv-zero{color:var(--green) !important}
+.draft-pv-sec.off{border:1px dashed var(--line-strong);border-radius:3px;padding:9px 10px;margin:10px 0;background:#fcfcfc}
+.draft-pv-sec.off .draft-pv-st{color:var(--faint);font-size:12px}
+.draft-pv-sec.off .draft-pv-sd{margin:2px 0 0;color:var(--faint)}
+.draft-pv-sec.off + .draft-pv-sec.off{margin-top:-4px}
+.draft-pv-none{padding:14px 0;text-align:center;color:var(--mute);border-bottom:1px solid var(--line)}
+.draft-pv-etc{display:flex;align-items:flex-start;gap:6px;padding-top:11px;font-size:10px;color:var(--sub);flex-wrap:wrap}
+.draft-pv-etc .dim{color:var(--faint)}
+.draft-pv-chk{width:11px;height:11px;border:1px solid var(--line-strong);border-radius:2px;flex:none;margin-top:2px}
+/* 확인 · 복사 모달 */
+.draft-cf .frow{grid-template-columns:96px minmax(0,1fr);align-items:start;padding:9px 0}
+.draft-cf .frow:last-child{border-bottom:0}
+.draft-cf-chg{display:flex;align-items:center;gap:8px}
+.draft-arrow{color:var(--mute)}
+.draft-cf-note{margin:10px 0 0;line-height:1.6}
+.draft-cf-p{margin:4px 0 8px}
+.draft-copy-diff{margin-top:12px}
+.draft-copy-tbl td,.draft-copy-tbl th{padding:8px 10px}

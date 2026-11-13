@@ -1,0 +1,19 @@
+/* 전체 법인 현황 (TRIP-ADM-CORP-01) */
+.overview-bar{margin:12px 0 12px;gap:10px}
+.overview-q{width:200px}
+.overview-warn{color:var(--orange) !important}
+.overview-tbl th,.overview-tbl td{padding:9px 7px}
+.overview-tbl th{vertical-align:middle;line-height:1.35}
+.overview-tbl th.overview-grp{border-bottom:1px solid var(--line-strong);padding:6px 7px}
+.overview-tbl th.overview-sub{font-weight:600;color:var(--sub);padding:6px 4px;white-space:normal;width:68px}
+.overview-code,.overview-name{background:none;border:0;padding:0;text-align:left;color:var(--ink)}
+.overview-code{font-weight:800}
+.overview-code:hover,.overview-name:hover{text-decoration:underline}
+.overview-code:focus-visible,.overview-name:focus-visible,.overview-pol:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+.overview-pol{display:block;background:none;border:0;padding:0;text-align:left;width:100%}
+.overview-pol-b{display:flex;flex-wrap:wrap;gap:3px}
+.overview-pol-d{display:block;font-size:11px;color:var(--mute);margin-top:3px;line-height:1.45}
+.overview-pol:hover .overview-pol-d{color:var(--text);text-decoration:underline}
+.overview-upd{font-size:11px;line-height:1.5;white-space:nowrap}
+.overview-foot{margin:10px 0 0}
+.overview-nw{white-space:nowrap}

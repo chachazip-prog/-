@@ -1,0 +1,71 @@
+/* ===== 등급 · 지역 기준 (TRIP-ADM-CORP-04) ===== */
+.criteria-intro{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg-panel);border-radius:4px;padding:10px 14px;font-size:12px;margin-bottom:22px}
+.criteria-intro .grow{color:var(--sub)}
+.criteria-intro b{color:var(--ink)}
+.criteria-hd{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:10px}
+.criteria-hd .sec-desc{margin:0}
+.criteria-hd .sec-title em{font-style:normal;color:var(--blue);margin-left:4px}
+.criteria-hd .row{flex:none}
+.criteria-tbl td{vertical-align:top;line-height:1.55}
+.criteria-tbl td.mid{vertical-align:middle}
+.criteria-tbl .nm{font-weight:700;color:var(--ink)}
+.criteria-tbl .sub{display:block;font-size:11px;color:var(--mute)}
+.criteria-tbl .act{white-space:nowrap;text-align:right}
+.criteria-tbl .act .btn{margin-left:2px}
+.criteria-tbl tr.off td{color:var(--mute)}
+.criteria-tbl tr.off .nm{color:var(--sub)}
+.criteria-chips{display:flex;flex-wrap:wrap;gap:4px}
+.criteria-chips .chip{padding:2px 7px;color:var(--text);white-space:normal;line-height:1.5}
+.criteria-ord{display:inline-flex;gap:2px;margin-right:6px}
+.criteria-ord .btn{width:24px;padding:0;justify-content:center;font-size:9px}
+.criteria-arrow{color:var(--mute);margin:0 4px}
+.criteria-foot{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--sub)}
+.criteria-foot b{color:var(--ink)}
+.criteria-empty .btns{display:flex;justify-content:center;gap:6px;margin-top:14px}
+.criteria-empty p{margin:0}
+
+/* 모달 공통 */
+.criteria-impact{background:var(--orange-bg);border-radius:3px;padding:8px 10px;margin:0 0 6px;font-size:11px;color:#b25f00;line-height:1.6}
+.criteria-frow-top{align-items:start}
+.criteria-frow-top > .lb{padding-top:6px}
+.criteria-err{display:block;color:var(--red);font-size:11px;margin-top:4px}
+.criteria-err:empty{display:none}
+.criteria-w{width:100%}
+.criteria-info{background:var(--bg-head);border-radius:3px;padding:9px 11px;line-height:1.7}
+.criteria-info dl{display:grid;grid-template-columns:86px minmax(0,1fr);gap:1px 8px;margin:0}
+.criteria-info dt{color:var(--sub)}
+.criteria-info dd{margin:0;color:var(--ink)}
+.criteria-list{margin:6px 0 0;padding-left:16px;line-height:1.7}
+.criteria-check{display:flex;align-items:flex-start;gap:7px;padding:5px 8px;border-radius:3px;cursor:pointer;line-height:1.45}
+.criteria-check:hover{background:#fafafa}
+.criteria-check input{margin:2px 0 0;flex:none;accent-color:#111}
+.criteria-check.dis{color:var(--faint);cursor:not-allowed}
+.criteria-check .own{display:block;font-size:10px;color:var(--mute)}
+.criteria-check input:focus-visible,.criteria-hit:focus-visible,.criteria-cty:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+
+/* 직급 선택 */
+.criteria-hrbox{border:1px solid var(--line);border-radius:3px;padding:6px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 6px;max-height:210px;overflow:auto}
+
+/* 구성원 검색 */
+.criteria-hits{border:1px solid var(--line);border-radius:3px;margin-top:6px;max-height:168px;overflow:auto}
+.criteria-hit{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:#fff;border:0;border-bottom:1px solid var(--line);padding:7px 10px;font-size:12px}
+.criteria-hit:last-child{border-bottom:0}
+.criteria-hit:hover:not(:disabled){background:#fafafa}
+.criteria-hit:disabled{color:var(--faint);cursor:not-allowed}
+.criteria-hit b{color:var(--ink)}
+.criteria-hit:disabled b{color:var(--faint)}
+.criteria-hit .dim{color:var(--mute);font-size:11px}
+.criteria-hits .none{padding:14px 10px;text-align:center;color:var(--mute);font-size:11px}
+.criteria-period{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+
+/* 출장지 선택 (좌 국가 / 우 도시) */
+.criteria-pick{display:grid;grid-template-columns:168px minmax(0,1fr);border:1px solid var(--line);border-radius:3px;height:236px}
+.criteria-pick .cl{border-right:1px solid var(--line);background:var(--bg-panel);padding:6px;overflow:auto}
+.criteria-pick .cr{padding:6px;overflow:auto}
+.criteria-cty{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;background:#fff;border:1px solid transparent;border-radius:3px;padding:5px 9px;margin-bottom:3px;font-size:12px}
+.criteria-cty:hover{border-color:var(--line-strong)}
+.criteria-cty.on{border:1.5px solid var(--ink);font-weight:700}
+.criteria-cty em{font-style:normal;color:var(--blue);font-weight:700;font-size:11px}
+.criteria-picked{min-height:26px;margin-bottom:6px}
+.criteria-picked .chip button{border:0;background:none;padding:0 0 0 2px;color:var(--mute);font-size:12px;line-height:1}
+.criteria-picked .chip button:hover{color:var(--ink)}
