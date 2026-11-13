@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>TRIP-ADM-POL-02b-1 조직도 구성원 선택 팝업</title>
+<style>
+/* ===== HYBENET 출장 관리 · 법인별 세팅 — 공통 스타일 (레퍼런스 톤앤매너) ===== */
+:root{
+  --side:#1f1f1f; --side-sub:#2b2b2b; --side-active:#4b4b4b; --side-text:#c9c9c9;
+  --yellow:#f5ff00;
+  --ink:#111; --text:#222; --sub:#666; --mute:#999; --faint:#bbb;
+  --line:#ebebeb; --line-strong:#d9d9d9; --bg-head:#f7f7f7; --bg-panel:#f5f5f5; --bg-chip:#f2f2f2;
+  --blue:#1a8cff; --blue-bg:#e5f2ff;
+  --green:#2fa800; --green-bg:#e4f8d6;
+  --red:#f0433a; --red-bg:#ffe9e7;
+  --orange:#ff8a00; --orange-bg:#fff3e0;
+  --gray-bg:#efefef;
+  --mk:#ff4d00;
+  --radius:3px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;
+  font-size:13px;line-height:1.5;color:var(--text);background:#fff;-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit}
+table{border-collapse:collapse;width:100%}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- 화면설계 툴바 (제품 UI 아님) ---------- */
+.specbar{height:36px;background:#2d2a26;color:#eee;display:flex;align-items:center;gap:14px;padding:0 14px;font-size:12px;position:sticky;top:0;z-index:60}
+.specbar b{color:#fff}
+.specbar .sid{background:#47423c;border-radius:2px;padding:1px 7px;font-family:ui-monospace,Menlo,monospace;font-size:11px}
+.specbar .sp{flex:1}
+.specbar label{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none}
+.specbar .hint{color:#aaa}
+
+/* ---------- 레이아웃 ---------- */
+.frame{display:grid;grid-template-columns:188px minmax(0,1fr);min-height:calc(100vh - 36px)}
+body.desc-on .frame{grid-template-columns:188px minmax(0,1fr) 360px}
+.side{background:var(--side);color:var(--side-text);font-size:12px;display:flex;flex-direction:column}
+.side .logo{height:40px;display:flex;align-items:center;gap:22px;padding:0 16px;color:#fff;font-weight:800;letter-spacing:.14em;font-size:13px}
+.side .logo .ham{width:12px;height:9px;border-top:1.5px solid #ddd;border-bottom:1.5px solid #ddd;position:relative}
+.side .logo .ham:after{content:"";position:absolute;left:0;right:0;top:2.2px;border-top:1.5px solid #ddd}
+.side nav{padding-top:18px;flex:1}
+.side .m1{display:flex;align-items:center;gap:14px;padding:11px 16px;font-weight:600}
+.side .m1 .ic{width:13px;height:13px;border:1.5px solid currentColor;border-radius:3px;opacity:.8}
+.side .m1 .car{margin-left:auto;font-size:8px}
+.side .m1.on{background:var(--yellow);color:#111}
+.side .sub{background:var(--side-sub)}
+.side .m2{padding:8px 16px 8px 40px;color:#b5b5b5}
+.side .m2.on{background:var(--side-active);color:#fff}
+.side .foot{padding:12px 16px;border-top:1px solid #333}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.gnb{height:40px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:flex-end;gap:22px;padding:0 14px;font-size:12px;font-weight:700}
+.gnb .ext:after{content:"↗";font-size:10px;margin-left:5px;font-weight:400}
+.gnb .me{display:flex;align-items:center;gap:8px}
+.gnb .me i{width:20px;height:20px;border-radius:50%;background:#ddd;display:inline-block}
+.gnb .me span{font-weight:400;color:var(--sub)}
+.page{padding:14px 16px 60px;min-width:0}
+.crumb{font-size:11px;color:var(--mute)}
+.crumb b{color:var(--text);font-weight:500}
+.ptitle{font-size:17px;font-weight:800;margin:8px 0 14px;color:var(--ink)}
+.tabs{display:flex;gap:30px;border-bottom:1px solid var(--line);padding:0 6px;border-top:1px solid var(--line);padding-top:8px}
+.tabs .t{padding:10px 0 12px;font-size:12px;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs .t.on{color:var(--ink);font-weight:800;border-bottom-color:var(--ink)}
+
+/* ---------- 법인별 세팅 2단 ---------- */
+.split{display:grid;grid-template-columns:212px minmax(0,1fr);gap:18px;margin-top:22px;align-items:start}
+.h3{font-size:13px;font-weight:800;color:var(--ink);margin:0 0 12px}
+.h3 em{font-style:normal;color:var(--blue);margin-left:2px}
+.corp-panel{background:var(--bg-panel);border-radius:4px;padding:14px}
+.corp-panel .tools{display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--sub);margin-bottom:8px}
+.corp-item{display:block;width:100%;text-align:left;background:#fff;border:1px solid transparent;border-radius:var(--radius);padding:9px 12px;margin-bottom:6px;position:relative}
+.corp-item:hover{border-color:var(--line-strong)}
+.corp-item.on{border:1.5px solid var(--ink);font-weight:700}
+.corp-item .cd{font-weight:800;font-size:12px;color:var(--ink)}
+.corp-item .nm{font-size:11px;color:var(--sub);font-weight:400;margin-left:6px}
+.corp-item .st{display:flex;gap:4px;margin-top:5px;flex-wrap:wrap}
+.corp-panel .sync{font-size:11px;color:var(--mute);line-height:1.6;margin-top:10px}
+
+.corp-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.corp-head .cd{font-size:16px;font-weight:800;color:var(--ink)}
+.corp-head .nm{font-size:13px;color:var(--sub)}
+.subtabs{display:flex;align-items:center;gap:6px;margin:14px 0 18px;border-bottom:1px solid var(--line)}
+.subtabs .s{background:none;border:0;padding:8px 12px 10px;font-size:12px;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.subtabs .s.on{color:var(--ink);font-weight:800;border-bottom-color:var(--ink)}
+.subtabs .s .cnt{color:var(--blue);margin-left:3px}
+
+/* ---------- 컴포넌트 ---------- */
+.btn{height:30px;padding:0 12px;border:1px solid var(--line-strong);background:#fff;border-radius:var(--radius);font-size:12px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.btn:hover{border-color:#999}
+.btn.pri{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.sm{height:26px;padding:0 9px;font-size:11px}
+.btn.ghost{border-color:transparent;color:var(--sub)}
+.btn.danger{color:var(--red)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,.corp-item:focus-visible,.subtabs .s:focus-visible,.tg:focus-visible{outline:2px solid var(--blue);outline-offset:1px}
+
+.inp,.sel,.ta{height:30px;border:1px solid var(--line-strong);border-radius:var(--radius);padding:0 9px;font-size:12px;background:#fff;min-width:0}
+.ta{height:auto;padding:7px 9px;width:100%;resize:vertical;line-height:1.5}
+.inp:focus,.sel:focus,.ta:focus{outline:none;border-color:var(--ink)}
+.inp:disabled,.sel:disabled{background:var(--bg-head);color:var(--faint)}
+.inp.cell{width:100%;height:26px;text-align:right}
+.inp.cell.l{text-align:left}
+
+.badge{display:inline-flex;align-items:center;height:17px;padding:0 6px;border-radius:2px;font-size:10px;font-weight:700;white-space:nowrap;line-height:1}
+.badge.blue{background:var(--blue-bg);color:var(--blue)}
+.badge.green{background:var(--green-bg);color:var(--green)}
+.badge.red{background:var(--red-bg);color:var(--red)}
+.badge.orange{background:var(--orange-bg);color:var(--orange)}
+.badge.gray{background:var(--gray-bg);color:#555}
+.badge.line{background:#fff;border:1px solid var(--line-strong);color:var(--sub);font-weight:600}
+
+.chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg-chip);border-radius:var(--radius);padding:4px 9px;font-size:11px;color:var(--sub)}
+.chip b{color:var(--ink)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+
+/* 토글 스위치 */
+.tg{appearance:none;-webkit-appearance:none;width:34px;height:20px;border-radius:10px;background:#cfcfcf;position:relative;border:0;padding:0;flex:none;transition:background .15s;cursor:pointer;vertical-align:middle}
+.tg:after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tg[aria-checked="true"]{background:var(--ink)}
+.tg[aria-checked="true"]:after{transform:translateX(14px)}
+.tg:disabled{opacity:.4;cursor:not-allowed}
+.tg-label{font-size:11px;font-weight:700;margin-left:6px;color:var(--mute)}
+.tg[aria-checked="true"] + .tg-label{color:var(--ink)}
+
+/* 테이블 (레퍼런스 목록형) */
+.tbl-wrap{overflow:visible}
+.tbl td{overflow-wrap:anywhere}
+.tbl th{background:var(--bg-head);font-size:11px;font-weight:700;color:var(--text);text-align:left;padding:9px 10px;white-space:nowrap}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:12px;vertical-align:middle}
+.tbl tr.click:hover td{background:#fafafa;cursor:pointer}
+.tbl .c{text-align:center}.tbl .r{text-align:right}
+.tbl .dim{color:var(--mute)}
+/* 매트릭스형 (규정 값) */
+.mx th,.mx td{border:1px solid var(--line);padding:7px 10px;font-size:12px}
+.mx th{background:var(--bg-head);font-size:11px;font-weight:700;text-align:center;white-space:nowrap}
+.mx td{text-align:right}
+.mx td.l,.mx th.l{text-align:left}
+.mx td.rh{background:#fcfcfc;font-weight:700;text-align:left;white-space:nowrap}
+
+/* 폼 행 (기안 화면 레퍼런스의 라벨-값 행) */
+.frow{display:grid;grid-template-columns:116px minmax(0,1fr);gap:8px;padding:11px 0;border-bottom:1px solid var(--line);align-items:center;font-size:12px}
+.frow > .lb{color:var(--text)}
+.frow > .lb.req:before{content:"•";color:var(--red);margin-right:3px}
+
+.sec{padding:22px 0;border-top:1px solid var(--line)}
+.sec:first-child{border-top:0;padding-top:0}
+.sec-title{font-size:15px;font-weight:800;color:var(--ink);margin:0 0 4px}
+.sec-desc{font-size:11px;color:var(--sub);margin:0 0 10px}
+.card{border:1px solid var(--line);border-radius:4px;background:#fff}
+.note{font-size:11px;color:var(--orange)}
+.note:before{content:"● ";font-size:7px;vertical-align:middle}
+.help{font-size:11px;color:var(--mute)}
+.empty{padding:44px 16px;text-align:center;color:var(--mute);font-size:12px;background:var(--bg-head);border-radius:4px}
+.empty b{display:block;color:var(--text);font-size:13px;margin-bottom:4px}
+.row{display:flex;align-items:center;gap:8px}
+.row.between{justify-content:space-between}
+.row.wrap{flex-wrap:wrap}
+.grow{flex:1;min-width:0}
+.link{color:var(--blue);text-decoration:underline;cursor:pointer;background:none;border:0;padding:0;font-size:inherit}
+.hl-blue{color:var(--blue);font-weight:700}
+
+/* 모달 · 토스트 */
+.dim-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:80;display:flex;align-items:center;justify-content:center;padding:20px}
+.modal{background:#fff;border-radius:4px;width:480px;max-width:100%;max-height:calc(100vh - 60px);display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.modal .mh{padding:16px 20px 10px;font-size:15px;font-weight:800;color:var(--ink);display:flex;justify-content:space-between;align-items:center}
+.modal .mh button{border:0;background:none;font-size:18px;color:var(--mute);line-height:1}
+.modal .mb{padding:4px 20px 16px;overflow:auto;font-size:12px}
+.modal .mf{padding:12px 20px 16px;display:flex;justify-content:flex-end;gap:6px;border-top:1px solid var(--line)}
+.toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);background:#222;color:#fff;font-size:12px;padding:10px 18px;border-radius:4px;z-index:90;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+
+/* ---------- Description 패널 · 마커 ---------- */
+.mk{display:inline-flex;align-items:center;justify-content:center;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--mk);color:#fff;font-size:10px;font-weight:800;font-style:normal;line-height:1;margin:0 4px;vertical-align:middle;cursor:help;letter-spacing:0;flex:none}
+body.mk-off .mk{display:none}
+.mk.hot,.desc-item.hot .mk{box-shadow:0 0 0 3px rgba(255,77,0,.28)}
+.desc{display:none;border-left:1px solid var(--line-strong);background:#fbfaf7;font-size:12px;min-width:0}
+body.desc-on .desc{display:block}
+.desc-in{position:sticky;top:36px;max-height:calc(100vh - 36px);overflow:auto;padding:16px 16px 40px}
+.desc h2{font-size:13px;margin:0 0 2px;font-weight:800;color:var(--ink)}
+.desc .dsub{color:var(--sub);font-size:11px;margin-bottom:12px}
+.desc h4{font-size:11px;margin:18px 0 6px;color:var(--sub);font-weight:800;letter-spacing:.04em}
+.desc-item{display:grid;grid-template-columns:26px minmax(0,1fr);gap:4px;padding:9px 6px;border-top:1px solid #e9e5dc;border-radius:3px}
+.desc-item.hot{background:#fff3ea}
+.desc-item .mk{margin:1px 0 0}
+.desc-item .dt{font-weight:800;color:var(--ink);margin-bottom:2px}
+.desc-item .db{color:#444;line-height:1.6}
+.desc-item .db ul{margin:3px 0 0;padding-left:15px}
+.desc-item .db li{margin:1px 0}
+.desc .issue{background:#fff;border:1px solid #f0d9b5;border-left:3px solid var(--orange);border-radius:3px;padding:8px 10px;margin-top:6px;line-height:1.6}
+.desc .issue b{color:#b25f00}
+.desc code{background:#efece4;border-radius:2px;padding:0 4px;font-size:11px}
+
+
+
+
+/* ===== v2: 법인별 출장여비규정 (마스터 그리드 + 관리 모달) ===== */
+.toolbar{display:flex;align-items:center;gap:8px;margin:18px 0 10px;flex-wrap:wrap}
+.toolbar .sp{flex:1}
+.grid-wrap{border-bottom:1px solid var(--line)}
+.grid{table-layout:fixed;width:100%}
+.hist-tbl{table-layout:fixed}
+.hist-tbl th{white-space:normal}
+.grid td,.grid th{overflow-wrap:anywhere}
+.grid th.stick,.grid td.stick{position:sticky;right:0;background:#fff;box-shadow:-1px 0 0 var(--line)}
+.grid th.stick{background:var(--bg-head)}
+.grid th{background:var(--bg-head);font-size:11px;font-weight:700;padding:8px 6px;text-align:left;white-space:normal;border-bottom:1px solid #fff}
+.grid th.grp{text-align:center;border-left:2px solid #fff;border-right:2px solid #fff}
+.grid td{padding:10px 6px;border-bottom:1px solid var(--line);font-size:12px;vertical-align:top}
+.grid td.c,.grid th.c{text-align:center}
+.grid .corp-cd{font-weight:800;color:var(--ink)}
+.grid .corp-nm{font-size:11px;color:var(--sub)}
+.grid .cat-list{font-size:11px;color:var(--text);line-height:1.55;min-width:62px}
+.grid .cat-list .off{color:var(--faint)}
+.grid .dim{color:var(--mute)}
+.grid .sm{font-size:11px;color:var(--mute)}
+.gtags{display:flex;gap:3px;flex-wrap:wrap}
+.back{background:none;border:0;padding:0;font-size:12px;color:var(--sub);margin-top:18px}
+.back:hover{color:var(--ink)}
+.hist-ba{display:grid;grid-template-columns:minmax(0,1fr) 14px minmax(0,1fr);gap:4px;font-size:11px;align-items:start}
+.hist-ba .b{color:var(--mute)}
+.hist-ba .a{color:var(--ink);font-weight:600}
+
+/* 큰 모달 (Description 패널은 가리지 않는다) */
+.ov{position:fixed;top:36px;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:70;display:flex;align-items:flex-start;justify-content:center;padding:18px;overflow-y:auto}
+.ov > *{margin:auto}
+body.desc-on .ov{right:360px}
+.ov.top{z-index:75}
+.xmodal{background:#fff;border-radius:4px;width:1200px;max-width:100%;min-height:560px;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.xh{padding:16px 22px 0;display:flex;align-items:flex-start;gap:10px}
+.xh .t{font-size:16px;font-weight:800;color:var(--ink)}
+.xh .s{font-size:12px;color:var(--sub);margin-top:2px}
+.xh .x{margin-left:auto;border:0;background:none;font-size:20px;color:var(--mute);line-height:1}
+.xtabs{display:flex;gap:4px;padding:10px 22px 0;border-bottom:1px solid var(--line)}
+.xtabs button{background:none;border:0;padding:8px 12px 10px;font-size:12px;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-1px}
+.xtabs button.on{color:var(--ink);font-weight:800;border-bottom-color:var(--ink)}
+.xtabs .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--mk);margin-left:5px;vertical-align:middle}
+.xb{flex:1;padding:18px 22px 24px}
+.xf{padding:12px 22px;border-top:1px solid var(--line);display:flex;align-items:center;gap:8px;position:sticky;bottom:-18px;background:#fff;border-radius:0 0 4px 4px}
+.xf .sp{flex:1}
+.cmodal{background:#fff;border-radius:4px;width:640px;max-width:100%;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.cmodal .xb{padding:10px 22px 16px}
+.cmodal .xh{padding-bottom:6px}
+
+.ditem{display:grid;grid-template-columns:minmax(0,1fr) 96px;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);align-items:center}
+.ditem .nm{font-size:13px;font-weight:800;color:var(--ink)}
+.ditem .ds{font-size:11px;color:var(--sub);margin-top:2px}
+.ditem .ef{font-size:11px;color:var(--mute);margin-top:4px}
+.ditem.changed .nm:after,.chg-dot:after{content:"변경";font-size:10px;font-weight:700;color:var(--mk);margin-left:6px}
+.etbl th{background:var(--bg-head);font-size:11px;font-weight:700;padding:7px 8px;text-align:left;white-space:nowrap}
+.etbl td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top;font-size:12px}
+.etbl .inp,.etbl .sel{width:100%;height:28px}
+.etbl td.c{text-align:center;vertical-align:middle}
+.etbl td.act{white-space:nowrap;text-align:right}
+.tchips{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.tchip{display:inline-flex;align-items:center;gap:3px;background:var(--bg-chip);border-radius:2px;padding:2px 3px 2px 7px;font-size:11px}
+.tchip button{border:0;background:none;color:var(--mute);padding:0 3px;font-size:13px;line-height:1}
+.tchip button:hover{color:var(--red)}
+.tchips .sel{width:auto;height:24px;font-size:11px;padding:0 4px}
+.seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:var(--radius);overflow:hidden}
+.seg button{border:0;background:#fff;padding:0 14px;height:30px;font-size:12px;color:var(--sub);border-left:1px solid var(--line-strong)}
+.seg button:first-child{border-left:0}
+.seg button.on{background:var(--ink);color:#fff;font-weight:700}
+.seg button em{font-style:normal;opacity:.7;margin-left:3px}
+.pitem{border:1px solid var(--line);border-radius:4px;margin-top:10px}
+.pitem.off{background:#fafafa}
+.pitem .ph{display:flex;align-items:center;gap:8px;padding:9px 12px;flex-wrap:wrap}
+.pitem .ph .inp.nm{width:150px;font-weight:700}
+.pitem .ph .sel{height:28px}
+.pitem .ph label{font-size:11px;color:var(--sub);display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.pitem .pb{padding:2px 12px 12px}
+.pitem .mx{table-layout:fixed}
+.pitem .mx th{padding:4px}
+.pitem .mx td{padding:4px}
+.pitem .mx .inp{height:26px;width:100%;min-width:0;padding:0 5px;font-size:11.5px}
+.pitem .mx th .inp{font-weight:700;text-align:center;background:transparent;border-color:transparent}
+.pitem .mx th .inp:hover,.pitem .mx th .inp:focus{border-color:var(--line-strong);background:#fff}
+.pitem .mx th.colh{position:relative;padding-right:20px}
+.pitem .mx th.colh .cx{position:absolute;right:2px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--mute);font-size:13px;padding:0 3px}
+.pitem .mx td.rh{overflow-wrap:anywhere;white-space:normal}
+.pitem .inp.undef{border-color:var(--orange);background:#fffaf2}
+.pitem .line{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;align-items:center;margin-top:6px;font-size:11px;color:var(--sub)}
+.pitem .line .inp{width:100%;height:28px}
+.banner{background:var(--bg-head);border-radius:4px;padding:10px 12px;font-size:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.banner.warn{background:var(--orange-bg)}
+.cf-list{margin:6px 0 0;padding-left:16px;font-size:12px;line-height:1.7}
+.cf-warn{background:var(--red-bg);color:#c0271f;border-radius:3px;padding:8px 10px;font-size:12px;margin-top:8px;line-height:1.6}
+.cf-warn.o{background:var(--orange-bg);color:#a85a00}
+.err{color:var(--red);font-size:11px;margin-top:4px}
+
+
+/* 조직도 선택 팝업 */
+.org{display:grid;grid-template-columns:260px minmax(0,1fr);gap:12px;margin-top:10px}
+.org-box{border:1px solid var(--line);border-radius:4px;padding:8px;min-height:300px}
+.org-box h5{margin:2px 4px 8px;font-size:11px;color:var(--sub);font-weight:700}
+.org-node{display:flex;align-items:center;gap:4px;width:100%;text-align:left;border:0;background:none;padding:5px 6px;border-radius:3px;font-size:12px}
+.org-node:hover{background:var(--bg-head)}
+.org-node.on{background:var(--ink);color:#fff;font-weight:700}
+.org-node .car{width:12px;font-size:9px;flex:none;text-align:center}
+.org-node .cnt{margin-left:auto;font-size:11px;opacity:.6;font-weight:400}
+.org-mem{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 6px;border-bottom:1px solid var(--line);font-size:12px;cursor:pointer}
+.org-mem.dis{opacity:.45;cursor:not-allowed}
+.org-mem .sub{font-size:11px;color:var(--mute)}
+.org-picked{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:10px;min-height:24px;font-size:11px;color:var(--sub)}
+
+.grid .badge{white-space:normal;height:auto;min-height:17px;padding:2px 6px;line-height:1.3}
+
+/* ===== Figma 임포트용 정적 레이아웃 ===== */
+html,body{height:auto}
+body{background:#e6e6e6;margin:0;padding:48px;width:max-content}
+.board{display:flex;flex-direction:column;gap:96px;align-items:flex-start}
+.fig-screen{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
+.fig-label{font-size:18px;font-weight:800;color:#111}
+.fig-label small{font-size:12px;font-weight:500;color:#666;margin-left:10px;font-family:ui-monospace,Menlo,monospace}
+.fig-row{display:flex;gap:40px;align-items:flex-start}
+.fig-frame{background:#fff;position:relative;overflow:hidden}
+.fig-frame.fig-page .frame{display:grid;grid-template-columns:188px minmax(0,1fr);min-height:900px}
+.fig-frame .xmodal,.fig-frame .cmodal{width:100% !important;max-width:none;min-height:0;box-shadow:none;margin:0}
+.fig-frame .xf{position:static}
+.fig-frame.desc{width:360px;background:#fbfaf7;border:1px solid #d9d9d9;display:block;font-size:12px}
+.fig-frame.desc .desc-in{position:static;max-height:none;overflow:visible}
+
+</style></head>
+<body><div class="board">
+<section class="fig-screen" id="screen-04-org-picker">
+  <div class="fig-label">조직도 구성원 선택 팝업<small>TRIP-ADM-POL-02b-1</small></div>
+  <div class="fig-row">
+    <div class="fig-frame fig-popup" id="frame-04-org-picker" data-name="TRIP-ADM-POL-02b-1 조직도 구성원 선택 팝업" aria-label="TRIP-ADM-POL-02b-1 조직도 구성원 선택 팝업" style="width:780px"><div class="cmodal" role="dialog" aria-modal="true" aria-label="조직도에서 구성원 선택" style="width:780px">
+      <div class="xh"><div><div class="t">조직도에서 구성원 선택<i class="mk" data-mk="1">1</i></div><div class="s"><b>HBA</b> HYBE AMERICA 조직도 · 개인 예외를 지정할 구성원을 선택합니다.</div></div><button type="button" class="x" aria-label="닫기" data-a="o-close">×</button></div>
+      <div class="xb"><div class="row"><input class="inp grow" id="org-q" value="" placeholder="이름 또는 사번으로 검색" maxlength="30" aria-label="구성원 검색"><i class="mk" data-mk="2">2</i></div>
+        <div class="org"><div class="org-box"><h5>조직<i class="mk" data-mk="3">3</i></h5><button type="button" class="org-node " style="padding-left:6px" data-a="o-node" data-id="HBA" aria-expanded="true"><span class="car">▾</span>HYBE AMERICA<span class="cnt num">11</span></button><button type="button" class="org-node " style="padding-left:20px" data-a="o-node" data-id="HBA/Music Division" aria-expanded="true"><span class="car">▾</span>Music Division<span class="cnt num">4</span></button><button type="button" class="org-node " style="padding-left:34px" data-a="o-node" data-id="HBA/Music Division/A&amp;R" aria-expanded=""><span class="car"></span>A&amp;R<span class="cnt num">2</span></button><button type="button" class="org-node on" style="padding-left:34px" data-a="o-node" data-id="HBA/Music Division/Label Operations" aria-expanded=""><span class="car"></span>Label Operations<span class="cnt num">2</span></button><button type="button" class="org-node " style="padding-left:20px" data-a="o-node" data-id="HBA/Business Division" aria-expanded="true"><span class="car">▾</span>Business Division<span class="cnt num">4</span></button><button type="button" class="org-node " style="padding-left:34px" data-a="o-node" data-id="HBA/Business Division/Artist Relations" aria-expanded=""><span class="car"></span>Artist Relations<span class="cnt num">2</span></button><button type="button" class="org-node " style="padding-left:34px" data-a="o-node" data-id="HBA/Business Division/Global Touring" aria-expanded=""><span class="car"></span>Global Touring<span class="cnt num">2</span></button><button type="button" class="org-node " style="padding-left:20px" data-a="o-node" data-id="HBA/Corporate" aria-expanded="true"><span class="car">▾</span>Corporate<span class="cnt num">3</span></button><button type="button" class="org-node " style="padding-left:34px" data-a="o-node" data-id="HBA/Corporate/Finance" aria-expanded=""><span class="car"></span>Finance<span class="cnt num">2</span></button><button type="button" class="org-node " style="padding-left:34px" data-a="o-node" data-id="HBA/Corporate/People" aria-expanded=""><span class="car"></span>People<span class="cnt num">1</span></button></div>
+          <div class="org-box"><h5>구성원<i class="mk" data-mk="4">4</i></h5><div id="org-list"><label class="org-mem "><input type="checkbox" data-a="o-pick" value="A100744">
+        <span><b>Chris Park</b> <span class="sub num">A100744</span><div class="sub">Music Division › Label Operations · Director</div></span>
+        <span><span class="sub">매핑 등급</span> <b>Tier 3</b></span></label><label class="org-mem "><input type="checkbox" data-a="o-pick" value="A101187">
+        <span><b>Noah Wilson</b> <span class="sub num">A101187</span><div class="sub">Music Division › Label Operations · Staff</div></span>
+        <span><span class="sub">매핑 등급</span> <b>Tier 3</b></span></label></div></div></div>
+        <div class="org-picked" id="org-picked">선택 1명 <span class="tchip">David Kim<button type="button" aria-label="David Kim 선택 해제" data-a="o-unpick" data-e="A100913">×</button></span></div></div>
+      <div class="xf"><span class="sp"></span><button type="button" class="btn" data-a="o-close">취소</button><button type="button" class="btn pri" data-a="o-ok">선택 완료</button><i class="mk" data-mk="5">5</i></div></div></div>
+    <aside class="fig-frame desc" id="desc-04-org-picker" data-name="TRIP-ADM-POL-02b-1 Description" aria-label="TRIP-ADM-POL-02b-1 Description"><div class="desc-in"><h2>조직도 구성원 선택 팝업</h2><div class="dsub">TRIP-ADM-POL-02b-1 · 개인 예외 지정 대상 구성원을 조직도 트리에서 찾아 선택한다. 등급 규정 탭의 [+ 조직도에서 구성원 선택]으로 호출한다.</div><h4>화면 상세</h4><div class="desc-item" data-d="1"><i class="mk">1</i><div><div class="dt">팝업</div><div class="db">관리 모달 위에 겹쳐 뜬다. 관리 중인 법인의 조직도만 보여준다(다른 법인 구성원은 선택 불가). 열릴 때 최상위(법인)와 1단계 조직이 펼쳐져 있고 법인 전체 구성원이 목록에 나온다. ×·취소·Esc는 선택을 버리고 닫는다.</div></div></div><div class="desc-item" data-d="2"><i class="mk">2</i><div><div class="dt">검색</div><div class="db">이름 또는 사번 부분 일치(30자, 대소문자 무시, 입력 즉시 반영). 검색어가 있으면 조직 선택과 무관하게 법인 전체에서 찾고, 지우면 선택한 조직의 목록으로 돌아간다. 결과가 없으면 "검색 결과가 없습니다."</div></div></div><div class="desc-item" data-d="3"><i class="mk">3</i><div><div class="dt">조직 트리</div><div class="db">법인 › 상위 조직 › 하위 조직 순의 트리. 조직명 옆 숫자는 하위 조직을 포함한 구성원 수. 조직을 누르면 선택(검정 반전)되고 하위가 펼쳐지며, 선택된 조직을 다시 누르면 접힌다. 조직을 선택하면 하위 조직 구성원까지 우측 목록에 나온다.</div></div></div><div class="desc-item" data-d="4"><i class="mk">4</i><div><div class="dt">구성원 목록</div><div class="db">체크박스로 여러 명을 선택할 수 있다. 행마다 이름·사번, 조직 경로·직책, 현재 매핑 등급을 보여준다. 이미 개인 예외가 지정된(또는 이번에 추가해 둔) 구성원은 "지정됨" 배지와 함께 비활성. 선택한 구성원은 하단에 칩으로 모아 보여주고 ×로 해제한다. 조직·검색을 바꿔도 선택은 유지된다.</div></div></div><div class="desc-item" data-d="5"><i class="mk">5</i><div><div class="dt">선택 완료</div><div class="db">1명 이상 선택 시 활성. 누르면 팝업을 닫고 개인 예외 지정 표에 선택한 순서대로 행을 추가한 뒤 첫 신규 행의 적용 등급으로 포커스를 옮긴다. 이 시점에는 저장되지 않으며, 적용 등급·사유를 입력하고 관리 모달의 [저장] → 컨펌 팝업을 거쳐야 반영된다.</div></div></div>
+      <h4>정책</h4><div class="desc-item" style="grid-template-columns:1fr"><div class="db"><ul><li>개인 예외 지정 대상은 조직도 트리에서 선택한다. 직접 입력은 받지 않는다.</li><li>구성원의 소속·직책은 인사정보 값을 그대로 쓰며 이 화면에서 수정하지 않는다.</li></ul></div></div>
+      <h4>확인 필요 사항</h4><div class="issue"><b>조직도 컴포넌트</b> — HYBENET 공통 조직도 컴포넌트 재사용 여부와 조직 단계(depth) 표시 범위.</div><div class="issue"><b>조회 범위</b> — 관리 중인 법인만 보여주도록 가정했다. 겸직·파견 구성원의 소속 법인 기준 확인 필요.</div><div class="issue"><b>퇴직·휴직자</b> — 조직도에서 제외할지, 기존 예외 지정은 어떻게 처리할지.</div>
+      <h4>화면 목록</h4><div class="desc-item" style="grid-template-columns:1fr"><div class="db"><ul><li><code>POL-01</code> 마스터 그리드</li><li><code>POL-02a~c</code> 관리 모달 (기안 항목 관리 / 등급 규정 / 여비규정 설정)</li><li><code>POL-02b-1</code> 조직도 구성원 선택 팝업</li><li><code>POL-03</code> 변경 내용 확인 팝업</li><li><code>POL-04</code> 변경 이력</li></ul></div></div></div></aside>
+  </div>
+</section>
+</div></body></html>
