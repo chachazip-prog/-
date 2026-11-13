@@ -66,8 +66,8 @@
   }
   function impactText(code, kind, name) {
     const used = usedIn(code, kind, name), live = livePolicies(code);
-    if (used.length) return `${used.map(polLabel).join(', ')}에서 사용 중인 기준입니다. 변경 내용은 다음 개정 버전부터 반영됩니다.`;
-    if (live.length) return `${live.map(polLabel).join(', ')}이(가) 있는 법인입니다. 추가·변경한 기준은 다음 개정 버전의 값 표부터 반영됩니다.`;
+    if (used.length) return `${used.map(polLabel).join(', ')}에서 사용 중인 기준입니다. 변경 내용은 저장 즉시 해당 버전의 값 표에 반영됩니다.`;
+    if (live.length) return `${live.map(polLabel).join(', ')}이(가) 있는 법인입니다. 추가·변경한 기준은 저장 즉시 해당 버전의 값 표에 반영되며, 새로 생기는 칸은 '미정의'로 표시됩니다.`;
     return '';
   }
   const impactBox = (code, kind, name) => { const t = impactText(code, kind, name); return t ? `<p class="criteria-impact">${esc(t)}</p>` : ''; };
@@ -93,7 +93,27 @@
   }
   const clearErr = (m) => m.querySelectorAll('[data-err]').forEach((e) => { e.textContent = ''; });
   const errSlot = (field) => `<span class="criteria-err" role="alert" data-err="${field}"></span>`;
-  function done(code, cat, text, toast) { App.log(code, cat, text); App.render(); ui.toast(toast); }
+  /* 기준 변경 → 적용 중·적용 예정 여비규정 값 표에 즉시 반영 (임시저장 버전은 편집 화면의 '현재 기준에 맞추기'로 처리) */
+  function renameInPolicies(code, kind, from, to) {
+    if (from === to) return;
+    livePolicies(code).forEach((p) => (p.items || []).forEach((it) => {
+      if (kind === 'grade' && it.byGrade) it.table.rows.forEach((r) => { if (r.label === from) r.label = to; });
+      if (kind === 'region' && it.byRegion) it.table.cols = it.table.cols.map((c) => (c === from ? to : c));
+    }));
+  }
+  function syncPolicies(code) {
+    const gn = gradesOf(code).map((g) => g.name), rn = regionsOf(code).map((r) => r.name);
+    livePolicies(code).forEach((p) => (p.items || []).forEach((it) => {
+      const t = it.table; if (!t) return;
+      if (it.byRegion && rn.length) {
+        const old = t.cols;
+        t.rows.forEach((r) => { r.cells = rn.map((n) => { const i = old.indexOf(n); return i >= 0 ? r.cells[i] : null; }); });
+        t.cols = rn.slice();
+      }
+      if (it.byGrade && gn.length) t.rows = gn.map((n) => t.rows.find((r) => r.label === n) || { label: n, cells: t.cols.map(() => null) });
+    }));
+  }
+  function done(code, cat, text, toast) { syncPolicies(code); App.log(code, cat, text); App.render(); ui.toast(toast); }
 
   /* ================= 1) 구성원 등급 ================= */
   function openGrade(code, id) {
@@ -142,6 +162,7 @@
       if (makeDefault) ch.push('기본 등급으로 지정');
       if (!ch.length) { ui.toast('변경된 내용이 없습니다.'); return true; }
       const label = g.name;
+      renameInPolicies(code, 'grade', g.name, name);
       Object.assign(g, { name, desc, hr }); if (makeDefault) g.isDefault = true;
       done(code, CAT_G, `등급 수정 — ${label}: ${ch.join(' / ')}`, '구성원 등급을 수정했습니다.');
     } else {
@@ -162,7 +183,7 @@
       title: '구성원 등급 삭제',
       body: `${impactBox(code, 'grade', g.name)}<p><b>${esc(g.name)}</b> 등급을 삭제합니다.</p>
         <ul class="criteria-list">${g.hr.length && def && def !== g ? `<li>매핑된 직급 ${g.hr.length}개(${esc(g.hr.join(', '))})는 미매핑 상태가 되어 기본 등급 <b>${esc(def.name)}</b>이(가) 적용됩니다.</li>` : ''}
-        ${used.length ? `<li>${esc(used.map(polLabel).join(', '))}의 값 표에는 이 등급 행이 그대로 남습니다.</li>` : ''}<li>삭제한 등급은 되돌릴 수 없으며 변경 이력에 기록됩니다.</li></ul>`,
+        ${used.length ? `<li>${esc(used.map(polLabel).join(', '))}의 값 표에서 이 등급 행과 입력된 값이 <b>즉시 삭제</b>됩니다.</li>` : ''}<li>삭제한 등급은 되돌릴 수 없으며 변경 이력에 기록됩니다.</li></ul>`,
       actions: [{ label: '취소' }, { label: '삭제', primary: true, danger: true, onClick: () => { list.splice(list.indexOf(g), 1); done(code, CAT_G, `등급 삭제 — ${g.name}${g.hr.length ? ' (매핑 해제: ' + g.hr.join(', ') + ')' : ''}`, '구성원 등급을 삭제했습니다.'); } }],
     });
   }
@@ -346,7 +367,7 @@
       if (plus.length) ch.push('출장지 추가 ' + plus.join(', '));
       if (minus.length) ch.push('출장지 제외 ' + minus.join(', '));
       if (!ch.length) { ui.toast('변경된 내용이 없습니다.'); return true; }
-      const label = r.name; r.name = name; r.places = places;
+      const label = r.name; renameInPolicies(code, 'region', r.name, name); r.name = name; r.places = places;
       done(code, CAT_R, `지역 그룹 수정 — ${label}: ${ch.join(' / ')}`, '지역 그룹을 수정했습니다.');
     } else {
       const nr = { id: newId(list, 'r'), name, places };
@@ -370,7 +391,7 @@
       title: '지역 그룹 삭제',
       body: `${impactBox(code, 'region', r.name)}<p><b>${esc(r.name)}</b> 그룹을 삭제합니다.</p>
         <ul class="criteria-list">${r.places.length && def && def !== r ? `<li>포함된 출장지 ${r.places.length}개는 다른 그룹에 넣기 전까지 기본 그룹 <b>${esc(def.name)}</b> 기준이 적용됩니다. (같은 국가의 '전체'가 다른 그룹에 있으면 그 그룹 기준)</li>` : ''}
-        ${used.length ? `<li>${esc(used.map(polLabel).join(', '))}의 값 표에는 이 그룹 열이 그대로 남습니다.</li>` : ''}<li>삭제한 그룹은 되돌릴 수 없으며 변경 이력에 기록됩니다.</li></ul>`,
+        ${used.length ? `<li>${esc(used.map(polLabel).join(', '))}의 값 표에서 이 그룹 열과 입력된 값이 <b>즉시 삭제</b>됩니다.</li>` : ''}<li>삭제한 그룹은 되돌릴 수 없으며 변경 이력에 기록됩니다.</li></ul>`,
       actions: [{ label: '취소' }, { label: '삭제', primary: true, danger: true, onClick: () => { list.splice(list.indexOf(r), 1); done(code, CAT_R, `지역 그룹 삭제 — ${r.name}`, '지역 그룹을 삭제했습니다.'); } }],
     });
   }
@@ -467,7 +488,7 @@
     if (st.code !== code) st = { code, exFilter: 'all', focus: null };
     const live = livePolicies(code), ps = h.policyState(code);
     const intro = live.length
-      ? `<b>${esc(live.map(polLabel).join(', '))}</b>이(가) 이 기준을 사용하고 있습니다. 등급·지역 그룹을 추가·삭제하거나 이름을 바꾸면 다음 개정 버전의 값 표부터 반영됩니다.`
+      ? `<b>${esc(live.map(polLabel).join(', '))}</b>이(가) 이 기준을 사용하고 있습니다. 등급·지역 그룹을 추가·삭제하거나 이름·순서를 바꾸면 <b>저장 즉시</b> 이 버전의 값 표에 반영됩니다. 새로 생기는 칸은 '미정의'로 표시되므로 여비규정에서 값을 채워 주세요.`
       : `이 법인에는 적용 중·예정인 여비규정이 없습니다. ${ps.draft ? '임시저장 중인 규정이 있습니다. ' : ''}여기서 정한 등급·지역 그룹이 여비규정 값 표의 행·열이 됩니다.`;
     return `<div class="criteria-intro">${h.mk(1)}<span class="grow">${intro}</span>${h.policyBadge(code)}<button type="button" class="link" data-act="go-policy">여비규정 보기</button></div>
       ${secGrades(code)}${secExceptions(code)}${secRegions(code)}`;
@@ -512,7 +533,7 @@
       summary: `${c} 법인의 여비규정에서 쓰는 구성원 등급(값 표의 행)과 지역 그룹(값 표의 열), 그리고 구성원 개인 예외 지정을 관리한다.`,
       items: [
         { no: 1, title: '여비규정 연결 안내', body: `<ul>
-          <li>적용 중·적용 예정인 여비규정 버전이 있으면 버전명과 함께 "이 기준을 사용하고 있음 / 변경은 다음 개정 버전부터 반영"을 안내한다. 없으면 "적용 중·예정인 여비규정이 없음"을 안내한다(임시저장 버전이 있으면 그 사실을 덧붙인다).</li>
+          <li>적용 중·적용 예정인 여비규정 버전이 있으면 버전명과 함께 "이 기준을 사용하고 있음 / 변경은 저장 즉시 값 표에 반영, 새 칸은 미정의"을 안내한다. 없으면 "적용 중·예정인 여비규정이 없음"을 안내한다(임시저장 버전이 있으면 그 사실을 덧붙인다).</li>
           <li>우측에 좌측 법인 목록과 같은 여비규정 상태 배지를 보여준다.</li>
           <li><code>여비규정 보기</code> 클릭 시 같은 법인의 여비규정 탭(TRIP-ADM-CORP-03)으로 이동한다.</li></ul>` },
         { no: 2, title: '구성원 등급 표', body: `<ul>
@@ -528,11 +549,11 @@
           <li><b>매핑 직급/직책</b>(선택, 다중 선택): 해당 법인의 인사정보 직급/직책 전체를 체크박스로 나열한다. 다른 등급에 이미 매핑된 직급은 비활성 + "{등급명}에 매핑됨"으로 표시한다(옮기려면 원래 등급에서 먼저 해제). 0개 선택도 저장할 수 있다.</li>
           <li><b>기본 등급 지정</b>: 기본값 미선택. 선택 후 저장하면 기존 기본 등급은 자동 해제된다. 법인의 첫 등급, 그리고 현재 기본 등급을 수정할 때는 선택 + 비활성(해제 불가)이다.</li>
           <li>수정 시 변경된 내용이 없으면 저장하지 않고 "변경된 내용이 없습니다." 토스트만 띄운다.</li>
-          <li>적용 중·예정 여비규정이 있는 법인은 모달 상단에 영향 안내를 보여준다. 수정 대상 등급명이 여비규정 값 표의 행으로 쓰이고 있으면 "여비규정 vN(적용 중)에서 사용 중인 기준입니다. 변경 내용은 다음 개정 버전부터 반영됩니다."</li>
+          <li>적용 중·예정 여비규정이 있는 법인은 모달 상단에 영향 안내를 보여준다. 수정 대상 등급명이 여비규정 값 표의 행으로 쓰이고 있으면 "여비규정 vN(적용 중)에서 사용 중인 기준입니다. 변경 내용은 저장 즉시 해당 버전의 값 표에 반영됩니다."</li>
           <li>저장 시 변경 이력(구성원 등급)에 등급명 변경 전→후, 매핑 추가/해제 직급, 기본 등급 지정을 기록한다.</li></ul>` },
         { no: 4, title: '순서 변경 · 삭제', body: `<ul>
           <li><b>순서 변경</b>: ▲/▼ 버튼으로 한 칸씩 이동, 누르는 즉시 저장한다. 첫 행의 ▲, 마지막 행의 ▼는 비활성. 이동 후에도 포커스는 같은 버튼에 남아 키보드로 연속 이동할 수 있다.</li>
-          <li><b>삭제</b>: 확인 모달을 거친다. 매핑돼 있던 직급은 미매핑 상태가 되어 기본 등급이 적용됨을 안내하고, 여비규정에서 사용 중인 등급이면 경고 문구(1번과 동일 문구 + "값 표에는 이 등급 행이 그대로 남습니다")를 함께 보여준다.</li>
+          <li><b>삭제</b>: 확인 모달을 거친다. 매핑돼 있던 직급은 미매핑 상태가 되어 기본 등급이 적용됨을 안내하고, 여비규정에서 사용 중인 등급이면 경고 문구(1번과 동일 문구 + "값 표에서 이 등급 행과 입력된 값이 즉시 삭제됩니다")를 함께 보여준다.</li>
           <li>삭제 불가 ①: 기본 등급(다른 등급이 남아 있는 동안). 다른 등급을 기본으로 지정한 뒤 삭제하도록 안내한다. 등급이 1개만 남았을 때는 그 등급도 삭제할 수 있다(빈 상태로 돌아감).</li>
           <li>삭제 불가 ②: 개인 예외 지정의 적용 등급으로 쓰이고 있는 등급. 해당 구성원 목록을 보여주고 예외 지정을 먼저 해제하도록 안내한다.</li></ul>` },
         { no: 5, title: '미매핑 직급 안내', body: `<ul>
@@ -583,12 +604,13 @@
         '등급·지역 기준은 여비규정 값 표의 행·열을 정하는 <b>기준 정보</b>다. 여비규정은 기준 정보 관리·구성원 안내용이므로, 이 화면의 등급·지역 그룹으로 출장 계획서를 자동 검증하거나 차단하지 않는다.',
         '본사(HYB) 출장 관리자만 전 법인의 기준을 조회·변경한다. 법인별 담당자 권한은 없다.',
         '등급·예외 지정·지역 그룹의 추가·수정·삭제·순서 변경·복사는 모두 저장 즉시 반영되고 변경 이력(구분: 구성원 등급 / 지역 그룹)에 남는다.',
+        '<b>기준 변경은 적용 중·적용 예정 여비규정의 값 표에 즉시 반영한다</b>(새 개정 버전을 만들지 않는다). 이름 변경은 행·열 이름만 바꾸고 값은 유지, 순서 변경은 행·열 순서만 바꾼다. 추가한 등급·지역 그룹은 값이 <code>미정의</code>인 행·열로 생기고, 삭제하면 해당 행·열과 값이 함께 삭제된다. 사용 중인 기준도 삭제를 막지 않고 확인 모달에서 경고만 한다. 종료 버전은 등록 당시 표를 유지하고, 임시저장 버전은 편집 화면의 [현재 기준에 맞추기]로 맞춘다.',
       ],
       issues: [
         '<b>매핑 키</b> — 인사정보에서 가져와 등급에 매핑하는 값이 직급인지 직책인지(또는 둘 다인지), 법인별 코드 체계와 연동 필드를 인사정보 담당과 확인해야 한다. 화면은 임시로 한 목록에 섞어 보여준다.',
         '<b>직급 변경 시 예외 지정</b> — 발령·겸직으로 구성원의 직급이 바뀌었을 때 기존 예외 지정을 유지할지, 자동 해제할지, 관리자에게 알릴지 미정. 프로토타입은 유지하되 매핑 등급과 같아지면 유의 문구만 표시한다. 겸직자의 직급을 무엇으로 볼지도 미정.',
         '<b>예외 지정 승인 절차</b> — 관리자가 바로 등록하면 되는지, 결재(예: 법인 재무 책임자 승인)나 증빙 첨부가 필요한지 미정. 시작일을 과거로 넣는 소급 지정을 허용할지도 함께 정해야 한다(프로토타입은 허용).',
-        '<b>기준 변경이 적용 중 여비규정에 미치는 영향</b> — 등급·지역 그룹을 추가·삭제·이름 변경했을 때 적용 중·예정 버전의 값 표를 그대로 둘지(프로토타입: "다음 개정 버전부터 반영"), 즉시 행·열을 맞출지, 사용 중인 기준은 삭제를 막을지 결정 필요.',
+        '<b>기준 변경으로 생긴 미정의 칸의 후속 처리</b> — 기준 변경은 적용 중 여비규정에 즉시 반영하기로 확정했다. 등급·지역 그룹을 추가하면 적용 중 버전에 값이 없는 칸이 생기는데, 적용 중 버전은 직접 수정할 수 없으므로 값을 채우려면 새 개정이 필요하다. 이 칸에 한해 적용 중 버전에서 바로 입력을 허용할지, 그동안 구성원에게 어떻게 안내할지 확인 필요. 삭제로 사라진 값의 복구 수단(이력에 삭제 전 값 기록 여부)도 함께 확인 필요.',
         '<b>지역 그룹 ↔ 출장지 관리 동기화</b> — 출장지 관리에서 국가·도시가 추가·사용 OFF·삭제·이름 변경될 때 지역 그룹의 포함 출장지를 어떻게 처리할지 미정. 현재 샘플 데이터는 출장지를 코드가 아닌 문자열로 갖고 있어 연동 키(출장지 코드)도 정해야 한다.',
         '<b>구성원 수 집계 시점</b> — 인사정보 동기화(매일 06:00) 때만 집계할지, 매핑 변경 즉시 재집계할지, 개인 예외 지정을 반영한 수로 볼지 미정.',
         '<b>만료된 예외 지정 보관</b> — 만료 건을 표에 계속 둘지, 일정 기간 뒤 숨길지, 종료 임박(현재 ' + SOON_DAYS + '일 전) 알림을 관리자에게 보낼지 미정.',
