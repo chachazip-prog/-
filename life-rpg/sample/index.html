@@ -4,7 +4,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Song+Myung&family=Gowun+Batang:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
 <style>
-/* Layout: 한 장의 한지 위에 놓인 세로 기록. 왼쪽에 간지를 세로쓰기로, 오른쪽에 그해의 일. 인주는 '당신다운 선택'의 낙관에만 쓴다. */
+/* Layout: 육성 시뮬레이션의 틀. 왼쪽 액자에 나이·신분·상태에 따라 바뀌는 전신 초상, 오른쪽에 움직이는 사건 그림과 이야기. 인주색은 '本心' 낙관에만. */
 :root {
   --paper: #ECE9E1;
   --sheet: #F6F4EE;
@@ -40,28 +40,27 @@ body {
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 28px 64px;
 }
-main { max-width: 720px; margin: 0 auto; display: grid; gap: 28px; }
-h1, h2, h3 { font-family: var(--f-display); font-weight: 400; text-wrap: balance; margin: 0; line-height: 1.3; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
+main { max-width: 1080px; margin: 0 auto; display: grid; gap: 28px; }
+.narrow { max-width: 760px; width: 100%; margin: 0 auto; }
+h1, h2, h3, h4 { font-family: var(--f-display); font-weight: 400; text-wrap: balance; margin: 0; line-height: 1.3; }
 p { margin: 0; }
 .eyebrow { font-family: var(--f-ui); font-size: 12px; letter-spacing: 0.14em; color: var(--ink-soft); text-transform: uppercase; }
 .muted { color: var(--ink-soft); }
-.ui { font-family: var(--f-ui); }
+.note { font-family: var(--f-ui); font-size: 12.5px; color: var(--ink-soft); line-height: 1.6; }
 button { font: inherit; color: inherit; cursor: pointer; }
 :focus-visible { outline: 2px solid var(--indigo); outline-offset: 3px; }
-
-.btn {
-  font-family: var(--f-ui); font-size: 15px; font-weight: 500;
-  border: 1px solid var(--ink); background: var(--ink); color: var(--sheet);
-  padding: 12px 22px; border-radius: 2px;
-}
+.btn { font-family: var(--f-ui); font-size: 15px; font-weight: 500; border: 1px solid var(--ink); background: var(--ink); color: var(--sheet); padding: 12px 22px; border-radius: 2px; }
 .btn:hover { background: var(--indigo); border-color: var(--indigo); }
 .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
 .btn.ghost:hover { border-color: var(--ink); background: transparent; }
 .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.head { display: grid; gap: 8px; margin-bottom: 18px; }
+.head h2 { font-size: clamp(28px, 5vw, 36px); }
 
-/* ---------- 시대 팩 ---------- */
+/* 시대 팩 */
 .hero { display: grid; gap: 14px; padding-top: 8px; }
-.hero h1 { font-size: clamp(44px, 9vw, 72px); letter-spacing: -0.01em; }
+.hero h1 { font-size: clamp(44px, 9vw, 72px); }
 .hero p { max-width: 34em; color: var(--ink-soft); }
 .ruler { position: relative; height: 64px; margin-top: 6px; }
 .ruler .axis { position: absolute; left: 0; right: 0; top: 22px; border-top: 1px solid var(--ink); }
@@ -72,61 +71,83 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .ruler .dot { position: absolute; top: 16px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%; background: var(--sheet); border: 1.5px solid var(--ink-soft); }
 .ruler .dot.on { background: var(--seal); border-color: var(--seal); }
 .packs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-.pack {
-  text-align: left; background: transparent; border: 1px solid var(--line); border-radius: 2px;
-  padding: 14px 16px; display: grid; gap: 4px; min-width: 0;
-}
+.pack { text-align: left; background: transparent; border: 1px solid var(--line); border-radius: 2px; padding: 14px 16px; display: grid; gap: 4px; min-width: 0; }
 .pack .when { font-family: var(--f-ui); font-size: 12px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .pack .name { font-family: var(--f-display); font-size: 20px; }
 .pack .state { font-family: var(--f-ui); font-size: 12px; color: var(--ink-soft); }
 .pack.open { background: var(--sheet); border-color: var(--ink); }
 .pack.open .state { color: var(--seal); font-weight: 600; }
-.pack.open:hover { border-color: var(--indigo); }
 .pack[disabled] { cursor: default; opacity: 0.62; }
 
-/* ---------- 인물 만들기 ---------- */
+/* 인물 만들기 */
 .sheet { background: var(--sheet); border: 1px solid var(--line); padding: 28px clamp(18px, 4vw, 36px); display: grid; gap: 24px; }
+.create-grid { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 28px; align-items: start; }
+.create-grid .frame { position: sticky; top: 16px; }
 fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: 10px; min-width: 0; }
 legend { font-family: var(--f-ui); font-size: 13px; font-weight: 600; margin-bottom: 8px; padding: 0; }
-.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.opts { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 .opt { position: relative; }
 .opt input { position: absolute; opacity: 0; inset: 0; }
-.opt label {
-  display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 2px; cursor: pointer; height: 100%;
-}
+.opt label { display: grid; gap: 2px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 2px; cursor: pointer; height: 100%; }
 .opt label b { font-family: var(--f-display); font-weight: 400; font-size: 18px; }
 .opt label small { font-family: var(--f-ui); font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
 .opt input:checked + label { border-color: var(--indigo); background: var(--indigo-wash); }
 .opt input:focus-visible + label { outline: 2px solid var(--indigo); outline-offset: 2px; }
 .name-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.name-row input {
-  flex: 1 1 200px; min-width: 0; font-family: var(--f-display); font-size: 22px; padding: 6px 10px;
-  border: 0; border-bottom: 1px solid var(--ink); background: transparent; color: var(--ink);
-}
-.note { font-family: var(--f-ui); font-size: 12.5px; color: var(--ink-soft); line-height: 1.6; }
+.name-row input { flex: 1 1 200px; min-width: 0; font-family: var(--f-display); font-size: 22px; padding: 6px 10px; border: 0; border-bottom: 1px solid var(--ink); background: transparent; color: var(--ink); }
 
-/* ---------- 플레이 ---------- */
-.status { display: grid; gap: 12px; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--paper); padding-block: 10px; border-bottom: 1px solid var(--line); }
-body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--paper); }
-.who { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; }
-.who .nm { font-family: var(--f-display); font-size: 24px; }
-.who .meta { font-family: var(--f-ui); font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
-.stat { display: grid; gap: 4px; min-width: 0; }
+/* 초상 액자 */
+.frame { background: var(--sheet); border: 1px solid var(--line); box-shadow: inset 0 0 0 5px var(--sheet), inset 0 0 0 6px var(--line); padding: 12px; }
+.frame svg { display: block; width: 100%; height: auto; }
+
+/* 모드 선택 */
+.modes { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.mode { text-align: left; background: var(--sheet); border: 1px solid var(--line); border-radius: 2px; padding: 18px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.mode:hover { border-color: var(--ink); }
+.mode .en { font-family: var(--f-ui); font-size: 11.5px; letter-spacing: 0.12em; color: var(--indigo); font-weight: 600; }
+.mode .span { font-family: var(--f-display); font-size: 30px; line-height: 1.2; }
+.mode .set { font-family: var(--f-ui); font-size: 13px; font-weight: 600; }
+.mode .desc { font-size: 14.5px; line-height: 1.65; color: var(--ink-soft); }
+.mode .meta { font-family: var(--f-ui); font-size: 12px; color: var(--ink-soft); border-top: 1px solid var(--line); padding-top: 8px; margin-top: 4px; }
+
+/* 주간 일정 */
+.plan { display: grid; gap: 8px; }
+.pday { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.pday .d { font-family: var(--f-display); font-size: 18px; line-height: 1.3; }
+.pday .d small { display: block; font-family: var(--f-ui); font-size: 12px; color: var(--ink-soft); }
+.pday .d em { font-style: normal; color: var(--seal); }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg .opt label { padding: 6px 12px; font-family: var(--f-ui); font-size: 13.5px; }
+
+/* 플레이 */
+.play { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; align-items: start; }
+.side { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 14px; }
+.side .who { display: grid; gap: 2px; }
+.side .nm { font-family: var(--f-display); font-size: 26px; line-height: 1.2; }
+.side .meta { font-family: var(--f-ui); font-size: 12.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.side .when { font-family: var(--f-ui); font-size: 12.5px; color: var(--indigo); font-weight: 600; }
+.stats { display: grid; gap: 8px; }
+.stat { display: grid; gap: 3px; min-width: 0; }
 .stat .lab { font-family: var(--f-ui); font-size: 12px; color: var(--ink-soft); display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
 .stat .lab b { color: var(--ink); font-weight: 600; }
 .bar { height: 4px; background: var(--line); position: relative; overflow: hidden; }
 .bar i { position: absolute; inset: 0 auto 0 0; background: var(--ink); transition: width 0.5s ease; }
-
-.card { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 0 22px; animation: ink 0.6s ease both; }
+.mainc { display: grid; gap: 18px; min-width: 0; }
+.win { position: relative; aspect-ratio: 16 / 7.5; max-width: 100%; border: 1px solid var(--line); overflow: hidden; background: #DCD6C8; }
+.win > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.cap { position: absolute; left: 12px; top: 12px; font-family: var(--f-ui); font-size: 12px; color: #F6F2E8; background: rgba(22, 20, 18, 0.62); padding: 4px 10px; border-radius: 2px; font-variant-numeric: tabular-nums; }
+.cine { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #F6F2E8; background: rgba(14, 14, 18, 0.62); animation: cine 3.2s ease forwards; padding: 0 16px; }
+.cine::before, .cine::after { content: ""; position: absolute; left: 0; right: 0; height: 13%; background: #0B0B0D; }
+.cine::before { top: 0; } .cine::after { bottom: 0; }
+.cine b { display: block; font-family: var(--f-display); font-weight: 400; font-size: clamp(24px, 4.5vw, 38px); }
+.cine span { font-family: var(--f-ui); font-size: 13px; opacity: 0.85; }
+@keyframes cine { 0%, 65% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+.ev { display: grid; gap: 14px; animation: ink 0.6s ease both; min-width: 0; }
 @keyframes ink { from { opacity: 0.25; filter: blur(1.5px); } to { opacity: 1; filter: none; } }
-.ganji { writing-mode: vertical-rl; font-family: var(--f-display); font-size: 34px; letter-spacing: 0.3em; color: var(--ink); border-right: 1px solid var(--line); padding-right: 10px; justify-self: end; }
-.ganji small { font-size: 15px; color: var(--ink-soft); letter-spacing: 0.15em; margin-top: 12px; }
-.ev { display: grid; gap: 16px; min-width: 0; }
 .ev .yr { font-family: var(--f-ui); font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.ev h2 { font-size: clamp(28px, 5.5vw, 38px); }
-.ev .body { max-width: 36em; }
-.hist { border-left: 2px solid var(--indigo); padding: 8px 0 8px 14px; display: grid; gap: 4px; }
+.ev h2 { font-size: clamp(26px, 5vw, 36px); }
+.ev .body { max-width: 38em; }
+.hist { border-left: 2px solid var(--indigo); padding: 6px 0 6px 14px; display: grid; gap: 4px; }
 .hist .tag { font-family: var(--f-ui); font-size: 11.5px; letter-spacing: 0.08em; font-weight: 600; color: var(--indigo); }
 .hist.fic { border-left-color: var(--ink-soft); }
 .hist.fic .tag { color: var(--ink-soft); }
@@ -134,79 +155,109 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .people { display: flex; flex-wrap: wrap; gap: 6px; }
 .people span { font-family: var(--f-ui); font-size: 12px; border: 1px solid var(--line); padding: 2px 8px; border-radius: 99px; color: var(--ink-soft); }
 .choices { display: grid; gap: 8px; }
-.choice {
-  text-align: left; background: var(--sheet); border: 1px solid var(--line); border-radius: 2px;
-  padding: 14px 16px; display: flex; gap: 12px; align-items: baseline; justify-content: space-between;
-}
+.choice { text-align: left; background: var(--sheet); border: 1px solid var(--line); border-radius: 2px; padding: 14px 16px; display: flex; gap: 12px; align-items: baseline; justify-content: space-between; }
 .choice:hover { border-color: var(--ink); }
-.choice .t { font-family: var(--f-body); font-size: 16.5px; }
-.choice .k { font-family: var(--f-ui); font-size: 11.5px; color: var(--ink-soft); white-space: nowrap; }
-.choice.mine .k { color: var(--seal); }
+.choice .t { font-size: 16.5px; }
+.choice .k { display: flex; gap: 6px; flex-shrink: 0; font-family: var(--f-ui); font-size: 11.5px; color: var(--ink-soft); white-space: nowrap; }
+.choice.mine .k .tr { color: var(--seal); }
+.choice .k .risk { color: var(--bad); border: 1px solid currentColor; padding: 0 5px; border-radius: 2px; }
 .result { background: var(--sheet); border: 1px solid var(--line); padding: 18px 20px; display: grid; gap: 12px; position: relative; }
 .result .picked { font-family: var(--f-ui); font-size: 12.5px; color: var(--ink-soft); }
+.result .fork { font-family: var(--f-ui); font-size: 12.5px; color: var(--indigo); font-weight: 600; }
 .deltas { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--f-ui); font-size: 13px; font-variant-numeric: tabular-nums; }
 .deltas .up { color: var(--good); } .deltas .down { color: var(--bad); }
-.seal {
-  position: absolute; top: 14px; right: 14px; width: 46px; height: 46px; border: 2px solid var(--seal); color: var(--seal);
-  font-family: var(--f-display); font-size: 17px; line-height: 1.05; display: grid; place-items: center; text-align: center;
-  transform: rotate(-6deg); border-radius: 3px; padding: 2px;
-}
+.seal { position: absolute; top: 14px; right: 14px; width: 46px; height: 46px; border: 2px solid var(--seal); color: var(--seal); font-family: var(--f-display); font-size: 17px; line-height: 1.05; display: grid; place-items: center; text-align: center; transform: rotate(-6deg); border-radius: 3px; }
 .result.sealed { padding-right: 76px; }
 
-/* ---------- 회고 ---------- */
-.epitaph { display: grid; gap: 10px; text-align: center; justify-items: center; padding-block: 18px 6px; }
+/* 회고 */
+.epitaph { display: grid; gap: 10px; text-align: center; justify-items: center; padding-block: 8px 6px; }
+.epitaph .frame { width: 150px; }
 .epitaph h1 { font-size: clamp(40px, 8vw, 60px); }
 .epitaph .life { font-family: var(--f-ui); font-size: 14px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .epitaph .line { font-family: var(--f-display); font-size: clamp(22px, 4.5vw, 28px); max-width: 20em; }
 section.block { display: grid; gap: 16px; }
 section.block > h3 { font-size: 24px; border-bottom: 1px solid var(--ink); padding-bottom: 6px; }
-.timeline { display: grid; gap: 0; }
-.tl { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); }
-.tl .y { font-family: var(--f-ui); font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.tl .y b { display: block; color: var(--ink); font-size: 15px; }
+.tl { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.tl .y { font-family: var(--f-ui); font-size: 12.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.tl .y b { display: block; color: var(--ink); font-size: 14px; }
 .tl .what { display: grid; gap: 2px; min-width: 0; }
 .tl .what strong { font-family: var(--f-display); font-weight: 400; font-size: 18px; }
 .tl .what span { font-size: 15px; color: var(--ink-soft); }
 .tl .mark { color: var(--seal); font-family: var(--f-ui); font-size: 12px; margin-left: 6px; }
+.tl .mark.f { color: var(--indigo); }
 .final-stats { display: grid; gap: 10px; }
 .fs { display: grid; grid-template-columns: 52px minmax(0, 1fr) 36px; gap: 12px; align-items: center; font-family: var(--f-ui); font-size: 13px; font-variant-numeric: tabular-nums; }
 .fs .bar { height: 8px; }
-.now { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.now { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
 .now article { border: 1px solid var(--line); background: var(--sheet); padding: 16px 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }
 .now .span { font-family: var(--f-ui); font-size: 12px; color: var(--indigo); font-weight: 600; font-variant-numeric: tabular-nums; }
-.now h4 { margin: 0; font-family: var(--f-display); font-weight: 400; font-size: 20px; }
+.now h4 { font-size: 20px; }
 .now p { font-size: 15px; line-height: 1.7; }
-.reflect { display: grid; gap: 14px; }
 .reflect ol { margin: 0; padding-left: 1.3em; display: grid; gap: 8px; }
-.reflect textarea {
-  width: 100%; min-height: 96px; font-family: var(--f-body); font-size: 17px; line-height: 1.7; padding: 12px 14px;
-  background: var(--sheet); color: var(--ink); border: 1px solid var(--line); border-radius: 2px; resize: vertical;
-}
+.reflect textarea { width: 100%; min-height: 96px; font-family: var(--f-body); font-size: 17px; line-height: 1.7; padding: 12px 14px; background: var(--sheet); color: var(--ink); border: 1px solid var(--line); border-radius: 2px; resize: vertical; }
 .saved { font-family: var(--f-ui); font-size: 13px; color: var(--good); }
 footer.note { text-align: center; }
 
-@media (max-width: 560px) {
-  body { font-size: 16px; }
-  .card { grid-template-columns: minmax(0, 1fr); gap: 10px; }
-  .ganji { writing-mode: horizontal-tb; font-size: 22px; letter-spacing: 0.12em; border-right: 0; padding-right: 0; justify-self: start; }
-  .ganji small { margin-top: 0; margin-left: 8px; font-size: 13px; }
+/* 그림 애니메이션 */
+.cloud { animation: drift 80s linear infinite; }
+@keyframes drift { from { transform: translateX(-140px); } to { transform: translateX(780px); } }
+.flow { stroke-dasharray: 14 26; animation: flow 3s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -40; } }
+.flick { transform-box: fill-box; transform-origin: 50% 100%; animation: flick 0.9s ease-in-out infinite; }
+@keyframes flick { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(0.9, 0.8); } }
+.smoke { animation: rise 5s ease-out infinite; }
+@keyframes rise { from { transform: translateY(0); opacity: 0.7; } to { transform: translateY(-70px); opacity: 0; } }
+.walk { animation: walk 28s linear infinite; }
+@keyframes walk { from { transform: translateX(-300px); } to { transform: translateX(300px); } }
+.lift { animation: lift 5s ease-in-out infinite; }
+@keyframes lift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-46px); } }
+.sway { transform-box: fill-box; transform-origin: 0% 50%; animation: sway 2.4s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: skewY(-6deg); } 50% { transform: skewY(6deg); } }
+.swing { transform-box: fill-box; transform-origin: 50% 0%; animation: swing 3.2s ease-in-out infinite; }
+@keyframes swing { 0%, 100% { transform: rotate(-24deg); } 50% { transform: rotate(24deg); } }
+.bob { transform-box: fill-box; transform-origin: 50% 100%; animation: bob 4s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(5px) rotate(1.5deg); } }
+.fall { animation: fall 9s linear infinite; }
+.fall.rain { animation-duration: 1.4s; }
+@keyframes fall { from { transform: translateY(0); } to { transform: translateY(300px); } }
+.burst { transform-box: fill-box; transform-origin: center; animation: burst 3s ease-out infinite; opacity: 0; }
+@keyframes burst { 0% { transform: scale(0.1); opacity: 0; } 12% { opacity: 1; } 75% { opacity: 0.85; } 100% { transform: scale(1.15); opacity: 0; } }
+.kb { transform-box: fill-box; transform-origin: 50% 60%; animation: kb 20s ease-in-out infinite alternate; }
+@keyframes kb { from { transform: scale(1); } to { transform: scale(1.06); } }
+.blink { transform-box: fill-box; transform-origin: center; animation: blink 5s infinite; }
+@keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(0.1); } }
+.idle { animation: idle 4s ease-in-out infinite; }
+@keyframes idle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+
+@media (max-width: 860px) {
+  .play { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .side { grid-template-columns: 96px minmax(0, 1fr); gap: 4px 14px; background: var(--paper); padding-block: 8px; z-index: 5; border-bottom: 1px solid var(--line); }
+  .side .frame { grid-row: span 2; padding: 4px; box-shadow: none; }
   .stats { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
   .stat .lab { flex-direction: column; }
-  .tl { grid-template-columns: 70px minmax(0, 1fr); }
+  .side .nm { font-size: 21px; }
+}
+@media (max-width: 560px) {
+  body { font-size: 16px; }
+  .create-grid { grid-template-columns: minmax(0, 1fr); }
+  .create-grid .frame { position: static; width: 140px; justify-self: center; }
+  .pday { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .tl { grid-template-columns: 78px minmax(0, 1fr); }
+  .win { aspect-ratio: 16 / 10; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .card { animation: none; }
+  .win *, .frame *, .ev { animation: none !important; }
+  .cine { display: none; }
   .bar i { transition: none; }
 }
 </style>
 
 <main id="app">
-  <!-- 1. 시대 팩 선택 -->
-  <section id="v-packs" class="hero-wrap" aria-labelledby="t-hero">
+  <section id="v-packs" class="narrow" aria-labelledby="t-hero">
     <div class="hero">
-      <span class="eyebrow">인생 롤플레잉 · 샘플 빌드</span>
+      <span class="eyebrow">인생 롤플레잉 · 샘플 빌드 2</span>
       <h1 id="t-hero">다시, 한 생</h1>
-      <p>지친 오늘을 잠시 내려두고, 다른 시대의 한 사람으로 태어나 봅니다. 그 시대의 큰일을 겪고, 작은 선택을 쌓고, 마지막에 그 삶을 돌아봅니다.</p>
+      <p>지친 오늘을 잠시 내려두고, 다른 시대의 한 사람으로 태어나 봅니다. 하루만 살아 볼 수도, 한평생을 살아 볼 수도 있습니다.</p>
     </div>
     <div style="display:grid;gap:14px;margin-top:28px">
       <div class="eyebrow">시대 팩 · 기원전 3000년부터 2026년까지</div>
@@ -216,56 +267,59 @@ footer.note { text-align: center; }
     </div>
   </section>
 
-  <!-- 2. 인물 만들기 -->
-  <section id="v-create" hidden aria-labelledby="t-create">
-    <div style="display:grid;gap:8px;margin-bottom:18px">
-      <span class="eyebrow">조선 후기 한양 · 1770–1840</span>
-      <h2 id="t-create" style="font-size:36px">어떤 사람으로 태어날까요</h2>
-    </div>
+  <section id="v-create" class="narrow" hidden aria-labelledby="t-create">
+    <div class="head"><span class="eyebrow">조선 후기 한양 · 1770–1840</span><h2 id="t-create">어떤 사람으로 태어날까요</h2></div>
     <form class="sheet" id="f-create">
-      <fieldset>
-        <legend>성별</legend>
-        <div class="opts" id="o-g"></div>
-      </fieldset>
-      <fieldset>
-        <legend>신분</legend>
-        <div class="opts" id="o-c"></div>
-      </fieldset>
-      <fieldset>
-        <legend>성향</legend>
-        <div class="opts" id="o-t"></div>
-        <p class="note">성향과 맞는 선택을 하면 기록에 붉은 낙관 ‘本心’이 찍히고 마음이 조금 편해집니다.</p>
-      </fieldset>
-      <fieldset>
-        <legend><label for="i-name">이름</label></legend>
-        <div class="name-row">
-          <input id="i-name" maxlength="12" autocomplete="off">
-          <button type="button" class="btn ghost" id="b-rename">다른 이름</button>
+      <div class="create-grid">
+        <div class="frame" id="pv" aria-label="초상 미리보기"></div>
+        <div style="display:grid;gap:24px;min-width:0">
+          <fieldset><legend>성별</legend><div class="opts" id="o-g"></div></fieldset>
+          <fieldset><legend>신분</legend><div class="opts" id="o-c"></div></fieldset>
+          <fieldset><legend>성향</legend><div class="opts" id="o-t"></div>
+            <p class="note">성향과 맞는 선택을 하면 기록에 붉은 낙관 ‘本心’이 찍히고 마음이 조금 편해집니다.</p></fieldset>
+          <fieldset><legend><label for="i-name">이름</label></legend>
+            <div class="name-row"><input id="i-name" maxlength="12" autocomplete="off"><button type="button" class="btn ghost" id="b-rename">다른 이름</button></div>
+            <p class="note" id="name-note"></p></fieldset>
         </div>
-        <p class="note" id="name-note"></p>
-      </fieldset>
-      <div class="row">
-        <button type="submit" class="btn" id="b-born">이 사람으로 태어나기</button>
-        <button type="button" class="btn ghost" id="b-back">시대 다시 고르기</button>
       </div>
+      <div class="row"><button type="submit" class="btn">얼마나 살아 볼지 고르기</button><button type="button" class="btn ghost" id="b-back">시대 다시 고르기</button></div>
     </form>
   </section>
 
-  <!-- 3. 플레이 -->
-  <section id="v-play" hidden>
-    <div class="status" id="status"></div>
-    <div id="stage" style="display:grid;gap:22px;margin-top:22px"></div>
+  <section id="v-mode" class="narrow" hidden aria-labelledby="t-mode">
+    <div class="head"><span class="eyebrow" id="mode-who"></span><h2 id="t-mode">얼마만큼의 시간을 살아 볼까요</h2></div>
+    <div class="modes" id="modes"></div>
+    <div class="row" style="margin-top:16px"><button class="btn ghost" id="b-recreate">인물 다시 만들기</button></div>
   </section>
 
-  <!-- 4. 회고 -->
-  <section id="v-end" hidden></section>
+  <section id="v-plan" class="narrow" hidden aria-labelledby="t-plan">
+    <div class="head"><span class="eyebrow">위클리 · 1794년 3월 1일–7일 · 한양</span><h2 id="t-plan">이레 동안 무엇을 할까요</h2>
+      <p class="muted">날마다 할 일을 정하세요. 가장 많이 한 일과 그 주에 벌어진 일에 따라 이레째 날의 사건이 달라집니다. 같은 일을 사흘 넘게 이어 하면 지칩니다.</p></div>
+    <div class="sheet">
+      <div class="row" id="presets"></div>
+      <div class="plan" id="plan"></div>
+      <div class="row"><button class="btn" id="b-week">이 일정으로 한 주 살기</button><button class="btn ghost" id="b-plan-back">다른 모드 고르기</button></div>
+    </div>
+  </section>
 
-  <footer class="note">샘플 시나리오 · 역사 노트의 ‘기록’은 사료 기반, ‘각색’은 게임을 위해 지어낸 장면입니다.</footer>
+  <section id="v-play" hidden>
+    <div class="play">
+      <aside class="side" id="side"></aside>
+      <div class="mainc">
+        <div class="win" id="win"></div>
+        <div id="stage"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="v-end" class="narrow" hidden></section>
+
+  <footer class="note">샘플 시나리오 · 역사 노트의 ‘기록’은 사료 기반, ‘각색’은 게임을 위해 지어낸 장면입니다. 그림은 모두 이 샘플을 위해 새로 그린 자리표시용 일러스트입니다.</footer>
 </main>
 
 <script>
 (() => {
-  /* ===== 데이터 ===== */
+  /* ================= 기본 데이터 ================= */
   const PACKS = [
     { id: 'egypt', name: '고대 이집트 · 테베', when: '기원전 1350년경', y: -1350 },
     { id: 'rome', name: '로마 공화정 말기', when: '기원전 60년경', y: -60 },
@@ -277,93 +331,233 @@ footer.note { text-align: center; }
     { id: 'seoul', name: '서울, 지금까지', when: '1960–2026', y: 1960 },
   ];
   const STAT = { hp: '몸', money: '재물', bond: '인연', fame: '명망', heart: '마음' };
-  const GENDERS = [
-    { v: '남', d: '과거 응시·관직·바깥일의 길이 열려 있다' },
-    { v: '여', d: '혼인 뒤 시댁에서 살며 집안의 중심이 된다' },
-  ];
-  const CLASSES = [
-    { v: '양반', d: '글과 체면의 집안. 장사는 드러내 놓고 못 한다' },
-    { v: '중인', d: '역관·의원·화원 같은 기술직 집안' },
-    { v: '상민', d: '농사짓고 장사하며 나라의 세금을 지는 사람들' },
-  ];
-  const TRAITS = [
-    { v: '호기심', d: '새로운 것을 보면 못 지나친다' },
-    { v: '신중', d: '한 번 더 따져 보고 움직인다' },
-    { v: '다정', d: '곁의 사람을 먼저 챙긴다' },
-    { v: '야심', d: '더 높이, 더 멀리 가고 싶다' },
-  ];
-  const NAMES = {
-    '남양반': ['이원겸', '윤시헌', '정재휴', '조명익', '권상하'],
-    '남중인': ['김응도', '박지순', '현덕윤', '변시영'],
-    '남상민': ['박막동', '최돌석', '김복남', '이쇠돌'],
-    '여': ['순덕', '옥분', '귀례', '막례', '정임', '분이', '간난'],
-  };
-  const BASE = {
-    '양반': { hp: 50, money: 60, bond: 50, fame: 60, heart: 50 },
-    '중인': { hp: 50, money: 50, bond: 50, fame: 45, heart: 50 },
-    '상민': { hp: 58, money: 30, bond: 55, fame: 30, heart: 52 },
-  };
+  const GENDERS = [{ v: '남', d: '과거 응시·관직·바깥일의 길이 열려 있다' }, { v: '여', d: '혼인 뒤 시댁에서 살며 집안의 중심이 된다' }];
+  const CLASSES = [{ v: '양반', d: '글과 체면의 집안. 장사는 드러내 놓고 못 한다' }, { v: '중인', d: '역관·의원·화원 같은 기술직 집안' }, { v: '상민', d: '농사짓고 장사하며 나라의 세금을 지는 사람들' }];
+  const TRAITS = [{ v: '호기심', d: '새로운 것을 보면 못 지나친다' }, { v: '신중', d: '한 번 더 따져 보고 움직인다' }, { v: '다정', d: '곁의 사람을 먼저 챙긴다' }, { v: '야심', d: '더 높이, 더 멀리 가고 싶다' }];
+  const NAMES = { '남양반': ['이원겸', '윤시헌', '정재휴', '조명익', '권상하'], '남중인': ['김응도', '박지순', '현덕윤', '변시영'], '남상민': ['박막동', '최돌석', '김복남', '이쇠돌'], '여': ['순덕', '옥분', '귀례', '막례', '정임', '분이', '간난'] };
+  const BASE = { '양반': { hp: 50, money: 60, bond: 50, fame: 60, heart: 50 }, '중인': { hp: 50, money: 50, bond: 50, fame: 45, heart: 50 }, '상민': { hp: 58, money: 30, bond: 55, fame: 30, heart: 52 } };
   const TRAIT_BONUS = { '호기심': { heart: 5 }, '신중': { money: 5 }, '다정': { bond: 5 }, '야심': { fame: 5 } };
-
   const STEM = '갑을병정무기경신임계', BR = '자축인묘진사오미신유술해';
   const ganji = y => { const i = ((y - 4) % 60 + 60) % 60; return STEM[i % 10] + BR[i % 12]; };
-  const reign = y => {
-    if (y < 1776) return `영조 ${y - 1724}년`;
-    if (y === 1776) return '정조 즉위년';
-    if (y <= 1800) return `정조 ${y - 1776}년`;
-    if (y <= 1834) return `순조 ${y - 1800}년`;
-    return `헌종 ${y - 1834}년`;
-  };
+  const reign = y => y < 1776 ? `영조 ${y - 1724}년` : y === 1776 ? '정조 즉위년' : y <= 1800 ? `정조 ${y - 1776}년` : y <= 1834 ? `순조 ${y - 1800}년` : `헌종 ${y - 1834}년`;
   const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
   const chance = p => Math.random() < p;
   const F = s => s.g === '여';
+  const $ = id => document.getElementById(id);
+  const val = (x, s) => typeof x === 'function' ? x(s) : x;
+  const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const eul = w => { const c = w.charCodeAt(w.length - 1) - 0xAC00; return w + (c >= 0 && c % 28 ? '을' : '를'); };
+  const clamp = v => Math.max(0, Math.min(100, Math.round(v)));
 
-  /* ===== 사건 (시대 팩 본문) ===== */
-  const EVENTS = [
-    {
-      id: 'accession', y: 1776, title: '새 임금이 즉위하다', people: ['정조', '영조'],
-      body: s => `봄, 쉰두 해를 다스린 영조가 승하하고 스물다섯 살 세손이 왕위에 올랐다. 즉위하던 날 새 임금이 신하들 앞에서 “과인은 사도세자의 아들이다”라고 말했다는 이야기가 저잣거리까지 퍼졌다. 어른들은 목소리를 낮춰 그 말을 되뇌었다. ${s.age}살의 당신은 그 말뜻을 다 알지 못했다.`,
+  /* ================= 초상 (나이·신분·성별·상태에 따라 바뀜) ================= */
+  function portrait(s) {
+    const st = s.age < 15 ? 'child' : s.age < 25 ? 'youth' : s.age < 55 ? 'adult' : 'elder';
+    const f = F(s), young = st === 'child' || st === 'youth';
+    const married = s.flags.married || s.age >= 19;
+    const hp = s.st.hp, heart = s.st.heart;
+    const skin = hp < 30 ? '#EADBCD' : '#F3D4B8';
+    const hair = st === 'elder' ? '#BDB8B0' : '#2B2421';
+    let P;
+    if (f) {
+      P = s.c === '상민' ? { top: '#F1ECE0', skirt: young ? '#B7A487' : '#7E8C99', trim: '#9C8E7A', rib: '#9C8E7A', shoe: '#9C8467' }
+        : st === 'elder' ? { top: '#EEE8DA', skirt: '#6E6A72', trim: '#5A5560', rib: '#8A7F78', shoe: '#6E6A72' }
+        : s.c === '양반' ? (young ? { top: '#F2CF5B', skirt: '#C9443B', trim: '#3D5A8A', rib: '#C9443B', shoe: '#B5465A' } : { top: '#E1EAD6', skirt: '#3E5A8A', trim: '#7A3E5C', rib: '#7A3E5C', shoe: '#7A3E5C' })
+        : (young ? { top: '#F3E6BF', skirt: '#8D5B8C', trim: '#5C7A6A', rib: '#8D5B8C', shoe: '#8D5B8C' } : { top: '#EAE3D1', skirt: '#5E806B', trim: '#7B5E3E', rib: '#7B5E3E', shoe: '#7B5E3E' });
+    } else {
+      const robe = !young && s.c !== '상민';
+      P = s.c === '상민' ? { top: '#EDE7D7', pants: '#E5DDCA', trim: '#9C8E7A' }
+        : robe ? (s.c === '양반' ? { robe: '#F4F2EC', belt: '#3E5A8A' } : { robe: '#D6DCE4', belt: '#6B4E3A' })
+        : s.c === '양반' ? { top: st === 'child' ? '#EBD9A9' : '#F3F0E8', pants: '#F3F0E8', vest: '#3E6D8A', trim: '#3E6D8A' } : { top: '#E8DCC0', pants: '#EFEBE0', trim: '#6B4E3A' };
+    }
+    const bgc = { '양반': '#E8DEC8', '중인': '#DCE3DC', '상민': '#E6DED0' }[s.c];
+    const k = { child: 0.8, youth: 0.94, adult: 1, elder: 0.95 }[st];
+    let back = '', body = '', top = '';
+    const braid = st === 'child' || (st === 'youth' && !married);
+    if (braid) back += `<path d="M116,92 Q130,140 122,196 L113,196 Q121,140 107,96Z" fill="${hair}"/><path d="M111,194 l14,0 l2,18 l-6,-6 l-4,8 l-4,-8 l-6,6Z" fill="${f ? '#C9443B' : '#3A2F2B'}"/>`;
+    if (f && !braid) back += `<ellipse cx="127" cy="98" rx="11" ry="10" fill="${hair}"/><rect x="110" y="96" width="36" height="3" rx="1.5" fill="#D2AE46"/>`;
+    const hands = `<circle cx="58" cy="202" r="6" fill="${skin}"/><circle cx="142" cy="202" r="6" fill="${skin}"/>`;
+    if (f) {
+      body = `<path d="M62,160 Q50,226 38,284 Q100,292 162,284 Q150,226 138,160Z" fill="${P.skirt}"/>
+        <path d="M80,175 Q74,230 68,284 M100,172 L100,288 M120,175 Q126,230 132,284" stroke="#000" stroke-opacity=".1" fill="none" stroke-width="2"/>
+        <ellipse cx="86" cy="288" rx="9" ry="4" fill="${P.shoe}"/><ellipse cx="114" cy="288" rx="9" ry="4" fill="${P.shoe}"/>
+        <path d="M64,118 Q100,106 136,118 L141,164 Q100,172 59,164Z" fill="${P.top}"/>
+        <path d="M66,120 Q48,150 50,196 L66,196 Q68,160 78,132Z" fill="${P.top}"/><rect x="49" y="189" width="18" height="9" fill="${P.trim}"/>
+        <path d="M134,120 Q152,150 150,196 L134,196 Q132,160 122,132Z" fill="${P.top}"/><rect x="133" y="189" width="18" height="9" fill="${P.trim}"/>
+        ${hands}
+        <path d="M84,114 L100,142 L116,114" stroke="${P.trim}" stroke-width="6" fill="none" stroke-linejoin="round"/>
+        <path d="M87,112 L100,135 L113,112" stroke="#fff" stroke-width="2" fill="none"/>
+        <path d="M100,146 l-5,40 l8,0Z M102,146 l9,34 l6,-3Z" fill="${P.rib}"/>`;
+    } else if (P.robe) {
+      body = `<path d="M62,118 Q100,104 138,118 L154,282 L46,282Z" fill="${P.robe}"/>
+        <path d="M100,140 L100,282" stroke="#000" stroke-opacity=".12" stroke-width="2"/>
+        <ellipse cx="84" cy="286" rx="10" ry="4" fill="#26221F"/><ellipse cx="116" cy="286" rx="10" ry="4" fill="#26221F"/>
+        <path d="M64,120 Q36,160 38,214 L70,214 Q72,170 80,134Z" fill="${P.robe}"/><path d="M136,120 Q164,160 162,214 L130,214 Q128,170 120,134Z" fill="${P.robe}"/>
+        <path d="M38,214 L70,214 M130,214 L162,214" stroke="#000" stroke-opacity=".12" stroke-width="2"/>
+        <circle cx="54" cy="218" r="6" fill="${skin}"/><circle cx="146" cy="218" r="6" fill="${skin}"/>
+        <rect x="64" y="160" width="72" height="5" fill="${P.belt}"/><path d="M92,164 L88,232 M108,164 L112,232" stroke="${P.belt}" stroke-width="3"/>
+        <path d="M84,112 L100,140 L116,112" stroke="#fff" stroke-width="5" fill="none"/>`;
+    } else {
+      body = `<path d="M66,168 L134,168 L140,270 L106,270 L100,206 L94,270 L60,270Z" fill="${P.pants}"/>
+        <rect x="61" y="258" width="33" height="5" fill="#8A7F6E"/><rect x="106" y="258" width="33" height="5" fill="#8A7F6E"/>
+        <ellipse cx="78" cy="276" rx="12" ry="4.5" fill="#C9B48A"/><ellipse cx="122" cy="276" rx="12" ry="4.5" fill="#C9B48A"/>
+        <path d="M64,118 Q100,106 136,118 L140,176 L60,176Z" fill="${P.top}"/>
+        ${P.vest ? `<path d="M70,120 L95,120 L99,176 L64,176Z M105,120 L130,120 L136,176 L101,176Z" fill="${P.vest}"/>` : ''}
+        <path d="M66,120 Q50,150 52,196 L66,196 Q68,160 78,132Z" fill="${P.top}"/><path d="M134,120 Q150,150 148,196 L134,196 Q132,160 122,132Z" fill="${P.top}"/>
+        ${hands}
+        <path d="M84,114 L100,140 L116,114" stroke="${P.trim}" stroke-width="5" fill="none"/>
+        <path d="M101,144 l-3,22 l6,0Z" fill="${P.trim}"/>`;
+    }
+    const face = `<ellipse cx="68" cy="80" rx="5" ry="7" fill="${skin}"/><ellipse cx="132" cy="80" rx="5" ry="7" fill="${skin}"/>
+      <ellipse cx="100" cy="76" rx="32" ry="35" fill="${skin}"/>`;
+    let hairF = `<path d="M67,80 Q64,38 100,38 Q136,38 133,80 Q130,56 104,52 L100,58 L96,52 Q70,56 67,80Z" fill="${hair}"/>`;
+    if (!f && !braid) {
+      hairF = `<ellipse cx="100" cy="36" rx="8" ry="9" fill="${hair}"/>` + hairF + `<rect x="70" y="50" width="60" height="7" rx="3" fill="#1F1B1A" opacity=".85"/>`;
+      if (s.c !== '상민') top += `<path d="M80,46 L82,14 Q100,8 118,14 L120,46Z" fill="#1E1C1F" opacity=".82"/><ellipse cx="100" cy="47" rx="64" ry="10" fill="#1E1C1F" opacity=".78"/><path d="M74,52 Q76,100 96,112 M126,52 Q124,100 104,112" stroke="#1E1C1F" stroke-width="1.5" fill="none" opacity=".7"/>`;
+      else top += `<path d="M68,56 Q100,46 132,56 L132,64 Q100,54 68,64Z" fill="#F4F1E8"/><path d="M130,58 l10,-6 l2,8Z" fill="#F4F1E8"/>`;
+    }
+    const brow = heart < 35 ? 'M80,71 L94,67 M106,67 L120,71' : 'M80,69 Q87,66 94,69 M106,69 Q113,66 120,69';
+    const mouth = heart >= 60 ? 'M92,94 Q100,101 108,94' : heart >= 35 ? 'M95,96 Q100,98 105,96' : 'M93,99 Q100,93 107,99';
+    let feat = `<path d="${brow}" stroke="${hair === '#BDB8B0' ? '#8E8880' : '#2B2421'}" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <g class="blink"><ellipse cx="88" cy="80" rx="3.8" ry="4.8" fill="#2A2320"/><ellipse cx="112" cy="80" rx="3.8" ry="4.8" fill="#2A2320"/><circle cx="89.3" cy="78.4" r="1.3" fill="#fff"/><circle cx="113.3" cy="78.4" r="1.3" fill="#fff"/></g>
+      <ellipse cx="80" cy="91" rx="6" ry="3.5" fill="#EE9F96" opacity="${(0.15 + hp / 220).toFixed(2)}"/><ellipse cx="120" cy="91" rx="6" ry="3.5" fill="#EE9F96" opacity="${(0.15 + hp / 220).toFixed(2)}"/>
+      <path d="${mouth}" stroke="#8A4A3E" stroke-width="2.2" fill="none" stroke-linecap="round"/>`;
+    if (st === 'elder') feat += `<path d="M77,84 l-5,2 M123,84 l5,2 M92,62 l16,0" stroke="#9A7E70" stroke-width="1.2" opacity=".7"/>`;
+    if (st === 'elder' && !f) feat += `<path d="M86,98 Q100,142 114,98 Q100,106 86,98Z" fill="#E8E4DC"/><path d="M88,95 Q100,90 112,95" stroke="#E8E4DC" stroke-width="4" fill="none"/>`;
+    const label = `${s.c} ${s.g === '여' ? '여인' : '사내'}, ${s.age}세`;
+    return `<svg viewBox="0 0 200 300" role="img" aria-label="${label}의 초상">
+      <path d="M14,300 L14,92 Q14,16 100,16 Q186,16 186,92 L186,300Z" fill="${bgc}"/>
+      <ellipse cx="100" cy="290" rx="64" ry="7" fill="#000" opacity=".1"/>
+      <g transform="translate(100 296) scale(${k}) translate(-100 -296)"><g class="idle">${back}${body}<rect x="93" y="100" width="14" height="16" fill="${skin}"/>${face}${hairF}${feat}${top}</g></g></svg>`;
+  }
+
+  /* ================= 사건 그림 (움직이는 장면) ================= */
+  const INK = '#3B302B';
+  const FIGC = ['#F1ECE0', '#E7D9B8', '#3E5A8A', '#C9443B', '#D6DCE4', '#8D5B8C', '#F2CF5B', '#5E806B'];
+  const g = {
+    mtn: (a = '#A9B9BF', b = '#8EA48B') => `<path d="M0,165 Q70,105 140,145 T280,128 T420,118 T560,138 T640,112 L640,300 L0,300Z" fill="${a}"/><path d="M0,198 Q90,150 190,184 T380,172 T540,188 T640,168 L640,300 L0,300Z" fill="${b}"/>`,
+    clouds: () => `<g class="cloud" style="animation-delay:-20s"><ellipse cx="0" cy="46" rx="48" ry="8" fill="#fff" opacity=".6"/><ellipse cx="28" cy="40" rx="26" ry="7" fill="#fff" opacity=".6"/></g><g class="cloud" style="animation-duration:110s;animation-delay:-70s"><ellipse cx="0" cy="78" rx="36" ry="6" fill="#fff" opacity=".5"/></g>`,
+    ground: (y, c) => `<rect x="0" y="${y}" width="640" height="${300 - y}" fill="${c}"/>`,
+    giwa(x, y, w, o = {}) {
+      const h = w * 0.38, r = w * 0.24, ex = w * 0.16, n = 4;
+      let pil = '';
+      for (let i = 0; i <= n; i++) pil += `<rect x="${x + i * w / n - 2}" y="${y}" width="4" height="${h}" fill="${o.pillar || '#7A4A2E'}"/>`;
+      let doors = '';
+      for (let i = 1; i < n - 1; i++) doors += `<rect x="${x + i * w / n + 5}" y="${y + 6}" width="${w / n - 10}" height="${h - 10}" fill="#E8DCC2" stroke="#8A6A4A" stroke-width="1"/><path d="M${x + i * w / n + 5 + (w / n - 10) / 2},${y + 6} l0,${h - 10} M${x + i * w / n + 5},${y + h / 2} l${w / n - 10},0" stroke="#8A6A4A" stroke-width="1"/>`;
+      return `<rect x="${x - 6}" y="${y + h}" width="${w + 12}" height="9" fill="#B7AE9D"/><rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${o.wall || '#EFE6D2'}"/>${doors}${pil}<rect x="${x - 2}" y="${y - 5}" width="${w + 4}" height="6" fill="#6B4A32"/>
+        <path d="M${x - ex},${y - 8} Q${x + w * 0.08},${y - r * 0.3} ${x + w * 0.12},${y - r} L${x + w * 0.88},${y - r} Q${x + w * 0.92},${y - r * 0.3} ${x + w + ex},${y - 8} Q${x + w / 2},${y + 14} ${x - ex},${y - 8}Z" fill="${o.roof || '#3A3D44'}"/>
+        <rect x="${x + w * 0.1}" y="${y - r - 5}" width="${w * 0.8}" height="6" rx="2" fill="${o.roof || '#3A3D44'}"/>`;
+    },
+    choga(x, y, w) {
+      const h = w * 0.42;
+      return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="#E3D3B0"/><rect x="${x + w * 0.4}" y="${y + h * 0.3}" width="${w * 0.2}" height="${h * 0.7}" fill="#7A5A3E"/><rect x="${x + w * 0.12}" y="${y + h * 0.3}" width="${w * 0.16}" height="${h * 0.28}" fill="#EFE6D2" stroke="#8A6A4A"/>
+        <path d="M${x - w * 0.1},${y + 4} Q${x - w * 0.06},${y - w * 0.34} ${x + w / 2},${y - w * 0.36} Q${x + w * 1.06},${y - w * 0.34} ${x + w * 1.1},${y + 4}Z" fill="#C8A564"/>
+        <path d="M${x},${y - w * 0.1} Q${x + w / 2},${y - w * 0.3} ${x + w},${y - w * 0.1} M${x - w * 0.04},${y - w * 0.02} Q${x + w / 2},${y - w * 0.2} ${x + w * 1.04},${y - w * 0.02}" stroke="#9E7E45" stroke-width="2" fill="none" opacity=".6"/>`;
+    },
+    fig(x, y, s, col, hat) {
+      const h = hat === 'gat' ? '<ellipse cx="0" cy="-25" rx="8" ry="1.8" fill="#222"/><rect x="-3" y="-31" width="6" height="6" rx="2" fill="#222"/>'
+        : hat === 'bun' ? '<circle cx="3.5" cy="-23" r="2.6" fill="#2A2320"/><path d="M-4.5,-22 Q0,-28 4.5,-22Z" fill="#2A2320"/>'
+        : hat === 'satgat' ? '<path d="M-10,-23 L0,-31 L10,-23Z" fill="#C8A564"/>'
+        : '<path d="M-4.6,-22 Q0,-28 4.6,-22Z" fill="#2A2320"/>';
+      return `<g transform="translate(${x},${y}) scale(${s})"><path d="M-6.5,0 L-4.5,-16 Q0,-19 4.5,-16 L6.5,0Z" fill="${col}"/><circle cx="0" cy="-21" r="4.6" fill="#E9C9A8"/>${h}</g>`;
+    },
+    crowd(n, y, x0, x1, s = 1.4, seed = 1) {
+      let o = '';
+      for (let i = 0; i < n; i++) {
+        const x = x0 + (x1 - x0) * (i + 0.5) / n + ((i * 37 * seed) % 11) - 5;
+        o += g.fig(x, y + ((i * 13 * seed) % 7), s, FIGC[(i * 3 + seed) % FIGC.length], ['gat', 'bun', 'none'][(i + seed) % 3]);
+      }
+      return o;
+    },
+    pine: (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})"><path d="M-2,0 L-3,-34 L3,-34 L2,0Z" fill="#6B4A32"/><ellipse cx="0" cy="-34" rx="17" ry="7" fill="#4E6B4E"/><ellipse cx="-5" cy="-43" rx="12" ry="6" fill="#56755A"/><ellipse cx="4" cy="-51" rx="8" ry="5" fill="#5F7F62"/></g>`,
+    tree: (x, y, s, leaf = '#86A274', fruit = '') => `<g transform="translate(${x},${y}) scale(${s})"><path d="M-4,0 L-3,-40 L3,-40 L4,0Z" fill="#6B4A32"/><circle cx="0" cy="-52" r="22" fill="${leaf}"/><circle cx="-16" cy="-42" r="14" fill="${leaf}"/><circle cx="16" cy="-44" r="15" fill="${leaf}"/>${fruit ? [[-10, -50], [8, -58], [14, -40], [-16, -38], [2, -44]].map(([a, b]) => `<circle cx="${a}" cy="${b}" r="3" fill="${fruit}"/>`).join('') : ''}</g>`,
+    jars: (x, y) => [[0, 0, 1], [22, 4, 0.8], [-20, 5, 0.75], [10, -12, 0.6]].map(([a, b, s]) => `<g transform="translate(${x + a},${y + b}) scale(${s})"><path d="M-12,0 Q-16,-18 -8,-26 L8,-26 Q16,-18 12,0Z" fill="#6E4630"/><rect x="-9" y="-30" width="18" height="5" rx="2" fill="#5A3826"/></g>`).join(''),
+    flag: (x, y, c) => `<path d="M${x},${y} L${x},${y + 60}" stroke="#6B4A32" stroke-width="2"/><path class="sway" d="M${x},${y} l24,6 l-24,8Z" fill="${c}"/>`,
+    smoke: (x, y) => [0, 1.6, 3.2].map(d => `<circle class="smoke" style="animation-delay:${d}s" cx="${x}" cy="${y}" r="7" fill="#F4F1EA" opacity=".6"/>`).join(''),
+    flames: (x, y, s) => `<g transform="translate(${x},${y}) scale(${s})"><path class="flick" d="M-18,0 Q-22,-30 -6,-52 Q-2,-30 6,-40 Q20,-22 16,0Z" fill="#E8722E"/><path class="flick" style="animation-delay:-.3s" d="M-9,0 Q-12,-22 -1,-36 Q4,-20 10,-26 Q14,-12 9,0Z" fill="#F5B544"/></g>`,
+    stars: () => Array.from({ length: 28 }, (_, i) => `<circle cx="${(i * 89) % 640}" cy="${(i * 37) % 120 + 8}" r="${i % 3 ? 0.9 : 1.5}" fill="#fff" opacity=".8"/>`).join(''),
+    moon: (x = 540, y = 56) => `<circle cx="${x}" cy="${y}" r="20" fill="#F5EBC8"/><circle cx="${x}" cy="${y}" r="34" fill="#F5EBC8" opacity=".12"/>`,
+    particles(kind) {
+      const one = (oy) => Array.from({ length: 46 }, (_, i) => kind === 'snow'
+        ? `<circle cx="${(i * 97) % 640}" cy="${(i * 53) % 300 + oy}" r="${i % 3 ? 1.8 : 2.8}" fill="#fff" opacity=".85"/>`
+        : `<path d="M${(i * 97) % 640},${(i * 53) % 300 + oy} l-3,12" stroke="#DDE6EE" stroke-width="1.2" opacity=".7"/>`).join('');
+      return `<g class="fall ${kind === 'rain' ? 'rain' : ''}">${one(-300)}${one(0)}</g>`;
+    },
+  };
+
+  const SCN = {
+    town: { d: () => g.mtn() + g.clouds() + g.ground(212, '#D9CBA6') + g.choga(40, 180, 120) + g.giwa(230, 168, 170) + g.choga(460, 188, 110) + g.smoke(90, 140) + g.smoke(510, 150) + g.pine(610, 214, 1.3) + g.crowd(4, 262, 150, 520, 1.3, 2) },
+    palace: { d: () => g.mtn() + g.clouds() + g.ground(200, '#D8CFBD') + `<rect x="120" y="186" width="400" height="22" fill="#BDB3A0"/>` + g.giwa(150, 120, 340, { wall: '#F0E4CC', pillar: '#A8402F' }) + g.flag(96, 150, '#C9443B') + g.flag(540, 150, '#3E5A8A') + g.crowd(10, 268, 40, 600, 1.5, 3) },
+    exam: { d: () => g.mtn() + g.ground(196, '#D8CFBD') + g.giwa(190, 120, 260, { wall: '#F0E4CC', pillar: '#A8402F' }) + Array.from({ length: 9 }, (_, i) => `<path d="M${40 + i * 70},226 l0,30" stroke="#6B4A32" stroke-width="2"/><path d="M${18 + i * 70},228 Q${40 + i * 70},208 ${62 + i * 70},228Z" fill="#F4F1EA"/>`).join('') + g.crowd(14, 280, 20, 620, 1.3, 5) },
+    river: { d: () => g.mtn('#B2C1C5', '#9BB09A') + g.clouds() + g.ground(170, '#CDBF9C') + `<rect x="0" y="196" width="640" height="70" fill="#7FA3B8"/>` + [210, 232, 252].map(y => `<path class="flow" d="M0,${y} L640,${y}" stroke="#fff" stroke-opacity=".5" stroke-width="2"/>`).join('') + Array.from({ length: 16 }, (_, i) => `<path d="M${i * 42},206 q20,14 40,0Z" fill="#6B4A32"/>`).join('') + `<rect x="0" y="200" width="640" height="6" fill="#8A6A4A"/><g class="walk">${g.crowd(12, 200, 180, 460, 1.1, 4)}${g.flag(300, 150, '#C9443B')}${g.flag(380, 150, '#F2CF5B')}</g>` + g.ground(266, '#CDBF9C') + g.crowd(8, 292, 20, 620, 1.4, 6) },
+    fortress: { d: () => g.mtn() + g.clouds() + g.ground(230, '#D4C7A5') + `<rect x="0" y="172" width="640" height="64" fill="#CBC2AF"/>` + [188, 204, 220].map(y => `<path d="M0,${y} L640,${y}" stroke="#A99F8C" stroke-width="1"/>`).join('') + Array.from({ length: 25 }, (_, i) => `<rect x="${i * 26}" y="160" width="16" height="13" fill="#BFB6A2"/>`).join('') + `<path d="M290,236 L290,200 Q320,176 350,200 L350,236Z" fill="#4A3C33"/>` + g.giwa(268, 128, 104, { pillar: '#A8402F' }) + `<path d="M520,236 L548,130 L576,236 M534,184 L562,184" stroke="#7A5A3E" stroke-width="5" fill="none"/><circle cx="548" cy="134" r="6" fill="#5A4030"/><g class="lift"><path d="M548,134 L548,214" stroke="#8A7A62" stroke-width="1.5"/><rect x="534" y="212" width="28" height="18" fill="#9E9686"/></g>` + g.crowd(5, 276, 380, 630, 1.5, 7) },
+    siege: { d: () => SCN.fortress.d() + g.flames(140, 172, 1.3) + g.flames(450, 176, 1) + g.smoke(140, 120) + g.smoke(450, 130) },
+    market: { d: () => g.ground(150, '#D9CBA6') + g.mtn('#B5C3C2', '#A5B59F').replace(/165/g, '120') + g.ground(196, '#D9CBA6') + [30, 190, 350, 500].map((x, i) => `<path d="M${x},152 L${x + 55},130 L${x + 110},152Z" fill="#F4F0E6" stroke="#B9AE98"/><path d="M${x + 4},152 L${x + 4},224 M${x + 106},152 L${x + 106},224" stroke="#6B4A32" stroke-width="3"/><rect x="${x + 8}" y="204" width="94" height="8" fill="#8A6A4A"/>${[18, 38, 58, 78].map(a => `<circle cx="${x + a + 8}" cy="198" r="${5 + (a + i) % 4}" fill="${['#C9443B', '#E9B84A', '#7E8C5A', '#F1ECE0'][(a / 20 + i) % 4 | 0]}"/>`).join('')}`).join('') + g.crowd(13, 278, 10, 630, 1.6, 2) },
+    home: { d: s => g.mtn() + g.clouds() + g.ground(206, '#D9CBA6') + `<rect x="0" y="196" width="640" height="12" fill="#BDB09A"/>` + (s.c === '상민' ? g.choga(200, 166, 220) : g.giwa(180, 158, 260)) + g.jars(540, 250) + g.tree(90, 250, 1.4, '#86A274', '#E5873A') + g.smoke(300, 110) },
+    baby: { d: s => SCN.home.d(s) + `<path d="M120,226 Q320,240 520,226" stroke="#C8A564" stroke-width="3" fill="none"/>` + Array.from({ length: 9 }, (_, i) => `<path d="M${150 + i * 40},${232} l0,14" stroke="${i % 2 ? '#C9443B' : '#2A2320'}" stroke-width="5" stroke-linecap="round"/>`).join('') },
+    study: { indoor: true, d: () => `<rect width="640" height="300" fill="#EDE3CC"/><rect x="380" y="34" width="210" height="150" fill="#F7F0DF" stroke="#8A6A4A" stroke-width="6"/>` + Array.from({ length: 6 }, (_, i) => `<path d="M${380 + (i + 1) * 30},34 l0,150" stroke="#8A6A4A" stroke-width="2"/>`).join('') + Array.from({ length: 4 }, (_, i) => `<path d="M380,${34 + (i + 1) * 30} l210,0" stroke="#8A6A4A" stroke-width="2"/>`).join('') + `<rect x="0" y="236" width="640" height="64" fill="#D9B676"/><rect x="110" y="196" width="230" height="14" fill="#6B4A32"/><rect x="120" y="210" width="10" height="28" fill="#5A3E2A"/><rect x="320" y="210" width="10" height="28" fill="#5A3E2A"/>` + [[140, '#3E5A8A'], [150, '#8A5A3E'], [158, '#3E5A8A']].map(([y, c], i) => `<rect x="${150 + i * 6}" y="${y + 36}" width="70" height="8" fill="${c}"/>`).join('') + `<rect x="250" y="186" width="56" height="10" fill="#F4F1EA"/><path d="M60,236 L60,150" stroke="#5A3E2A" stroke-width="4"/><ellipse cx="60" cy="150" rx="14" ry="4" fill="#5A3E2A"/><circle cx="60" cy="132" r="40" fill="#F5B544" opacity=".15"/><path class="flick" d="M60,148 Q52,136 60,122 Q68,136 60,148Z" fill="#F5B544"/>` },
+    kitchen: { indoor: true, d: () => `<rect width="640" height="300" fill="#D9CDB5"/><rect width="640" height="70" fill="#6E6255" opacity=".35"/><rect x="60" y="190" width="520" height="80" fill="#A99A86"/>` + [180, 420].map(x => `<ellipse cx="${x}" cy="190" rx="80" ry="16" fill="#2A2624"/><path d="M${x - 70},190 Q${x},236 ${x + 70},190Z" fill="#3A3532"/><rect x="${x - 26}" y="232" width="52" height="30" rx="8" fill="#2A1A12"/><g transform="translate(${x},262)">${g.flames(0, 0, 0.5)}</g>` + g.smoke(x - 20, 170) + g.smoke(x + 24, 172)).join('') + g.crowd(3, 296, 60, 600, 1.8, 3) },
+    inn: { d: () => g.mtn() + g.ground(206, '#D4C29C') + g.choga(60, 160, 210) + g.tree(560, 260, 1.5, '#9DB284') + `<rect x="320" y="226" width="200" height="10" fill="#8A6A4A"/><rect x="326" y="236" width="6" height="22" fill="#6B4A32"/><rect x="508" y="236" width="6" height="22" fill="#6B4A32"/>` + g.jars(290, 270) + `<path d="M300,130 l0,20" stroke="#5A3E2A"/><circle class="flick" cx="300" cy="160" r="9" fill="#E9874A"/>` + g.fig(370, 226, 1.4, '#F1ECE0', 'gat') + g.fig(420, 226, 1.4, '#E7D9B8', 'none') + g.fig(470, 226, 1.4, '#8D5B8C', 'bun') },
+    fireworks: { force: 'night', d: () => g.mtn('#26304A', '#1E2638') + `<rect x="0" y="236" width="640" height="64" fill="#1A2236"/>` + [250, 270].map(y => `<path class="flow" d="M0,${y} L640,${y}" stroke="#F5B544" stroke-opacity=".3" stroke-width="2"/>`).join('') + `<g opacity=".9">${g.giwa(270, 170, 100, { wall: '#3A3A44', roof: '#15161C', pillar: '#2A2A30' })}</g>` + [[160, 90, '#F5B544', 0], [330, 60, '#F2A0B0', 1], [480, 100, '#FFF2C4', 2], [250, 120, '#F2A0B0', 0.6]].map(([x, y, c, d]) => `<g class="burst" style="animation-delay:${d}s">${Array.from({ length: 14 }, (_, i) => `<circle cx="${(x + Math.cos(i / 14 * 6.28) * 34).toFixed(1)}" cy="${(y + Math.sin(i / 14 * 6.28) * 34).toFixed(1)}" r="2.6" fill="${c}"/>`).join('')}<circle cx="${x}" cy="${y}" r="4" fill="${c}"/></g>`).join('') + g.crowd(12, 296, 20, 620, 1.4, 4).replace(/fill="#(?!E9C9A8)[0-9A-F]{6}"/g, 'fill="#10131C"') },
+    plague: { d: () => g.ground(0, '#8E8A80') + `<rect x="0" y="40" width="640" height="190" fill="#B3AA98"/>` + [30, 190, 350, 510].map(x => `<rect x="${x}" y="110" width="100" height="120" fill="#6B5644"/><path d="M${x + 50},110 l0,120" stroke="#4A3C30" stroke-width="2"/><path d="M${x - 10},110 Q${x + 50},90 ${x + 110},110Z" fill="#4A4A50"/>`).join('') + `<path d="M0,150 Q320,170 640,150" stroke="#C8A564" stroke-width="3" fill="none"/>` + Array.from({ length: 12 }, (_, i) => `<path d="M${30 + i * 52},${156 + Math.sin(i) * 3} l0,14" stroke="#C8A564" stroke-width="3"/>`).join('') + g.ground(230, '#8E8470') + g.smoke(120, 220) + g.smoke(420, 214) + g.fig(300, 270, 1.8, '#E7E2D6', 'none') + `<rect width="640" height="300" fill="#2A2E30" opacity=".25"/>` },
+    field: { d: () => g.mtn() + g.clouds() + g.ground(186, '#9DB27C') + Array.from({ length: 5 }, (_, i) => `<path d="M0,${200 + i * 20} L640,${196 + i * 22}" stroke="#7E9A6A" stroke-width="3"/><path class="flow" d="M0,${208 + i * 20} L640,${204 + i * 22}" stroke="#C8DCE6" stroke-opacity=".6" stroke-width="1.5"/>`).join('') + g.fig(240, 250, 1.8, '#EDE7D7', 'satgat') + g.fig(420, 236, 1.5, '#F1ECE0', 'bun') + g.pine(600, 190, 1.2) },
+    drought: { d: () => `<rect width="640" height="300" fill="#E9D6A6" opacity=".55"/><circle cx="470" cy="70" r="40" fill="#FFF4D4"/><circle cx="470" cy="70" r="70" fill="#FFF4D4" opacity=".25"/>` + g.mtn('#C9B994', '#BFA97C') + g.ground(196, '#C9A877') + `<path d="M40,220 l40,10 l30,-8 l50,14 M200,250 l40,-10 l30,16 l60,-6 M380,214 l50,14 l30,-12 l40,18 M120,270 l60,6 l40,-10 M420,262 l50,8 l60,-12" stroke="#8E7048" stroke-width="2" fill="none"/>` + `<path d="M120,200 L124,130 M122,160 L100,140 M123,150 L144,128 M110,146 L98,150" stroke="#5A4030" stroke-width="4" fill="none" stroke-linecap="round"/>` + g.fig(330, 260, 1.7, '#EDE7D7', 'none') },
+    festival: { d: () => g.mtn() + g.clouds() + g.ground(206, '#A9BE86') + `<path d="M300,206 L304,70 L318,70 L322,206Z" fill="#6B4A32"/><path d="M300,74 Q240,60 180,80 L460,80 Q400,60 320,74Z" fill="#6B4A32"/><circle cx="310" cy="50" r="58" fill="#7E9A6A"/><circle cx="230" cy="62" r="40" fill="#86A274"/><circle cx="392" cy="62" r="42" fill="#86A274"/>` + `<g class="swing"><path d="M200,80 L200,210 M240,80 L240,210" stroke="#C8A564" stroke-width="2"/><rect x="194" y="208" width="52" height="5" fill="#8A6A4A"/>${g.fig(220, 208, 1.7, '#C9443B', 'bun')}</g>` + g.flag(500, 150, '#F2CF5B') + g.crowd(10, 280, 20, 620, 1.5, 8) },
+    sea: { d: () => g.clouds() + `<path d="M380,150 Q430,120 480,150Z" fill="#8EA48B"/><rect x="0" y="150" width="640" height="150" fill="#5E8AA6"/>` + [170, 196, 226, 258].map(y => `<path class="flow" d="M0,${y} L640,${y}" stroke="#fff" stroke-opacity=".4" stroke-width="2"/>`).join('') + `<g class="bob"><path d="M150,200 L330,200 L310,226 L170,226Z" fill="#4A3426"/><path d="M190,200 L190,92 M240,200 L240,80 M290,200 L290,100" stroke="#3A2A20" stroke-width="3"/>${[[190, 100], [240, 88], [290, 108]].map(([x, y]) => `<path d="M${x - 24},${y + 8} L${x + 24},${y + 8} L${x + 20},${y + 50} L${x - 20},${y + 50}Z" fill="#F4F1EA"/><path d="M${x - 20},${y + 62} L${x + 20},${y + 62} L${x + 18},${y + 90} L${x - 18},${y + 90}Z" fill="#F4F1EA"/>`).join('')}<path d="M290,100 l18,4 l-18,6Z" fill="#C9443B"/></g>` + g.ground(268, '#D9CBA6') + g.crowd(5, 296, 380, 620, 1.5, 3) },
+    snow: { d: s => g.mtn('#C8D0D6', '#DCE2E4') + g.ground(206, '#F1F1EE') + (s.c === '상민' ? g.choga(200, 166, 220) : g.giwa(180, 158, 260, { roof: '#4A4E58' })) + `<path d="M150,${s.c === '상민' ? 150 : 140} Q320,${s.c === '상민' ? 80 : 90} 490,${s.c === '상민' ? 150 : 140}" stroke="#fff" stroke-width="10" fill="none" stroke-linecap="round"/>` + g.pine(90, 240, 1.4) + g.jars(550, 254) + g.smoke(320, 110) + g.particles('snow') },
+    fire: { force: 'night', d: () => g.mtn('#26304A', '#1E2638') + g.ground(210, '#2C2A2E') + g.choga(230, 170, 190) + g.flames(260, 160, 1.6) + g.flames(330, 140, 2) + g.flames(400, 158, 1.5) + g.smoke(300, 90) + g.smoke(380, 96) + `<circle cx="330" cy="140" r="140" fill="#E8722E" opacity=".12"/>` + g.crowd(7, 290, 20, 640, 1.6, 2) },
+    road: { d: () => g.mtn() + g.clouds() + g.ground(200, '#B9C497') + `<path d="M640,206 Q420,214 380,240 Q330,276 0,290" stroke="#D9CBA6" stroke-width="34" fill="none"/>` + g.pine(80, 230, 1.6) + g.pine(560, 214, 1.3) + `<g class="walk" style="animation-duration:40s">${g.fig(300, 264, 1.6, '#EDE7D7', 'satgat')}${g.fig(334, 260, 1.4, '#F1ECE0', 'bun')}<rect x="292" y="232" width="14" height="10" fill="#B7A487"/></g>` },
+    death: { indoor: true, d: () => `<rect width="640" height="300" fill="#24201D"/>` + Array.from({ length: 8 }, (_, i) => `<rect x="${80 + i * 60}" y="40" width="58" height="180" fill="#3A332D" stroke="#4A4038"/><path d="M${90 + i * 60},${150 - (i % 3) * 10} q20,-30 40,0" stroke="#5A4E44" fill="none"/>`).join('') + `<rect x="0" y="236" width="640" height="64" fill="#1A1714"/><rect x="230" y="200" width="180" height="12" fill="#4A3426"/><rect x="250" y="212" width="8" height="26" fill="#3A2A20"/><rect x="382" y="212" width="8" height="26" fill="#3A2A20"/>` + [280, 360].map(x => `<rect x="${x - 4}" y="168" width="8" height="32" fill="#EFE9DC"/><circle cx="${x}" cy="150" r="30" fill="#F5B544" opacity=".12"/><path class="flick" d="M${x},168 Q${x - 6},158 ${x},146 Q${x + 6},158 ${x},168Z" fill="#F5B544"/>`).join('') + g.smoke(320, 190) },
+    wedding: { d: () => g.ground(0, '#D8CFBD') + `<rect x="0" y="0" width="640" height="120" fill="#F4F0E6"/><path d="M0,120 Q320,150 640,120" stroke="#B9AE98" fill="none"/>` + `<rect x="200" y="196" width="240" height="16" fill="#C9443B"/><rect x="200" y="212" width="240" height="40" fill="#A8352D"/>` + [[260, '#3E5A8A'], [380, '#C9443B']].map(([x, c]) => `<rect x="${x - 4}" y="160" width="8" height="36" fill="${c}"/><path class="flick" d="M${x},160 Q${x - 5},151 ${x},141 Q${x + 5},151 ${x},160Z" fill="#F5B544"/>`).join('') + `<path d="M300,190 Q312,170 330,180 L344,176 L338,184 Q330,196 300,190Z" fill="#8A6A4A"/>` + g.fig(140, 270, 2.6, '#3E5A8A', 'gat') + g.fig(500, 270, 2.6, '#C9443B', 'bun') + g.crowd(6, 296, 40, 600, 1.3, 5) },
+  };
+  const OVER = { dawn: ['#FF9A6A', 0.1], day: ['#fff', 0], dusk: ['#E0703A', 0.16], night: ['#0A1430', 0.42] };
+  const SKY = { dawn: ['#F2C6A4', '#FBEAD8'], day: ['#BCD6E8', '#EEF2EA'], dusk: ['#E39A73', '#F6D8B4'], night: ['#18223A', '#34446A'] };
+  function drawScene(key, time, s) {
+    const sc = SCN[key] || SCN.town, t = sc.force || time || 'day';
+    const sky = sc.indoor ? '' : `<defs><linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${SKY[t][0]}"/><stop offset="1" stop-color="${SKY[t][1]}"/></linearGradient></defs><rect width="640" height="300" fill="url(#gSky)"/>${t === 'night' ? g.stars() + g.moon() : ''}`;
+    const ov = !sc.indoor && OVER[t][1] ? `<rect width="640" height="300" fill="${OVER[t][0]}" opacity="${OVER[t][1]}"/>` : '';
+    return `<svg viewBox="0 0 640 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${sky}<g class="kb">${sc.d(s)}</g>${ov}</svg>`;
+  }
+
+  /* ================= 이슈(한평생) 시나리오 ================= */
+  const LIFE = [
+    { id: 'accession', y: 1776, bg: 'palace', time: 'day', title: '새 임금이 즉위하다', people: ['정조', '영조'],
+      body: s => `봄, 쉰두 해를 다스린 영조가 승하하고 스물다섯 살 세손이 왕위에 올랐다. 즉위하던 날 새 임금이 신하들 앞에서 “과인은 사도세자의 아들이다”라고 말했다는 이야기가 저잣거리까지 퍼졌다. ${s.age}살의 당신은 그 말뜻을 다 알지 못했다.`,
       note: ['기록', '『정조실록』 즉위년(1776) 3월 10일. 정조는 즉위 직후 궁궐 안에 왕실 도서관이자 학문 기관인 규장각을 세웠다.'],
       choices: () => [
         { t: '어른들 곁에 붙어 앉아 이야기를 엿듣는다', tag: '호기심', eff: { heart: 3 }, r: '무슨 일인지 다 알 수는 없었지만, 세상이 바뀌고 있다는 것만은 알 것 같았다.' },
         { t: '동생을 업고 마당에 나가 논다', tag: '다정', eff: { bond: 4 }, r: '동생은 당신 등에서 잠이 들었다. 어른들의 이야기는 담장 너머의 일이었다.' },
         { t: '아버지가 시킨 심부름을 꼼꼼히 해낸다', tag: '신중', eff: { money: 2, fame: 2 }, r: '“제법이구나.” 아버지의 짧은 칭찬이 오래 남았다.' },
-      ],
-    },
-    {
-      id: 'smallpox', y: 1778, title: '마마가 돌다', people: [],
+      ] },
+    { id: 'smallpox', y: 1778, bg: 'home', time: 'night', title: '마마가 돌다',
       body: () => '동네에 마마가 돌았다. 열이 끓고 온몸에 붉은 반점이 돋았다. 어른들은 병을 ‘손님’이라 높여 부르며, 손님이 노하지 않도록 집 안에서 함부로 떠들지 못하게 했다.',
       note: ['기록', '천연두는 조선 아이들의 가장 큰 사망 원인 가운데 하나였다. 우두법이 널리 보급된 것은 1879년 지석영 이후의 일이다.'],
       choices: () => [
         { t: '무당을 불러 손님을 달래는 굿을 한다', tag: '다정', fn: () => ({ eff: { hp: -rnd(8, 18), money: -5, bond: 3 }, r: '밤새 장구 소리가 났다. 이웃들이 와서 함께 빌어 주었다. 열은 사흘 만에 내렸다.' }) },
         { t: '의원을 찾아 약을 지어 온다', tag: '신중', eff: { hp: -8, money: -8 }, r: '쓴 탕약을 몇 첩 먹고 나니 열이 가라앉았다. 집안 살림이 조금 줄었다.' },
-        { t: '방 안에 누워 조용히 견딘다', tag: null, fn: () => { const d = rnd(5, 24); return { eff: { hp: -d }, r: d > 16 ? '열흘을 앓았다. 얼굴에 옅은 자국이 남았지만 살아남았다.' : '생각보다 빨리 털고 일어났다. 운이 좋았다고들 했다.', flag: d > 16 ? 'scar' : null }; } },
-      ],
-    },
-    {
-      id: 'youth', y: 1783, title: s => ({ '양반': '책상 앞의 열세 살', '중인': '어떤 기술을 익힐까', '상민': '열세 살의 일' }[s.c]), people: s => (s.c === '양반' && !F(s) ? ['박지원'] : s.c === '중인' ? ['김홍도'] : []),
+        { t: '방 안에 누워 조용히 견딘다', fn: () => { const d = rnd(5, 24); return { eff: { hp: -d }, r: d > 16 ? '열흘을 앓았다. 얼굴에 옅은 자국이 남았지만 살아남았다.' : '생각보다 빨리 털고 일어났다. 운이 좋았다고들 했다.' }; } },
+      ] },
+    { id: 'youth', y: 1783, when: s => s.c !== '상민', bg: s => F(s) && s.c === '중인' ? 'kitchen' : 'study', time: 'day',
+      title: s => s.c === '양반' ? '책상 앞의 열세 살' : '어떤 기술을 익힐까', people: s => (s.c === '양반' && !F(s) ? ['박지원'] : s.c === '중인' ? ['김홍도'] : []),
       body: s => {
         if (s.c === '양반' && !F(s)) return '아침마다 사서삼경을 외운다. 과거에 붙어야 집안이 산다. 그러던 어느 날 사촌 형이 소매에서 필사본 하나를 꺼냈다. 박지원이 청나라에 다녀와 쓴 『열하일기』라고 했다. “어른들한테는 비밀이다.”';
         if (s.c === '양반') return '한문은 사내의 글이라 했다. 그래도 언문 소설은 규방에서 몰래 돌았다. 한양에는 책을 빌려주는 세책점이 있어, 여종이 심부름 길에 『사씨남정기』를 빌려 왔다.';
         if (!F(s)) return '중인 집안의 아들은 기술로 먹고산다. 역관이 되어 청나라 말을 배울지, 의원이 될지, 도화서에 들어가 그림을 그릴지. 요즘 장안에서는 도화서 화원 김홍도의 그림이 사람들 입에 오르내린다.';
         return '아버지는 약방을 하신다. 손님이 많은 날이면 약재를 썰고 달이는 일손이 모자랐다. 이웃 언니는 언문 소설을 베껴 써서 세책점에 넘기고 돈을 받는다고 했다.';
       },
-      note: s => s.c === '양반' && !F(s)
-        ? ['기록', '박지원은 1780년 청나라 사신단을 따라 열하까지 다녀와 『열하일기』를 썼다. 이 책은 필사본으로 널리 읽혔다.']
-        : ['기록', '18세기 후반 한양에는 소설을 빌려주는 세책점이 성행했고, 김홍도는 이 무렵 서민의 일상을 담은 풍속화로 이름을 떨쳤다.'],
+      note: s => s.c === '양반' && !F(s) ? ['기록', '박지원은 1780년 청나라 사신단을 따라 열하까지 다녀와 『열하일기』를 썼다. 이 책은 필사본으로 널리 읽혔다.'] : ['기록', '18세기 후반 한양에는 소설을 빌려주는 세책점이 성행했고, 김홍도는 이 무렵 서민의 일상을 담은 풍속화로 이름을 떨쳤다.'],
       choices: s => {
         if (s.c === '양반' && !F(s)) return [
-          { t: '흔들리지 않고 과거 공부에 매진한다', tag: '신중', eff: { fame: 5, heart: -3 }, flag: 'study', r: '해가 지고 등잔을 켤 때까지 책을 덮지 않았다. 허리가 굽었다고 어머니가 웃었다.' },
+          { t: '흔들리지 않고 과거 공부에 매진한다', tag: '신중', eff: { fame: 5, heart: -3 }, flag: 'study', br: 1, r: '해가 지고 등잔을 켤 때까지 책을 덮지 않았다.' },
           { t: '『열하일기』를 밤새 읽는다', tag: '호기심', eff: { heart: 6 }, flag: 'silhak', r: '수레, 벽돌, 장사꾼의 셈법. 책 속의 청나라는 당신이 배운 오랑캐의 나라와 달랐다.' },
-          { t: '활쏘기와 말타기를 더 좋아한다', tag: '야심', eff: { hp: 6 }, r: '활터에서 과녁을 맞힐 때마다 가슴이 뛰었다. 글은 조금 뒤로 밀렸다.' },
+          { t: '활쏘기와 말타기를 더 좋아한다', tag: '야심', eff: { hp: 6 }, r: '활터에서 과녁을 맞힐 때마다 가슴이 뛰었다.' },
         ];
         if (s.c === '양반') return [
-          { t: '언문 소설을 빌려 몰래 읽는다', tag: '호기심', eff: { heart: 6, money: -2 }, r: '사씨 부인의 억울한 사연에 밤새 눈물을 훔쳤다. 다음 권을 빌려 올 날만 기다렸다.' },
+          { t: '언문 소설을 빌려 몰래 읽는다', tag: '호기심', eff: { heart: 6, money: -2 }, r: '사씨 부인의 억울한 사연에 밤새 눈물을 훔쳤다.' },
           { t: '오라버니 어깨너머로 한문을 익힌다', tag: '야심', eff: { fame: 3, heart: 3 }, flag: 'hanmun', r: '천자문을 몰래 다 외웠을 때, 오라버니가 놀라서 한동안 말을 잃었다.' },
-          { t: '바느질과 살림을 차근차근 배운다', tag: '신중', eff: { money: 3, bond: 2 }, r: '어머니 곁에서 장 담그는 법, 제사상 차리는 법을 익혔다. 손이 야무지다는 말을 들었다.' },
+          { t: '바느질과 살림을 차근차근 배운다', tag: '신중', eff: { money: 3, bond: 2 }, r: '어머니 곁에서 장 담그는 법, 제사상 차리는 법을 익혔다.' },
         ];
         if (!F(s)) return [
-          { t: '청나라 말을 배워 역관을 꿈꾼다', tag: '야심', eff: { fame: 3, money: 2 }, flag: 'yeokgwan', r: '“니하오.” 서툰 발음에 스승이 혀를 찼지만, 언젠가 연경에 가 보겠다는 꿈이 생겼다.' },
+          { t: '청나라 말을 배워 역관을 꿈꾼다', tag: '야심', eff: { fame: 3, money: 2 }, flag: 'yeokgwan', br: 1, r: '서툰 발음에 스승이 혀를 찼지만, 언젠가 연경에 가 보겠다는 꿈이 생겼다.' },
           { t: '약방에서 의술을 익힌다', tag: '다정', eff: { bond: 3, hp: 2 }, flag: 'medicine', r: '맥을 짚는 법부터 배웠다. 아픈 사람의 손목은 생각보다 가늘었다.' },
           { t: '붓을 잡고 그림을 배운다', tag: '호기심', eff: { heart: 6 }, flag: 'paint', r: '씨름판, 서당, 빨래터. 장터에 나가 사람들 모습을 그리고 또 그렸다.' },
         ];
@@ -372,398 +566,775 @@ footer.note { text-align: center; }
           { t: '소설을 베껴 세책점에 넘긴다', tag: '야심', eff: { money: 5, heart: 2 }, r: '글씨가 곱다고 세책점 주인이 일감을 더 주었다. 처음으로 내 손으로 번 돈이었다.' },
           { t: '이웃 아이들을 돌봐 준다', tag: '다정', eff: { bond: 4 }, r: '골목 아이들이 당신을 졸졸 따라다녔다.' },
         ];
-      },
-    },
-    {
-      id: 'youth2', y: 1783, title: '열세 살의 일', people: [], when: s => s.c === '상민',
+      } },
+    { id: 'youth2', y: 1783, when: s => s.c === '상민', bg: s => F(s) ? 'home' : 'field', time: 'day', title: '열세 살의 일',
       body: s => F(s) ? '어머니는 밤마다 베틀에 앉는다. 베 한 필이 곧 세금이고 돈이다. 장날이면 떡을 이고 나가는 이웃 아주머니가 당신에게 같이 가자고 했다.' : '보리가 익을 무렵이면 논밭에 일손이 모자란다. 한양 장터에서는 짐을 져 나르면 하루 품삯을 준다는 말도 들린다. 남사당패가 들어온다는 소문에 아이들이 들떠 있다.',
       note: ['각색', '상민 가정의 일상 장면이다. 조선 후기 상민은 군포와 환곡 같은 부담을 지며 농사와 장사로 생계를 꾸렸다.'],
       choices: s => F(s) ? [
         { t: '어머니 곁에서 길쌈을 배운다', tag: '신중', eff: { money: 4 }, r: '첫 베 한 자를 짜던 날, 어머니가 말없이 머리를 쓰다듬었다.' },
-        { t: '장터에 떡을 팔러 따라간다', tag: '야심', eff: { money: 5, bond: 2 }, r: '목이 쉬도록 외쳤다. 해 질 녘 떡 함지가 텅 비었다.' },
+        { t: '장터에 떡을 팔러 따라간다', tag: '야심', eff: { money: 5, bond: 2 }, flag: 'trade', br: 1, r: '목이 쉬도록 외쳤다. 해 질 녘 떡 함지가 텅 비었다.' },
         { t: '동생들을 업고 돌본다', tag: '다정', eff: { bond: 4 }, r: '어머니가 일하는 동안 동생들은 당신 품에서 컸다.' },
       ] : [
-        { t: '아버지를 따라 논일을 거든다', tag: '신중', eff: { hp: 3, money: 2 }, r: '진흙에 발이 빠질 때마다 아버지가 웃었다. 그해 쌀이 넉넉했다.' },
-        { t: '한양 장터에서 짐꾼으로 일한다', tag: '야심', eff: { money: 5, hp: -3 }, r: '어깨가 벗겨졌지만, 손에 쥔 엽전 소리가 좋았다.' },
+        { t: '아버지를 따라 논일을 거든다', tag: '신중', eff: { hp: 3, money: 2 }, r: '진흙에 발이 빠질 때마다 아버지가 웃었다.' },
+        { t: '한양 장터에서 짐꾼으로 일한다', tag: '야심', eff: { money: 5, hp: -3 }, flag: 'trade', br: 1, r: '어깨가 벗겨졌지만, 손에 쥔 엽전 소리가 좋았다.' },
         { t: '남사당패 놀이판을 구경 간다', tag: '호기심', eff: { heart: 5 }, r: '줄 위를 걷는 어름사니에 넋을 잃었다. 집에 와서 한참 혼났다.' },
-      ],
-    },
-    {
-      id: 'marriage', y: 1786, title: '혼담이 오가다', people: [],
-      body: s => F(s)
-        ? '중매쟁이가 드나들더니 혼처가 정해졌다. 신랑의 얼굴은 혼례 날에야 볼 수 있다. 혼례를 치르면 친정을 떠나 시댁으로 들어가 살게 된다.'
-        : '중매쟁이가 드나들더니 혼처가 정해졌다. 신부의 얼굴은 혼례 날에야 볼 수 있다. 어머니는 벌써 사주단자를 보낼 날을 고르고 있다.',
-      note: ['기록', '조선 후기에는 성리학의 예법에 따라 혼례 뒤 신부가 시댁에 들어가 사는 풍습이 자리 잡았다. 열대여섯 살 혼인이 흔했다.'],
+      ] },
+    { id: 'catholicIntro', y: 1785, bg: 'study', time: 'night', title: '명례방의 모임', people: ['이승훈', '김범우'],
+      body: () => '베이징에서 세례를 받고 돌아온 이승훈을 중심으로, 중인 김범우의 집에서 천주교 모임이 열린다는 이야기가 들렸다. 양반과 중인이 한방에 모여 신분을 따지지 않고 책을 읽는다고 했다.',
+      note: ['기록', '1784년 이승훈이 베이징에서 세례를 받고 돌아왔다. 1785년 명례방 김범우의 집 모임이 발각되었다(을사추조적발).'],
+      choices: () => [
+        { t: '모임에 나가 보고, 믿게 된다', tag: '호기심', eff: { heart: 8, bond: 4 }, flag: 'catholic', br: 1, r: '“하늘 아래 모든 사람은 평등하다.” 처음 듣는 말이 오래 가슴에 남았다.' },
+        { t: '책만 빌려 몰래 읽어 본다', tag: '신중', eff: { heart: 3 }, r: '서양 학문이라는 것이 신기했지만, 믿음까지 가지는 않았다.' },
+        { t: '위험한 일이니 가까이하지 않는다', tag: '야심', eff: { fame: 2 }, r: '말 많은 데 끼지 않는 것이 출세의 길이라고 배웠다.' },
+      ] },
+    { id: 'marriage', y: 1786, bg: 'wedding', time: 'day', title: '혼례를 올리다', sets: 'married',
+      body: s => `중매쟁이가 드나들더니 혼처가 정해졌다. ${F(s) ? '신랑' : '신부'}의 얼굴은 혼례 날에야 볼 수 있다. 초례상에는 청홍 촛불과 나무 기러기가 놓였다.${F(s) ? ' 혼례를 치르면 친정을 떠나 시댁으로 들어가 살게 된다.' : ''}`,
+      note: ['기록', '조선 후기에는 성리학의 예법에 따라 혼례 뒤 신부가 시댁에 들어가 사는 풍습이 자리 잡았다. 나무 기러기는 평생 짝을 바꾸지 않는다는 뜻을 담았다.'],
       choices: s => [
         { t: '부모님 뜻을 따른다', tag: '신중', fn: () => ({ eff: { bond: 5 }, r: chance(0.6) ? '혼례 날 처음 본 짝은 수줍게 웃는 사람이었다. 다행이라고 생각했다.' : '처음 본 짝은 말수가 적었다. 서로를 알아 가는 데 오래 걸릴 것 같았다.' }) },
         { t: '몰래 짝이 될 사람을 엿보러 간다', tag: '호기심', fn: () => chance(0.5) ? { eff: { heart: 6, bond: 3 }, r: '담 너머로 본 그 사람은 마당에서 강아지에게 밥을 주고 있었다. 마음이 놓였다.' } : { eff: { heart: -2, fame: -3 }, r: '들키고 말았다. 혼례 전까지 양쪽 집안에 웃음거리가 됐다.' } },
         { t: '혼인을 몇 해만 미뤄 달라고 버틴다', tag: '야심', eff: { heart: 3, bond: -6 }, r: `집안이 한바탕 시끄러웠다. 결국 혼례는 이듬해 가을로 밀렸고, 그동안 당신은 ${F(s) ? '글을 더 익혔다' : '공부와 일에 매달렸다'}.` },
-      ],
-    },
-    {
-      id: 'child', y: 1790, title: '첫아이', people: [],
+      ] },
+    { id: 'child', y: 1790, bg: 'baby', time: 'day', title: '첫아이',
       body: () => '첫아이가 태어났다. 대문에 금줄이 걸리고, 세이레가 지날 때까지 바깥사람은 집에 들이지 않았다. 아이가 백 일을 넘기던 날, 온 집안이 수수팥떡을 나눴다.',
-      note: ['기록', '아이가 어려서 세상을 떠나는 일이 잦았기에, 백일과 돌은 아이가 고비를 넘겼음을 축하하는 날이었다. 이 가족의 이야기는 각색이다.'],
+      note: ['기록', '아들이면 금줄에 고추와 숯을, 딸이면 숯과 솔가지를 끼웠다. 아이가 어려서 세상을 떠나는 일이 잦아 백일과 돌을 크게 축하했다. 이 가족의 이야기는 각색이다.'],
       choices: s => [
-        { t: '이 아이만큼은 글을 가르치겠다', tag: '야심', eff: { fame: 3, money: -3 }, flag: 'teachChild', r: `${s.c === '상민' ? '서당에 보낼 돈을 모으기 시작했다.' : '아이 몫의 천자문을 미리 사 두었다.'}` },
+        { t: '이 아이만큼은 글을 가르치겠다', tag: '야심', eff: { fame: 3, money: -3 }, r: s.c === '상민' ? '서당에 보낼 돈을 모으기 시작했다.' : '아이 몫의 천자문을 미리 사 두었다.' },
         { t: '그저 건강하게만 자라 다오', tag: '다정', eff: { bond: 6, heart: 3 }, r: '아이가 잠든 얼굴을 한참 들여다보았다. 다른 바람은 없었다.' },
         { t: '식구가 늘었으니 살림을 더 단단히', tag: '신중', eff: { money: 5 }, r: '셈을 다시 했다. 줄일 것은 줄이고, 모을 것은 모았다.' },
-      ],
-    },
-    {
-      id: 'tonggong', y: 1791, title: '누구나 장사를 할 수 있다', people: ['채제공', '정조'],
-      body: s => `채제공의 건의로 육의전을 뺀 시전 상인들의 독점권이 사라졌다. 이제 허가 없는 상인도 한양 안에서 물건을 팔 수 있다. 칠패와 배오개의 난전이 하루가 다르게 커졌다. ${s.c === '양반' ? '양반이 장사를 드러내 놓고 할 수는 없지만, 하인 이름으로 돈을 대는 집도 있다고 한다.' : ''}`,
+      ] },
+    { id: 'yeonhaeng', y: 1790, when: s => s.flags.yeokgwan, bg: 'road', time: 'dawn', title: '연경 가는 길',
+      body: () => '역관 시험에 붙어 사신단을 따라 연경(베이징)으로 떠났다. 압록강을 건너 두 달 가까이 걸었다. 유리창 거리에는 조선에서는 본 적 없는 책과 물건이 산처럼 쌓여 있었다.',
+      note: ['기록', '역관은 사신단의 통역을 맡았고, 사행 길에 허용된 무역으로 큰 부를 쌓기도 했다. 이 인물의 연행은 각색이다.'],
+      choices: () => [
+        { t: '서양 천문서와 지도를 구해 온다', tag: '호기심', eff: { heart: 6, fame: 4, money: -4 }, flag: 'westBook', r: '세상이 둥글다는 지도를 펼쳐 놓고 밤새 들여다보았다.' },
+        { t: '인삼을 몰래 더 실어 가 판다', tag: '야심', fn: () => chance(0.65) ? { eff: { money: 20 }, r: '은 꾸러미가 묵직했다. 집안 살림이 확 폈다.' } : { eff: { money: -10, fame: -15 }, r: '국경에서 걸렸다. 물건을 빼앗기고 이름에 먹칠을 했다.' } },
+        { t: '통역 일에만 충실한다', tag: '신중', eff: { fame: 6 }, r: '정사 대감이 당신의 통역을 칭찬했다.' },
+      ] },
+    { id: 'tonggong', y: 1791, bg: 'market', time: 'day', title: '누구나 장사를 할 수 있다', people: ['채제공', '정조'],
+      body: s => `채제공의 건의로 육의전을 뺀 시전 상인들의 독점권이 사라졌다. 이제 허가 없는 상인도 한양 안에서 물건을 팔 수 있다. 칠패와 배오개의 난전이 하루가 다르게 커졌다.${s.flags.trade ? ' 장터에서 잔뼈가 굵은 당신에게는 기회였다.' : ''}${s.c === '양반' ? ' 양반이 장사를 드러내 놓고 할 수는 없지만, 하인 이름으로 돈을 대는 집도 있다고 한다.' : ''}`,
       note: ['기록', '1791년(정조 15) 신해통공. 시전 상인의 금난전권을 없애 자유로운 상업 활동의 길을 열었다.'],
       choices: s => [
-        { t: s.c === '양반' ? '하인 이름으로 몰래 장사 밑천을 댄다' : '밑천을 모아 장사를 시작한다', tag: '야심', fn: () => chance(0.55) ? { eff: { money: 16, heart: 3 }, flag: 'trade', r: '소금과 젓갈을 받아다 팔았다. 첫해에 밑천의 두 배가 돌아왔다.' } : { eff: { money: -10, heart: -3 }, flag: 'trade', r: '물건을 너무 많이 들였다. 장마에 반이 상했다.' } },
+        { t: s.c === '양반' ? '하인 이름으로 몰래 장사 밑천을 댄다' : '밑천을 모아 장사를 시작한다', tag: '야심', fn: () => chance(s.flags.trade ? 0.75 : 0.5) ? { eff: { money: 16, heart: 3 }, flag: 'merchant', r: '소금과 젓갈을 받아다 팔았다. 첫해에 밑천의 두 배가 돌아왔다.' } : { eff: { money: -10, heart: -3 }, r: '물건을 너무 많이 들였다. 장마에 반이 상했다.' } },
         { t: '시전 상인인 먼 친척을 돕는다', tag: '신중', eff: { money: 3, bond: 3 }, r: '손님을 뺏긴 친척은 한숨이 깊었다. 당신은 장부 정리를 거들었다.' },
         { t: '장터에서 벌어지는 다툼을 구경한다', tag: '호기심', eff: { heart: 3 }, r: '시전 상인과 난전 상인이 멱살을 잡았다. 세상이 바뀌는 소리는 생각보다 시끄러웠다.' },
-      ],
-    },
-    {
-      id: 'exam', y: 1792, title: '과거 시험장', people: [], when: s => s.c === '양반' && !F(s),
+      ] },
+    { id: 'exam', y: 1792, when: s => s.c === '양반' && !F(s), bg: 'exam', time: 'day', title: '과거 시험장',
       body: () => '과거장에는 수천 명이 몰렸다. 종이를 펼칠 자리 다툼부터 벌어졌다. 돈 있는 집안은 글을 대신 지어 주는 ‘거벽’과 글씨를 대신 써 주는 ‘사수’를 데려온다는 말이 공공연했다.',
       note: ['기록', '조선 후기 과거장의 대리 작성 같은 부정은 실록과 문집에 자주 등장한다. 응시자가 크게 늘면서 급제는 더 어려워졌다.'],
       choices: s => [
-        { t: '내 힘으로 답안을 쓴다', tag: '신중', fn: () => { const p = 0.18 + (s.flags.study ? 0.22 : 0) + s.st.fame / 500; return chance(p) ? { eff: { fame: 22, heart: 8 }, flag: 'pass', r: '방이 붙었다. 당신의 이름이 있었다. 어머니가 대문 앞에서 울었다.' } : { eff: { heart: -5 }, r: '이번에도 이름이 없었다. 다음 시험을 기약했다.' }; } },
+        { t: '내 힘으로 답안을 쓴다', tag: '신중', fn: () => chance(0.18 + (s.flags.study ? 0.22 : 0) + s.st.fame / 500) ? { eff: { fame: 22, heart: 8 }, flag: 'pass', r: '방이 붙었다. 당신의 이름이 있었다. 어머니가 대문 앞에서 울었다.' } : { eff: { heart: -5 }, r: '이번에도 이름이 없었다. 다음 시험을 기약했다.' } },
         { t: '거벽을 사서 답안을 맡긴다', tag: '야심', fn: () => chance(0.5) ? { eff: { money: -15, fame: 15, heart: -6 }, flag: 'pass', r: '급제했다. 축하하는 사람들 앞에서 당신은 끝내 웃지 못했다.' } : { eff: { money: -15, heart: -4 }, r: '돈만 날렸다. 거벽은 다른 집 답안을 먼저 써 주었다.' } },
         { t: '시험을 접고 쓸모 있는 학문을 한다', tag: '호기심', eff: { heart: 6, fame: -3 }, flag: 'silhak', r: '농사법과 수레, 셈법을 공부했다. 벼슬은 멀어졌지만 책상은 더 넓어졌다.' },
-      ],
-    },
-    {
-      id: 'hwaseong', y: 1794, title: '수원에 새 성을 쌓는다', people: ['정약용', '정조'],
-      body: s => `수원에 새 성을 쌓는다는 소식이 돌았다. 나라에서 일한 날수만큼 품삯을 준다고 한다. 정약용이 고안한 거중기가 큰 돌을 거뜬히 들어 올린다는 소문도 들린다. ${s.c === '상민' || s.c === '중인' ? '이웃 사내들이 짐을 꾸려 남쪽으로 떠났다.' : ''}`,
+      ] },
+    { id: 'hwaseong', y: 1794, bg: 'fortress', time: 'day', title: '수원에 새 성을 쌓는다', people: ['정약용', '정조'],
+      body: s => `수원에 새 성을 쌓는다는 소식이 돌았다. 나라에서 일한 날수만큼 품삯을 준다고 한다. 정약용이 고안한 거중기가 큰 돌을 거뜬히 들어 올린다는 소문도 들린다.${s.c !== '양반' ? ' 이웃 사내들이 짐을 꾸려 남쪽으로 떠났다.' : ''}`,
       note: ['기록', '화성은 1794년 1월 착공해 1796년 9월 완공했다. 『화성성역의궤』에는 장인들의 이름과 일한 날수, 받은 품삯까지 적혀 있다.'],
-      choices: s => {
-        const work = F(s)
-          ? { t: '공사장 근처 주막에서 국밥을 판다', tag: '야심', eff: { money: 10, hp: -4 }, flag: 'hwaseongWork', r: '새벽마다 가마솥에 불을 지폈다. 돌 나르는 사람들이 당신 국밥으로 하루를 버텼다.' }
-          : s.c === '양반'
-            ? { t: '성 쌓는 일을 감독하는 관리를 돕는다', tag: '야심', eff: { fame: 8, hp: -3 }, flag: 'hwaseongWork', r: '공사 장부를 맡았다. 인부 한 사람 한 사람의 이름과 날수를 적었다.' }
-            : { t: '인부로 일하러 간다', tag: '야심', eff: { money: 12, hp: -7 }, flag: 'hwaseongWork', r: '두 해 동안 돌을 날랐다. 손바닥이 갈라졌지만 품삯은 꼬박꼬박 나왔다.' };
-        return [
-          work,
-          { t: '거중기를 직접 보러 간다', tag: '호기심', eff: { heart: 6 }, flag: 'crane', r: '도르래 몇 개로 장정 여럿이 들 돌을 몇 사람이 들어 올렸다. 한참을 그 앞에 서 있었다.' },
-          { t: '집과 식구를 지킨다', tag: '신중', eff: { money: 2, bond: 3 }, r: '떠나는 이웃들을 배웅하고, 그 집 노인들의 끼니를 챙겼다.' },
-        ];
-      },
-    },
-    {
-      id: 'procession', y: 1795, title: '임금의 행차', people: ['정조', '혜경궁 홍씨'],
+      choices: s => [
+        F(s) ? { t: '공사장 근처 주막에서 국밥을 판다', tag: '야심', eff: { money: 10, hp: -4 }, flag: 'hwaseongWork', br: 1, r: '새벽마다 가마솥에 불을 지폈다. 돌 나르는 사람들이 당신 국밥으로 하루를 버텼다.' }
+          : s.c === '양반' ? { t: '성 쌓는 일을 감독하는 관리를 돕는다', tag: '야심', eff: { fame: 8, hp: -3 }, flag: 'hwaseongWork', br: 1, r: '공사 장부를 맡았다. 인부 한 사람 한 사람의 이름과 날수를 적었다.' }
+          : { t: '인부로 일하러 간다', tag: '야심', eff: { money: 12, hp: -7 }, flag: 'hwaseongWork', br: 1, r: '두 해 동안 돌을 날랐다. 손바닥이 갈라졌지만 품삯은 꼬박꼬박 나왔다.' },
+        { t: '거중기를 직접 보러 간다', tag: '호기심', eff: { heart: 6 }, r: '도르래 몇 개로 장정 여럿이 들 돌을 몇 사람이 들어 올렸다. 한참을 그 앞에 서 있었다.' },
+        { t: '집과 식구를 지킨다', tag: '신중', eff: { money: 2, bond: 3 }, r: '떠나는 이웃들을 배웅하고, 그 집 노인들의 끼니를 챙겼다.' },
+      ] },
+    { id: 'procession', y: 1795, bg: 'river', time: 'day', title: '임금의 행차', people: ['정조', '혜경궁 홍씨'],
       body: () => '윤2월, 임금이 어머니 혜경궁의 회갑을 맞아 화성으로 행차했다. 한강에는 배를 잇대어 만든 배다리가 놓였고, 길가는 구경꾼으로 빼곡했다. 억울한 일이 있는 사람은 행차 길에서 꽹과리를 쳐 임금에게 직접 호소할 수 있다고 했다.',
       note: ['기록', '『원행을묘정리의궤』에 행차의 모든 과정이 기록되어 있다. 정조는 백성이 꽹과리를 쳐 호소하는 ‘격쟁’을 많이 받아들였다.'],
       choices: () => [
-        { t: '꽹과리를 쳐서 억울한 일을 호소한다', tag: '야심', fn: () => chance(0.5) ? { eff: { fame: 8, money: 6, heart: 5 }, flag: 'gyeokjaeng', r: '포졸에게 끌려가 사연을 적었다. 몇 달 뒤 고을 원님의 부당한 세금이 바로잡혔다.' } : { eff: { hp: -6, heart: -2 }, flag: 'gyeokjaeng', r: '사연은 올라갔지만 답은 없었다. 그날 밀려 넘어져 다리를 다쳤다.' } },
-        { t: '배다리를 건너는 행렬을 끝까지 지켜본다', tag: '호기심', eff: { heart: 7 }, flag: 'sawKing', r: '수천 명의 행렬이 강을 건넜다. 멀리 붉은 옷의 임금이 보였다. 평생 이 장면을 이야기하게 될 것 같았다.' },
+        { t: '꽹과리를 쳐서 억울한 일을 호소한다', tag: '야심', fn: () => chance(0.5) ? { eff: { fame: 8, money: 6, heart: 5 }, r: '포졸에게 끌려가 사연을 적었다. 몇 달 뒤 고을 원님의 부당한 세금이 바로잡혔다.' } : { eff: { hp: -6, heart: -4 }, flag: 'grudge', br: 1, r: '사연은 올라갔지만 답은 없었다. 그날 밀려 넘어져 다리를 다쳤다. 억울함만 더 깊어졌다.' } },
+        { t: '배다리를 건너는 행렬을 끝까지 지켜본다', tag: '호기심', eff: { heart: 7 }, r: '수천 명의 행렬이 강을 건넜다. 멀리 붉은 옷의 임금이 보였다.' },
         { t: '식구들 손을 꼭 잡고 인파를 헤친다', tag: '다정', eff: { bond: 5 }, r: '아이를 어깨에 태웠다. 아이가 “저기!” 하고 외쳤다.' },
-      ],
-    },
-    {
-      id: 'kingdeath', y: 1800, title: '임금이 승하하다', people: ['정조', '순조', '정순왕후'],
+      ] },
+    { id: 'hwaseongDone', y: 1796, when: s => s.flags.hwaseongWork, bg: 'fortress', time: 'dusk', title: '성이 완공되다',
+      body: () => '가을, 마침내 성이 완공되었다. 공사에 참여한 사람들에게 잔치가 베풀어졌다. 당신이 나른 돌, 당신이 쑨 국, 당신이 적은 장부가 저 성벽 어딘가에 있다.',
+      note: ['기록', '1796년 가을 완공 뒤 낙성연이 열렸다. 공사 기록은 『화성성역의궤』로 정리되었다.'],
+      choices: () => [
+        { t: '잔치에서 동료들과 밤새 마신다', tag: '다정', eff: { bond: 8, hp: -2 }, r: '두 해를 함께한 얼굴들과 잔을 부딪쳤다.' },
+        { t: '성벽을 한 바퀴 돌며 쌓은 자리를 찾는다', tag: '호기심', eff: { heart: 8 }, r: '서북쪽 모퉁이, 당신이 기억하는 돌이 그 자리에 있었다.' },
+        { t: '받은 품삯으로 땅을 산다', tag: '신중', eff: { money: 8 }, r: '작은 밭 한 뙈기가 생겼다.' },
+      ] },
+    { id: 'kingdeath', y: 1800, bg: 'palace', time: 'dusk', title: '임금이 승하하다', people: ['정조', '순조', '정순왕후'],
       body: () => '여름, 마흔아홉의 임금이 갑자기 세상을 떠났다. 열한 살 세자가 왕위에 올랐고, 대왕대비가 발을 드리우고 나랏일을 맡았다. 거리마다 흰옷 입은 사람들이 늘었다.',
       note: ['기록', '정조는 1800년 6월 승하했다. 독살설이 돌았지만 사료로 확인된 사실은 아니다. 순조 즉위 후 정순왕후가 수렴청정을 했다.'],
       choices: () => [
-        { t: '대궐 앞에 나가 곡을 한다', tag: '다정', eff: { bond: 2, heart: -2 }, r: '모르는 사람들과 나란히 엎드려 울었다. 한 시대가 끝났다는 것을 모두가 알았다.' },
+        { t: '대궐 앞에 나가 곡을 한다', tag: '다정', eff: { bond: 2, heart: -2 }, r: '모르는 사람들과 나란히 엎드려 울었다.' },
         { t: '세상이 어수선할 테니 재물을 감춰 둔다', tag: '신중', eff: { money: 4 }, r: '항아리에 엽전을 담아 뒤뜰에 묻었다.' },
         { t: '앞으로 어찌 될지 사람들과 이야기한다', tag: '호기심', eff: { heart: 2, fame: 2 }, r: '주막에서 밤늦게까지 말이 오갔다. 아무도 답을 알지 못했다.' },
-      ],
-    },
-    {
-      id: 'persecution', y: 1801, title: '천주학쟁이를 잡아들이다', people: ['정약용', '정약종', '강완숙'],
+      ] },
+    { id: 'persecution', y: 1801, when: s => !s.flags.catholic && !s.flags.pass, bg: 'plague', time: 'night', title: '천주학쟁이를 잡아들이다', people: ['정약용', '정약종', '강완숙'],
       body: () => '봄, 천주교를 믿는 사람들을 잡아들이라는 명이 내려졌다. 정약용의 형 정약종이 처형되었고 정약용은 먼 남쪽으로 유배를 떠났다. 여성 신자들을 이끌던 강완숙도 붙잡혔다. 어느 밤, 천주교를 믿는다는 이웃이 당신 집 문을 조용히 두드렸다.',
       note: ['기록', '1801년(순조 1) 신유박해. 정약용은 이후 18년 동안 강진 등지에서 유배 생활을 했다. 이웃이 찾아오는 장면은 각색이다.'],
       choices: () => [
-        { t: '광에 숨겨 준다', tag: '다정', fn: () => chance(0.7) ? { eff: { bond: 8, heart: 5 }, flag: 'hid', r: '사흘 밤을 광에서 지낸 이웃은 새벽 안개에 섞여 떠났다. 떠나며 당신 손을 오래 잡았다.' } : { eff: { fame: -15, hp: -10, money: -10, heart: 2 }, flag: 'hid', r: '포졸이 들이닥쳤다. 이웃은 끌려갔고 당신은 곤장을 맞았다. 후회하지는 않았다.' } },
+        { t: '광에 숨겨 준다', tag: '다정', fn: () => chance(0.7) ? { eff: { bond: 8, heart: 5 }, r: '사흘 밤을 광에서 지낸 이웃은 새벽 안개에 섞여 떠났다.' } : { eff: { fame: -15, hp: -12, money: -10, heart: 2 }, r: '포졸이 들이닥쳤다. 이웃은 끌려갔고 당신은 곤장을 맞았다. 후회하지는 않았다.' } },
         { t: '미안하다며 돌려보낸다', tag: '신중', eff: { heart: -6 }, r: '닫힌 문 너머로 발소리가 멀어졌다. 그 소리가 오래 귀에 남았다.' },
-        { t: '관아에 알린다', tag: '야심', eff: { fame: 6, bond: -10, heart: -10 }, flag: 'reported', r: '포상을 받았다. 그 뒤로 이웃들은 당신 앞에서 말을 아꼈다.' },
-      ],
-    },
-    {
-      id: 'mourning', y: 1806, title: '부모를 여의다', people: [],
-      body: s => `늙은 ${F(s) ? '친정' : ''} 부모님이 같은 해에 잇달아 세상을 떠났다. ${s.c === '양반' ? '양반가에서는 무덤 곁에 움막을 짓고 3년을 지키는 시묘살이를 큰 효로 여긴다.' : '형편이 넉넉지 않아도 상례는 갖춰야 한다는 것이 동네의 인심이었다.'}`,
+        { t: '관아에 알린다', tag: '야심', eff: { fame: 6, bond: -10, heart: -10 }, r: '포상을 받았다. 그 뒤로 이웃들은 당신 앞에서 말을 아꼈다.' },
+      ] },
+    { id: 'persecutionC', y: 1801, when: s => s.flags.catholic, bg: 'plague', time: 'night', title: '명단에 오른 이름', people: ['정약종', '강완숙'],
+      body: () => '천주교 신자를 잡아들이라는 명이 내려졌다. 붙잡힌 교우의 입에서 당신 이름이 나왔다는 소식이 들렸다. 포졸이 골목 어귀까지 왔다.',
+      note: ['기록', '1801년 신유박해로 정약종, 강완숙 등 많은 신자가 처형되었다. 살아남은 신자들은 산속으로 숨어 옹기를 구우며 교우촌을 이루었다.'],
+      choices: () => [
+        { t: '끝까지 믿음을 지킨다', tag: '다정', risk: 1, die: '순교', eff: { heart: 10 }, r: '형리 앞에서 당신은 고개를 저었다. “버릴 수 없습니다.”' },
+        { t: '믿음을 버리겠다고 말한다', tag: '신중', eff: { heart: -15, fame: -5 }, r: '풀려났다. 그날 밤 당신은 혼자 오래 울었다.' },
+        { t: '식구와 함께 산속으로 도망친다', tag: '야심', go: 'kyowoo', eff: { money: -15 }, r: '가진 것을 다 버리고 밤길을 걸었다.' },
+      ] },
+    { id: 'kyowoo', y: 1802, branch: true, bg: 'road', time: 'dusk', title: '산속 교우촌',
+      body: () => '깊은 산골짜기에 숨어 사는 신자들의 마을이 있었다. 사람들은 옹기를 구워 팔며 살았다. 가마에서 연기가 오르면 서로의 안부를 알았다.',
+      note: ['기록', '박해를 피한 신자들은 산간에 교우촌을 이루고 옹기를 구워 생계를 이었다. 이 인물의 피신은 각색이다.'],
+      choices: () => [
+        { t: '옹기 굽는 법을 배운다', tag: '신중', eff: { money: 6, hp: -3 }, r: '흙을 밟고, 물레를 돌리고, 가마를 지켰다.' },
+        { t: '마을 아이들에게 언문을 가르친다', tag: '다정', eff: { bond: 8, heart: 5 }, r: '숨어 사는 아이들도 글을 알아야 한다고 생각했다.' },
+        { t: '몰래 한양 소식을 전하는 일을 맡는다', tag: '야심', risk: 1, fn: () => chance(0.7) ? { eff: { fame: 6, heart: 4 }, r: '보따리장수로 꾸며 산을 넘나들었다.' } : { eff: {}, die: '처형', r: '세 번째 길에서 붙잡혔다.' } },
+      ] },
+    { id: 'persecutionO', y: 1801, when: s => s.flags.pass && !s.flags.catholic, bg: 'palace', time: 'night', title: '심문하는 자리', people: ['정약용'],
+      body: () => '급제해 관직에 있던 당신에게 천주교 신자를 심문하는 일이 맡겨졌다. 끌려온 사람 가운데 어린 시절 서당 동무의 얼굴이 있었다.',
+      note: ['기록', '신유박해 때 조정은 신자들을 잡아 심문하고 처형했다. 정약용 형제도 이 일로 화를 입었다. 심문 장면은 각색이다.'],
+      choices: () => [
+        { t: '법대로 엄하게 다스린다', tag: '야심', eff: { fame: 10, heart: -12, bond: -5 }, r: '공을 인정받았다. 그 얼굴은 꿈에 자주 나왔다.' },
+        { t: '몰래 풀어 줄 길을 찾는다', tag: '다정', risk: 1, fn: () => chance(0.55) ? { eff: { heart: 10, bond: 6 }, r: '증거가 모자라다며 풀어 주었다. 아무도 눈치채지 못했다.' } : { eff: { fame: -25, money: -15, heart: 4 }, r: '들켰다. 파직당하고 시골로 내려갔다.' } },
+        { t: '병을 핑계로 자리를 피한다', tag: '신중', eff: { fame: -4, heart: -2 }, r: '사직 상소를 올렸다. 비겁하다는 소리를 들었다.' },
+      ] },
+    { id: 'mourning', y: 1806, bg: 'death', title: '부모를 여의다',
+      body: s => `늙은 ${F(s) ? '친정 ' : ''}부모님이 같은 해에 잇달아 세상을 떠났다. ${s.c === '양반' ? '양반가에서는 무덤 곁에 움막을 짓고 3년을 지키는 시묘살이를 큰 효로 여긴다.' : '형편이 넉넉지 않아도 상례는 갖춰야 한다는 것이 동네의 인심이었다.'}`,
       note: ['기록', '조선 후기에는 『주자가례』에 따른 삼년상이 신분을 넘어 널리 퍼졌다. 가족의 일은 각색이다.'],
       choices: s => [
-        { t: s.c === '양반' && !F(s) ? '시묘살이를 한다' : '할 수 있는 만큼 예를 갖춘다', tag: '신중', eff: s.c === '양반' && !F(s) ? { fame: 8, hp: -6 } : { fame: 4, money: -4 }, r: s.c === '양반' && !F(s) ? '세 번의 겨울을 움막에서 났다. 사람들은 당신을 효자라 불렀다.' : '빚을 조금 졌지만, 부끄럽지 않게 보내 드렸다.' },
+        { t: s.c === '양반' && !F(s) ? '시묘살이를 한다' : '할 수 있는 만큼 예를 갖춘다', tag: '신중', eff: s.c === '양반' && !F(s) ? { fame: 8, hp: -6 } : { fame: 4, money: -4 }, r: s.c === '양반' && !F(s) ? '세 번의 겨울을 움막에서 났다.' : '빚을 조금 졌지만, 부끄럽지 않게 보내 드렸다.' },
         { t: '상례는 간소히, 남은 식구 살림부터', tag: '야심', eff: { money: 4, fame: -3 }, r: '수군대는 소리가 들렸다. 그래도 아이들 끼니는 거르지 않았다.' },
-        { t: '형제들과 모여 함께 슬퍼한다', tag: '다정', eff: { bond: 6, heart: 2 }, r: '흩어져 살던 형제들이 한방에 모였다. 어린 시절 이야기를 하다 울다 웃었다.' },
-      ],
-    },
-    {
-      id: 'famine', y: 1809, title: '큰 흉년', people: [],
-      body: () => '가뭄으로 논바닥이 갈라졌다. 이듬해 봄까지 굶주린 사람들이 한양으로 몰려들었다. 관에서는 진휼소를 열어 죽을 쑤어 나눠 주었지만, 줄은 끝이 보이지 않았다.',
-      note: ['기록', '1809~1810년(기사·경오년) 전국적인 대기근이 들어 많은 사람이 굶주렸다.'],
+        { t: '형제들과 모여 함께 슬퍼한다', tag: '다정', eff: { bond: 6, heart: 2 }, r: '흩어져 살던 형제들이 한방에 모였다.' },
+      ] },
+    { id: 'famine', y: 1809, bg: 'drought', time: 'day', title: '큰 흉년',
+      body: s => `가뭄으로 논바닥이 갈라졌다. 이듬해 봄까지 굶주린 사람들이 한양으로 몰려들었다.${s.flags.merchant ? ' 장사꾼인 당신의 곳간에는 아직 곡식이 있었다.' : ''}`,
+      note: ['기록', '1809~1810년(기사·경오년) 전국적인 대기근이 들어 많은 사람이 굶주렸다. 관에서는 진휼소를 열어 죽을 나눠 주었다.'],
       choices: s => [
-        { t: '곳간을 열어 이웃과 나눈다', tag: '다정', eff: { money: -12, bond: 8, fame: 6 }, flag: 'shared', r: s.st.money < 25 ? '가진 것이 많지 않았다. 그래도 한 됫박씩 나눴다. 그 겨울 우리 집도 배가 고팠다.' : '쌀 몇 섬이 사라졌다. 대신 골목의 아이들이 겨울을 넘겼다.' },
-        { t: '곡식을 사들여 비싸게 판다', tag: '야심', eff: { money: 16, fame: -8, heart: -5 }, flag: 'hoarded', r: '재물은 불었다. 장터에서 당신을 보는 눈빛이 달라졌다.' },
-        { t: '허리띠를 졸라매고 버틴다', tag: '신중', eff: { hp: -6, money: -3 }, r: '하루 두 끼를 한 끼로 줄였다. 봄이 오기를 기다렸다.' },
-      ],
-    },
-    {
-      id: 'hong', y: 1812, title: '서북에서 난이 일어나다', people: ['홍경래'],
-      body: () => '평안도에서 홍경래가 난을 일으켰다는 소식이 들렸다. 서북 사람들은 오래도록 벼슬길에서 차별받아 왔다고들 했다. 정주성에 들어가 넉 달을 버티던 무리는 봄이 되어 진압되었다.',
+        { t: '곳간을 열어 이웃과 나눈다', tag: '다정', eff: { money: -12, bond: 8, fame: 6 }, r: s.st.money < 25 ? '가진 것이 많지 않았다. 그래도 한 됫박씩 나눴다.' : '쌀 몇 섬이 사라졌다. 대신 골목의 아이들이 겨울을 넘겼다.' },
+        { t: '곡식을 사들여 비싸게 판다', tag: '야심', eff: { money: s.flags.merchant ? 24 : 14, fame: -8, heart: -5 }, flag: 'hoarded', br: 1, r: '재물은 불었다. 장터에서 당신을 보는 눈빛이 달라졌다.' },
+        { t: '산에서 처음 보는 풀뿌리를 캐 먹는다', tag: '호기심', risk: 1, fn: () => chance(0.3) ? { eff: {}, die: '독초', r: '쓴맛이 혀끝에 오래 남았다.' } : { eff: { hp: -4 }, r: '배는 채웠다. 다행히 독은 없었다.' } },
+      ] },
+    { id: 'hong', y: 1812, bg: 'road', time: 'dusk', title: '서북에서 난이 일어나다', people: ['홍경래'],
+      body: s => `평안도에서 홍경래가 난을 일으켰다는 소식이 들렸다. 서북 사람들은 오래도록 벼슬길에서 차별받아 왔다고들 했다.${s.flags.grudge || s.flags.hoarded ? ' 장터에서 만난 서북 사내가 당신에게 귓속말을 했다. “함께하겠소?”' : ''}`,
       note: ['기록', '1811년 12월부터 1812년 4월까지 이어진 홍경래의 난. 서북 지역에 대한 차별과 세도 정치 아래의 수탈이 배경으로 꼽힌다.'],
-      choices: () => [
-        { t: '차별받아 온 그들의 마음을 헤아려 본다', tag: '호기심', eff: { heart: 3 }, r: '나라 안에서도 태어난 곳이 사람을 가른다는 것을, 처음으로 오래 생각했다.' },
+      choices: s => [
+        ...(s.flags.grudge || (s.c === '상민' && !F(s)) ? [{ t: '난에 가담한다', tag: '야심', risk: 1, go: 'jeongju', eff: { heart: 4 }, r: '짐을 꾸려 북쪽으로 떠났다. 식구들에게는 장사 간다고 말했다.' }] : []),
+        { t: '차별받아 온 그들의 마음을 헤아려 본다', tag: '호기심', eff: { heart: 3 }, r: '태어난 곳이 사람을 가른다는 것을, 처음으로 오래 생각했다.' },
         { t: '관군을 돕는 모금에 참여한다', tag: '신중', eff: { fame: 4, money: -4 }, r: '고을 명단에 이름이 올랐다.' },
         { t: '평안도 출신 지인에게 안부를 전한다', tag: '다정', eff: { bond: 5 }, r: '답장은 석 달 만에 왔다. “살아 있소.” 그 한 줄이 반가웠다.' },
-      ],
-    },
-    {
-      id: 'cholera', y: 1821, title: '이름 모를 괴질', people: [],
-      body: () => '늦여름, 서쪽에서 처음 보는 병이 들어왔다. 멀쩡하던 사람이 토하고 설사하다가 하루 이틀 만에 쓰러졌다. 사람들은 이 병을 ‘괴질’이라 불렀다. 무엇 때문인지 아는 사람은 아무도 없었다.',
+      ] },
+    { id: 'jeongju', y: 1812, branch: true, bg: 'siege', time: 'night', title: '정주성 안에서', people: ['홍경래'],
+      body: () => '정주성에 들어간 지 넉 달. 관군이 성을 겹겹이 에워쌌다. 성안에는 먹을 것이 바닥났다. 관군이 성벽 밑으로 땅굴을 판다는 소문이 돌았다.',
+      note: ['기록', '1812년 4월, 관군은 정주성 성벽 밑에 화약을 묻어 터뜨려 성을 함락했다. 잡힌 이들 가운데 수많은 사람이 처형되었다.'],
+      choices: () => [
+        { t: '끝까지 성벽을 지킨다', tag: '야심', risk: 1, die: '정주성', eff: { fame: 5 }, r: '마지막 밤, 당신은 성벽 위에서 남쪽 하늘을 보았다.' },
+        { t: '밤을 틈타 성을 빠져나간다', tag: '신중', risk: 1, fn: () => chance(0.45) ? { eff: { hp: -15, fame: -10 }, flag: 'fugitive', r: '성벽 틈으로 빠져나왔다. 그 뒤로 평생 이름을 바꾸고 살았다.' } : { eff: {}, die: '처형', r: '성 밖에서 관군의 횃불이 당신을 비췄다.' } },
+        { t: '항복한다', tag: '다정', risk: 1, fn: () => chance(0.3) ? { eff: { hp: -10, fame: -20 }, r: '어린 나이가 참작되어 귀양으로 끝났다.' } : { eff: {}, die: '처형', r: '항복한 자들도 대부분 살아남지 못했다.' } },
+      ] },
+    { id: 'cholera', y: 1821, bg: 'plague', time: 'day', title: '이름 모를 괴질',
+      body: () => '늦여름, 서쪽에서 처음 보는 병이 들어왔다. 멀쩡하던 사람이 토하고 설사하다가 하루 이틀 만에 쓰러졌다. 사람들은 이 병을 ‘괴질’이라 불렀다.',
       note: ['기록', '1821년(순조 21) 콜레라가 조선에 처음 크게 퍼졌다. 평안도를 시작으로 한양까지 번져 수많은 사람이 목숨을 잃었다고 실록은 전한다.'],
       choices: s => [
-        { t: '식구들을 데리고 시골로 피한다', tag: '신중', fn: () => outbreak(s, 0.06, { money: -6 }, '짐을 꾸려 산골 친척 집으로 갔다. 두 달 뒤 돌아온 골목은 반쯤 비어 있었다.') },
-        { t: '남아서 앓는 이웃을 돌본다', tag: '다정', fn: () => outbreak(s, s.flags.medicine ? 0.14 : 0.22, { bond: 10, fame: 6 }, '밤낮으로 물을 끓여 먹이고 이부자리를 갈았다. 살아난 사람들이 당신 이름을 잊지 않았다.') },
-        { t: '대문을 걸어 잠그고 아무도 들이지 않는다', tag: null, fn: () => outbreak(s, 0.1, { bond: -5 }, '문틈으로 곡소리가 들려왔다. 식구들은 무사했다.') },
-      ],
-    },
-    {
-      id: 'ship', y: 1832, title: '바다 건너 온 배', people: ['귀츨라프'],
-      body: () => '충청도 앞바다에 서양 배가 나타나 장사를 트자고 했다는 소문이 들렸다. 조정은 단호히 거절했고 배는 한 달쯤 머물다 떠났다. 배에 탄 서양 사람이 섬사람들에게 감자 심는 법을 알려 주었다는 말도 돌았다.',
+        { t: '식구들을 데리고 시골로 피한다', tag: '신중', fn: () => outbreak(s, 0.06, { money: -6 }, '두 달 뒤 돌아온 골목은 반쯤 비어 있었다.') },
+        { t: '남아서 앓는 이웃을 돌본다', tag: '다정', risk: 1, fn: () => outbreak(s, s.flags.medicine ? 0.14 : 0.22, { bond: 10, fame: 6 }, '밤낮으로 물을 끓여 먹였다. 살아난 사람들이 당신 이름을 잊지 않았다.') },
+        { t: '죽은 이웃의 시신을 맨손으로 거둔다', tag: '야심', risk: 1, fn: () => chance(0.55) ? { eff: {}, die: '괴질', r: '아무도 손대지 않던 시신을 당신이 거뒀다.' } : { eff: { fame: 10, bond: 6, hp: -8 }, r: '사람들이 당신을 보고 하나둘 손을 보탰다.' } },
+      ] },
+    { id: 'ship', y: 1832, bg: 'sea', time: 'day', title: '바다 건너 온 배', people: ['귀츨라프'],
+      body: s => `충청도 앞바다에 서양 배가 나타나 장사를 트자고 했다는 소문이 들렸다. 조정은 단호히 거절했고 배는 한 달쯤 머물다 떠났다.${s.flags.westBook ? ' 젊은 날 연경에서 구해 온 지도 속 나라에서 온 배였다.' : ''}`,
       note: ['기록', '1832년(순조 32) 영국 상선 로드 애머스트호가 고대도에 머물며 통상을 요구했다. 함께 온 선교사 귀츨라프가 감자 재배법을 전했다고 알려져 있다.'],
       choices: () => [
-        { t: '손주에게 바다 건너 세상 이야기를 해 준다', tag: '다정', eff: { bond: 5, heart: 3 }, r: '“그 배는 얼마나 커요?” 손주가 묻고 또 물었다. 당신도 모르는 것을 지어내 대답했다.' },
-        { t: '죽기 전에 그 배를 꼭 보고 싶었다', tag: '호기심', eff: { heart: 5 }, flag: 'westCurious', r: '끝내 보지는 못했다. 대신 바다 쪽 하늘을 오래 바라보았다.' },
-        { t: '나라 앞날이 걱정된다', tag: '신중', eff: { fame: 2, heart: -2 }, r: '세상이 문을 두드리고 있다는 생각이 들었다. 그 문이 언제 열릴지는 알 수 없었다.' },
-      ],
-    },
-    {
-      id: 'old', y: 1836, title: '마당의 볕', people: [], final: true,
+        { t: '손주에게 바다 건너 세상 이야기를 해 준다', tag: '다정', eff: { bond: 5, heart: 3 }, r: '“그 배는 얼마나 커요?” 손주가 묻고 또 물었다.' },
+        { t: '죽기 전에 그 배를 꼭 보고 싶었다', tag: '호기심', eff: { heart: 5 }, r: '끝내 보지는 못했다. 대신 바다 쪽 하늘을 오래 바라보았다.' },
+        { t: '나라 앞날이 걱정된다', tag: '신중', eff: { fame: 2, heart: -2 }, r: '세상이 문을 두드리고 있다는 생각이 들었다.' },
+      ] },
+    { id: 'old', y: 1836, bg: 'home', time: 'dawn', title: '마당의 볕', final: true,
       body: () => '머리가 하얗게 셌다. 아침이면 마당에 볕이 들 때까지 툇마루에 앉아 있는다. 손주들의 웃음소리가 담장 너머까지 퍼진다.',
       note: ['각색', '이 삶의 마지막 장면이다.'],
       choices: () => [
         { t: '살아온 이야기를 손주들에게 들려준다', tag: '다정', eff: { bond: 5, heart: 5 }, r: '같은 이야기를 몇 번이고 했다. 아이들은 매번 처음 듣는 척해 주었다.' },
-        { t: '지나온 일을 언문으로 적어 둔다', tag: '호기심', eff: { heart: 6, fame: 3 }, flag: 'wrote', r: '삐뚤빼뚤한 글씨로 한 권을 채웠다. 누군가는 언젠가 읽어 주겠지.' },
-        { t: '남은 재물을 자식들에게 고루 나눈다', tag: '신중', eff: { money: -10, bond: 6, heart: 3 }, r: '다툼이 없도록 미리 나눠 두었다. 마음이 가벼워졌다.' },
-      ],
-    },
+        { t: '지나온 일을 언문으로 적어 둔다', tag: '호기심', eff: { heart: 6, fame: 3 }, r: '삐뚤빼뚤한 글씨로 한 권을 채웠다. 누군가는 언젠가 읽어 주겠지.' },
+        { t: '남은 재물을 자식들에게 고루 나눈다', tag: '신중', eff: { money: -10, bond: 6, heart: 3 }, r: '다툼이 없도록 미리 나눠 두었다.' },
+      ] },
   ];
-
   function outbreak(s, base, eff, text) {
-    const p = base * (1.6 - s.st.hp / 100);
-    if (chance(p)) return { eff: { hp: -100 }, r: '사흘째 되던 날, 당신도 열에 들떠 쓰러졌다.', die: '괴질' };
-    return { eff: { ...eff, hp: -rnd(2, 8) }, r: text, flag: 'survivedCholera' };
+    if (chance(base * (1.6 - s.st.hp / 100))) return { eff: {}, r: '사흘째 되던 날, 당신도 열에 들떠 쓰러졌다.', die: '괴질' };
+    return { eff: { ...eff, hp: -rnd(2, 8) }, r: text };
   }
 
-  /* ===== 상태 ===== */
-  let S = null;
-  const $ = id => document.getElementById(id);
-  const views = ['v-packs', 'v-create', 'v-play', 'v-end'];
-  const show = id => { views.forEach(v => $(v).hidden = v !== id); window.scrollTo(0, 0); };
-  const val = (x, s) => typeof x === 'function' ? x(s) : x;
-  const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const clamp = v => Math.max(0, Math.min(100, Math.round(v)));
+  /* ================= 데일리: 1795년 윤2월 14일 ================= */
+  const DAY = [
+    { id: 'd1', y: 1795, date: '윤2월 14일', clock: '새벽', bg: 'fortress', time: 'dawn', title: '새벽, 화성 성안', people: ['정조', '혜경궁 홍씨'],
+      body: () => '닭이 울기도 전에 눈을 떴다. 어제 봉수당에서 혜경궁의 회갑 잔치가 열렸고, 오늘도 행궁 주변에서는 임금이 베푸는 행사가 이어진다고 했다. 성안 골목마다 벌써 사람들이 움직인다.',
+      note: ['기록', '1795년 윤2월, 정조는 어머니 혜경궁 홍씨와 화성에 머물렀다. 13일 회갑 잔치에 이어 14일에는 백성에게 쌀을 나눠 주고 노인들에게 잔치를 베풀었다고 『원행을묘정리의궤』는 전한다.'],
+      choices: () => [
+        { t: '신풍루 앞 쌀 나눔 줄에 선다', tag: '신중', go: 'd2r', r: '보따리를 들고 행궁 정문으로 향했다.' },
+        { t: '노인 잔치 일손을 돕겠다고 나선다', tag: '다정', go: 'd2f', r: '부엌 쪽에서 사람을 구한다는 소리를 들었다.' },
+        { t: '성벽에 올라 해 뜨는 것을 본다', tag: '호기심', go: 'd2w', r: '아직 돌 냄새가 나는 성벽으로 올라갔다.' },
+      ] },
+    { id: 'd2r', branch: true, y: 1795, date: '윤2월 14일', clock: '아침', bg: 'palace', time: 'day', title: '신풍루 앞',
+      body: () => '행궁 정문인 신풍루 앞에 가난한 사람들이 길게 줄을 섰다. 관리들이 이름을 부르며 쌀을 됫박으로 나눠 준다. 줄 끝에서 지팡이를 짚은 노인이 비틀거린다.',
+      note: ['기록', '화성 행차를 그린 병풍 그림 가운데 「신풍루사미도」에 백성에게 쌀을 나눠 주는 이 장면이 남아 있다.'],
+      choices: () => [
+        { t: '받은 쌀을 노인에게 건넨다', tag: '다정', eff: { bond: 6, money: -3 }, flag: 'gave', br: 1, r: '노인은 당신 손을 잡고 한참 놓지 않았다. 이름을 묻길래 알려 주었다.' },
+        { t: '새치기하는 장정에게 따진다', tag: '야심', fn: () => chance(0.55) ? { eff: { fame: 6 }, r: '장정이 머쓱해서 줄 뒤로 갔다. 사람들이 박수를 쳤다.' } : { eff: { hp: -10 }, r: '멱살을 잡혔다. 코피가 났다.' } },
+        { t: '조용히 차례를 기다린다', tag: '신중', eff: { money: 5 }, r: '쌀 한 됫박을 받았다. 오늘 저녁은 넉넉하겠다.' },
+      ] },
+    { id: 'd2f', branch: true, y: 1795, date: '윤2월 14일', clock: '아침', bg: 'kitchen', time: 'day', title: '낙남헌 부엌',
+      body: () => '낙남헌에서는 화성 고을 노인들을 위한 잔치가 열린다. 부엌에서는 숙수들이 소리를 지르고, 가마솥마다 김이 오른다. 상을 나를 손이 모자라다.',
+      note: ['기록', '정조는 이날 낙남헌에서 노인들을 위한 양로연을 베풀었다. 부엌 장면은 각색이다.'],
+      choices: () => [
+        { t: '노인들 상을 조심조심 나른다', tag: '다정', eff: { bond: 5, fame: 3 }, flag: 'gave', br: 1, r: '한 노인이 “고맙네, 젊은이” 하며 떡 한 조각을 쥐여 주었다.' },
+        { t: '임금 얼굴을 보려고 대청 가까이 간다', tag: '호기심', fn: () => chance(0.6) ? { eff: { heart: 8 }, r: '발 너머로 붉은 곤룡포가 보였다. 임금이 노인에게 술잔을 내리고 있었다.' } : { eff: { hp: -8, fame: -4 }, r: '호위 군사에게 붙들려 쫓겨났다.' } },
+        { t: '남은 음식을 몰래 챙긴다', tag: '야심', fn: () => chance(0.6) ? { eff: { money: 4, heart: 2 }, r: '약과 몇 개를 품에 넣었다. 아무도 못 봤다.' } : { eff: { fame: -6 }, r: '숙수에게 들켜 국자로 머리를 맞았다.' } },
+      ] },
+    { id: 'd2w', branch: true, y: 1795, date: '윤2월 14일', clock: '아침', bg: 'fortress', time: 'dawn', title: '해 뜨는 성곽',
+      body: () => '성벽 위로 올라가니 동쪽 하늘이 붉어진다. 성은 아직 공사 중이다. 거중기가 선 자리에는 굵은 밧줄이 감겨 있고, 일찍 나온 인부들이 돌을 고른다.',
+      note: ['기록', '화성 공사는 1794년 시작되어 1796년에 끝났다. 이 무렵 공사가 한창이었다.'],
+      choices: () => [
+        { t: '성벽 끝 여장 위에 올라서 바람을 맞는다', tag: '호기심', risk: 1, fn: () => chance(0.25) ? { eff: {}, die: '추락', r: '발밑의 돌 하나가 아직 굳지 않았다.' } : { eff: { heart: 10 }, r: '성 아래로 화성 고을이 한눈에 들어왔다. 가슴이 탁 트였다.' } },
+        { t: '인부들에게 물을 떠다 준다', tag: '다정', eff: { bond: 5 }, r: '“고맙소.” 땀에 젖은 얼굴들이 웃었다.' },
+        { t: '돌 쌓는 법을 유심히 본다', tag: '신중', eff: { fame: 3, heart: 3 }, r: '큰 돌과 작은 돌을 엇갈려 쌓는 데에 법도가 있었다.' },
+      ] },
+    { id: 'd3', y: 1795, date: '윤2월 14일', clock: '한낮', bg: 'market', time: 'day', title: '한낮, 화성 장터',
+      body: s => `임금의 행차로 성안 장터는 대목을 맞았다. 엿장수 가위 소리, 점쟁이의 외침, 국밥 냄새가 뒤섞인다.${s.flags.gave ? ' 아침에 만난 노인이 저쪽에서 당신을 보고 손을 흔든다.' : ''}`,
+      note: ['기록', '정조는 화성을 상업 도시로 키우려고 상인들을 불러 모으고 장사 밑천을 빌려주었다.'],
+      choices: () => [
+        { t: '점쟁이에게 오늘 운수를 묻는다', tag: '호기심', eff: { heart: 3, money: -1 }, flag: 'fortune', br: 1, r: '점쟁이가 눈을 가늘게 떴다. “오늘 밤, 불을 조심하시오.”' },
+        { t: '소매치기를 쫓아간다', tag: '야심', risk: 1, fn: () => { const r = Math.random(); return r < 0.1 ? { eff: {}, die: '칼부림', r: '골목 끝에서 소매치기가 돌아섰다. 손에 칼이 들려 있었다.' } : r < 0.35 ? { eff: { hp: -12 }, r: '놓쳤다. 넘어지며 무릎이 깨졌다.' } : { eff: { fame: 8, money: 5 }, r: '붙잡았다. 돈주머니 주인이 사례금을 쥐여 주었다.' }; } },
+        { t: '엿을 사서 아이들에게 나눠 준다', tag: '다정', eff: { bond: 5, money: -2 }, r: '엿 한 가락에 아이들이 몰려들었다.' },
+      ] },
+    { id: 'd4', y: 1795, date: '윤2월 14일', clock: '해 질 녘', bg: 'inn', time: 'dusk', title: '해 질 녘 주막',
+      body: s => s.flags.gave ? '아침의 그 노인이 국밥 한 그릇을 사겠다며 당신을 끌었다. 자기 아들이 오늘 밤 득중정에서 불꽃 놓는 일을 한다고 자랑했다.' : '주막 평상마다 낯선 사람들이 앉아 있다. 오늘 밤 득중정에서 활쏘기와 불꽃놀이가 있다는 이야기로 시끌시끌하다.',
+      note: ['기록', '이날 밤 정조는 득중정에서 활을 쏘고 매화포 불꽃놀이를 열었다. 「득중정어사도」에 그 장면이 그려져 있다.'],
+      choices: () => [
+        { t: '불꽃놀이를 보러 간다', tag: '호기심', go: 'd5f', r: '사람들 틈에 섞여 득중정 쪽으로 걸었다.' },
+        { t: '주막 뒷방 투전판에 끼어든다', tag: '야심', go: 'd5g', r: '등잔 불빛이 새어 나오는 뒷방 문을 열었다.' },
+        { t: '일찍 잠자리에 든다', tag: '신중', go: 'd5s', r: '긴 하루였다. 봇짐을 베고 누웠다.' },
+      ] },
+    { id: 'd5f', branch: true, final: true, y: 1795, date: '윤2월 14일', clock: '밤', bg: 'fireworks', time: 'night', title: '득중정의 불꽃',
+      body: s => `어둠 속에서 펑 소리와 함께 하늘에 매화꽃 같은 불꽃이 피었다. 사람들이 일제히 탄성을 질렀다. 포수들이 화약을 재는 곳이 저 아래 보인다.${s.flags.fortune ? ' 문득 낮에 들은 점쟁이 말이 떠올랐다.' : ''}`,
+      note: ['기록', '매화포는 불꽃이 매화처럼 터진다고 붙은 이름이다. 행차 기간의 불꽃놀이는 「득중정어사도」에 남아 있다.'],
+      choices: s => [
+        s.flags.fortune
+          ? { t: '점쟁이 말이 떠올라 멀찍이서 본다', tag: '신중', eff: { heart: 8 }, r: '언덕 위에서 불꽃이 다 지도록 보았다. 아무 일도 없었다.' }
+          : { t: '화약을 재는 곳까지 몰래 내려가 본다', tag: '호기심', risk: 1, fn: () => chance(0.5) ? { eff: {}, die: '화약', r: '불꽃 하나가 바람을 타고 내려왔다.' } : { eff: { heart: 10, fame: -3 }, r: '포수에게 혼쭐이 났지만, 불꽃이 어디서 오는지 보았다.' } },
+        { t: '옆 사람 손을 잡고 끝까지 본다', tag: '다정', eff: { bond: 6, heart: 6 }, r: '모르는 사람과 같이 웃었다. 오늘이 오래 기억날 것 같았다.' },
+        { t: '불꽃이 터질 때 소원을 빈다', tag: '야심', eff: { heart: 6 }, r: '무엇을 빌었는지는 아무에게도 말하지 않았다.' },
+      ] },
+    { id: 'd5g', branch: true, final: true, y: 1795, date: '윤2월 14일', clock: '밤', bg: 'inn', time: 'night', title: '뒷방 투전판',
+      body: () => '등잔 아래 투전 패가 오간다. 몇 판 만에 엽전 꾸러미가 오락가락했다. 맞은편 사내의 소매에서 패 한 장이 비죽 나와 있다.',
+      note: ['기록', '조선 후기에는 투전이 크게 유행해 나라에서 여러 차례 금지령을 내렸다.'],
+      choices: () => [
+        { t: '속임수를 따진다', tag: '야심', risk: 1, fn: () => { const r = Math.random(); return r < 0.3 ? { eff: {}, die: '칼부림', r: '사내가 품에서 칼을 꺼냈다.' } : r < 0.7 ? { eff: { fame: 6, money: 12 }, r: '다른 노름꾼들이 당신 편을 들었다. 판돈을 돌려받았다.' } : { eff: { hp: -12 }, r: '주먹다짐 끝에 밖으로 내동댕이쳐졌다.' }; } },
+        { t: '모른 척 판을 접고 나온다', tag: '신중', eff: { money: -4 }, r: '잃은 돈은 수업료라 치기로 했다.' },
+        { t: '한 판에 다 건다', tag: '호기심', fn: () => chance(0.5) ? { eff: { money: 20, heart: 5 }, r: '마지막 패가 뒤집혔다. 이겼다!' } : { eff: { money: -18, heart: -6 }, r: '빈손으로 주막을 나섰다.' } },
+      ] },
+    { id: 'd5s', branch: true, final: true, y: 1795, date: '윤2월 14일', clock: '밤', bg: 'home', time: 'night', title: '이른 잠',
+      body: () => '멀리서 펑, 펑 불꽃 터지는 소리가 들린다. 문풍지 너머로 하늘이 잠깐씩 밝아졌다 어두워진다.',
+      note: ['각색', '이 하루의 마지막 장면이다.'],
+      choices: () => [
+        { t: '불꽃 소리를 들으며 잠든다', tag: '신중', eff: { hp: 8, heart: 3 }, r: '오랜만에 꿈도 없이 푹 잤다.' },
+        { t: '내일 돌아갈 짐을 꾸린다', tag: '야심', eff: { money: 2, heart: 2 }, r: '장터에서 산 것들을 차곡차곡 쌌다.' },
+        { t: '집에 두고 온 식구를 생각한다', tag: '다정', eff: { bond: 4, heart: 4 }, r: '식구들에게 들려줄 이야기가 많았다.' },
+      ] },
+  ];
 
-  /* ===== 1. 시대 팩 ===== */
+  /* ================= 위클리: 1794년 3월 첫 이레 ================= */
+  const ACTS = {
+    work: { label: '일하기', bg: s => s.c === '상민' ? (F(s) ? 'home' : 'field') : s.c === '중인' ? 'kitchen' : 'study' },
+    study: { label: '배우기', bg: () => 'study' },
+    market: { label: '장터', bg: () => 'market' },
+    people: { label: '사람 만나기', bg: () => 'inn' },
+    rest: { label: '쉬기', bg: () => 'home' },
+  };
+  const ORD = ['첫째', '둘째', '셋째', '넷째', '다섯째', '여섯째', '이레째'];
+  const pickT = a => a[rnd(0, a.length - 1)];
+  function actOutcome(s, a, d, plan) {
+    let streak = 1; for (let i = d - 1; i >= 0 && plan[i] === a; i--) streak++;
+    let eff = {}, r = '';
+    if (a === 'work') {
+      eff = { money: 7, hp: -4 };
+      r = F(s) ? pickT({ '양반': ['집안 살림 장부를 맞추고 장을 담갔다.'], '중인': ['아버지 약방에서 약재를 썰고 달였다.'], '상민': ['베틀에 앉아 베 한 필을 끝냈다.', '남의 집 빨래 일을 해 주고 삯을 받았다.'] }[s.c])
+        : pickT({ '양반': ['집안 문서를 정리하고 소작료 장부를 맞췄다.'], '중인': ['약방에서 약재를 썰고 달였다.', '통역 일로 관아에 불려 갔다.'], '상민': ['남의 집 품을 팔아 하루 품삯을 받았다.', '새벽부터 논에 물을 댔다.'] }[s.c]);
+    } else if (a === 'study') {
+      eff = { fame: 4, heart: -1 };
+      r = s.c === '상민' ? '서당 앞을 기웃거리며 천자문을 몇 자 더 익혔다.' : F(s) ? '언문으로 옮긴 책을 읽고 베껴 썼다.' : s.c === '중인' ? '한어 회화책을 소리 내어 읽었다.' : '사랑방에서 경전을 읽었다.';
+    } else if (a === 'market') {
+      const m = rnd(-4, 9); eff = { money: m, heart: 2 };
+      r = m > 3 ? '종루 앞 시전과 칠패 난전을 돌았다. 싸게 산 물건을 되팔아 이문을 남겼다.' : m < 0 ? '장터에서 이것저것 사다 보니 돈이 금세 없어졌다.' : '장터를 한 바퀴 돌며 구경만 실컷 했다.';
+    } else if (a === 'people') {
+      eff = { bond: 5, money: -1 }; r = pickT(['이웃과 우물가에서 이야기꽃을 피웠다.', '오랜 벗을 찾아가 막걸리 한 사발을 나눴다.', '먼 친척 집에 인사를 다녀왔다.']);
+    } else {
+      eff = { hp: 6, heart: 4 }; r = '툇마루에 누워 늘어지게 낮잠을 잤다.';
+      if (d > 0 && plan[d - 1] === 'work') { eff.hp += 3; r += ' 어제 일한 덕에 쉬는 맛이 달았다.'; }
+    }
+    if (d === 2 && (a === 'rest' || a === 'people')) { eff.heart = (eff.heart || 0) + 4; r = '삼짇날이라 들에 나가 진달래 꽃잎으로 화전을 부쳐 먹었다. ' + r; }
+    if (streak >= 3 && a !== 'rest') { eff.hp = (eff.hp || 0) - 4; eff.heart = (eff.heart || 0) - 4; r += ` ${streak}일째 같은 일이라 몸도 마음도 지쳤다.`; }
+    return { eff, r };
+  }
+  function weekKey(s) {
+    if (s.flags.hero) return 'hero';
+    const c = {}; s.plan.forEach(a => c[a] = (c[a] || 0) + 1);
+    const dom = Object.keys(ACTS).sort((a, b) => (c[b] || 0) - (c[a] || 0))[0];
+    if (s.flags.recruit && dom === 'work') return 'hwaseong';
+    return dom;
+  }
+  const W_END = {
+    work: { title: '품삯을 셈하는 날', bg: 'market', body: () => '한 주 내내 부지런히 일했다. 일을 맡긴 주인이 장부를 덮으며 말했다. “자네 같은 사람이 필요하네. 다음 달부터 우리 일을 아예 맡아 보겠나?”', note: ['각색', '한 주 동안 일하기를 가장 많이 골라 이 장면이 나왔다.'],
+      choices: () => [{ t: '맡겠다고 한다', tag: '야심', eff: { money: 10, fame: 5, heart: -2 }, r: '살림이 펴겠지만, 쉴 날은 더 줄어들 것이다.' }, { t: '몸이 먼저다, 사양한다', tag: '신중', eff: { hp: 6, heart: 3 }, r: '주인은 아쉬워했지만 당신은 홀가분했다.' }, { t: '벗과 함께라면 하겠다고 한다', tag: '다정', eff: { bond: 6, money: 5 }, r: '오랜 벗과 같은 일터에 다니게 되었다.' }] },
+    hwaseong: { title: '남쪽으로 떠나는 날', bg: 'road', time: 'dawn', body: () => '장터에 적어 둔 이름이 불렸다. 화성으로 떠나는 인부 행렬이 숭례문 앞에 모였다. 손에 익은 일이니 품삯도 넉넉히 쳐준다고 했다.', note: ['기록', '화성 축성에는 전국에서 모인 장인과 인부가 일했고, 『화성성역의궤』에 그 이름과 품삯이 남아 있다.'],
+      choices: () => [{ t: '화성으로 떠난다', tag: '야심', eff: { money: 12, hp: -5 }, flag: 'hwaseongWork', r: '식구들이 숭례문까지 따라 나왔다. 두 해 뒤에 돌아오겠다고 했다.' }, { t: '식구들 곁에 남는다', tag: '다정', eff: { bond: 6 }, r: '행렬이 멀어지는 것을 지켜보았다.' }, { t: '대신 이웃 청년을 소개한다', tag: '신중', eff: { fame: 4, bond: 3 }, r: '청년의 어머니가 당신에게 연신 고개를 숙였다.' }] },
+    study: { title: '스승의 부름', bg: 'study', body: s => F(s) ? '한 주 내내 책을 끼고 산 것을 본 이웃 부인이 찾아왔다. 멀리 시집간 딸에게 보낼 언문 편지를 대신 써 달라고 했다.' : '스승이 당신을 불러 책 한 권을 내밀었다. “규장각에서 검서관을 뽑을 때 서얼도 쓴다더라. 신분보다 글이다. 너도 글을 놓지 마라.”', note: s => F(s) ? ['각색', '조선 후기 여성들은 언문 편지로 소식을 주고받았다.'] : ['기록', '정조는 1779년 서얼 출신 이덕무·박제가 등을 규장각 검서관으로 뽑았다.'],
+      choices: () => [{ t: '밤을 새워 정성껏 쓴다', tag: '신중', eff: { fame: 6, hp: -3 }, r: '쓴 글을 받아 든 사람이 오래 들여다보았다.' }, { t: '더 큰 공부를 하겠다고 다짐한다', tag: '야심', eff: { fame: 4, heart: 4 }, r: '책 목록을 새로 적었다.' }, { t: '배운 것을 동생들에게 가르친다', tag: '다정', eff: { bond: 6 }, r: '동생들이 처음으로 제 이름을 썼다.' }] },
+    market: { title: '객주의 제안', bg: 'market', body: () => '칠패 장터에서 자주 보던 객주가 말을 걸었다. “다음 장에 소금 배가 들어오네. 밑천을 보태면 이문을 나누지.”', note: ['기록', '조선 후기 객주는 상인들의 물건을 맡아 팔고 돈을 빌려주던 중개 상인이었다.'],
+      choices: () => [{ t: '가진 돈을 다 건다', tag: '야심', risk: 0, fn: () => chance(0.5) ? { eff: { money: 25, heart: 5 }, r: '소금 배가 무사히 들어왔다. 밑천이 두 배가 됐다.' } : { eff: { money: -25, heart: -8 }, r: '배가 풍랑에 늦었다. 소금값이 떨어졌다.' } }, { t: '조금만 보탠다', tag: '신중', fn: () => ({ eff: { money: rnd(-6, 10) }, r: '크게 벌지도 잃지도 않았다.' }) }, { t: '정중히 거절한다', tag: '호기심', eff: { heart: 2 }, r: '객주는 다음에 보자며 웃었다.' }] },
+    people: { title: '마당에 모인 벗들', bg: 'inn', time: 'dusk', body: () => '한 주 동안 만난 사람들이 당신 집 마당에 모였다. 누군가 계를 만들자고 했다. 다달이 돈을 모아 서로의 혼사와 초상을 돕는 모임이다.', note: ['기록', '조선 후기 마을에는 혼례·장례·농사를 서로 돕는 계가 많았다.'],
+      choices: () => [{ t: '계주를 맡는다', tag: '야심', eff: { fame: 6, bond: 4 }, r: '장부를 맡았다. 믿고 맡긴 돈이라 어깨가 무거웠다.' }, { t: '기꺼이 계원이 된다', tag: '다정', eff: { bond: 8, money: -3 }, r: '든든한 사람들이 생겼다.' }, { t: '돈 문제는 조심스럽다며 빠진다', tag: '신중', eff: { money: 2, bond: -3 }, r: '서운해하는 얼굴들이 보였다.' }] },
+    rest: { title: '몸이 가벼운 아침', bg: 'field', time: 'dawn', body: () => '잘 쉬었더니 오랜만에 몸이 가볍다. 봄볕이 좋아 들로 나갔다. 산자락마다 진달래가 붉다.', note: ['각색', '한 주 동안 쉬기를 가장 많이 골라 이 장면이 나왔다.'],
+      choices: () => [{ t: '진달래를 꺾어 식구들에게 가져간다', tag: '다정', eff: { bond: 5, heart: 4 }, r: '방 안에 봄이 들어왔다.' }, { t: '다음 주는 힘내서 일하겠다고 다짐한다', tag: '야심', eff: { heart: 3, fame: 2 }, r: '쉬어 본 사람만 다시 달릴 수 있다.' }, { t: '산 너머까지 걸어가 본다', tag: '호기심', eff: { heart: 8, hp: 2 }, r: '처음 가 본 마을에서 처음 본 꽃을 보았다.' }] },
+    hero: { title: '불을 끈 사람', bg: 'home', time: 'day', body: () => '닷새 전 불길 속에서 아이를 구한 이야기가 동네에 퍼졌다. 아이 부모가 떡 한 시루를 이고 찾아왔다. 관아에서도 사람을 보냈다.', note: ['각색', '불길 속으로 뛰어든 선택 때문에 이 장면이 나왔다.'],
+      choices: () => [{ t: '관아의 포상을 받는다', tag: '야심', eff: { fame: 10, money: 6 }, r: '이름이 관아 문서에 올랐다.' }, { t: '떡을 이웃과 나눠 먹는다', tag: '다정', eff: { bond: 10 }, r: '불탄 집 식구들도 함께 먹었다.' }, { t: '덴 곳부터 치료한다', tag: '신중', eff: { hp: 10 }, r: '의원이 혀를 찼다. “조금만 늦었어도 큰일 날 뻔했소.”' }] },
+  };
+  function buildWeek(plan) {
+    const out = [];
+    const firstMarket = plan.indexOf('market');
+    plan.forEach((a, d) => {
+      out.push({ id: 'w' + d, y: 1794, date: `3월 ${d + 1}일`, clock: '하루', bg: ACTS[a].bg, time: d === 2 ? 'dawn' : 'day', title: `${ORD[d]} 날 · ${ACTS[a].label}`,
+        body: () => d === 2 ? '오늘은 음력 3월 3일 삼짇날이다. 강남 갔던 제비가 돌아온다는 날이다.' : `오늘은 ${ACTS[a].label}로 정한 날이다.`,
+        note: d === 0 ? ['기록', '조선에는 요일이 없었다. 사람들은 닷새마다 서는 장날과 절기로 시간을 셌다. 이레를 한 묶음으로 보는 것은 게임의 구분이다.'] : d === 2 ? ['기록', '삼짇날에는 진달래 꽃잎을 얹어 화전을 부쳐 먹고 들놀이를 했다.'] : null,
+        auto: s => actOutcome(s, a, d, plan) });
+      if (d === firstMarket) out.push({ id: 'wbang', y: 1794, date: `3월 ${d + 1}일`, clock: '장터에서', bg: 'market', time: 'day', title: '장터에 붙은 방', people: ['정조'],
+        body: () => '장터 담벼락에 방이 붙었다. 수원 화성 공사에 인부와 장인을 더 모은다는 내용이다. 일한 날수대로 품삯을 쳐준다고 적혀 있다.',
+        note: ['기록', '화성 축성(1794~1796)에서는 부역 대신 임금을 주고 사람을 모았다.'],
+        choices: () => [
+          { t: '이름을 적어 둔다', tag: '야심', flag: 'recruit', br: 1, eff: { heart: 2 }, r: '서기가 당신 이름을 받아 적었다. 일을 많이 하는 사람부터 데려간다고 했다.' },
+          { t: '식구와 의논해 보겠다', tag: '신중', eff: { bond: 2 }, r: '방의 내용을 꼼꼼히 외워 두었다.' },
+          { t: '남의 일이다', tag: '호기심', eff: { heart: 1 }, r: '방 앞을 지나쳐 엿장수 쪽으로 갔다.' },
+        ] });
+      if (d === 4) out.push({ id: 'wfire', y: 1794, date: '3월 5일', clock: '한밤중', bg: 'fire', time: 'night', title: '닷새째 밤, 불이야',
+        body: () => '한밤중에 ‘불이야!’ 소리가 골목을 갈랐다. 이웃 초가 지붕이 활활 타오른다. 안에서 아이 울음소리가 들린다.',
+        note: ['기록', '초가가 빽빽한 한양에서는 불이 잦았다. 조선은 불을 막는 관청인 수성금화사를 두었다.'],
+        choices: s => [
+          { t: '불길 속으로 뛰어든다', tag: '다정', risk: 1, fn: () => chance(s.st.hp >= 50 ? 0.3 : 0.5) ? { eff: {}, die: '화재', r: '연기 속에서 아이를 찾아 품에 안았다.' } : { eff: { fame: 12, bond: 10, hp: -15 }, flag: 'hero', r: '아이를 안고 불길을 빠져나왔다. 소매가 타 있었다.' } },
+          { t: '물동이를 이어 나른다', tag: '신중', eff: { hp: -5, bond: 5 }, r: '우물에서 불까지 사람들이 줄을 섰다. 새벽에야 불이 잡혔다.' },
+          { t: '우리 집 지붕에 물부터 뿌린다', tag: '야심', eff: { money: 2, bond: -4 }, r: '우리 집은 무사했다. 이웃의 원망 섞인 눈길이 따가웠다.' },
+        ] });
+    });
+    Object.entries(W_END).forEach(([k, e]) => out.push({ id: 'wend-' + k, y: 1794, date: '3월 7일', clock: '이레째 저녁', time: e.time || 'dusk', final: true, when: s => weekKey(s) === k, ...e }));
+    return out;
+  }
+
+  /* ================= 먼슬리: 1821년 8월, 괴질의 한 달 ================= */
+  const MONTH = [
+    { id: 'm1', y: 1821, date: '8월 초하루', bg: 'market', time: 'day', title: '서쪽에서 온 소문',
+      body: () => '평안도에 처음 보는 돌림병이 돌아 열흘 만에 수많은 사람이 죽었다는 소문이 장터에 돌았다. 토하고 설사하다가 하루 만에 쓰러진다고 했다.',
+      note: ['기록', '1821년(순조 21) 8월, 콜레라가 평안도를 거쳐 한양까지 퍼졌다. 조선에 처음 크게 번진 콜레라였다.'],
+      choices: () => [
+        { t: '먼 데 일이다', eff: { heart: 2 }, flag: 'careless', br: 1, r: '평양은 멀다. 한양까지 오기야 하겠냐고 생각했다.' },
+        { t: '곡식과 땔감을 미리 사 둔다', tag: '신중', eff: { money: -6 }, flag: 'stock', br: 1, r: '쌀 두 말과 장작 한 짐을 들였다.' },
+        { t: '이웃들에게 알려 조심시킨다', tag: '다정', eff: { bond: 3, fame: 2 }, flag: 'warned', r: '반쯤은 믿고 반쯤은 웃었다.' },
+      ] },
+    { id: 'm2', y: 1821, date: '8월 열흘', bg: 'plague', time: 'day', title: '한양에 들어온 괴질',
+      body: s => `괴질이 한양에 들어왔다. 옆집 사내가 아침에 쓰러졌다는 소식이 들렸다. 거리에서는 곡소리가 끊이지 않는다.${s.flags.careless ? ' 먼 데 일이라던 것이 바로 문밖에 와 있었다.' : ''}`,
+      note: ['기록', '조정은 전염병을 물리치기 위한 제사인 여제를 지내게 했다.'],
+      choices: () => [
+        { t: '옆집으로 건너가 돌본다', tag: '다정', go: 'm3c', r: '물 한 동이를 들고 옆집 문을 열었다.' },
+        { t: '식구를 데리고 시골로 떠난다', tag: '신중', go: 'm3f', r: '해 뜨기 전에 짐을 꾸렸다.' },
+        { t: '여제를 지내는 곳에 사람들과 모인다', tag: '호기심', go: 'm3r', r: '사람들을 따라 제단 쪽으로 걸었다.' },
+      ] },
+    { id: 'm3c', branch: true, y: 1821, date: '8월 보름', bg: 'plague', time: 'night', title: '앓는 이의 곁',
+      body: () => '옆집 사내는 물만 들어가면 토했다. 그 아내는 넋이 나가 있었다. 방 안에 시큼한 냄새가 가득했다.',
+      note: ['각색', '당시에는 병의 원인을 몰랐다. 콜레라는 오염된 물로 퍼진다는 것이 밝혀진 것은 1850년대 이후다.'],
+      choices: () => [
+        { t: '시신을 맨손으로 수습하고 염을 돕는다', tag: '다정', risk: 1, fn: () => chance(0.5) ? { eff: {}, die: '괴질', r: '사내는 그날 밤 숨을 거뒀다. 당신이 그를 씻기고 염했다.' } : { eff: { bond: 12, fame: 5 }, r: '마지막 길을 정성껏 보냈다. 그 아내가 당신 앞에 엎드렸다.' } },
+        { t: '물을 끓여 먹이고 손을 자주 씻긴다', tag: '신중', fn: () => chance(0.08) ? { eff: {}, die: '괴질', r: '조심했지만 사흘 뒤 당신도 배를 움켜쥐었다.' } : { eff: { bond: 8 }, flag: 'clean', br: 1, r: '왜인지 몰라도 끓인 물이 나을 것 같았다. 사내는 기적처럼 일어났다.' } },
+        { t: '의원을 부르러 장안을 뛴다', tag: '야심', eff: { hp: -6, fame: 4 }, r: '의원들도 모두 앓는 집을 도느라 바빴다. 겨우 한 사람을 데려왔다.' },
+      ] },
+    { id: 'm3f', branch: true, y: 1821, date: '8월 보름', bg: 'road', time: 'day', title: '피난길',
+      body: () => '짐을 지고 동쪽으로 걸었다. 나루터에는 피난민을 태우려는 배가 사람들로 넘친다. 산을 넘는 길은 사흘이 걸린다.',
+      note: ['기록', '괴질이 돌자 많은 사람이 한양을 떠나 피난했다. 피난 장면은 각색이다.'],
+      choices: () => [
+        { t: '사람이 빽빽한 나룻배에 오른다', tag: '야심', risk: 1, fn: () => chance(0.25) ? { eff: {}, die: '난파', r: '배가 기우뚱했다.' } : { eff: { hp: -3 }, r: '아슬아슬하게 강을 건넜다.' } },
+        { t: '배를 포기하고 산을 넘는다', tag: '신중', eff: { hp: -10 }, flag: 'clean', r: '발이 부르텄지만 사람을 피해 걸었다. 산속 마을은 조용했다.' },
+        { t: '길에서 쓰러진 아이를 업고 간다', tag: '다정', risk: 1, fn: () => chance(0.15) ? { eff: {}, die: '괴질', r: '아이의 몸이 불덩이 같았다.' } : { eff: { bond: 10, hp: -6 }, flag: 'adopt', br: 1, r: '아이는 열이 내렸다. 부모를 찾을 수 없었다.' } },
+      ] },
+    { id: 'm3r', branch: true, y: 1821, date: '8월 보름', bg: 'palace', time: 'dusk', title: '여제',
+      body: () => '괴질을 몰아내려고 관에서 제사를 지냈다. 사람들이 무리 지어 엎드려 빌었다. 기침하는 사람, 얼굴이 누런 사람이 섞여 있었다.',
+      note: ['기록', '1821년 조정은 괴질을 물리치기 위해 여제를 지냈다. 사람이 많이 모이는 곳일수록 병이 퍼지기 쉬웠다.'],
+      choices: () => [
+        { t: '사람들 틈에서 함께 빈다', tag: '다정', risk: 1, fn: () => chance(0.22) ? { eff: {}, die: '괴질', r: '이틀 뒤 열이 오르기 시작했다.' } : { eff: { heart: 6, bond: 4 }, r: '모두가 같은 마음이라는 것이 위로가 되었다.' } },
+        { t: '제사 음식을 나르는 일을 돕는다', tag: '신중', eff: { fame: 4 }, r: '관리가 당신 이름을 적어 갔다.' },
+        { t: '사람 많은 곳을 피해 돌아간다', tag: '호기심', eff: { heart: -1 }, flag: 'clean', r: '왠지 사람 많은 곳이 꺼려졌다.' },
+      ] },
+    { id: 'm4', y: 1821, date: '8월 그믐', bg: 'home', time: 'night', title: '식구가 앓아눕다',
+      body: s => `${s.flags.stock ? '미리 사 둔 땔감 덕에 물을 넉넉히 끓일 수 있었다. ' : ''}이번에는 집안 식구가 열에 들떠 누웠다. 밤새 앓는 소리가 났다.`,
+      note: ['각색', '앞의 선택(미리 사 둔 땔감, 물 끓이기, 사람 피하기)에 따라 식구가 살아날 가능성이 달라진다.'],
+      choices: s => {
+        const base = 0.45 + (s.flags.clean ? 0.25 : 0) + (s.flags.stock ? 0.1 : 0);
+        const fam = (p) => chance(p) ? { ok: true, r: ' 사흘 만에 식구가 눈을 떴다.' } : { ok: false, r: ' 끝내 식구는 일어나지 못했다.' };
+        return [
+          { t: '곁을 지키며 밤새 간호한다', tag: '다정', risk: 1, fn: () => { if (chance(s.flags.clean ? 0.08 : 0.2)) return { eff: {}, die: '괴질', r: '간호하던 당신이 먼저 쓰러졌다.' }; const f = fam(base + 0.1); return { eff: { bond: 8, hp: -6 }, flag: f.ok ? 'famSaved' : 'famLost', r: '물수건을 갈고 또 갈았다.' + f.r }; } },
+          { t: '의원을 찾아 장안을 헤맨다', tag: '야심', fn: () => { const f = fam(base); return { eff: { money: -8, hp: -4 }, flag: f.ok ? 'famSaved' : 'famLost', r: '비싼 값을 치르고 탕약을 지어 왔다.' + f.r }; } },
+          { t: '무당을 불러 굿을 한다', tag: '신중', fn: () => { const f = fam(base - 0.1); return { eff: { money: -6 }, flag: f.ok ? 'famSaved' : 'famLost', r: '징 소리가 밤새 울렸다.' + f.r }; } },
+        ];
+      } },
+    { id: 'm5', y: 1821, date: '9월 초', bg: 'town', time: 'day', title: '괴질이 지나간 자리', final: true,
+      body: s => `찬바람이 불자 괴질이 잦아들었다. 골목 곳곳이 비었다. ${s.flags.famLost ? '당신 집에도 빈자리가 생겼다.' : '당신 식구는 모두 살아남았다.'}`,
+      note: ['기록', '1821년 콜레라는 이듬해 다시 돌았고, 이후 19세기 내내 여러 차례 유행했다.'],
+      choices: s => [
+        { t: s.flags.adopt ? '피난길에 업고 온 아이를 내 자식으로 키운다' : '부모 잃은 아이를 거둔다', tag: '다정', eff: { bond: 10, money: -6, heart: 5 }, r: '아이가 처음으로 당신을 어머니·아버지 하고 불렀다.' },
+        { t: '장례 치를 돈이 없는 집을 돕는다', tag: '신중', eff: { fame: 6, money: -6 }, r: '거적에 싸인 이웃들을 양지바른 곳에 묻었다.' },
+        { t: '문을 닫고 한동안 아무도 만나지 않는다', tag: '호기심', eff: { hp: 6, heart: s.flags.famLost ? -4 : 2 }, r: '조용히 쉬었다. 마음이 조금씩 돌아왔다.' },
+      ] },
+  ];
+
+  /* ================= 이얼리: 1809년 기사년 ================= */
+  const YEAR = [
+    { id: 'y1', y: 1809, date: '정월 초하루', bg: 'snow', time: 'day', title: '기사년 설날',
+      body: () => '떡국을 먹고 한 살을 더 먹었다. 아이들이 세배를 오고, 마을 어른은 올해 농사 걱정을 했다. 지난겨울에 눈이 적었다.',
+      note: ['기록', '조선 후기에는 『토정비결』로 한 해 운수를 보는 풍습이 널리 퍼졌다고 알려져 있다.'],
+      choices: () => [
+        { t: '토정비결로 올해 운수를 본다', tag: '호기심', eff: { heart: 2 }, flag: 'fortune', br: 1, r: '“물 귀한 해이니 우물을 지켜라.” 괘가 마음에 걸렸다.' },
+        { t: '친척 어른들께 세배를 다닌다', tag: '다정', eff: { bond: 5 }, r: '세뱃돈 대신 덕담을 한 아름 들었다.' },
+        { t: '정월에 장 담글 준비를 한다', tag: '신중', eff: { money: 4 }, r: '메주를 손질하고 항아리를 닦았다.' },
+      ] },
+    { id: 'y2', y: 1809, date: '3월', bg: 'drought', time: 'day', title: '비가 오지 않는 봄',
+      body: () => '모내기 철이 다가오는데 하늘이 말랐다. 저수지 바닥이 드러났다. 마을 사람들이 산꼭대기에서 기우제를 지내자고 했다.',
+      note: ['기록', '1809년 봄부터 큰 가뭄이 들었다. 조정과 고을마다 기우제를 지냈다.'],
+      choices: s => [
+        s.flags.fortune ? { t: '점괘대로 우물부터 깊이 판다', tag: '신중', eff: { hp: -6 }, flag: 'irrigate', br: 1, r: '사흘을 파서 맑은 물줄기를 만났다.' } : { t: '사람들과 물길을 판다', tag: '신중', eff: { hp: -8 }, flag: 'irrigate', br: 1, r: '먼 개울에서 논까지 도랑을 냈다. 손이 다 부르텄다.' },
+        { t: '기우제에 정성을 보탠다', tag: '다정', eff: { bond: 4, money: -3 }, r: '산꼭대기에 불을 피우고 밤새 빌었다.' },
+        { t: '곡식값이 오를 테니 미리 사들인다', tag: '야심', eff: { money: -8 }, flag: 'stock', br: 1, r: '빚을 얻어 쌀 다섯 섬을 들였다.' },
+      ] },
+    { id: 'y3', y: 1809, date: '5월 단오', bg: 'festival', time: 'day', title: '가뭄 속의 단오',
+      body: s => `가뭄 중에도 단오는 왔다. 창포물에 머리를 감고, ${F(s) ? '처녀들은 느티나무에 맨 그네를 뛰었다' : '장정들은 씨름판에 모였다'}. 잠시나마 걱정을 잊었다.`,
+      note: ['기록', '음력 5월 5일 단오에는 창포물에 머리를 감고, 여성은 그네뛰기, 남성은 씨름을 즐겼다.'],
+      choices: s => [
+        F(s) ? { t: '그네를 누구보다 높이 뛴다', tag: '호기심', fn: () => chance(0.85) ? { eff: { heart: 9 }, r: '치맛자락이 하늘에 닿을 것 같았다.' } : { eff: { hp: -10, heart: 2 }, r: '줄이 미끄러져 떨어졌다. 팔을 삐었다.' } } : { t: '씨름판에 나선다', tag: '야심', fn: () => chance(0.4 + s.st.hp / 250) ? { eff: { fame: 8, money: 5 }, r: '마지막 판에서 이겼다. 상으로 쌀 한 말을 받았다.' } : { eff: { hp: -6 }, r: '첫 판에서 모래판에 처박혔다.' } },
+        { t: '먹을 것을 나누는 데 손을 보탠다', tag: '다정', eff: { bond: 5 }, r: '수리취떡을 쪄서 나눴다.' },
+        { t: '단오에도 논에 물을 댄다', tag: '신중', eff: { hp: -3 }, flag: 'irrigate', r: '모두가 놀 때 논에 나갔다.' },
+      ] },
+    { id: 'y4', y: 1809, date: '7월', bg: 'drought', time: 'day', title: '갈라진 논',
+      body: s => `벼가 누렇게 타들어 갔다. 쌀값은 하루가 다르게 뛰었다.${s.flags.irrigate ? ' 판 물길 덕에 우리 논 몇 마지기는 아직 푸르다.' : ''}${s.flags.stock ? ' 미리 사 둔 쌀이 금값이 되었다.' : ''}`,
+      note: ['기록', '1809년 여름 가뭄으로 전국의 농사가 크게 망쳤다(기사년 대기근).'],
+      choices: () => [
+        { t: '산에서 처음 보는 풀뿌리를 캐 먹는다', tag: '호기심', risk: 1, fn: () => chance(0.3) ? { eff: {}, die: '독초', r: '쓴맛이 혀끝에 오래 남았다.' } : { eff: { hp: -4 }, r: '배는 채웠다. 다행히 독은 없었다.' } },
+        { t: '소를 팔아 곡식을 산다', tag: '신중', eff: { hp: 4, heart: -5 }, flag: 'soldOx', r: '외양간이 비었다. 내년 농사가 걱정이었다.' },
+        { t: '빚을 내서라도 버틴다', tag: '야심', eff: { money: 10 }, flag: 'debt', br: 1, r: '이자가 무서웠지만 당장 굶을 수는 없었다.' },
+      ] },
+    { id: 'y5', y: 1809, date: '8월 한가위', bg: 'field', time: 'night', title: '흉년의 한가위',
+      body: s => s.flags.irrigate ? '물길 덕에 반쯤은 거뒀다. 둥근 달 아래 송편을 몇 개라도 빚을 수 있었다.' : '거둘 것이 거의 없었다. 송편 대신 쑥을 섞은 개떡을 쪘다. 그래도 달은 둥글었다.',
+      note: ['각색', '봄에 물길을 냈는지에 따라 이 장면이 달라진다.'],
+      choices: s => [
+        { t: '달을 보며 내년을 빈다', tag: '호기심', eff: { heart: 5 }, r: '달은 가뭄도 모르는 듯 밝았다.' },
+        { t: '거둔 것을 이웃과 나눈다', tag: '다정', eff: s.flags.irrigate ? { bond: 8, money: -4 } : { bond: 5, hp: -3 }, r: s.flags.irrigate ? '우리 논 쌀로 이웃 세 집이 한가위를 넘겼다.' : '나눌 것이 없어 개떡 반쪽씩을 나눴다.' },
+        { t: '남은 곡식을 세어 겨울을 계획한다', tag: '신중', eff: { money: 3 }, r: '하루 몇 홉씩 먹을지 정했다.' },
+      ] },
+    { id: 'y6', y: 1809, date: '10월', bg: 'road', time: 'dusk', title: '떠도는 사람들',
+      body: s => `굶주린 사람들이 무리를 지어 고을을 떠돌았다. 산에는 도적 떼가 생겼다는 말이 돈다.${s.flags.debt ? ' 빚쟁이가 집에 찾아와 소리를 질렀다.' : ''} 어느 날 도적 떼의 우두머리가 사람을 보내 함께하자고 했다.`,
+      note: ['기록', '대기근 때 고향을 떠나 떠도는 유민이 크게 늘었고, 일부는 도적이 되었다. 이 장면의 권유는 각색이다.'],
+      choices: s => [
+        { t: '도적 떼에 들어간다', tag: '야심', risk: 1, go: 'y6b', eff: { money: 6 }, r: s.flags.debt ? '빚에 쫓기느니 산으로 가기로 했다.' : '배를 곯는 식구들 얼굴이 떠올랐다.' },
+        { t: '유민들에게 죽을 쑤어 준다', tag: '다정', eff: { money: -8, bond: 8, fame: 5 }, r: '가마솥 하나로 스무 명이 저녁을 먹었다.' },
+        { t: '대문을 굳게 닫는다', tag: '신중', eff: { bond: -3 }, r: '밤마다 문 두드리는 소리가 들렸다.' },
+      ] },
+    { id: 'y6b', branch: true, y: 1809, date: '11월', bg: 'road', time: 'night', title: '산채의 겨울',
+      body: () => '산채에서는 배는 곯지 않았다. 지나는 장사꾼의 짐을 빼앗은 날도 있었다. 관군이 토벌하러 온다는 소문이 들려왔다.',
+      note: ['기록', '기근 때 생긴 도적 떼는 관군의 토벌 대상이 되었다. 산채 장면은 각색이다.'],
+      choices: () => [
+        { t: '끝까지 산채를 지킨다', tag: '야심', risk: 1, die: '토벌', eff: {}, r: '횃불 수백 개가 산을 에워쌌다.' },
+        { t: '밤을 틈타 도망친다', tag: '신중', risk: 1, fn: () => chance(0.6) ? { eff: { hp: -12, fame: -10 }, r: '눈 덮인 산을 사흘 동안 넘었다. 겨우 집에 닿았다.' } : { eff: {}, die: '토벌', r: '골짜기 입구에 관군이 먼저 와 있었다.' } },
+        { t: '관아에 자수한다', tag: '다정', risk: 1, fn: () => chance(0.5) ? { eff: { hp: -15, fame: -15 }, r: '곤장을 맞고 풀려났다. 사또가 굶어서 그런 것이라며 사정을 봐주었다.' } : { eff: {}, die: '처형', r: '본보기가 필요하다고 했다.' } },
+      ] },
+    { id: 'y7', y: 1809, date: '11월 동지', bg: 'snow', time: 'day', title: '동지 팥죽',
+      body: () => '동짓날, 팥죽을 쑤어 대문과 장독에 뿌렸다. 붉은 팥이 나쁜 기운을 쫓는다고 했다. 관에서는 진휼소를 열어 죽을 나눠 주었다.',
+      note: ['기록', '동지에는 팥죽을 쑤어 먹고 대문에 뿌려 액운을 막았다. 기근 때는 관에서 진휼소를 열었다.'],
+      choices: s => [
+        { t: '진휼소 일을 돕는다', tag: '다정', eff: { bond: 6, fame: 4, hp: -3 }, r: '하루 종일 죽을 펐다. 줄은 끝이 없었다.' },
+        { t: s.st.money < 20 ? '묽게라도 팥죽을 쑤어 식구와 먹는다' : '팥죽을 넉넉히 쑤어 이웃과 나눈다', tag: '신중', eff: s.st.money < 20 ? { heart: 4 } : { bond: 5, money: -4 }, r: '뜨끈한 팥죽 한 그릇에 언 손이 녹았다.' },
+        s.flags.debt ? { t: '빚을 조금이라도 갚으러 간다', tag: '야심', eff: { money: -8, heart: 6 }, r: '빚쟁이가 놀란 얼굴로 돈을 받았다.' } : { t: '내년 봄 씨앗을 챙겨 둔다', tag: '야심', eff: { money: 3 }, r: '씨앗 자루를 천장에 매달았다.' },
+      ] },
+    { id: 'y8', y: 1809, date: '섣달그믐', bg: 'home', time: 'night', title: '한 해의 끝', final: true,
+      body: () => '섣달그믐 밤에는 잠들면 눈썹이 센다고 해서 온 식구가 밤을 새웠다. 집 안 구석구석 불을 밝혔다. 길고 메마른 한 해가 저물고 있었다.',
+      note: ['기록', '섣달그믐 밤에 잠을 자지 않고 새해를 맞는 풍습을 수세라고 했다.'],
+      choices: () => [
+        { t: '올해 일을 식구들과 이야기한다', tag: '다정', eff: { bond: 6, heart: 4 }, r: '웃을 일보다 울 일이 많았지만, 다 같이 살아 있었다.' },
+        { t: '새해에 할 일을 적는다', tag: '야심', eff: { heart: 4, fame: 2 }, r: '첫 줄에 ‘물길 넓히기’라고 썼다.' },
+        { t: '조용히 혼자 마당에 나간다', tag: '호기심', eff: { heart: 6 }, r: '별이 유난히 많았다.' },
+      ] },
+  ];
+
+  const MODES = {
+    day: { en: 'DAILY', label: '데일리', span: '하루', unit: '하루', title: '1795년 윤2월 14일', where: '화성', desc: '혜경궁 회갑 이튿날, 임금의 행차가 머문 화성. 새벽부터 밤까지 시간대마다 길이 갈라집니다.', meta: '장면 5개 · 갈림길 2곳 · 목숨이 걸린 선택 있음', scenes: () => DAY },
+    week: { en: 'WEEKLY', label: '위클리', span: '일주일', unit: '한 주', title: '1794년 3월 1일–7일', where: '한양', desc: '이레의 일정을 직접 짭니다. 짠 일정과 그 주에 벌어진 일에 따라 이레째 날의 사건이 달라집니다.', meta: '장면 9~10개 · 결말 6가지 · 목숨이 걸린 선택 있음', scenes: s => buildWeek(s.plan) },
+    month: { en: 'MONTHLY', label: '먼슬리', span: '한 달', unit: '한 달', title: '1821년 8월', where: '한양', desc: '처음 보는 괴질이 한양을 덮친 한 달. 누구를 돌보고 어디로 피할지에 목숨이 걸립니다.', meta: '장면 5개 · 갈림길 3곳 · 목숨이 걸린 선택 있음', scenes: () => MONTH, adj: { hp: -6 } },
+    year: { en: 'YEARLY', label: '이얼리', span: '한 해', unit: '한 해', title: '1809년 기사년', where: '경기 고을', desc: '큰 가뭄이 든 한 해를 설날부터 섣달그믐까지 계절마다 삽니다. 봄의 선택이 가을의 밥상을 바꿉니다.', meta: '장면 8개 · 갈림길 있음 · 목숨이 걸린 선택 있음', scenes: () => YEAR },
+    life: { en: 'ISSUE', label: '이슈', span: '한평생', unit: '삶', title: '1770–1840', where: '한양', desc: '태어나서 눈감을 때까지 시대의 큰 사건을 겪습니다. 젊은 날의 선택이 노년의 장면을 바꿉니다.', meta: '장면 16~20개 · 숨은 장면 6개 · 목숨이 걸린 선택 있음', scenes: () => LIFE, aging: true },
+  };
+
+  /* ================= 상태와 흐름 ================= */
+  let CH = null, S = null;
+  const views = ['v-packs', 'v-create', 'v-mode', 'v-plan', 'v-play', 'v-end'];
+  const show = id => { views.forEach(v => $(v).hidden = v !== id); window.scrollTo(0, 0); };
+  const ageAt = y => y - S.birth + 1;
+
   function renderPacks() {
     const min = -3000, max = 2026, pos = y => ((y - min) / (max - min) * 100).toFixed(2) + '%';
     const ticks = [[-3000, '기원전 3000', 'start'], [-2000, '기원전 2000'], [-1000, '기원전 1000'], [1, '서기 1'], [1000, '1000'], [2026, '2026', 'end']];
-    $('ruler').innerHTML = '<div class="axis"></div>' +
-      ticks.map(([y, l, c]) => `<div class="tick ${c || ''}" style="left:${pos(y)}"><span>${l}</span></div>`).join('') +
-      PACKS.map(p => `<div class="dot ${p.open ? 'on' : ''}" style="left:${pos(p.y)}" title="${p.name}"></div>`).join('');
-    $('packs').innerHTML = PACKS.map(p => `
-      <button class="pack ${p.open ? 'open' : ''}" ${p.open ? '' : 'disabled'} data-id="${p.id}">
-        <span class="when">${p.when}</span>
-        <span class="name">${p.name}</span>
-        <span class="state">${p.open ? '플레이 가능' : '준비 중'}</span>
-      </button>`).join('');
-    $('packs').querySelector('.open').addEventListener('click', () => { show('v-create'); });
+    $('ruler').innerHTML = '<div class="axis"></div>' + ticks.map(([y, l, c]) => `<div class="tick ${c || ''}" style="left:${pos(y)}"><span>${l}</span></div>`).join('') + PACKS.map(p => `<div class="dot ${p.open ? 'on' : ''}" style="left:${pos(p.y)}"></div>`).join('');
+    $('packs').innerHTML = PACKS.map(p => `<button class="pack ${p.open ? 'open' : ''}" ${p.open ? '' : 'disabled'}><span class="when">${p.when}</span><span class="name">${p.name}</span><span class="state">${p.open ? '플레이 가능' : '준비 중'}</span></button>`).join('');
+    $('packs').querySelector('.open').addEventListener('click', () => { show('v-create'); preview(); });
   }
 
-  /* ===== 2. 인물 만들기 ===== */
   function radioGroup(el, name, items, checked) {
-    el.innerHTML = items.map((it, i) => `
-      <div class="opt">
-        <input type="radio" name="${name}" id="${name}-${i}" value="${it.v}" ${it.v === checked ? 'checked' : ''}>
-        <label for="${name}-${i}"><b>${it.v}</b><small>${it.d}</small></label>
-      </div>`).join('');
+    el.innerHTML = items.map((it, i) => `<div class="opt"><input type="radio" name="${name}" id="${name}-${i}" value="${it.v}" ${it.v === checked ? 'checked' : ''}><label for="${name}-${i}"><b>${it.v}</b><small>${it.d}</small></label></div>`).join('');
   }
   const pick = n => document.querySelector(`input[name="${n}"]:checked`).value;
   function suggestName() {
-    const g = pick('g'), c = pick('c');
-    const list = g === '여' ? NAMES['여'] : NAMES[g + c];
-    const cur = $('i-name').value;
-    let n; do { n = list[rnd(0, list.length - 1)]; } while (n === cur && list.length > 1);
+    const gg = pick('g'), c = pick('c');
+    const list = gg === '여' ? NAMES['여'] : NAMES[gg + c];
+    const cur = $('i-name').value; let n;
+    do { n = list[rnd(0, list.length - 1)]; } while (n === cur && list.length > 1);
     $('i-name').value = n;
-    $('name-note').textContent = g === '여'
-      ? '조선의 여성은 족보와 문서에 이름 대신 ‘○○ 이씨’처럼 본관과 성으로 적히는 일이 많았습니다. 여기서는 집에서 부르던 이름을 씁니다.'
-      : c === '상민' ? '상민 집안에서는 막동이, 돌쇠처럼 아이가 탈 없이 크라는 투박한 이름을 흔히 썼습니다.' : '';
+    $('name-note').textContent = gg === '여' ? '조선의 여성은 족보와 문서에 이름 대신 ‘○○ 이씨’처럼 본관과 성으로 적히는 일이 많았습니다. 여기서는 집에서 부르던 이름을 씁니다.' : c === '상민' ? '상민 집안에서는 막동이, 돌쇠처럼 아이가 탈 없이 크라는 투박한 이름을 흔히 썼습니다.' : '';
+  }
+  function preview() {
+    const s = { g: pick('g'), c: pick('c'), age: 26, flags: {}, st: { hp: 60, heart: 62 } };
+    $('pv').innerHTML = portrait(s);
   }
   function renderCreate() {
     radioGroup($('o-g'), 'g', GENDERS, '여');
-    radioGroup($('o-c'), 'c', CLASSES, '중인');
+    radioGroup($('o-c'), 'c', CLASSES, '양반');
     radioGroup($('o-t'), 't', TRAITS, '호기심');
-    suggestName();
-    ['o-g', 'o-c'].forEach(id => $(id).addEventListener('change', suggestName));
+    suggestName(); preview();
+    ['o-g', 'o-c'].forEach(id => $(id).addEventListener('change', () => { suggestName(); preview(); }));
     $('b-rename').addEventListener('click', suggestName);
     $('b-back').addEventListener('click', () => show('v-packs'));
-    $('f-create').addEventListener('submit', e => { e.preventDefault(); born(); });
+    $('f-create').addEventListener('submit', e => {
+      e.preventDefault();
+      CH = { name: $('i-name').value.trim() || '이름 없는 이', g: pick('g'), c: pick('c'), t: pick('t') };
+      renderModes(); show('v-mode');
+    });
   }
 
-  /* ===== 3. 플레이 ===== */
-  function born() {
-    const g = pick('g'), c = pick('c'), t = pick('t');
-    const st = { ...BASE[c] };
-    Object.entries(TRAIT_BONUS[t]).forEach(([k, v]) => st[k] += v);
-    const birth = rnd(1769, 1771);
-    S = { name: $('i-name').value.trim() || '이름 없는 이', g, c, t, birth, year: birth, age: 1, st, flags: {}, log: [], idx: -1, mine: 0, seen: [] };
+  function renderModes() {
+    $('mode-who').textContent = `${CH.name} · ${CH.c} ${CH.g} · ${CH.t}`;
+    $('modes').innerHTML = Object.entries(MODES).map(([id, m]) => `
+      <button class="mode" data-id="${id}"><span class="en">${m.en} · ${m.label}</span><span class="span">${m.span}</span><span class="set">${m.title} · ${m.where}</span><span class="desc">${m.desc}</span><span class="meta">${m.meta}</span></button>`).join('');
+    $('modes').querySelectorAll('.mode').forEach(b => b.addEventListener('click', () => {
+      if (b.dataset.id === 'week') { renderPlan(); show('v-plan'); } else start(b.dataset.id);
+    }));
+  }
+  $('b-recreate').addEventListener('click', () => show('v-create'));
+
+  let PLAN = ['work', 'market', 'rest', 'study', 'work', 'people', 'rest'];
+  const PRESETS = { '고르게': ['work', 'market', 'rest', 'study', 'work', 'people', 'rest'], '일 위주': ['work', 'work', 'market', 'work', 'work', 'work', 'rest'], '쉬엄쉬엄': ['rest', 'people', 'rest', 'market', 'rest', 'people', 'rest'], '공부 위주': ['study', 'study', 'people', 'study', 'study', 'market', 'study'] };
+  function renderPlan() {
+    $('presets').innerHTML = '<span class="note">빠르게 짜기</span>' + Object.keys(PRESETS).map(k => `<button class="btn ghost" data-p="${k}" style="padding:6px 12px;font-size:13px">${k}</button>`).join('');
+    $('presets').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { PLAN = [...PRESETS[b.dataset.p]]; drawPlan(); }));
+    drawPlan();
+  }
+  function drawPlan() {
+    $('plan').innerHTML = PLAN.map((a, d) => `
+      <div class="pday" role="radiogroup" aria-label="${ORD[d]} 날">
+        <div class="d">${ORD[d]} 날<small>3월 ${d + 1}일${d === 2 ? ' · <em>삼짇날</em>' : ''}</small></div>
+        <div class="seg">${Object.entries(ACTS).map(([k, v]) => `<div class="opt"><input type="radio" name="p${d}" id="p${d}-${k}" value="${k}" ${k === a ? 'checked' : ''}><label for="p${d}-${k}">${v.label}</label></div>`).join('')}</div>
+      </div>`).join('');
+    $('plan').querySelectorAll('input').forEach(i => i.addEventListener('change', () => { PLAN[+i.name.slice(1)] = i.value; }));
+  }
+  $('b-week').addEventListener('click', () => start('week'));
+  $('b-plan-back').addEventListener('click', () => show('v-mode'));
+
+  function start(mode) {
+    const m = MODES[mode];
+    const st = { ...BASE[CH.c] };
+    Object.entries(TRAIT_BONUS[CH.t]).forEach(([k, v]) => st[k] += v);
+    if (m.adj) Object.entries(m.adj).forEach(([k, v]) => st[k] = clamp(st[k] + v));
+    S = { ...CH, mode, birth: rnd(1769, 1771), st, flags: {}, log: [], mine: 0, seen: [], idx: -1, plan: [...PLAN] };
+    S.year = mode === 'life' ? S.birth : 0; S.age = 1;
+    S.scenes = m.scenes(S);
+    S.first = true;
     show('v-play');
     next();
   }
-  const ageAt = y => y - S.birth + 1;
 
-  function next() {
-    let i = S.idx + 1;
-    while (i < EVENTS.length && EVENTS[i].when && !EVENTS[i].when(S)) i++;
-    // 같은 해 youth/youth2 중복 방지: 상민은 youth2만, 그 외는 youth만
-    if (EVENTS[i] && EVENTS[i].id === 'youth' && S.c === '상민') i++;
-    if (i >= EVENTS.length) return endLife('노환');
-    const ev = EVENTS[i];
-    const dy = ev.y - S.year;
-    S.year = ev.y; S.age = ageAt(ev.y);
-    if (S.age > 40) S.st.hp = clamp(S.st.hp - dy * (S.age > 58 ? 0.8 : 0.4));
-    if (S.age >= 55) {
-      const p = Math.max(0, (S.age - 54) * 0.008) + Math.max(0, (28 - S.st.hp) * 0.012);
-      if (chance(p) || S.st.hp <= 0) { S.year = ev.y - rnd(0, Math.min(dy, 3)); S.age = ageAt(S.year); return endLife('병'); }
+  function next(go) {
+    const L = S.scenes;
+    let i;
+    if (go) i = L.findIndex(x => x.id === go);
+    else { i = S.idx + 1; while (i < L.length && (L[i].branch || (L[i].when && !L[i].when(S)))) i++; }
+    if (i < 0 || i >= L.length) return finish();
+    const sc = L[i];
+    const prevYear = S.year;
+    S.year = sc.y; S.age = ageAt(sc.y);
+    if (MODES[S.mode].aging && prevYear) {
+      const dy = sc.y - prevYear;
+      if (S.age > 40) S.st.hp = clamp(S.st.hp - dy * (S.age > 58 ? 0.8 : 0.4));
+      if (S.age >= 55 && (chance(Math.max(0, (S.age - 54) * 0.008) + Math.max(0, (28 - S.st.hp) * 0.012)) || S.st.hp <= 0)) {
+        S.year = sc.y - rnd(0, Math.min(dy, 3)); S.age = ageAt(S.year);
+        return death('병');
+      }
     }
-    S.idx = i;
-    renderEvent(ev);
+    S.idx = i; S.cur = sc;
+    renderScene(sc);
   }
 
-  function renderStatus() {
-    $('status').innerHTML = `
-      <div class="who">
-        <span class="nm">${esc(S.name)}</span>
-        <span class="meta">${S.c} · ${S.g} · ${S.t} · ${S.age}세 · ${reign(S.year)}</span>
-      </div>
-      <div class="stats">${Object.entries(STAT).map(([k, l]) => `
-        <div class="stat"><div class="lab"><span>${l}</span><b>${S.st[k]}</b></div><div class="bar"><i style="width:${S.st[k]}%"></i></div></div>`).join('')}
-      </div>`;
+  const whenLabel = sc => sc.date ? `${sc.y}년 ${sc.date}${sc.clock ? ' · ' + sc.clock : ''}` : `${sc.y}년 · ${reign(sc.y)}`;
+  function renderSide() {
+    const m = MODES[S.mode];
+    $('side').innerHTML = `
+      <div class="frame">${portrait(S)}</div>
+      <div class="who"><span class="nm">${esc(S.name)}</span>
+        <span class="meta">${S.c} · ${S.g} · ${S.t} · ${S.age}세</span>
+        <span class="when">${m.label} · ${S.cur ? esc(whenLabel(S.cur)) : ''}</span></div>
+      <div class="stats">${Object.entries(STAT).map(([k, l]) => `<div class="stat"><div class="lab"><span>${l}</span><b>${S.st[k]}</b></div><div class="bar"><i style="width:${S.st[k]}%"></i></div></div>`).join('')}</div>`;
   }
 
-  function renderEvent(ev) {
-    renderStatus();
-    const note = val(ev.note, S), people = val(ev.people, S) || [];
-    const choices = ev.choices(S);
-    $('stage').innerHTML = `
-      <article class="card">
-        <div class="ganji" aria-label="${ganji(S.year)}년">${ganji(S.year)}<small>${S.age}세</small></div>
-        <div class="ev">
-          <span class="yr">${S.year}년 · ${reign(S.year)}</span>
-          <h2>${esc(val(ev.title, S))}</h2>
-          <p class="body">${esc(ev.body(S))}</p>
-          ${people.length ? `<div class="people" aria-label="실존 인물">${people.map(p => `<span>실존 인물 · ${p}</span>`).join('')}</div>` : ''}
-          <div class="hist ${note[0] === '각색' ? 'fic' : ''}"><span class="tag">역사 노트 · ${note[0]}</span><p>${esc(note[1])}</p></div>
-          <div class="choices" id="choices">${choices.map((c, i) => `
-            <button class="choice ${c.tag === S.t ? 'mine' : ''}" data-i="${i}"><span class="t">${esc(c.t)}</span><span class="k">${c.tag ? c.tag : ''}</span></button>`).join('')}
-          </div>
-          <div id="result"></div>
-        </div>
-      </article>`;
-    $('choices').querySelectorAll('.choice').forEach(b => b.addEventListener('click', () => choose(ev, choices[+b.dataset.i])));
+  function renderScene(sc) {
+    renderSide();
+    const bg = val(sc.bg, S), t = sc.time || 'day';
+    const m = MODES[S.mode];
+    $('win').innerHTML = drawScene(bg, t, S) + `<span class="cap">${esc(whenLabel(sc))}</span>` +
+      (S.first ? `<div class="cine"><div><span>${m.label} · ${m.span}</span><b>${m.title}</b><span>${m.where} · ${esc(S.name)}, ${S.age}세</span></div></div>` : '');
+    S.first = false;
+    const note = val(sc.note, S), people = val(sc.people, S) || [];
+    const head = `<span class="yr">${esc(whenLabel(sc))} · ${ganji(sc.y)}년</span><h2>${esc(val(sc.title, S))}</h2><p class="body">${esc(sc.body(S))}</p>
+      ${people.length ? `<div class="people">${people.map(p => `<span>실존 인물 · ${p}</span>`).join('')}</div>` : ''}
+      ${note ? `<div class="hist ${note[0] === '각색' ? 'fic' : ''}"><span class="tag">역사 노트 · ${note[0]}</span><p>${esc(note[1])}</p></div>` : ''}`;
+    if (sc.auto) {
+      $('stage').innerHTML = `<div class="ev">${head}<div id="result"></div></div>`;
+      const out = sc.auto(S);
+      apply(sc, { t: '정한 일정대로' }, out);
+      return;
+    }
+    const choices = sc.choices(S);
+    $('stage').innerHTML = `<div class="ev">${head}
+      <div class="choices" id="choices">${choices.map((c, i) => `<button class="choice ${c.tag && c.tag === S.t ? 'mine' : ''}" data-i="${i}"><span class="t">${esc(c.t)}</span><span class="k">${c.risk ? '<span class="risk">위험</span>' : ''}${c.tag ? `<span class="tr">${c.tag}</span>` : ''}</span></button>`).join('')}</div>
+      <div id="result"></div></div>`;
+    $('choices').querySelectorAll('.choice').forEach(b => b.addEventListener('click', () => {
+      const c = choices[+b.dataset.i];
+      const out = c.fn ? c.fn(S) : { eff: c.eff, r: c.r, flag: c.flag, die: c.die, go: c.go };
+      $('choices').remove();
+      apply(sc, c, out);
+    }));
   }
 
-  function choose(ev, c) {
-    const out = c.fn ? c.fn(S) : { eff: c.eff, r: c.r, flag: c.flag };
+  function apply(sc, c, out) {
     const eff = { ...(out.eff || {}) };
-    const mine = c.tag && c.tag === S.t;
+    const mine = !!(c.tag && c.tag === S.t);
     if (mine) { eff.heart = (eff.heart || 0) + 3; S.mine++; }
+    const die = out.die || c.die;
     const deltas = [];
-    Object.entries(eff).forEach(([k, v]) => {
-      const before = S.st[k]; S.st[k] = clamp(before + v);
-      const d = S.st[k] - before; if (d && !out.die) deltas.push([k, d]);
-    });
+    Object.entries(eff).forEach(([k, v]) => { const b = S.st[k]; S.st[k] = clamp(b + v); const d = S.st[k] - b; if (d) deltas.push([k, d]); });
     const flag = out.flag || c.flag; if (flag) S.flags[flag] = true;
-    S.seen.push(ev.id);
-    S.log.push({ y: S.year, age: S.age, title: val(ev.title, S), pick: c.t, r: out.r, mine });
-    renderStatus();
-    $('choices').innerHTML = '';
-    const last = ev.final || out.die;
+    if (sc.sets) S.flags[sc.sets] = true;
+    const go = out.go || c.go;
+    const fork = !!(go || c.br);
+    S.seen.push(sc.id);
+    S.log.push({ when: whenLabel(sc), age: S.age, title: val(sc.title, S), pick: c.t, r: out.r, mine, fork, die: !!die });
+    renderSide();
+    const last = die || sc.final;
     $('result').innerHTML = `
       <div class="result ${mine ? 'sealed' : ''}">
         ${mine ? '<div class="seal" aria-label="당신다운 선택">本<br>心</div>' : ''}
-        <span class="picked">당신의 선택 · ${esc(c.t)}</span>
+        ${c.t !== '정한 일정대로' ? `<span class="picked">당신의 선택 · ${esc(c.t)}</span>` : ''}
         <p>${esc(out.r)}</p>
-        ${deltas.length ? `<div class="deltas">${deltas.map(([k, d]) => `<span class="${d > 0 ? 'up' : 'down'}">${STAT[k]} ${d > 0 ? '+' : '−'}${Math.abs(d)}</span>`).join('')}</div>` : ''}
-        <div class="row"><button class="btn" id="b-next">${last ? '삶을 돌아보기' : '세월이 흐른다'}</button></div>
+        ${deltas.length && !die ? `<div class="deltas">${deltas.map(([k, d]) => `<span class="${d > 0 ? 'up' : 'down'}">${STAT[k]} ${d > 0 ? '+' : '−'}${Math.abs(d)}</span>`).join('')}</div>` : ''}
+        ${fork && !die ? '<span class="fork">갈림길 · 이 선택으로 뒤의 이야기가 달라집니다</span>' : ''}
+        <div class="row"><button class="btn" id="b-next">${die ? '마지막 장면' : last ? `이 ${eul(MODES[S.mode].unit)} 돌아보기` : sc.auto ? '다음 날로' : '이어서'}</button></div>
       </div>`;
-    $('b-next').focus();
+    $('b-next').focus({ preventScroll: true });
     $('b-next').addEventListener('click', () => {
-      if (out.die) return endLife(out.die);
-      if (ev.final) { S.year = Math.min(1845, S.year + 1 + Math.round(S.st.hp / 14)); S.age = ageAt(S.year); return endLife('노환'); }
-      next();
+      if (die) return death(die);
+      if (sc.final) {
+        if (S.mode === 'life') { S.year = Math.min(1845, S.year + 1 + Math.round(S.st.hp / 14)); S.age = ageAt(S.year); return death('노환'); }
+        return finish();
+      }
+      next(go);
     });
   }
 
-  /* ===== 4. 회고 ===== */
+  const DEATH = {
+    '노환': '자리에 누운 지 며칠 만에, 식구들 곁에서 조용히 눈을 감았다.',
+    '병': '긴 병 끝에, 어느 새벽 조용히 숨을 거두었다.',
+    '괴질': '괴질은 당신도 비켜 가지 않았다. 사흘을 앓고 눈을 감았다.',
+    '순교': '당신은 끝내 믿음을 버리지 않았다. 서소문 밖 형장에서 생을 마쳤다.',
+    '정주성': '관군이 성벽 밑에 묻은 화약이 터졌다. 정주성은 무너졌고, 당신도 그 안에 있었다.',
+    '처형': '붙잡힌 이들과 함께 형장으로 끌려갔다. 마지막으로 고향 쪽 하늘을 보았다.',
+    '독초': '캐 먹은 풀뿌리에 독이 있었다. 밤새 배를 움켜쥐다 새벽에 숨이 멎었다.',
+    '화재': '아이를 품에 안고 나오던 순간, 서까래가 무너져 내렸다. 아이는 살았다.',
+    '화약': '불꽃 하나가 화약 더미에 튀었다. 섬광이 밤하늘보다 밝았다.',
+    '칼부림': '칼끝은 생각보다 빨랐다. 장터의 소란이 멀어져 갔다.',
+    '추락': '바람이 세게 불었다. 발밑의 돌이 흔들렸고, 당신은 성벽 아래로 떨어졌다.',
+    '토벌': '관군이 산채를 에워쌌다. 당신은 마지막까지 산채 문을 지켰다.',
+    '난파': '사람을 너무 많이 태운 나룻배가 강 한가운데서 뒤집혔다.',
+  };
+  function death(cause) {
+    S.dead = true; S.cause = cause;
+    const sc = { id: 'death', y: S.year, date: S.cur && S.cur.date, clock: S.cur && S.cur.clock };
+    $('win').innerHTML = drawScene('death', 'night', S) + `<span class="cap">${esc(sc.date ? whenLabel(sc) : `${S.year}년 · ${reign(S.year)}`)}</span>`;
+    renderSide();
+    $('stage').innerHTML = `<div class="ev"><span class="yr">${S.year}년 · ${ganji(S.year)}년 · 향년 ${S.age}세</span><h2>${esc(S.name)}, 눈을 감다</h2><p class="body">${DEATH[cause]}</p>
+      <div class="row"><button class="btn" id="b-end">삶을 돌아보기</button></div></div>`;
+    $('b-end').focus({ preventScroll: true });
+    $('b-end').addEventListener('click', finish);
+  }
+
+  /* ================= 회고 ================= */
   const NOW = [
+    { need: s => s.mode === 'day', span: '1795 → 2026', h: '다시 걷는 행차길', p: '해마다 가을이면 서울에서 수원 화성까지 정조의 행차가 재현된다. 의궤에 남은 행렬 그림이 그 길의 안내서다.' },
+    { need: s => s.mode === 'week', span: '1794 → 2026', h: '요일이 없던 시절', p: '조선 사람들의 시간은 닷새마다 서는 장날과 절기로 흘렀다. 이레를 한 주로 묶고 하루를 쉬는 습관은 근대 이후에 자리 잡았다.' },
     { need: s => s.seen.includes('smallpox'), span: '1778 → 1980', h: '마마', p: '당신을 앓게 한 천연두는 1980년 세계보건기구가 지구에서 사라졌다고 선언한 첫 번째 질병이 됐다.' },
-    { need: s => s.seen.includes('tonggong'), span: '1791 → 2026', h: '누구나 장사를 하는 거리', p: '독점이 풀린 뒤 커진 칠패와 배오개의 난전은 오늘날 남대문과 종로 일대 시장 거리의 뿌리로 꼽힌다.' },
-    { need: s => s.seen.includes('hwaseong'), span: '1796 → 1997', h: '수원 화성', p: s => `한국전쟁 때 크게 부서진 화성은 『화성성역의궤』의 기록을 바탕으로 1970년대에 복원됐고, 1997년 유네스코 세계유산이 됐다.${s.flags.hwaseongWork ? ' 의궤에는 당신 곁에서 일한 사람들의 이름과 품삯이 남아 있다.' : ''}` },
-    { need: s => s.seen.includes('persecution'), span: '1801 → 2026', h: '유배지의 책', p: '정약용은 18년의 유배 동안 『목민심서』를 비롯해 500여 권을 남겼다. 오늘날 공직자의 자세를 이야기할 때 그 책이 자주 인용된다.' },
-    { need: s => s.seen.includes('cholera') && s.cause !== '괴질', span: '1821 → 2020년대', h: '이름 모를 병의 시간', p: '1821년의 사람들은 병의 정체도 모른 채 문을 걸어 잠그거나 이웃을 돌봤다. 우리도 불과 몇 해 전, 비슷한 선택 앞에 서 보았다.' },
-    { need: s => s.cause === '괴질', span: '1821 → 2020년대', h: '이름 모를 병의 시간', p: '당신을 데려간 괴질은 콜레라였다. 우리도 불과 몇 해 전, 이름도 낯선 병 앞에서 서로를 지키는 법을 다시 배웠다.' },
+    { need: s => s.seen.includes('tonggong') || s.seen.includes('wend-market'), span: '1791 → 2026', h: '누구나 장사를 하는 거리', p: '독점이 풀린 뒤 커진 칠패와 배오개의 난전은 오늘날 남대문과 종로 일대 시장 거리의 뿌리로 꼽힌다.' },
+    { need: s => s.seen.includes('hwaseong') || s.mode === 'day' || s.flags.hwaseongWork, span: '1796 → 1997', h: '수원 화성', p: s => `한국전쟁 때 크게 부서진 화성은 『화성성역의궤』의 기록을 바탕으로 1970년대에 복원됐고, 1997년 유네스코 세계유산이 됐다.${s.flags.hwaseongWork ? ' 의궤에는 당신 곁에서 일한 사람들의 이름과 품삯이 남아 있다.' : ''}` },
+    { need: s => s.flags.catholic, span: '1801 → 2014', h: '이름을 되찾은 사람들', p: '신유박해 때 목숨을 잃은 강완숙 등 124명은 2014년 복자로 선포되었다. 당신이 다니던 모임의 사람들도 그 이름 가운데 있었을지 모른다.' },
+    { need: s => s.seen.some(x => /^persecution/.test(x)), span: '1801 → 2026', h: '유배지의 책', p: '정약용은 18년의 유배 동안 『목민심서』를 비롯해 500여 권을 남겼다. 오늘날 공직자의 자세를 이야기할 때 그 책이 자주 인용된다.' },
+    { need: s => s.mode === 'month' || s.seen.includes('cholera'), span: '1821 → 2020년대', h: '이름 모를 병의 시간', p: '1821년의 사람들은 병의 정체도 모른 채 문을 걸어 잠그거나 이웃을 돌봤다. 우리도 불과 몇 해 전, 비슷한 선택 앞에 서 보았다.' },
+    { need: s => s.mode === 'year' || s.seen.includes('famine'), span: '1809 → 2026', h: '비를 기다리던 사람들', p: '1809년 사람들은 산에 올라 비를 빌었다. 오늘은 저수지와 관개 시설 덕분에 한 해 가뭄이 곧바로 굶주림이 되지는 않는다.' },
+    { need: s => s.seen.includes('y7'), span: '1809 → 2026', h: '동지 팥죽', p: '붉은 팥으로 나쁜 기운을 쫓던 동지 팥죽은 2026년 겨울에도 동짓날 식탁에 오른다.' },
     { need: s => s.seen.includes('ship'), span: '1832 → 1882', h: '문을 두드린 배', p: '그 배가 떠나고 50년 뒤인 1882년, 조선은 미국과 첫 서양 조약을 맺었다. 당신의 손주가 그 소식을 들었을지도 모른다.' },
   ];
-  const LINES = {
-    hp: '오래 버틴 몸으로 한 시대를 끝까지 지켜본 삶',
-    money: '가진 것을 차곡차곡 쌓아 식구를 지킨 삶',
-    bond: '언제나 사람 곁에 머문 삶',
-    fame: '이름을 세상에 남긴 삶',
-    heart: '끝까지 스스로에게 떳떳했던 삶',
+  const LINE = { hp: '몸을 아끼며 끝까지 버틴', money: '살림을 단단히 지켜 낸', bond: '언제나 사람 곁에 머문', fame: '이름을 세상에 남긴', heart: '스스로에게 떳떳했던' };
+  const REFLECT = {
+    day: ['오늘 하루 중 가장 오래 남는 순간은 언제였나요?', n => `${n}의 하루와 오늘 당신의 하루, 그 하루를 채운 것은 얼마나 달랐나요?`, '내일 하루, 딱 한 가지만 다르게 해 본다면 무엇일까요?'],
+    week: ['짠 일정과 실제로 겪은 한 주는 얼마나 같았나요?', '이번 주 당신의 일정표에는 쉬는 칸이 몇 개 있나요?', '이레 가운데 하루를 통째로 비운다면 무엇을 하고 싶나요?'],
+    month: ['두려움 앞에서 당신이 먼저 지킨 것은 무엇이었나요?', '몇 해 전 우리가 겪은 전염병의 시간에, 당신은 누구를 먼저 떠올렸나요?', '지금 당신 곁에서 안부를 물어야 할 사람은 누구인가요?'],
+    year: ['가뭄 같은 한 해를 버티게 한 것은 무엇이었나요?', '올해 당신의 계절은 지금 어디쯤인가요?', '섣달그믐 밤에 식구들과 나누고 싶은 이야기는 무엇인가요?'],
+    life: ['이 삶에서 가장 오래 남는 장면은 무엇이었나요?', n => `${n}의 삶이 붙잡았던 것과, 2026년의 당신이 붙잡고 있는 것은 얼마나 닮았나요?`, '그 시대 사람이 지금의 당신을 본다면, 무엇을 부러워하고 무엇을 안쓰러워할까요?'],
   };
-
-  function endLife(cause) {
-    S.cause = cause;
+  function finish() {
+    const m = MODES[S.mode];
     const top = Object.entries(S.st).sort((a, b) => b[1] - a[1])[0][0];
-    const causeText = { '노환': '자리에 누운 지 며칠 만에, 식구들 곁에서 조용히 눈을 감았다.', '괴질': '괴질이 지나간 그해 가을, 당신은 돌아오지 못했다.', '병': '긴 병 끝에, 어느 새벽 조용히 숨을 거두었다.' }[cause];
+    const unit = S.dead ? '삶' : m.unit;
+    const life = S.dead
+      ? `${S.birth} ${ganji(S.birth)}년 생 — ${S.year} ${ganji(S.year)}년 졸 · 향년 ${S.age}세 · ${S.c} ${S.g}`
+      : `${m.title} · ${m.where} · ${S.c} ${S.g} · ${S.age}세`;
+    const sub = S.dead ? `${DEATH[S.cause]} ${S.mode !== 'life' ? `${m.label} 모드에서 ${eul(m.unit)} 다 살지 못하고 생을 마쳤다.` : ''}` : `${m.unit} 동안 ${S.log.length}개의 장면을 지나왔다.`;
     const cards = NOW.filter(n => n.need(S)).slice(0, 4);
+    const forks = S.log.filter(l => l.fork).length;
     let saved = ''; try { saved = localStorage.getItem('hanseng-note') || ''; } catch (e) {}
     $('v-end').innerHTML = `
       <div style="display:grid;gap:36px">
         <div class="epitaph">
-          <span class="eyebrow">회고 · 조선 후기 한양</span>
+          <div class="frame">${portrait(S)}</div>
+          <span class="eyebrow">회고 · ${m.label} · ${m.span}</span>
           <h1>${esc(S.name)}</h1>
-          <span class="life">${S.birth} ${ganji(S.birth)}년 생 — ${S.year} ${ganji(S.year)}년 졸 · 향년 ${S.age}세 · ${S.c} ${S.g}</span>
-          <p class="line">${LINES[top]}</p>
-          <p class="muted" style="max-width:32em">${causeText} 살면서 ‘당신다운 선택’을 ${S.mine}번 했다.</p>
+          <span class="life">${life}</span>
+          <p class="line">${LINE[top]} ${unit}</p>
+          <p class="muted" style="max-width:34em">${esc(sub)} ‘당신다운 선택’ ${S.mine}번, 이야기를 바꾼 갈림길 ${forks}번.</p>
         </div>
-
-        <section class="block">
-          <h3>지나온 길</h3>
-          <div class="timeline">${S.log.map(l => `
-            <div class="tl"><div class="y"><b>${l.y}</b>${l.age}세</div>
-              <div class="what"><strong>${esc(l.title)}${l.mine ? '<span class="mark">本心</span>' : ''}</strong><span>${esc(l.pick)}. ${esc(l.r)}</span></div></div>`).join('')}
-          </div>
-        </section>
-
-        <section class="block">
-          <h3>남긴 것</h3>
-          <div class="final-stats">${Object.entries(STAT).map(([k, l]) => `
-            <div class="fs"><span>${l}</span><div class="bar"><i style="width:${S.st[k]}%"></i></div><b>${S.st[k]}</b></div>`).join('')}
-          </div>
-        </section>
-
-        ${cards.length ? `<section class="block">
-          <h3>그때와 지금, 2026</h3>
-          <div class="now">${cards.map(c => `<article><span class="span">${c.span}</span><h4>${c.h}</h4><p>${esc(val(c.p, S))}</p></article>`).join('')}</div>
-        </section>` : ''}
-
-        <section class="block reflect">
-          <h3>지금의 당신에게</h3>
-          <ol>
-            <li>이 삶에서 가장 오래 남는 장면은 무엇이었나요?</li>
-            <li>${esc(S.name)}의 삶이 붙잡았던 것과, 2026년의 당신이 붙잡고 있는 것은 얼마나 닮았나요?</li>
-            <li>그 시대 사람이 지금의 당신을 본다면, 무엇을 부러워하고 무엇을 안쓰러워할까요?</li>
-          </ol>
-          <label for="i-note" class="ui" style="font-size:13px;font-weight:600">지금의 나에게 남기는 한 줄</label>
+        <section class="block"><h3>지나온 길</h3>
+          <div>${S.log.map(l => `<div class="tl"><div class="y"><b>${esc(l.when.split(' · ')[0])}</b>${esc(l.when.split(' · ').slice(1).join(' · ') || l.age + '세')}</div>
+            <div class="what"><strong>${esc(l.title)}${l.mine ? '<span class="mark">本心</span>' : ''}${l.fork ? '<span class="mark f">갈림길</span>' : ''}</strong><span>${l.pick !== '정한 일정대로' ? esc(l.pick) + '. ' : ''}${esc(l.r)}</span></div></div>`).join('')}
+            ${S.dead ? `<div class="tl"><div class="y"><b>${S.year}</b>${S.age}세</div><div class="what"><strong>눈을 감다</strong><span>${esc(DEATH[S.cause])}</span></div></div>` : ''}
+          </div></section>
+        <section class="block"><h3>남긴 것</h3>
+          <div class="final-stats">${Object.entries(STAT).map(([k, l]) => `<div class="fs"><span>${l}</span><div class="bar"><i style="width:${S.st[k]}%"></i></div><b>${S.st[k]}</b></div>`).join('')}</div></section>
+        ${cards.length ? `<section class="block"><h3>그때와 지금, 2026</h3><div class="now">${cards.map(c => `<article><span class="span">${c.span}</span><h4>${c.h}</h4><p>${esc(val(c.p, S))}</p></article>`).join('')}</div></section>` : ''}
+        <section class="block reflect"><h3>지금의 당신에게</h3>
+          <ol>${REFLECT[S.mode].map(q => `<li>${esc(typeof q === 'function' ? q(S.name) : q)}</li>`).join('')}</ol>
+          <label for="i-note" class="note" style="font-weight:600">지금의 나에게 남기는 한 줄</label>
           <textarea id="i-note" placeholder="예: 그 시대에도 사람들은 결국 곁의 사람을 챙기며 버텼다.">${esc(saved)}</textarea>
-          <div class="row"><button class="btn ghost" id="b-save">이 브라우저에 간직하기</button><span class="saved" id="saved" aria-live="polite"></span></div>
-        </section>
-
+          <div class="row"><button class="btn ghost" id="b-save">이 브라우저에 간직하기</button><span class="saved" id="saved" aria-live="polite"></span></div></section>
         <div class="row" style="justify-content:center">
-          <button class="btn" id="b-again">같은 시대, 다른 삶</button>
-          <button class="btn ghost" id="b-home">시대 팩 고르기</button>
+          <button class="btn" id="b-again">같은 모드 다시 살기</button>
+          <button class="btn ghost" id="b-other">다른 모드로 살기</button>
+          <button class="btn ghost" id="b-new">새 인물 만들기</button>
         </div>
       </div>`;
     show('v-end');
@@ -771,11 +1342,11 @@ footer.note { text-align: center; }
       try { localStorage.setItem('hanseng-note', $('i-note').value); $('saved').textContent = '간직했습니다'; }
       catch (e) { $('saved').textContent = '이 브라우저에서는 저장할 수 없습니다. 글을 따로 옮겨 두세요.'; }
     });
-    $('b-again').addEventListener('click', () => { suggestName(); show('v-create'); });
-    $('b-home').addEventListener('click', () => show('v-packs'));
+    $('b-again').addEventListener('click', () => S.mode === 'week' ? (renderPlan(), show('v-plan')) : start(S.mode));
+    $('b-other').addEventListener('click', () => { renderModes(); show('v-mode'); });
+    $('b-new').addEventListener('click', () => { suggestName(); show('v-create'); preview(); });
   }
 
-  /* ===== 시작 ===== */
   renderPacks();
   renderCreate();
   show('v-packs');
