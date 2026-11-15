@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>TRIP-ADM-POL-02c 관리 모달 · 여비규정 설정 (미등록 법인)</title>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>TRIP-06-M02 (미등록 법인)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ===== HYBENET 출장 관리 · 법인별 세팅 — 공통 스타일 (레퍼런스 톤앤매너) ===== */
 :root{
@@ -305,43 +306,188 @@ body.desc-on .ov{right:360px}
 
 .grid .badge{white-space:normal;height:auto;min-height:17px;padding:2px 6px;line-height:1.3}
 
-/* ===== Figma 임포트용 정적 레이아웃 ===== */
+/* ===== v3: 위임전결 어드민 기획안(v7)과 동일한 톤앤매너 ===== */
+:root{
+  --ink:#111; --text:#111827; --sub:#475569; --mute:#64748B; --faint:#94A3B8;
+  --line:#E2E8F0; --line-strong:#CBD5E1; --bg-head:#F1F5F9; --bg-panel:#F8FAFC; --bg-chip:#F1F5F9;
+  --blue:#2563EB; --blue-bg:#DBEAFE; --green:#166534; --green-bg:#DCFCE7; --red:#DC2626; --red-bg:#FEE2E2;
+  --orange:#92400E; --orange-bg:#FEF3C7; --gray-bg:#F1F5F9; --mk:#E53935; --radius:4px;
+}
+*{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+body{font-size:13px;line-height:1.45;color:var(--text);letter-spacing:0}
+input[type=checkbox],input[type=radio]{accent-color:#2563EB}
+/* 레이아웃 · LNB */
+.frame{grid-template-columns:247px minmax(0,1fr)}
+body.desc-on .frame{grid-template-columns:247px minmax(0,1fr) 408px}
+.side{background:#111;color:#B6BBC4;font-size:13.5px}
+.side .logo{height:auto;padding:24px 20px 28px;font-size:15px;font-weight:700;letter-spacing:0;gap:0}
+.side .logo .ham{display:none}
+.side nav{padding-top:0}
+.side .m1{padding:12px 20px;font-weight:400;gap:0;color:#B6BBC4}
+.side .m1 .ic{display:none}
+.side .m1.on{background:none;color:#fff;font-weight:700}
+.side .sub{background:none}
+.side .m2{padding:10px 20px 10px 34px;color:#8B919B;font-size:12.5px}
+.side .m2.on{background:#2A2D33;color:#fff;font-weight:700;border-left:3px solid #3B82F6;padding-left:31px}
+.side .foot{padding:16px 20px;font-size:11px;color:#6B7280;border-top:1px solid #222}
+.gnb,.crumb{display:none}
+.page{padding:28px 40px 60px}
+.ptitle{font-size:21px;font-weight:700;margin:0 0 14px;height:40px;display:flex;align-items:center}
+.tabs{gap:22px;border-top:0;border-bottom:1px solid #E5E7EB;padding:0;margin-bottom:14px}
+.tabs .t{padding:8px 2px;font-size:13.5px;color:#6B7280}
+.tabs .t.on{font-weight:700;color:#111;border-bottom:2px solid #111}
+/* 버튼 · 입력 */
+.btn{height:32px;padding:0 14px;border:1px solid #CBD5E1;border-radius:4px;font-size:12.5px;font-weight:500;color:#111;justify-content:center}
+.btn:hover{border-color:#94A3B8}
+.btn.pri{background:#111;border-color:#111;color:#fff}
+.btn.sm{height:26px;padding:0 10px;font-size:11.5px}
+.btn.danger{color:#DC2626;border-color:#FECACA}
+.btn.ghost{border-color:transparent;color:#475569}
+.btn.ghost.danger{border-color:transparent}
+.btn:disabled{opacity:1;color:#94A3B8;border-color:#E2E8F0;background:#fff}
+.btn.pri:disabled{background:#CBD5E1;border-color:#CBD5E1;color:#fff}
+.link{color:#2563EB;text-decoration:none;font-weight:500}
+.inp,.sel,.ta{height:32px;border:1px solid #CBD5E1;border-radius:4px;padding:0 10px;font-size:12.5px;color:#111}
+.ta{height:auto;padding:8px 10px}
+.sel{background-color:#F8FAFC}
+.inp::placeholder,.ta::placeholder{color:#94A3B8}
+.inp:focus,.sel:focus,.ta:focus{border-color:#2563EB}
+.inp:disabled,.sel:disabled{background:#F1F5F9;color:#94A3B8}
+.etbl .inp,.etbl .sel{height:30px}
+.tg[aria-checked="true"]{background:#2563EB}
+.tg-label{font-size:11.5px;color:#94A3B8}
+.tg[aria-checked="true"] + .tg-label{color:#1D4ED8}
+/* 칩 */
+.badge{height:20px;padding:0 7px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid transparent}
+.badge.blue{background:#DBEAFE;color:#1E40AF}
+.badge.green{background:#DCFCE7;color:#166534}
+.badge.red{background:#FEE2E2;color:#B91C1C}
+.badge.orange{background:#FEF3C7;color:#92400E}
+.badge.gray{background:#F1F5F9;color:#475569}
+.badge.line{background:#EEF0F3;color:#374151;border-color:#D1D5DB}
+.grid .badge{min-height:20px}
+.chip{font-size:12px;font-weight:500;color:#475569;background:#F1F5F9;border-radius:4px;padding:3px 8px}
+.chip b{color:#111;font-weight:700}
+.tchip{background:#fff;color:#2563EB;border:1px solid #93C5FD;border-radius:4px;font-weight:600;padding:1px 3px 1px 7px}
+.tchip button{color:#2563EB}
+.hl-blue{color:#2563EB}
+.h3 em{color:#2563EB}
+/* 표 */
+.grid-wrap,.tbl-wrap{border-top:1px solid #CBD5E1;border-bottom:0}
+.etbl{border-top:1px solid #CBD5E1}
+.grid th,.tbl th,.etbl th,.mx th{background:#F1F5F9;font-size:11px;font-weight:700;color:#334155;border-bottom:1px solid #CBD5E1}
+.grid th{border-bottom:1px solid #CBD5E1}
+.grid th.grp{border-left:1px solid #CBD5E1;border-right:1px solid #CBD5E1}
+.grid td,.tbl td,.etbl td{border-bottom:1px solid #E2E8F0;font-size:12px}
+.grid .corp-cd{font-weight:700}
+.grid .corp-nm,.grid .sm,.grid .dim,.tbl .dim{color:#64748B}
+.mx th,.mx td{border:1px solid #E2E8F0}
+.mx th{border-bottom-color:#CBD5E1}
+.mx td.rh{background:#F8FAFC}
+.hist-ba .b{color:#64748B}
+.empty{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;color:#64748B}
+.empty b{color:#111}
+.note{color:#B45309}
+.help{color:#64748B;font-size:11.5px}
+.sec-title{font-size:13.5px;font-weight:700;margin-bottom:4px}
+.sec-desc{font-size:12px;color:#64748B}
+.back{color:#2563EB;font-weight:500;margin-top:0}
+.toolbar{margin:0 0 10px}
+/* 모달 */
+.ov{background:rgba(17,24,39,.42)}
+body.desc-on .ov{right:408px}
+.xmodal,.cmodal{border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.xh{padding:20px 24px 16px}
+.cmodal .xh{border-bottom:1px solid #E5E7EB;padding-bottom:16px}
+.xh .t{font-size:17px;font-weight:700}
+.xh .s{font-size:12px;color:#64748B;margin-top:3px}
+.xh .x{font-size:18px;color:#6B7280}
+.xtabs{gap:22px;padding:0 24px;border-bottom:1px solid #E5E7EB}
+.xtabs button{padding:8px 2px;font-size:13.5px;color:#6B7280}
+.xtabs button.on{font-weight:700;color:#111;border-bottom:2px solid #111}
+.xtabs .dot{background:#E53935}
+.xb{padding:20px 24px}
+.cmodal .xb{padding:16px 24px 20px}
+.xf{padding:14px 24px;border-top:1px solid #E5E7EB;border-radius:0 0 12px 12px}
+.ditem{border:1px solid #E5E7EB;border-radius:8px;padding:14px 18px;margin-bottom:10px}
+.ditem .nm{font-size:13.5px;font-weight:700}
+.ditem .ds{font-size:12px;color:#475569}
+.ditem .ef{font-size:11.5px;color:#64748B}
+.ditem.changed{border-color:#93C5FD;background:#F8FBFF}
+.ditem.changed .nm:after{color:#2563EB}
+.pitem{border:1px solid #E5E7EB;border-radius:8px}
+.pitem.off{background:#F8FAFC}
+.pitem .ph .inp.nm{font-weight:700}
+.pitem .inp.undef{border-color:#F59E0B;background:#FFFBEB}
+.pitem .line{color:#374151;font-weight:600}
+.pitem .line .inp{font-weight:400}
+.seg{border-color:#CBD5E1;border-radius:4px}
+.seg button{height:32px;font-size:12.5px;border-left-color:#CBD5E1;color:#111;font-weight:500}
+.seg button.on{background:#111;color:#fff}
+.banner{font-size:12px;padding:9px 12px;border-radius:6px;background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE}
+.banner.warn{background:#EFF6FF;color:#1E40AF;border-color:#BFDBFE}
+.cf-warn{font-size:12px;padding:9px 12px;border-radius:6px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
+.cf-warn.o{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
+.err{color:#DC2626}
+.frow{border-bottom-color:#E5E7EB;font-size:12.5px}
+.frow > .lb{font-size:12px;font-weight:600;color:#374151}
+.frow > .lb.req:before{content:"";margin:0}
+.frow > .lb.req:after{content:" *";color:#DC2626}
+.org-box{border:1px solid #E5E7EB;border-radius:8px}
+.org-box h5{color:#374151;font-size:12px}
+.org-node{font-size:12.5px;height:28px}
+.org-node.on{background:#EFF6FF;color:#111;font-weight:700}
+.org-mem{border-bottom-color:#E2E8F0}
+.org-mem .sub{color:#64748B;font-size:11.5px}
+.toast{background:#111827;border-radius:6px}
+/* 마커 */
+.mk{min-width:20px;height:20px;padding:0;border-radius:50%;background:#E53935;color:#fff;font-size:11px;font-weight:700;border:2px solid #fff;box-shadow:0 0 0 1px #E53935;box-sizing:border-box}
+.mk.hot{box-shadow:0 0 0 1px #E53935,0 0 0 5px rgba(229,57,53,.25)}
+/* Description 패널: 설계 정보 / 정책 정보 / 화면 설명 및 디스크립션 */
+.desc{background:#F8FAFC;border-left:1px solid #E2E8F0;font-size:11px}
+.desc-in{padding:12px;display:flex;flex-direction:column;gap:8px}
+.g-sec{border-radius:8px;padding:9px 12px;font-size:11px;line-height:1.5;color:#1E293B;word-break:keep-all;overflow-wrap:anywhere}
+.g-sec.g1{background:#EEF0F3}
+.g-sec.g2{background:#E8F1FD}
+.g-sec.g3{background:#fff;border:1px solid #E2E8F0}
+.g-h{font-size:11px;font-weight:700;color:#64748B;letter-spacing:.2px;margin-bottom:6px}
+.g-sec .red{color:#DC2626;font-weight:700}
+.g-sec .ind{padding-left:9px}
+.g-sec .gap{height:11px}
+.g-item{border-radius:4px;margin:0 -4px;padding:0 4px}
+.g-item.hot{background:#FEF2F2}
+.g-item .gt{font-weight:500}
+
+/* ===== 정적 캔버스 (Figma 임포트용) ===== */
 html,body{height:auto}
-body{background:#e6e6e6;margin:0;padding:48px;width:max-content}
-.board{display:flex;flex-direction:column;gap:96px;align-items:flex-start}
-.fig-screen{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
-.fig-label{font-size:18px;font-weight:800;color:#111}
-.fig-label small{font-size:12px;font-weight:500;color:#666;margin-left:10px;font-family:ui-monospace,Menlo,monospace}
-.fig-row{display:flex;gap:40px;align-items:flex-start}
-.fig-frame{background:#fff;position:relative;overflow:hidden}
-.fig-frame.fig-page .frame{display:grid;grid-template-columns:188px minmax(0,1fr);min-height:900px}
-.fig-frame .xmodal,.fig-frame .cmodal{width:100% !important;max-width:none;min-height:0;box-shadow:none;margin:0}
-.fig-frame .xf{position:static}
-.fig-frame.desc{width:360px;background:#fbfaf7;border:1px solid #d9d9d9;display:block;font-size:12px}
-.fig-frame.desc .desc-in{position:static;max-height:none;overflow:visible}
+body{margin:0;background:#E5E5E5}
+.canvas{display:flex;flex-direction:column;gap:300px;padding:100px;width:max-content;background:#E5E5E5}
+.canvas-row{display:flex;gap:240px;align-items:flex-start}
+.cell{display:flex;flex-direction:column;gap:16px}
+label-trip-06-p01,label-trip-06-m01,label-trip-06-m02,label-trip-06-m04,label-trip-06-m03-a,label-trip-06-m03-b,label-trip-06-m03-c,label-trip-06-m03-d,label-trip-06-m08,label-trip-06-m05,label-trip-06-m06,label-trip-06-m02-empty,label-trip-06-m03-empty,label-trip-06-m03-scheduled,label-trip-06-m07,label-trip-06-p02{display:block;font-size:64px;line-height:80px;font-weight:500;color:#8A8A8A;white-space:nowrap}
+screen-trip-06-p01,screen-trip-06-m01,screen-trip-06-m02,screen-trip-06-m04,screen-trip-06-m03-a,screen-trip-06-m03-b,screen-trip-06-m03-c,screen-trip-06-m03-d,screen-trip-06-m08,screen-trip-06-m05,screen-trip-06-m06,screen-trip-06-m02-empty,screen-trip-06-m03-empty,screen-trip-06-m03-scheduled,screen-trip-06-m07,screen-trip-06-p02{display:flex;align-items:stretch;width:1920px;min-height:1080px;background:#fff}
+ui-trip-06-p01,ui-trip-06-m01,ui-trip-06-m02,ui-trip-06-m04,ui-trip-06-m03-a,ui-trip-06-m03-b,ui-trip-06-m03-c,ui-trip-06-m03-d,ui-trip-06-m08,ui-trip-06-m05,ui-trip-06-m06,ui-trip-06-m02-empty,ui-trip-06-m03-empty,ui-trip-06-m03-scheduled,ui-trip-06-m07,ui-trip-06-p02{display:block;position:relative;width:1512px;min-height:1080px;flex:none;background:#fff;overflow:hidden}
+guide-trip-06-p01,guide-trip-06-m01,guide-trip-06-m02,guide-trip-06-m04,guide-trip-06-m03-a,guide-trip-06-m03-b,guide-trip-06-m03-c,guide-trip-06-m03-d,guide-trip-06-m08,guide-trip-06-m05,guide-trip-06-m06,guide-trip-06-m02-empty,guide-trip-06-m03-empty,guide-trip-06-m03-scheduled,guide-trip-06-m07,guide-trip-06-p02{display:flex;flex-direction:column;gap:8px;width:408px;min-height:1080px;flex:none;box-sizing:border-box;padding:12px;background:#F8FAFC;border-left:1px solid #E2E8F0}
+.uiroot .frame{display:grid;grid-template-columns:247px minmax(0,1fr);min-height:1080px}
+.uiroot.dim{background:#9CA0A8;display:flex;align-items:center;justify-content:center;padding:60px 0}
+.uiroot.dim .xmodal,.uiroot.dim .cmodal{margin:0;max-width:none;min-height:0;flex:none}
+.uiroot .xf{position:static}
 
 </style></head>
-<body><div class="board">
-<section class="fig-screen" id="screen-05e-manage-policy-empty">
-  <div class="fig-label">관리 모달 · 여비규정 설정 (미등록 법인)<small>TRIP-ADM-POL-02c</small></div>
-  <div class="fig-row">
-    <div class="fig-frame fig-modal" id="frame-05e-manage-policy-empty" data-name="TRIP-ADM-POL-02c 관리 모달 · 여비규정 설정 (미등록 법인)" aria-label="TRIP-ADM-POL-02c 관리 모달 · 여비규정 설정 (미등록 법인)" style="width:1200px"><div class="xmodal" role="dialog" aria-modal="true" aria-label="HBC 출장여비규정 관리">
+<body><main class="canvas">
+<div class="canvas-row"><div class="cell"><label-trip-06-m02-empty>TRIP-06-M02 (미등록 법인)</label-trip-06-m02-empty>
+<screen-trip-06-m02-empty><ui-trip-06-m02-empty class="uiroot dim"><div class="xmodal" role="dialog" aria-modal="true" aria-label="HBC 출장여비규정 관리" style="width: 1200px;">
       <div class="xh"><div><div class="t">HBC 출장여비규정 관리<i class="mk" data-mk="1">1</i></div><div class="s">HYBE CHINA · 중국 · 기준 통화 CNY · 구성원 41명</div></div><button type="button" class="x" aria-label="닫기" data-a="m-close">×</button></div>
-      <div class="xtabs" role="tablist"><button type="button" role="tab" aria-selected="false" class="" data-a="m-tab" data-v="draft">기안 항목 관리</button><button type="button" role="tab" aria-selected="false" class="" data-a="m-tab" data-v="grade">등급 규정</button><button type="button" role="tab" aria-selected="true" class="on" data-a="m-tab" data-v="policy">여비규정 설정</button></div>
-      <div class="xb" id="xb">
-      <div class="row between wrap"><div><h4 class="sec-title">여비규정 설정<i class="mk" data-mk="9">9</i></h4><p class="sec-desc">구성원에게 안내하는 출장 여비 기준입니다(자동 검증·차단 없음). 분류를 선택해 항목과 값을 입력합니다.</p></div>
-        <div class="row"><span class="help">원문 문서</span><input class="inp" style="width:230px" value="" maxlength="80" placeholder="파일명 (선택)" data-meta="doc" aria-label="원문 문서"><button type="button" class="btn sm" data-a="p-copy">다른 법인 규정 복사</button><i class="mk" data-mk="13">13</i></div></div>
-      <div class="row between wrap" style="margin-top:4px"><div class="seg" role="tablist"><button type="button" role="tab" aria-selected="true" class="on" data-a="p-cat" data-v="교통">교통<em>0</em></button><button type="button" role="tab" aria-selected="false" class="" data-a="p-cat" data-v="숙박">숙박<em>0</em></button><button type="button" role="tab" aria-selected="false" class="" data-a="p-cat" data-v="일비·식비">일비·식비<em>0</em></button><button type="button" role="tab" aria-selected="false" class="" data-a="p-cat" data-v="기타">기타<em>0</em></button></div><i class="mk" data-mk="10">10</i>
-        <span class="help">숫자만 입력하면 금액으로, 문자가 섞이면 문구로 표시됩니다</span></div>
-      <div class="empty" style="margin-top:10px"><b>교통 분류에 등록된 항목이 없습니다</b>표준 항목으로 시작하거나 다른 법인 규정을 복사해 올 수 있습니다.<div style="margin-top:10px"><button type="button" class="btn sm" data-a="p-template">표준 항목으로 시작</button></div></div>
-      <div style="margin-top:10px"><button type="button" class="btn sm" data-a="i-add">+ 교통 항목 추가</button><i class="mk" data-mk="12">12</i></div></div>
+      <div class="xtabs" role="tablist"><button type="button" role="tab" aria-selected="false" class="" data-a="m-tab" data-v="draft">기안 항목 관리</button><button type="button" role="tab" aria-selected="true" class="on" data-a="m-tab" data-v="grade">등급 규정</button><button type="button" role="tab" aria-selected="false" class="" data-a="m-tab" data-v="policy">여비규정 설정</button></div>
+      <div class="xb" id="xb"><div class="row between"><div><h4 class="sec-title">구성원 등급 <span class="hl-blue">0</span><i class="mk" data-mk="2">2</i></h4><p class="sec-desc">인사정보 직책을 등급에 매핑합니다. 등급은 여비규정 표의 행으로 쓰이며, 추가·삭제·이름 변경은 여비규정 표에 즉시 반영됩니다.</p></div><button type="button" class="btn sm" data-a="g-add">+ 등급 추가</button></div>
+      <div class="empty"><b>등록된 등급이 없습니다</b>등급이 없으면 여비규정의 모든 항목이 '전체 구성원' 단일 기준으로 적용됩니다.</div>
+
+      <div class="row between" style="margin-top:26px"><div><h4 class="sec-title">개인 예외 지정 <span class="hl-blue">0</span><i class="mk" data-mk="5">5</i></h4><p class="sec-desc">직책 매핑과 다른 등급을 특정 구성원에게 개별 지정합니다. 적용 기간 동안 직책 매핑보다 우선합니다.</p></div><button type="button" class="btn sm" data-a="x-add" disabled="">+ 조직도에서 구성원 선택</button></div>
+      <div class="empty">등급이 2개 이상일 때 개인 예외를 지정할 수 있습니다.</div></div>
       <div class="xf"><button type="button" class="link" data-a="m-history">이 법인 변경 이력</button><span class="sp"></span><span class="help">변경 없음</span>
-        <button type="button" class="btn" data-a="m-close">취소</button><button type="button" class="btn pri" data-a="m-save" disabled="">저장</button><i class="mk" data-mk="15">15</i></div>
-    </div></div>
-    <aside class="fig-frame desc" id="desc-05e-manage-policy-empty" data-name="TRIP-ADM-POL-02c Description" aria-label="TRIP-ADM-POL-02c Description"><div class="desc-in"><h2>관리 모달 — 여비규정 설정</h2><div class="dsub">TRIP-ADM-POL-02c · 교통 / 숙박 / 일비·식비 / 기타 4개 분류로 항목과 값을 입력한다. 기준 정보 관리·구성원 안내용이며 자동 검증·차단은 없다.</div><h4>화면 상세</h4><div class="desc-item" data-d="1"><i class="mk">1</i><div><div class="dt">관리 모달</div><div class="db">그리드의 [관리]로 호출. 제목에 법인 코드, 부제에 법인명·국가·기준 통화·구성원 수(인사정보 연동, 읽기 전용). 탭 3개로 구성하며, 변경이 있는 탭에는 주황 점을 표시한다. 탭을 오가도 입력은 유지된다.</div></div></div><div class="desc-item" data-d="9"><i class="mk">9</i><div><div class="dt">여비규정 설정</div><div class="db">원문 문서(선택, 파일명 80자 — 실제는 파일 첨부)를 함께 관리한다. 개정 버전 목록은 두지 않고 현재 값 1벌만 편집한다. 과거 값은 변경 이력에서 확인한다.</div></div></div><div class="desc-item" data-d="10"><i class="mk">10</i><div><div class="dt">분류 선택</div><div class="db">교통 / 숙박 / 일비·식비 / 기타. 분류별 항목 수를 함께 표시하고, 선택한 분류의 항목만 아래에 나열한다. 값이 빈 칸이 있으면 우측에 "미정의 N칸"을 주황색으로 표시한다.</div></div></div><div class="desc-item" data-d="11"><i class="mk">11</i><div><div class="dt">항목 블록</div><div class="db"><ul><li>사용 토글: OFF면 값 영역을 접고 구성원에게 안내하지 않는다(값은 보존).</li><li>항목명(필수, 20자), 지급 방식(등급 기준 / 한도 내 실비 / 정액 지급 / 실비), 통화(한도·정액일 때만), 단위(30자).</li><li><b>등급별 차등</b> 체크: 켜면 행이 등급 목록으로, 끄면 "전체 구성원" 1행으로 바뀐다(끄면 첫 행 값만 남김). 등급이 없는 법인은 비활성.</li><li>열: 지역·조건 등 구분을 자유롭게 입력한다(열 이름 24자, 중복 불가). <code>+ 열</code>로 추가, ×로 삭제(최소 1열).</li><li>칸: 숫자만 입력하면 금액(통화 기호·천 단위 구분), 문자가 섞이면 문구로 저장. 빈 칸은 주황 테두리 + "미정의".</li><li>적용 조건(80자)·구성원 안내(300자)는 선택.</li></ul></div></div></div><div class="desc-item" data-d="12"><i class="mk">12</i><div><div class="dt">항목 추가 · 삭제</div><div class="db"><code>+ (분류) 항목 추가</code>는 현재 분류 맨 아래에 빈 항목(한도 내 실비, 1행 1열)을 만든다. <code>항목 삭제</code>는 즉시 작업본에서 제거하며 저장 전에는 취소로 되돌릴 수 있다. 항목이 하나도 없는 법인에는 <code>표준 항목으로 시작</code>(항공·철도·숙박·식비·출장 수당·통신비)을 제공한다.</div></div></div><div class="desc-item" data-d="13"><i class="mk">13</i><div><div class="dt">다른 법인 규정 복사</div><div class="db">적용 중 규정이 있는 다른 법인을 골라 항목·값을 통째로 복사해 온다(현재 작업본을 대체, 확인 필요). 1회성 복사이며 법인 간 연결은 없다. 등급별 차등 항목의 행은 이 법인의 등급 순서대로 값을 옮기고, 등급 수가 다르면 남는 값은 버리고 모자란 칸은 미정의로 둔다.</div></div></div><div class="desc-item" data-d="14"><i class="mk">14</i><div><div class="dt">적용 예정 배너</div><div class="db">적용일을 지정해 저장한 변경이 있을 때만 노출. <code>적용 예정본</code>(편집 가능) / <code>현재 적용 값</code>(읽기 전용)을 전환해 볼 수 있고, <code>예정 취소</code>는 확인 팝업을 거쳐 예정 변경을 폐기한다. 적용일이 되면 시스템이 예정본을 현재 값으로 바꾼다(프로토타입은 자동 전환 미구현).</div></div></div><div class="desc-item" data-d="15"><i class="mk">15</i><div><div class="dt">하단 영역</div><div class="db"><ul><li><code>이 법인 변경 이력</code>: 해당 법인으로 필터된 변경 이력 화면으로 이동(변경이 있으면 닫기 확인).</li><li><code>저장</code>: 변경이 없으면 비활성. 누르면 입력 검증 후 변경 내용 확인 팝업(TRIP-ADM-POL-03)을 띄운다.</li><li><code>취소</code>/×/Esc: 변경이 있으면 닫기 확인을 띄운다.</li></ul></div></div></div>
-      <h4>정책</h4><div class="desc-item" style="grid-template-columns:1fr"><div class="db"><ul><li>여비규정은 기준 정보 관리 + 구성원 안내용이다. 출장 계획서 자동 검증·차단, 규정 예외 신청 연동은 하지 않는다.</li><li>지역 구분은 별도 마스터 없이 항목별 열 이름으로 관리한다(간소화). 법인마다, 항목마다 지역 구분이 달라도 된다.</li><li>규정을 공유하는 법인(HBA·HBL)도 각각 등록하며, 복사는 1회성이다.</li><li>HYB 값은 화면 예시용 샘플, HBA·HBL·HBJ는 유첨 규정 문서 기준 값이다.</li></ul></div></div>
-      <h4>확인 필요 사항</h4><div class="issue"><b>지역 열과 출장지 마스터 연결</b> — 간소화를 위해 지역을 자유 입력 열로 바꿨다. 구성원 안내 시 출장지(국가·도시)에 맞는 열을 자동으로 골라 보여주려면 출장지 관리와의 매핑이 다시 필요하다.</div><div class="issue"><b>항목 안에 통화가 섞이는 경우</b> — HBJ 식비(¥/₩/US$)처럼 열마다 통화가 다른 경우는 문구로 입력하게 했다. 칸 단위 통화 지정이 필요한지 확인 필요.</div><div class="issue"><b>구성원 안내 노출 위치</b> — 출장 계획서·기안 화면 중 어디에 어떤 형태로 보여줄지 미정.</div><div class="issue"><b>다국어 표기</b> — 항목명·안내 문구를 영어·일본어로 함께 등록할지.</div>
-      <h4>화면 목록</h4><div class="desc-item" style="grid-template-columns:1fr"><div class="db"><ul><li><code>POL-01</code> 마스터 그리드</li><li><code>POL-02a~c</code> 관리 모달 (기안 항목 관리 / 등급 규정 / 여비규정 설정)</li><li><code>POL-02b-1</code> 조직도 구성원 선택 팝업</li><li><code>POL-03</code> 변경 내용 확인 팝업</li><li><code>POL-04</code> 변경 이력</li></ul></div></div></div></aside>
-  </div>
-</section>
-</div></body></html>
+        <button type="button" class="btn" data-a="m-close">취소</button><button type="button" class="btn pri" data-a="m-save" disabled="">저장</button><i class="mk" data-mk="7">7</i></div>
+    </div></ui-trip-06-m02-empty><guide-trip-06-m02-empty>
+      <div class="g-sec g1"><div class="g-h">설계 정보</div><b>TRIP-06-M02 출장여비규정 관리 — 등급 규정</b><div class="gap"></div><div>Page ID: TRIP-06-M02</div><div>Definition: 법인별 구성원 등급과 직책 매핑, 개인 예외 지정을 관리하는 탭</div><div>Path: 업무관리자 &gt; 출장 관리 &gt; 법인별 출장여비규정 &gt; [관리] &gt; 등급 규정 (모달)</div></div>
+      <div class="g-sec g2"><div class="g-h">정책 정보</div><div>■ 주요 정책</div><div>• 등급은 법인별로 정의하고 인사정보 직책에 매핑해 자동 판정</div><div>• 한 직책은 한 등급에만 매핑. 미매핑 직책은 기본 등급 적용</div><div>• 개인 예외 지정은 적용 기간 동안 직책 매핑보다 우선</div><div>• 등급 추가·삭제·이름 변경은 여비규정 표에 즉시 반영(추가=미정의 행, 삭제=행과 값 삭제, 이름 변경=값 유지)</div><div>• 입력 검증은 [저장] 시점에 일괄 수행</div><div class="gap"></div><div class="red">■ 확인 필요 사항</div><div>• 인사정보 매핑 키가 직책인지 직급인지, 법인별 코드 체계</div><div>• 예외 지정에 별도 승인·증빙이 필요한지</div><div>• 발령으로 직책이 바뀐 구성원의 예외 지정 유지 여부</div></div>
+      <div class="g-sec g3"><div class="g-h">화면 설명 및 디스크립션</div><div class="g-item" data-d="1"><div class="gt">❶ 모달 헤더 · 탭</div><div>• 구성 : 법인 코드, 법인명·국가·기준 통화·구성원 수, 탭(기안 항목 관리/등급 규정/여비규정 설정)</div><div>• 기능 : 탭 선택 → 해당 탭 내용으로 전환(입력 유지)</div><div>• 기타 : 변경이 있는 탭에는 빨간 점 표시. 법인 정보는 인사정보 연동 값(읽기 전용)</div></div><div class="gap"></div><div class="g-item" data-d="2"><div class="gt">❷ 구성원 등급</div><div>• 구성 : 기본 등급 라디오, 등급명, 설명, 매핑 직책, 순서 ▲▼, [삭제], [+ 등급 추가]</div><div>• 기능</div><div class="ind">: [+ 등급 추가] 선택 → 표 맨 아래 빈 행 추가(첫 등급은 자동으로 기본 등급)</div><div class="ind">: ▲▼ 선택 → 순서 변경(여비규정 표의 행 순서)</div><div class="ind">: [삭제] 선택 → 행 삭제</div><div>• 기타</div><div class="ind">: 등급명 - 필수, 20자, 법인 내 중복 불가 / 설명 - 선택, 60자</div><div class="ind">: 개인 예외의 적용 등급으로 사용 중인 등급, 기본 등급은 삭제 불가(토스트 안내)</div><div class="ind">: 등급이 없으면 "등록된 등급이 없습니다" 빈 상태 노출</div></div><div class="gap"></div><div class="g-item" data-d="3"><div class="gt">❸ 매핑 직책</div><div>• 구성 : 직책 칩, [+ 직책] Select</div><div>• 기능</div><div class="ind">: [+ 직책] 선택 → 해당 등급에 직책 매핑</div><div class="ind">: 칩의 ✕ 선택 → 매핑 해제</div><div>• 기타 : Select 에는 미매핑 직책만 노출. 미매핑 직책은 표 아래에 개수·목록 안내</div></div><div class="gap"></div><div class="g-item" data-d="4"><div class="gt">❹ 기본 등급</div><div>• 구성 : 라디오(법인당 1개 필수)</div><div>• 기타 : 어느 등급에도 매핑되지 않은 직책의 구성원에게 적용</div></div><div class="gap"></div><div class="g-item" data-d="5"><div class="gt">❺ 개인 예외 지정</div><div>• 구성 : 구성원(이름·사번·소속·직책), 매핑 등급, 적용 등급, 사유, 적용 기간, [삭제]</div><div>• 기능</div><div class="ind">: [+ 조직도에서 구성원 선택] 선택 → TRIP-06-M04 호출, 선택한 구성원 수만큼 "신규" 행 추가</div><div class="ind">: [삭제] 선택 → 행 삭제</div><div>• 기타</div><div class="ind">: 등급이 2개 이상일 때 추가 버튼 활성</div><div class="ind">: 적용 등급 - 매핑 등급과 같은 등급 선택 불가 / 사유 - 필수, 100자</div><div class="ind">: 기존 건은 구성원 변경 불가</div></div><div class="gap"></div><div class="g-item" data-d="6"><div class="gt">❻ 적용 기간</div><div>• 구성 : 시작일, 종료일(YYYY.MM.DD)</div><div>• 디폴트 : 시작일 = 오늘, 종료일 = 비움(무기한)</div><div>• 기타 : 종료일은 시작일 이후. 종료일이 지나면 "만료" 칩 표기 후 매핑 등급으로 복귀</div></div><div class="gap"></div><div class="g-item" data-d="7"><div class="gt">❼ 하단 버튼</div><div>• 구성 : [이 법인 변경 이력], 변경 상태 문구, [취소][저장]</div><div>• 기능</div><div class="ind">: [이 법인 변경 이력] 선택 → 해당 법인으로 필터된 TRIP-06-P02 로 이동</div><div class="ind">: [저장] 선택 → 입력 검증 후 TRIP-06-M05 호출</div><div class="ind">: [취소]/✕/Esc 선택 → 변경이 있으면 TRIP-06-M06 호출, 없으면 모달 닫기</div><div>• 기타 : 변경이 없으면 [저장] 비활성. 검증 실패 시 해당 탭으로 이동하고 토스트로 사유 안내</div></div></div></guide-trip-06-m02-empty></screen-trip-06-m02-empty></div></div>
+</main></body></html>

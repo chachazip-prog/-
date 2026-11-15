@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>TRIP-ADM-POL-01 마스터 그리드</title>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>TRIP-06-P01</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ===== HYBENET 출장 관리 · 법인별 세팅 — 공통 스타일 (레퍼런스 톤앤매너) ===== */
 :root{
@@ -305,41 +306,191 @@ body.desc-on .ov{right:360px}
 
 .grid .badge{white-space:normal;height:auto;min-height:17px;padding:2px 6px;line-height:1.3}
 
-/* ===== Figma 임포트용 정적 레이아웃 ===== */
+/* ===== v3: 위임전결 어드민 기획안(v7)과 동일한 톤앤매너 ===== */
+:root{
+  --ink:#111; --text:#111827; --sub:#475569; --mute:#64748B; --faint:#94A3B8;
+  --line:#E2E8F0; --line-strong:#CBD5E1; --bg-head:#F1F5F9; --bg-panel:#F8FAFC; --bg-chip:#F1F5F9;
+  --blue:#2563EB; --blue-bg:#DBEAFE; --green:#166534; --green-bg:#DCFCE7; --red:#DC2626; --red-bg:#FEE2E2;
+  --orange:#92400E; --orange-bg:#FEF3C7; --gray-bg:#F1F5F9; --mk:#E53935; --radius:4px;
+}
+*{font-family:'Noto Sans KR','Apple SD Gothic Neo','Malgun Gothic',sans-serif}
+body{font-size:13px;line-height:1.45;color:var(--text);letter-spacing:0}
+input[type=checkbox],input[type=radio]{accent-color:#2563EB}
+/* 레이아웃 · LNB */
+.frame{grid-template-columns:247px minmax(0,1fr)}
+body.desc-on .frame{grid-template-columns:247px minmax(0,1fr) 408px}
+.side{background:#111;color:#B6BBC4;font-size:13.5px}
+.side .logo{height:auto;padding:24px 20px 28px;font-size:15px;font-weight:700;letter-spacing:0;gap:0}
+.side .logo .ham{display:none}
+.side nav{padding-top:0}
+.side .m1{padding:12px 20px;font-weight:400;gap:0;color:#B6BBC4}
+.side .m1 .ic{display:none}
+.side .m1.on{background:none;color:#fff;font-weight:700}
+.side .sub{background:none}
+.side .m2{padding:10px 20px 10px 34px;color:#8B919B;font-size:12.5px}
+.side .m2.on{background:#2A2D33;color:#fff;font-weight:700;border-left:3px solid #3B82F6;padding-left:31px}
+.side .foot{padding:16px 20px;font-size:11px;color:#6B7280;border-top:1px solid #222}
+.gnb,.crumb{display:none}
+.page{padding:28px 40px 60px}
+.ptitle{font-size:21px;font-weight:700;margin:0 0 14px;height:40px;display:flex;align-items:center}
+.tabs{gap:22px;border-top:0;border-bottom:1px solid #E5E7EB;padding:0;margin-bottom:14px}
+.tabs .t{padding:8px 2px;font-size:13.5px;color:#6B7280}
+.tabs .t.on{font-weight:700;color:#111;border-bottom:2px solid #111}
+/* 버튼 · 입력 */
+.btn{height:32px;padding:0 14px;border:1px solid #CBD5E1;border-radius:4px;font-size:12.5px;font-weight:500;color:#111;justify-content:center}
+.btn:hover{border-color:#94A3B8}
+.btn.pri{background:#111;border-color:#111;color:#fff}
+.btn.sm{height:26px;padding:0 10px;font-size:11.5px}
+.btn.danger{color:#DC2626;border-color:#FECACA}
+.btn.ghost{border-color:transparent;color:#475569}
+.btn.ghost.danger{border-color:transparent}
+.btn:disabled{opacity:1;color:#94A3B8;border-color:#E2E8F0;background:#fff}
+.btn.pri:disabled{background:#CBD5E1;border-color:#CBD5E1;color:#fff}
+.link{color:#2563EB;text-decoration:none;font-weight:500}
+.inp,.sel,.ta{height:32px;border:1px solid #CBD5E1;border-radius:4px;padding:0 10px;font-size:12.5px;color:#111}
+.ta{height:auto;padding:8px 10px}
+.sel{background-color:#F8FAFC}
+.inp::placeholder,.ta::placeholder{color:#94A3B8}
+.inp:focus,.sel:focus,.ta:focus{border-color:#2563EB}
+.inp:disabled,.sel:disabled{background:#F1F5F9;color:#94A3B8}
+.etbl .inp,.etbl .sel{height:30px}
+.tg[aria-checked="true"]{background:#2563EB}
+.tg-label{font-size:11.5px;color:#94A3B8}
+.tg[aria-checked="true"] + .tg-label{color:#1D4ED8}
+/* 칩 */
+.badge{height:20px;padding:0 7px;border-radius:4px;font-size:11px;font-weight:600;border:1px solid transparent}
+.badge.blue{background:#DBEAFE;color:#1E40AF}
+.badge.green{background:#DCFCE7;color:#166534}
+.badge.red{background:#FEE2E2;color:#B91C1C}
+.badge.orange{background:#FEF3C7;color:#92400E}
+.badge.gray{background:#F1F5F9;color:#475569}
+.badge.line{background:#EEF0F3;color:#374151;border-color:#D1D5DB}
+.grid .badge{min-height:20px}
+.chip{font-size:12px;font-weight:500;color:#475569;background:#F1F5F9;border-radius:4px;padding:3px 8px}
+.chip b{color:#111;font-weight:700}
+.tchip{background:#fff;color:#2563EB;border:1px solid #93C5FD;border-radius:4px;font-weight:600;padding:1px 3px 1px 7px}
+.tchip button{color:#2563EB}
+.hl-blue{color:#2563EB}
+.h3 em{color:#2563EB}
+/* 표 */
+.grid-wrap,.tbl-wrap{border-top:1px solid #CBD5E1;border-bottom:0}
+.etbl{border-top:1px solid #CBD5E1}
+.grid th,.tbl th,.etbl th,.mx th{background:#F1F5F9;font-size:11px;font-weight:700;color:#334155;border-bottom:1px solid #CBD5E1}
+.grid th{border-bottom:1px solid #CBD5E1}
+.grid th.grp{border-left:1px solid #CBD5E1;border-right:1px solid #CBD5E1}
+.grid td,.tbl td,.etbl td{border-bottom:1px solid #E2E8F0;font-size:12px}
+.grid .corp-cd{font-weight:700}
+.grid .corp-nm,.grid .sm,.grid .dim,.tbl .dim{color:#64748B}
+.mx th,.mx td{border:1px solid #E2E8F0}
+.mx th{border-bottom-color:#CBD5E1}
+.mx td.rh{background:#F8FAFC}
+.hist-ba .b{color:#64748B}
+.empty{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:8px;color:#64748B}
+.empty b{color:#111}
+.note{color:#B45309}
+.help{color:#64748B;font-size:11.5px}
+.sec-title{font-size:13.5px;font-weight:700;margin-bottom:4px}
+.sec-desc{font-size:12px;color:#64748B}
+.back{color:#2563EB;font-weight:500;margin-top:0}
+.toolbar{margin:0 0 10px}
+/* 모달 */
+.ov{background:rgba(17,24,39,.42)}
+body.desc-on .ov{right:408px}
+.xmodal,.cmodal{border-radius:12px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.xh{padding:20px 24px 16px}
+.cmodal .xh{border-bottom:1px solid #E5E7EB;padding-bottom:16px}
+.xh .t{font-size:17px;font-weight:700}
+.xh .s{font-size:12px;color:#64748B;margin-top:3px}
+.xh .x{font-size:18px;color:#6B7280}
+.xtabs{gap:22px;padding:0 24px;border-bottom:1px solid #E5E7EB}
+.xtabs button{padding:8px 2px;font-size:13.5px;color:#6B7280}
+.xtabs button.on{font-weight:700;color:#111;border-bottom:2px solid #111}
+.xtabs .dot{background:#E53935}
+.xb{padding:20px 24px}
+.cmodal .xb{padding:16px 24px 20px}
+.xf{padding:14px 24px;border-top:1px solid #E5E7EB;border-radius:0 0 12px 12px}
+.ditem{border:1px solid #E5E7EB;border-radius:8px;padding:14px 18px;margin-bottom:10px}
+.ditem .nm{font-size:13.5px;font-weight:700}
+.ditem .ds{font-size:12px;color:#475569}
+.ditem .ef{font-size:11.5px;color:#64748B}
+.ditem.changed{border-color:#93C5FD;background:#F8FBFF}
+.ditem.changed .nm:after{color:#2563EB}
+.pitem{border:1px solid #E5E7EB;border-radius:8px}
+.pitem.off{background:#F8FAFC}
+.pitem .ph .inp.nm{font-weight:700}
+.pitem .inp.undef{border-color:#F59E0B;background:#FFFBEB}
+.pitem .line{color:#374151;font-weight:600}
+.pitem .line .inp{font-weight:400}
+.seg{border-color:#CBD5E1;border-radius:4px}
+.seg button{height:32px;font-size:12.5px;border-left-color:#CBD5E1;color:#111;font-weight:500}
+.seg button.on{background:#111;color:#fff}
+.banner{font-size:12px;padding:9px 12px;border-radius:6px;background:#EFF6FF;color:#1E40AF;border:1px solid #BFDBFE}
+.banner.warn{background:#EFF6FF;color:#1E40AF;border-color:#BFDBFE}
+.cf-warn{font-size:12px;padding:9px 12px;border-radius:6px;background:#FEF2F2;color:#B91C1C;border:1px solid #FECACA}
+.cf-warn.o{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
+.err{color:#DC2626}
+.frow{border-bottom-color:#E5E7EB;font-size:12.5px}
+.frow > .lb{font-size:12px;font-weight:600;color:#374151}
+.frow > .lb.req:before{content:"";margin:0}
+.frow > .lb.req:after{content:" *";color:#DC2626}
+.org-box{border:1px solid #E5E7EB;border-radius:8px}
+.org-box h5{color:#374151;font-size:12px}
+.org-node{font-size:12.5px;height:28px}
+.org-node.on{background:#EFF6FF;color:#111;font-weight:700}
+.org-mem{border-bottom-color:#E2E8F0}
+.org-mem .sub{color:#64748B;font-size:11.5px}
+.toast{background:#111827;border-radius:6px}
+/* 마커 */
+.mk{min-width:20px;height:20px;padding:0;border-radius:50%;background:#E53935;color:#fff;font-size:11px;font-weight:700;border:2px solid #fff;box-shadow:0 0 0 1px #E53935;box-sizing:border-box}
+.mk.hot{box-shadow:0 0 0 1px #E53935,0 0 0 5px rgba(229,57,53,.25)}
+/* Description 패널: 설계 정보 / 정책 정보 / 화면 설명 및 디스크립션 */
+.desc{background:#F8FAFC;border-left:1px solid #E2E8F0;font-size:11px}
+.desc-in{padding:12px;display:flex;flex-direction:column;gap:8px}
+.g-sec{border-radius:8px;padding:9px 12px;font-size:11px;line-height:1.5;color:#1E293B;word-break:keep-all;overflow-wrap:anywhere}
+.g-sec.g1{background:#EEF0F3}
+.g-sec.g2{background:#E8F1FD}
+.g-sec.g3{background:#fff;border:1px solid #E2E8F0}
+.g-h{font-size:11px;font-weight:700;color:#64748B;letter-spacing:.2px;margin-bottom:6px}
+.g-sec .red{color:#DC2626;font-weight:700}
+.g-sec .ind{padding-left:9px}
+.g-sec .gap{height:11px}
+.g-item{border-radius:4px;margin:0 -4px;padding:0 4px}
+.g-item.hot{background:#FEF2F2}
+.g-item .gt{font-weight:500}
+
+/* ===== 정적 캔버스 (Figma 임포트용) ===== */
 html,body{height:auto}
-body{background:#e6e6e6;margin:0;padding:48px;width:max-content}
-.board{display:flex;flex-direction:column;gap:96px;align-items:flex-start}
-.fig-screen{display:flex;flex-direction:column;gap:14px;align-items:flex-start}
-.fig-label{font-size:18px;font-weight:800;color:#111}
-.fig-label small{font-size:12px;font-weight:500;color:#666;margin-left:10px;font-family:ui-monospace,Menlo,monospace}
-.fig-row{display:flex;gap:40px;align-items:flex-start}
-.fig-frame{background:#fff;position:relative;overflow:hidden}
-.fig-frame.fig-page .frame{display:grid;grid-template-columns:188px minmax(0,1fr);min-height:900px}
-.fig-frame .xmodal,.fig-frame .cmodal{width:100% !important;max-width:none;min-height:0;box-shadow:none;margin:0}
-.fig-frame .xf{position:static}
-.fig-frame.desc{width:360px;background:#fbfaf7;border:1px solid #d9d9d9;display:block;font-size:12px}
-.fig-frame.desc .desc-in{position:static;max-height:none;overflow:visible}
+body{margin:0;background:#E5E5E5}
+.canvas{display:flex;flex-direction:column;gap:300px;padding:100px;width:max-content;background:#E5E5E5}
+.canvas-row{display:flex;gap:240px;align-items:flex-start}
+.cell{display:flex;flex-direction:column;gap:16px}
+label-trip-06-p01,label-trip-06-m01,label-trip-06-m02,label-trip-06-m04,label-trip-06-m03-a,label-trip-06-m03-b,label-trip-06-m03-c,label-trip-06-m03-d,label-trip-06-m08,label-trip-06-m05,label-trip-06-m06,label-trip-06-m02-empty,label-trip-06-m03-empty,label-trip-06-m03-scheduled,label-trip-06-m07,label-trip-06-p02{display:block;font-size:64px;line-height:80px;font-weight:500;color:#8A8A8A;white-space:nowrap}
+screen-trip-06-p01,screen-trip-06-m01,screen-trip-06-m02,screen-trip-06-m04,screen-trip-06-m03-a,screen-trip-06-m03-b,screen-trip-06-m03-c,screen-trip-06-m03-d,screen-trip-06-m08,screen-trip-06-m05,screen-trip-06-m06,screen-trip-06-m02-empty,screen-trip-06-m03-empty,screen-trip-06-m03-scheduled,screen-trip-06-m07,screen-trip-06-p02{display:flex;align-items:stretch;width:1920px;min-height:1080px;background:#fff}
+ui-trip-06-p01,ui-trip-06-m01,ui-trip-06-m02,ui-trip-06-m04,ui-trip-06-m03-a,ui-trip-06-m03-b,ui-trip-06-m03-c,ui-trip-06-m03-d,ui-trip-06-m08,ui-trip-06-m05,ui-trip-06-m06,ui-trip-06-m02-empty,ui-trip-06-m03-empty,ui-trip-06-m03-scheduled,ui-trip-06-m07,ui-trip-06-p02{display:block;position:relative;width:1512px;min-height:1080px;flex:none;background:#fff;overflow:hidden}
+guide-trip-06-p01,guide-trip-06-m01,guide-trip-06-m02,guide-trip-06-m04,guide-trip-06-m03-a,guide-trip-06-m03-b,guide-trip-06-m03-c,guide-trip-06-m03-d,guide-trip-06-m08,guide-trip-06-m05,guide-trip-06-m06,guide-trip-06-m02-empty,guide-trip-06-m03-empty,guide-trip-06-m03-scheduled,guide-trip-06-m07,guide-trip-06-p02{display:flex;flex-direction:column;gap:8px;width:408px;min-height:1080px;flex:none;box-sizing:border-box;padding:12px;background:#F8FAFC;border-left:1px solid #E2E8F0}
+.uiroot .frame{display:grid;grid-template-columns:247px minmax(0,1fr);min-height:1080px}
+.uiroot.dim{background:#9CA0A8;display:flex;align-items:center;justify-content:center;padding:60px 0}
+.uiroot.dim .xmodal,.uiroot.dim .cmodal{margin:0;max-width:none;min-height:0;flex:none}
+.uiroot .xf{position:static}
 
 </style></head>
-<body><div class="board">
-<section class="fig-screen" id="screen-01-master-grid">
-  <div class="fig-label">마스터 그리드<small>TRIP-ADM-POL-01</small></div>
-  <div class="fig-row">
-    <div class="fig-frame fig-page" id="frame-01-master-grid" data-name="TRIP-ADM-POL-01 마스터 그리드" aria-label="TRIP-ADM-POL-01 마스터 그리드" style="width:1440px"><div class="frame">
+<body><main class="canvas">
+<div class="canvas-row"><div class="cell"><label-trip-06-p01>TRIP-06-P01</label-trip-06-p01>
+<screen-trip-06-p01><ui-trip-06-p01 class="uiroot"><div class="frame">
   <aside class="side" aria-label="전역 메뉴">
-    <div class="logo"><span class="ham"></span>HYBENET</div>
+    <div class="logo">HYBENET ADMIN</div>
     <nav>
-      <div class="m1"><span class="ic"></span>홈</div>
-      <div class="m1"><span class="ic"></span>커뮤니티</div>
-      <div class="m1"><span class="ic"></span>업무공간<span class="car">▼</span></div>
-      <div class="m1"><span class="ic"></span>조직<span class="car">▼</span></div>
-      <div class="m1 on"><span class="ic"></span>업무관리자<span class="car">▲</span></div>
+      <div class="m1">홈</div>
+      <div class="m1">커뮤니티</div>
+      <div class="m1">업무공간</div>
+      <div class="m1">조직</div>
+      <div class="m1 on">업무관리자</div>
       <div class="sub">
         <div class="m2">계약 관리</div><div class="m2">공문 관리</div><div class="m2 on">출장 관리</div><div class="m2">하이브 사다리 관리</div>
         <div class="m2">카페 관리</div><div class="m2">컨시어지 공통 자원</div><div class="m2">컨디셔닝 운영 관리</div><div class="m2">P.A.T 어워즈 관리</div>
       </div>
     </nav>
-    <div class="foot">관리자</div>
+    <div class="foot">인사정보 최종 동기화<br>2026-11-12 06:00</div>
   </aside>
   <div class="main">
     <header class="gnb"><span class="ext">HYPLE</span><span class="ext">ONHYBE</span><span>협업지원 ▾</span><span class="me"><i></i>차영록 <span>서비스전략팀(HYB)</span></span></header>
@@ -429,11 +580,8 @@ body{background:#e6e6e6;margin:0;padding:48px;width:max-content}
     </main>
   </div>
   
-</div></div>
-    <aside class="fig-frame desc" id="desc-01-master-grid" data-name="TRIP-ADM-POL-01 Description" aria-label="TRIP-ADM-POL-01 Description"><div class="desc-in"><h2>법인별 출장여비규정 (마스터 그리드)</h2><div class="dsub">TRIP-ADM-POL-01 · 출장 관리에 추가되는 단일 메뉴의 기본 화면. 전 법인의 설정 값을 한 표로 보여주고, 수정은 [관리] 모달에서 한다.</div><h4>화면 상세</h4><div class="desc-item" data-d="1"><i class="mk">1</i><div><div class="dt">요약 칩</div><div class="db">법인 수, 여비규정 등록/미등록 법인 수(항목이 1개 이상이면 등록), 인사정보 연동 시각. 검색·필터와 무관하게 전체 기준.</div></div></div><div class="desc-item" data-d="2"><i class="mk">2</i><div><div class="dt">필터 · 검색</div><div class="db">여비규정 등록 여부(전체/등록/미등록) + 법인 코드·법인명 부분 일치 검색(30자, 대소문자 무시, 입력 즉시 반영). 결과가 없으면 빈 상태 문구.</div></div></div><div class="desc-item" data-d="3"><i class="mk">3</i><div><div class="dt">법인</div><div class="db">인사정보의 법인 코드·법인명·국가·기준 통화·구성원 수를 그대로 노출(읽기 전용). 이 화면에서 법인을 추가·삭제할 수 없다. 정렬은 인사정보 연동 순서.</div></div></div><div class="desc-item" data-d="4"><i class="mk">4</i><div><div class="dt">기안 항목</div><div class="db">출장 예산 / 법인카드 실시간 한도증액 / 출장 근태 신청의 현재 ON(파랑)·OFF(회색) 상태. 그리드에서는 조회만 하고 변경은 [관리]에서 한다.</div></div></div><div class="desc-item" data-d="5"><i class="mk">5</i><div><div class="dt">등급 규정</div><div class="db">법인에 정의된 등급명을 순서대로 표시, 없으면 "미등록". 개인 예외는 지정 건수(만료 포함), 없으면 "-".</div></div></div><div class="desc-item" data-d="6"><i class="mk">6</i><div><div class="dt">여비규정</div><div class="db">교통 / 숙박 / 일비·식비 / 기타 분류별 등록 항목명. 사용 안 함 항목은 흐리게 "(미사용)". 항목이 하나도 없는 법인은 4개 열을 합쳐 "미등록"으로 표시한다.</div></div></div><div class="desc-item" data-d="7"><i class="mk">7</i><div><div class="dt">변경 이력</div><div class="db">전 법인의 변경 이력 화면(TRIP-ADM-POL-04)으로 이동한다.</div></div></div><div class="desc-item" data-d="8"><i class="mk">8</i><div><div class="dt">최종 수정 · 관리</div><div class="db">최종 수정: 가장 최근 저장 일자·수정자, 여비규정 시행일, 적용 예정 변경(파랑 배지), 미정의 칸 수(주황 배지). <code>관리</code>: 해당 법인의 관리 모달(TRIP-ADM-POL-02)을 연다.</div></div></div>
-      <h4>정책</h4><div class="desc-item" style="grid-template-columns:1fr"><div class="db"><ul><li>출장 관리에 추가되는 메뉴는 <b>법인별 출장여비규정</b> 탭 하나이며, 기본 화면은 이 마스터 그리드 하나다.</li><li>수정은 [관리] 모달에서만 하고, 모든 수정은 컨펌 팝업을 거쳐 저장하며 변경 이력에 남는다.</li><li>본사(HYB) 출장 관리자만 접근하며 전 법인을 관리한다.</li><li>법인 목록은 인사정보 연동 결과를 그대로 사용한다.</li></ul></div></div>
-      <h4>확인 필요 사항</h4><div class="issue"><b>그리드에 노출할 값의 깊이</b> — 현재는 항목명까지만 보여준다. 대표 값(예: 숙박 상한)까지 그리드에 보여줄지 확인 필요.</div><div class="issue"><b>엑셀 다운로드</b> — 전 법인 현황 내려받기 필요 여부.</div><div class="issue"><b>법인명</b> — HBC·HBI의 법인명은 예시이며 인사정보 값으로 대체된다.</div>
-      <h4>화면 목록</h4><div class="desc-item" style="grid-template-columns:1fr"><div class="db"><ul><li><code>POL-01</code> 마스터 그리드</li><li><code>POL-02a~c</code> 관리 모달 (기안 항목 관리 / 등급 규정 / 여비규정 설정)</li><li><code>POL-02b-1</code> 조직도 구성원 선택 팝업</li><li><code>POL-03</code> 변경 내용 확인 팝업</li><li><code>POL-04</code> 변경 이력</li></ul></div></div></div></aside>
-  </div>
-</section>
-</div></body></html>
+</div></ui-trip-06-p01><guide-trip-06-p01>
+      <div class="g-sec g1"><div class="g-h">설계 정보</div><b>TRIP-06-P01 법인별 출장여비규정 — 마스터 그리드</b><div class="gap"></div><div>Page ID: TRIP-06-P01</div><div>Definition: 전 법인의 출장여비규정 설정 값을 한 표로 조회하는 메인 화면</div><div>Path: 업무관리자 &gt; 출장 관리 &gt; 법인별 출장여비규정</div></div>
+      <div class="g-sec g2"><div class="g-h">정책 정보</div><div>■ 주요 정책</div><div>• 출장 관리에 추가되는 메뉴는 "법인별 출장여비규정" 탭 1개</div><div>• 기본 화면은 전 법인의 값을 보여주는 마스터 그리드 1개</div><div>• 수정은 [관리] 모달에서만 수행</div><div>• 모든 수정은 컨펌 팝업을 거쳐 저장하고 변경 이력에 기록</div><div>• 법인 목록은 인사정보 연동 결과를 그대로 사용(추가·삭제 불가)</div><div>• 본사(HYB) 출장 관리자만 접근하며 전 법인을 관리</div><div class="gap"></div><div class="red">■ 확인 필요 사항</div><div>• 그리드에 대표 값(예: 숙박 상한)까지 노출할지</div><div>• 전 법인 현황 엑셀 다운로드 필요 여부</div><div>• HBC·HBI 법인명은 예시(인사정보 값으로 대체)</div></div>
+      <div class="g-sec g3"><div class="g-h">화면 설명 및 디스크립션</div><div class="g-item" data-d="1"><div class="gt">❶ 요약 정보</div><div>• 구성 : 법인 수, 여비규정 등록/미등록 법인 수, 인사정보 연동 시각</div><div>• 기타 : 검색·필터와 무관하게 전체 기준. 항목이 1개 이상이면 "등록"</div></div><div class="gap"></div><div class="g-item" data-d="2"><div class="gt">❷ 검색/조회 조건</div><div>• 구성 : 여비규정 등록 여부 Select(전체/등록/미등록), 통합검색</div><div>• 키워드 : 법인 코드, 법인명(부분 일치, 대소문자 무시, 30자)</div><div>• 플레이스홀더 : 법인 코드, 법인명 검색</div><div>• 기타 : 입력 즉시 반영. 결과가 없으면 "검색 결과가 없습니다" 문구 노출</div></div><div class="gap"></div><div class="g-item" data-d="3"><div class="gt">❸ 법인</div><div>• 구성 : 법인 코드, 법인명, 국가, 기준 통화, 구성원 수</div><div>• 기타 : 인사정보 연동 값(읽기 전용). 정렬은 인사정보 연동 순서</div></div><div class="gap"></div><div class="g-item" data-d="4"><div class="gt">❹ 기안 항목</div><div>• 구성 : 출장 예산, 법인카드 실시간 한도증액, 출장 근태 신청의 ON/OFF 칩</div><div>• 기타 : 조회 전용. 변경은 [관리]에서 수행</div></div><div class="gap"></div><div class="g-item" data-d="5"><div class="gt">❺ 등급 규정</div><div>• 구성 : 등급명 칩(등록 순서), 개인 예외 건수</div><div>• 기타 : 등급이 없으면 "미등록", 예외가 없으면 "-"</div></div><div class="gap"></div><div class="g-item" data-d="6"><div class="gt">❻ 여비규정</div><div>• 구성 : 교통 / 숙박 / 일비·식비 / 기타 분류별 등록 항목명</div><div>• 기타 : 사용 안 함 항목은 흐리게 "(미사용)" 표기</div><div class="ind">: 항목이 없는 법인은 4개 열을 합쳐 "미등록" 표기</div></div><div class="gap"></div><div class="g-item" data-d="7"><div class="gt">❼ 변경 이력 버튼</div><div>• 기능 : 선택 → TRIP-06-P02 로 이동</div></div><div class="gap"></div><div class="g-item" data-d="8"><div class="gt">❽ 최종 수정 · 관리</div><div>• 구성 : 최종 저장 일자·수정자, 시행일, 적용 예정 칩, 미정의 칸 수 칩, [관리]</div><div>• 기능 : [관리] 선택 → TRIP-06-M01 호출</div></div></div></guide-trip-06-p01></screen-trip-06-p01></div></div>
+</main></body></html>
