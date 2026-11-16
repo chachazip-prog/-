@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>TRIP-06-M07</title>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>TRIP-06-M01-2</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ===== HYBENET 출장 관리 · 법인별 세팅 — 공통 스타일 (레퍼런스 톤앤매너) ===== */
@@ -457,6 +457,9 @@ body.desc-on .ov{right:408px}
 .g-item{border-radius:4px;margin:0 -4px;padding:0 4px}
 .g-item.hot{background:#FEF2F2}
 .g-item .gt{font-weight:500}
+.banner.red{background:#FEF2F2;color:#B91C1C;border-color:#FECACA}
+.banner .mk{margin-left:0}
+.ditem{grid-template-columns:minmax(0,1fr) 96px}
 
 /* ===== 정적 캔버스 (Figma 임포트용) ===== */
 html,body{height:auto}
@@ -464,10 +467,10 @@ body{margin:0;background:#E5E5E5}
 .canvas{display:flex;flex-direction:column;gap:300px;padding:100px;width:max-content;background:#E5E5E5}
 .canvas-row{display:flex;gap:240px;align-items:flex-start}
 .cell{display:flex;flex-direction:column;gap:16px}
-label-trip-06-p01,label-trip-06-m01,label-trip-06-m02,label-trip-06-m04,label-trip-06-m03-a,label-trip-06-m03-b,label-trip-06-m03-c,label-trip-06-m03-d,label-trip-06-m08,label-trip-06-m05,label-trip-06-m06,label-trip-06-m02-empty,label-trip-06-m03-empty,label-trip-06-m03-scheduled,label-trip-06-m07,label-trip-06-p02{display:block;font-size:64px;line-height:80px;font-weight:500;color:#8A8A8A;white-space:nowrap}
-screen-trip-06-p01,screen-trip-06-m01,screen-trip-06-m02,screen-trip-06-m04,screen-trip-06-m03-a,screen-trip-06-m03-b,screen-trip-06-m03-c,screen-trip-06-m03-d,screen-trip-06-m08,screen-trip-06-m05,screen-trip-06-m06,screen-trip-06-m02-empty,screen-trip-06-m03-empty,screen-trip-06-m03-scheduled,screen-trip-06-m07,screen-trip-06-p02{display:flex;align-items:stretch;width:1920px;min-height:1080px;background:#fff}
-ui-trip-06-p01,ui-trip-06-m01,ui-trip-06-m02,ui-trip-06-m04,ui-trip-06-m03-a,ui-trip-06-m03-b,ui-trip-06-m03-c,ui-trip-06-m03-d,ui-trip-06-m08,ui-trip-06-m05,ui-trip-06-m06,ui-trip-06-m02-empty,ui-trip-06-m03-empty,ui-trip-06-m03-scheduled,ui-trip-06-m07,ui-trip-06-p02{display:block;position:relative;width:1512px;min-height:1080px;flex:none;background:#fff;overflow:hidden}
-guide-trip-06-p01,guide-trip-06-m01,guide-trip-06-m02,guide-trip-06-m04,guide-trip-06-m03-a,guide-trip-06-m03-b,guide-trip-06-m03-c,guide-trip-06-m03-d,guide-trip-06-m08,guide-trip-06-m05,guide-trip-06-m06,guide-trip-06-m02-empty,guide-trip-06-m03-empty,guide-trip-06-m03-scheduled,guide-trip-06-m07,guide-trip-06-p02{display:flex;flex-direction:column;gap:8px;width:408px;min-height:1080px;flex:none;box-sizing:border-box;padding:12px;background:#F8FAFC;border-left:1px solid #E2E8F0}
+label-trip-06-p01,label-trip-06-m01,label-trip-06-m02,label-trip-06-m02-1,label-trip-06-m01-1,label-trip-06-m01-2,label-trip-06-p03,label-trip-06-p02{display:block;font-size:64px;line-height:80px;font-weight:500;color:#8A8A8A;white-space:nowrap}
+screen-trip-06-p01,screen-trip-06-m01,screen-trip-06-m02,screen-trip-06-m02-1,screen-trip-06-m01-1,screen-trip-06-m01-2,screen-trip-06-p03,screen-trip-06-p02{display:flex;align-items:stretch;width:1920px;min-height:1080px;background:#fff}
+ui-trip-06-p01,ui-trip-06-m01,ui-trip-06-m02,ui-trip-06-m02-1,ui-trip-06-m01-1,ui-trip-06-m01-2,ui-trip-06-p03,ui-trip-06-p02{display:block;position:relative;width:1512px;min-height:1080px;flex:none;background:#fff;overflow:hidden}
+guide-trip-06-p01,guide-trip-06-m01,guide-trip-06-m02,guide-trip-06-m02-1,guide-trip-06-m01-1,guide-trip-06-m01-2,guide-trip-06-p03,guide-trip-06-p02{display:flex;flex-direction:column;gap:8px;width:408px;min-height:1080px;flex:none;box-sizing:border-box;padding:12px;background:#F8FAFC;border-left:1px solid #E2E8F0}
 .uiroot .frame{display:grid;grid-template-columns:247px minmax(0,1fr);min-height:1080px}
 .uiroot.dim{background:#9CA0A8;display:flex;align-items:center;justify-content:center;padding:60px 0}
 .uiroot.dim .xmodal,.uiroot.dim .cmodal{margin:0;max-width:none;min-height:0;flex:none}
@@ -475,9 +478,9 @@ guide-trip-06-p01,guide-trip-06-m01,guide-trip-06-m02,guide-trip-06-m04,guide-tr
 
 </style></head>
 <body><main class="canvas">
-<div class="canvas-row"><div class="cell"><label-trip-06-m07>TRIP-06-M07</label-trip-06-m07>
-<screen-trip-06-m07><ui-trip-06-m07 class="uiroot dim"><div class="cmodal" role="alertdialog" aria-modal="true" style="width:460px"><div class="xh"><div class="t">적용 예정 변경을 취소할까요?</div></div><div class="xb" style="padding-top:10px"><p><b>HBJ</b>의 2027.01.01 적용 예정 여비규정 변경을 취소합니다. 현재 적용 중인 값은 그대로 유지되며, 취소 내역은 변경 이력에 남습니다.</p></div><div class="xf"><span class="sp"></span><button type="button" class="btn" data-a="c-back">돌아가기</button><button type="button" class="btn pri" data-a="c-cancel-pending">예정 취소</button></div></div></ui-trip-06-m07><guide-trip-06-m07>
-      <div class="g-sec g1"><div class="g-h">설계 정보</div><b>TRIP-06-M07 적용 예정 취소 확인</b><div class="gap"></div><div>Page ID: TRIP-06-M07</div><div>Definition: 적용일을 지정해 둔 여비규정 변경을 취소하기 전에 확인하는 팝업</div><div>Path: 업무관리자 &gt; 출장 관리 &gt; 법인별 출장여비규정 &gt; [관리] &gt; 여비규정 설정 &gt; [예정 취소] (모달)</div></div>
-      <div class="g-sec g2"><div class="g-h">정책 정보</div><div>■ 주요 정책</div><div>• 취소하면 적용 예정본을 폐기하고 현재 적용 값은 유지</div><div>• 취소 내역은 변경 이력에 기록</div></div>
-      <div class="g-sec g3"><div class="g-h">화면 설명 및 디스크립션</div><div class="g-item" data-d="1"><div class="gt">❶ 안내 · 버튼</div><div>• 구성 : 안내 문구(법인, 적용 예정일), [돌아가기][예정 취소]</div><div>• 기능</div><div class="ind">: [돌아가기] 선택 → 관리 모달로 복귀</div><div class="ind">: [예정 취소] 선택 → 적용 예정본 폐기, 이력 기록, 관리 모달 새로 고침</div><div>• 기타 : 관리 모달에 저장하지 않은 다른 변경이 있으면 함께 사라짐을 안내</div></div></div></guide-trip-06-m07></screen-trip-06-m07></div></div>
+<div class="canvas-row"><div class="cell"><label-trip-06-m01-2>TRIP-06-M01-2</label-trip-06-m01-2>
+<screen-trip-06-m01-2><ui-trip-06-m01-2 class="uiroot dim"><div class="cmodal" role="alertdialog" aria-modal="true" style="width:420px"><div class="xh"><div class="t">변경 내용을 저장하지 않고 닫을까요?<i class="mk" data-mk="1">1</i></div></div><div class="xb"><p style="margin:0">저장하지 않은 변경 4건이 사라집니다.</p></div><div class="xf"><span class="sp"></span><button type="button" class="btn" data-a="c-back">계속 수정</button><button type="button" class="btn pri" data-a="c-discard">저장하지 않고 닫기</button></div></div></ui-trip-06-m01-2><guide-trip-06-m01-2>
+      <div class="g-sec g1"><div class="g-h">설계 정보</div><b>TRIP-06-M01-2 닫기 확인</b><div class="gap"></div><div>Page ID: TRIP-06-M01-2</div><div>Definition: 저장하지 않은 변경이 있을 때 관리 모달을 닫기 전에 확인하는 팝업</div><div>Path: 업무관리자 &gt; 출장 관리 &gt; 글로벌 법인별 관리 &gt; [관리] &gt; [취소] (모달)</div></div>
+      <div class="g-sec g2"><div class="g-h">정책 정보</div><div>■ 주요 정책</div><div>• 저장하지 않은 변경이 1건 이상일 때만 호출</div><div>• 변경이 없으면 확인 없이 닫음</div></div>
+      <div class="g-sec g3"><div class="g-h">화면 설명 및 디스크립션</div><div class="g-item" data-d="1"><div class="gt">❶ 안내 · 버튼</div><div>• 구성 : 안내 문구(사라지는 변경 건수), [계속 수정][저장하지 않고 닫기]</div><div>• 기능</div><div class="ind">: [계속 수정] 선택 → 관리 모달로 복귀(입력 유지)</div><div class="ind">: [저장하지 않고 닫기] 선택 → 변경을 버리고 관리 모달 닫기</div></div></div></guide-trip-06-m01-2></screen-trip-06-m01-2></div></div>
 </main></body></html>

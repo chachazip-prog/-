@@ -453,3 +453,6 @@ body.desc-on .ov{right:408px}
 .g-item{border-radius:4px;margin:0 -4px;padding:0 4px}
 .g-item.hot{background:#FEF2F2}
 .g-item .gt{font-weight:500}
+.banner.red{background:#FEF2F2;color:#B91C1C;border-color:#FECACA}
+.banner .mk{margin-left:0}
+.ditem{grid-template-columns:minmax(0,1fr) 96px}

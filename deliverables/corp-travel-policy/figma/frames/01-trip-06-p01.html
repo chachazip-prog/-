@@ -457,6 +457,9 @@ body.desc-on .ov{right:408px}
 .g-item{border-radius:4px;margin:0 -4px;padding:0 4px}
 .g-item.hot{background:#FEF2F2}
 .g-item .gt{font-weight:500}
+.banner.red{background:#FEF2F2;color:#B91C1C;border-color:#FECACA}
+.banner .mk{margin-left:0}
+.ditem{grid-template-columns:minmax(0,1fr) 96px}
 
 /* ===== 정적 캔버스 (Figma 임포트용) ===== */
 html,body{height:auto}
@@ -464,10 +467,10 @@ body{margin:0;background:#E5E5E5}
 .canvas{display:flex;flex-direction:column;gap:300px;padding:100px;width:max-content;background:#E5E5E5}
 .canvas-row{display:flex;gap:240px;align-items:flex-start}
 .cell{display:flex;flex-direction:column;gap:16px}
-label-trip-06-p01,label-trip-06-m01,label-trip-06-m02,label-trip-06-m04,label-trip-06-m03-a,label-trip-06-m03-b,label-trip-06-m03-c,label-trip-06-m03-d,label-trip-06-m08,label-trip-06-m05,label-trip-06-m06,label-trip-06-m02-empty,label-trip-06-m03-empty,label-trip-06-m03-scheduled,label-trip-06-m07,label-trip-06-p02{display:block;font-size:64px;line-height:80px;font-weight:500;color:#8A8A8A;white-space:nowrap}
-screen-trip-06-p01,screen-trip-06-m01,screen-trip-06-m02,screen-trip-06-m04,screen-trip-06-m03-a,screen-trip-06-m03-b,screen-trip-06-m03-c,screen-trip-06-m03-d,screen-trip-06-m08,screen-trip-06-m05,screen-trip-06-m06,screen-trip-06-m02-empty,screen-trip-06-m03-empty,screen-trip-06-m03-scheduled,screen-trip-06-m07,screen-trip-06-p02{display:flex;align-items:stretch;width:1920px;min-height:1080px;background:#fff}
-ui-trip-06-p01,ui-trip-06-m01,ui-trip-06-m02,ui-trip-06-m04,ui-trip-06-m03-a,ui-trip-06-m03-b,ui-trip-06-m03-c,ui-trip-06-m03-d,ui-trip-06-m08,ui-trip-06-m05,ui-trip-06-m06,ui-trip-06-m02-empty,ui-trip-06-m03-empty,ui-trip-06-m03-scheduled,ui-trip-06-m07,ui-trip-06-p02{display:block;position:relative;width:1512px;min-height:1080px;flex:none;background:#fff;overflow:hidden}
-guide-trip-06-p01,guide-trip-06-m01,guide-trip-06-m02,guide-trip-06-m04,guide-trip-06-m03-a,guide-trip-06-m03-b,guide-trip-06-m03-c,guide-trip-06-m03-d,guide-trip-06-m08,guide-trip-06-m05,guide-trip-06-m06,guide-trip-06-m02-empty,guide-trip-06-m03-empty,guide-trip-06-m03-scheduled,guide-trip-06-m07,guide-trip-06-p02{display:flex;flex-direction:column;gap:8px;width:408px;min-height:1080px;flex:none;box-sizing:border-box;padding:12px;background:#F8FAFC;border-left:1px solid #E2E8F0}
+label-trip-06-p01,label-trip-06-m01,label-trip-06-m02,label-trip-06-m02-1,label-trip-06-m01-1,label-trip-06-m01-2,label-trip-06-p03,label-trip-06-p02{display:block;font-size:64px;line-height:80px;font-weight:500;color:#8A8A8A;white-space:nowrap}
+screen-trip-06-p01,screen-trip-06-m01,screen-trip-06-m02,screen-trip-06-m02-1,screen-trip-06-m01-1,screen-trip-06-m01-2,screen-trip-06-p03,screen-trip-06-p02{display:flex;align-items:stretch;width:1920px;min-height:1080px;background:#fff}
+ui-trip-06-p01,ui-trip-06-m01,ui-trip-06-m02,ui-trip-06-m02-1,ui-trip-06-m01-1,ui-trip-06-m01-2,ui-trip-06-p03,ui-trip-06-p02{display:block;position:relative;width:1512px;min-height:1080px;flex:none;background:#fff;overflow:hidden}
+guide-trip-06-p01,guide-trip-06-m01,guide-trip-06-m02,guide-trip-06-m02-1,guide-trip-06-m01-1,guide-trip-06-m01-2,guide-trip-06-p03,guide-trip-06-p02{display:flex;flex-direction:column;gap:8px;width:408px;min-height:1080px;flex:none;box-sizing:border-box;padding:12px;background:#F8FAFC;border-left:1px solid #E2E8F0}
 .uiroot .frame{display:grid;grid-template-columns:247px minmax(0,1fr);min-height:1080px}
 .uiroot.dim{background:#9CA0A8;display:flex;align-items:center;justify-content:center;padding:60px 0}
 .uiroot.dim .xmodal,.uiroot.dim .cmodal{margin:0;max-width:none;min-height:0;flex:none}
@@ -490,98 +493,77 @@ guide-trip-06-p01,guide-trip-06-m01,guide-trip-06-m02,guide-trip-06-m04,guide-tr
         <div class="m2">카페 관리</div><div class="m2">컨시어지 공통 자원</div><div class="m2">컨디셔닝 운영 관리</div><div class="m2">P.A.T 어워즈 관리</div>
       </div>
     </nav>
-    <div class="foot">인사정보 최종 동기화<br>2026-11-12 06:00</div>
+    <div class="foot">인사정보 최종 동기화<br>2026-11-16 06:00</div>
   </aside>
   <div class="main">
     <header class="gnb"><span class="ext">HYPLE</span><span class="ext">ONHYBE</span><span>협업지원 ▾</span><span class="me"><i></i>차영록 <span>서비스전략팀(HYB)</span></span></header>
     <main class="page">
       <div class="crumb">업무관리자 / <b>출장</b></div>
       <h1 class="ptitle">출장 관리</h1>
-      <div class="tabs"><span class="t">일별 출장자</span><span class="t">출장 신청</span><span class="t">출장 알림</span><span class="t">출장지 관리</span><span class="t">규정 예외 신청</span><span class="t on">법인별 출장여비규정</span></div>
+      <div class="tabs"><span class="t">일별 출장자</span><span class="t">출장 신청</span><span class="t">출장 알림</span><span class="t">출장지 관리</span><span class="t">규정 예외 신청</span><span class="t on">글로벌 법인별 관리</span></div>
       <div id="view">
-      <div class="toolbar">
-        <div class="chips"><i class="mk" data-mk="1">1</i><span class="chip">법인 <b class="num">6</b></span><span class="chip">여비규정 등록 <b class="num">4</b> · 미등록 <b class="num" style="color:var(--orange)">2</b></span><span class="chip">인사정보 연동 <b class="num">2026.11.12 06:00</b></span></div>
-        <span class="sp"></span>
-        <select class="sel" data-a="f" aria-label="여비규정 등록 여부"><option value="all">전체</option><option value="reg">여비규정 등록</option><option value="none">여비규정 미등록</option></select>
-        <input class="inp" data-a="q" value="" placeholder="법인 코드, 법인명 검색" maxlength="30" style="width:190px" aria-label="법인 검색"><i class="mk" data-mk="2">2</i>
-        <button type="button" class="btn" data-a="history">변경 이력</button><i class="mk" data-mk="7">7</i>
+      <div class="toolbar"><span class="sp"></span>
+        <select class="sel" data-a="f" aria-label="출장 시스템"><option value="">전체</option><option>Concur (AMEX GBT)</option><option>미사용</option></select>
+        <input class="inp" data-a="q" value="" placeholder="법인 코드, 법인명 검색" maxlength="30" style="width:200px" aria-label="법인 검색"><i class="mk" data-mk="1">1</i>
+        <button type="button" class="btn" data-a="members">구성원 최종 등급</button><i class="mk" data-mk="8">8</i>
+        <button type="button" class="btn" data-a="history">변경 이력</button><i class="mk" data-mk="9">9</i>
       </div>
       <div class="grid-wrap"><table class="grid">
-        <colgroup><col style="width:3%"><col style="width:11%"><col style="width:5%"><col style="width:6%"><col style="width:6%"><col style="width:6%"><col style="width:10%"><col style="width:5%"><col style="width:9%"><col style="width:7%"><col style="width:9%"><col style="width:7%"><col style="width:10%"></colgroup>
+        <colgroup><col style="width:4%"><col style="width:14%"><col style="width:12%"><col style="width:6%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:13%"><col style="width:6%"><col style="width:7%"><col style="width:9%"><col style="width:5%"></colgroup>
         <thead>
-          <tr><th rowspan="2" class="c">번호</th><th rowspan="2">법인<i class="mk" data-mk="3">3</i></th><th rowspan="2" class="c">구성원</th>
-            <th colspan="3" class="grp">기안 항목<i class="mk" data-mk="4">4</i></th><th colspan="2" class="grp">등급 규정<i class="mk" data-mk="5">5</i></th><th colspan="4" class="grp">여비규정 (등록 항목)<i class="mk" data-mk="6">6</i></th>
-            <th rowspan="2">최종 수정</th><th rowspan="2" class="c stick">관리<i class="mk" data-mk="8">8</i></th></tr>
-          <tr><th class="c">출장 예산</th><th class="c">법인카드<br>실시간 한도증액</th><th class="c">출장 근태<br>신청</th><th>등급</th><th class="c">개인 예외</th><th>교통</th><th>숙박</th><th>일비·식비</th><th>기타</th></tr>
+          <tr><th rowspan="2" class="c">번호<i class="mk" data-mk="2">2</i></th><th rowspan="2">법인<i class="mk" data-mk="3">3</i></th><th rowspan="2">출장 시스템<i class="mk" data-mk="4">4</i></th><th rowspan="2" class="c">구성원</th>
+            <th colspan="3" class="grp">기안 항목<i class="mk" data-mk="5">5</i></th><th colspan="3" class="grp">등급 규정<i class="mk" data-mk="6">6</i></th><th rowspan="2">최종 수정<i class="mk" data-mk="7">7</i></th><th rowspan="2" class="c">관리</th></tr>
+          <tr><th class="c">출장 예산</th><th class="c">법인카드<br>실시간 한도증액</th><th class="c">출장 근태<br>신청</th><th>등급</th><th class="c">개인 예외</th><th class="c">미할당 직책</th></tr>
         </thead>
         <tbody><tr>
             <td class="c dim num">1</td>
-            <td><div class="corp-cd">HYB <span class="badge gray">샘플 값</span></div><div class="corp-nm">(주)하이브</div><div class="sm">대한민국 · KRW</div></td>
-            <td class="c num">1,524</td>
-            <td class="c"><span class="badge blue">ON</span></td><td class="c"><span class="badge blue">ON</span></td><td class="c"><span class="badge blue">ON</span></td>
-            <td><div class="gtags"><span class="badge line">임원</span><span class="badge line">리더</span><span class="badge line">구성원</span></div></td>
-            <td class="c num"><span class="dim">-</span></td>
-            <td><div class="cat-list"><div class="">항공</div></div></td><td><div class="cat-list"><div class="">숙박</div></div></td><td><div class="cat-list"><div class="">식비</div></div></td><td><div class="cat-list"><div class="">통신비</div></div></td>
-            <td class="num">2026.03.09<div class="sm">서준석</div>
-              <div class="sm">시행 2026.03.09</div></td>
-            <td class="c stick"><button type="button" class="btn sm" data-a="manage" data-code="HYB">관리</button></td></tr><tr>
-            <td class="c dim num">2</td>
-            <td><div class="corp-cd">HBA</div><div class="corp-nm">HYBE AMERICA</div><div class="sm">미국 · USD</div></td>
+            <td><div class="corp-cd">HBA</div><div class="corp-nm">HYBE AMERICA</div><div class="sm">미국</div></td>
+            <td><span class="badge blue">Concur (AMEX GBT)</span></td>
             <td class="c num">412</td>
             <td class="c"><span class="badge gray">OFF</span></td><td class="c"><span class="badge gray">OFF</span></td><td class="c"><span class="badge gray">OFF</span></td>
-            <td><div class="gtags"><span class="badge line">Tier 1</span><span class="badge line">Tier 2</span><span class="badge line">Tier 3</span></div></td>
-            <td class="c num">2건</td>
-            <td><div class="cat-list"><div class="">항공</div><div class="">철도</div><div class="">렌터카</div><div class="">자가용(마일리지)</div></div></td><td><div class="cat-list"><div class="">숙박</div></div></td><td><div class="cat-list"><div class="">식비</div><div class="off">출장 수당(일당) (미사용)</div></div></td><td><div class="cat-list"><div class="">세탁비</div><div class="">통신비</div></div></td>
-            <td class="num">2026.10.20<div class="sm">윤채희</div>
-              <div class="sm">시행 2025.12.15</div></td>
-            <td class="c stick"><button type="button" class="btn sm" data-a="manage" data-code="HBA">관리</button></td></tr><tr>
-            <td class="c dim num">3</td>
-            <td><div class="corp-cd">HBL</div><div class="corp-nm">HYBE LATIN AMERICA</div><div class="sm">멕시코 · USD</div></td>
+              <td><div class="gtags"><span class="badge line">Tier 1</span><span class="badge line">Tier 2</span><span class="badge line">Tier 3</span></div></td>
+              <td class="c num">3건</td>
+              <td class="c"><span class="badge red">2개</span></td>
+              <td class="num">2026.10.20<div class="sm">윤채희</div></td>
+            <td class="c"><button type="button" class="btn sm" data-a="manage" data-code="HBA">관리</button></td></tr><tr>
+            <td class="c dim num">2</td>
+            <td><div class="corp-cd">HBL</div><div class="corp-nm">HYBE LATIN AMERICA</div><div class="sm">멕시코</div></td>
+            <td><span class="badge blue">Concur (AMEX GBT)</span></td>
             <td class="c num">96</td>
             <td class="c"><span class="badge gray">OFF</span></td><td class="c"><span class="badge gray">OFF</span></td><td class="c"><span class="badge gray">OFF</span></td>
-            <td><div class="gtags"><span class="badge line">Tier 1</span><span class="badge line">Tier 2</span><span class="badge line">Tier 3</span></div></td>
-            <td class="c num"><span class="dim">-</span></td>
-            <td><div class="cat-list"><div class="">항공</div><div class="">철도</div><div class="">렌터카</div><div class="">자가용(마일리지)</div></div></td><td><div class="cat-list"><div class="">숙박</div></div></td><td><div class="cat-list"><div class="">식비</div><div class="off">출장 수당(일당) (미사용)</div></div></td><td><div class="cat-list"><div class="">세탁비</div><div class="">통신비</div></div></td>
-            <td class="num">2026.10.20<div class="sm">윤채희</div>
-              <div class="sm">시행 2025.12.15</div></td>
-            <td class="c stick"><button type="button" class="btn sm" data-a="manage" data-code="HBL">관리</button></td></tr><tr>
-            <td class="c dim num">4</td>
-            <td><div class="corp-cd">HBJ</div><div class="corp-nm">HYBE JAPAN</div><div class="sm">일본 · JPY</div></td>
+              <td><div class="gtags"><span class="badge line">Tier 1</span><span class="badge line">Tier 2</span><span class="badge line">Tier 3</span></div></td>
+              <td class="c num"><span class="dim">-</span></td>
+              <td class="c"><span class="badge red">1개</span></td>
+              <td class="num">2026.10.20<div class="sm">윤채희</div></td>
+            <td class="c"><button type="button" class="btn sm" data-a="manage" data-code="HBL">관리</button></td></tr><tr>
+            <td class="c dim num">3</td>
+            <td><div class="corp-cd">HBJ</div><div class="corp-nm">HYBE JAPAN</div><div class="sm">일본</div></td>
+            <td><span class="badge blue">Concur (AMEX GBT)</span></td>
             <td class="c num">268</td>
             <td class="c"><span class="badge blue">ON</span></td><td class="c"><span class="badge gray">OFF</span></td><td class="c"><span class="badge blue">ON</span></td>
-            <td><div class="gtags"><span class="badge line">리더그룹·SP 이상</span><span class="badge line">일반 구성원</span></div></td>
-            <td class="c num">1건</td>
-            <td><div class="cat-list"><div class="">항공</div><div class="">철도·버스</div><div class="">렌터카</div></div></td><td><div class="cat-list"><div class="">숙박</div></div></td><td><div class="cat-list"><div class="">식비</div><div class="">출장 수당(일당)</div></div></td><td><div class="cat-list"><div class="">세탁비</div><div class="">통신비</div></div></td>
-            <td class="num">2026.10.27<div class="sm">윤채희</div>
-              <div class="sm">시행 2024.03.29</div><div><span class="badge orange">미정의 1칸</span></div></td>
-            <td class="c stick"><button type="button" class="btn sm" data-a="manage" data-code="HBJ">관리</button></td></tr><tr>
-            <td class="c dim num">5</td>
-            <td><div class="corp-cd">HBC</div><div class="corp-nm">HYBE CHINA</div><div class="sm">중국 · CNY</div></td>
+              <td><div class="gtags"><span class="badge line">리더그룹·SP 이상</span><span class="badge line">일반 구성원</span></div></td>
+              <td class="c num">1건</td>
+              <td class="c"><span class="badge red">1개</span></td>
+              <td class="num">2026.11.03<div class="sm">윤채희</div></td>
+            <td class="c"><button type="button" class="btn sm" data-a="manage" data-code="HBJ">관리</button></td></tr><tr>
+            <td class="c dim num">4</td>
+            <td><div class="corp-cd">HBC</div><div class="corp-nm">HYBE CHINA</div><div class="sm">중국</div></td>
+            <td><span class="badge gray">미사용</span></td>
             <td class="c num">41</td>
-            <td class="c"><span class="badge gray">OFF</span></td><td class="c"><span class="badge gray">OFF</span></td><td class="c"><span class="badge gray">OFF</span></td>
-            <td><span class="badge orange">미등록</span></td>
-            <td class="c num"><span class="dim">-</span></td>
-            <td colspan="4"><span class="badge orange">미등록</span> <span class="sm">등록된 여비규정이 없습니다</span></td>
-            <td class="num"><span class="dim">-</span>
-              </td>
-            <td class="c stick"><button type="button" class="btn sm" data-a="manage" data-code="HBC">관리</button></td></tr><tr>
-            <td class="c dim num">6</td>
-            <td><div class="corp-cd">HBI</div><div class="corp-nm">HYBE INDIA</div><div class="sm">인도 · INR</div></td>
+            <td colspan="7"><span class="sm">출장 시스템 미사용 법인입니다. AMEX GBT 합류 시 설정을 오픈합니다.</span></td>
+            <td class="c"><button type="button" class="btn sm" data-a="manage" data-code="HBC" disabled="">관리</button></td></tr><tr>
+            <td class="c dim num">5</td>
+            <td><div class="corp-cd">HBI</div><div class="corp-nm">HYBE INDIA</div><div class="sm">인도</div></td>
+            <td><span class="badge gray">미사용</span></td>
             <td class="c num">23</td>
-            <td class="c"><span class="badge gray">OFF</span></td><td class="c"><span class="badge gray">OFF</span></td><td class="c"><span class="badge gray">OFF</span></td>
-            <td><span class="badge orange">미등록</span></td>
-            <td class="c num"><span class="dim">-</span></td>
-            <td colspan="4"><span class="badge orange">미등록</span> <span class="sm">등록된 여비규정이 없습니다</span></td>
-            <td class="num"><span class="dim">-</span>
-              </td>
-            <td class="c stick"><button type="button" class="btn sm" data-a="manage" data-code="HBI">관리</button></td></tr></tbody>
-      </table></div>
-      <p class="note" style="margin-top:10px">법인 목록은 인사정보의 법인 코드를 그대로 사용합니다. 값 수정은 [관리]에서 하며, 모든 수정은 확인 팝업을 거쳐 저장되고 변경 이력에 남습니다.</p></div>
+            <td colspan="7"><span class="sm">출장 시스템 미사용 법인입니다. AMEX GBT 합류 시 설정을 오픈합니다.</span></td>
+            <td class="c"><button type="button" class="btn sm" data-a="manage" data-code="HBI" disabled="">관리</button></td></tr></tbody>
+      </table></div></div>
     </main>
   </div>
   
 </div></ui-trip-06-p01><guide-trip-06-p01>
-      <div class="g-sec g1"><div class="g-h">설계 정보</div><b>TRIP-06-P01 법인별 출장여비규정 — 마스터 그리드</b><div class="gap"></div><div>Page ID: TRIP-06-P01</div><div>Definition: 전 법인의 출장여비규정 설정 값을 한 표로 조회하는 메인 화면</div><div>Path: 업무관리자 &gt; 출장 관리 &gt; 법인별 출장여비규정</div></div>
-      <div class="g-sec g2"><div class="g-h">정책 정보</div><div>■ 주요 정책</div><div>• 출장 관리에 추가되는 메뉴는 "법인별 출장여비규정" 탭 1개</div><div>• 기본 화면은 전 법인의 값을 보여주는 마스터 그리드 1개</div><div>• 수정은 [관리] 모달에서만 수행</div><div>• 모든 수정은 컨펌 팝업을 거쳐 저장하고 변경 이력에 기록</div><div>• 법인 목록은 인사정보 연동 결과를 그대로 사용(추가·삭제 불가)</div><div>• 본사(HYB) 출장 관리자만 접근하며 전 법인을 관리</div><div class="gap"></div><div class="red">■ 확인 필요 사항</div><div>• 그리드에 대표 값(예: 숙박 상한)까지 노출할지</div><div>• 전 법인 현황 엑셀 다운로드 필요 여부</div><div>• HBC·HBI 법인명은 예시(인사정보 값으로 대체)</div></div>
-      <div class="g-sec g3"><div class="g-h">화면 설명 및 디스크립션</div><div class="g-item" data-d="1"><div class="gt">❶ 요약 정보</div><div>• 구성 : 법인 수, 여비규정 등록/미등록 법인 수, 인사정보 연동 시각</div><div>• 기타 : 검색·필터와 무관하게 전체 기준. 항목이 1개 이상이면 "등록"</div></div><div class="gap"></div><div class="g-item" data-d="2"><div class="gt">❷ 검색/조회 조건</div><div>• 구성 : 여비규정 등록 여부 Select(전체/등록/미등록), 통합검색</div><div>• 키워드 : 법인 코드, 법인명(부분 일치, 대소문자 무시, 30자)</div><div>• 플레이스홀더 : 법인 코드, 법인명 검색</div><div>• 기타 : 입력 즉시 반영. 결과가 없으면 "검색 결과가 없습니다" 문구 노출</div></div><div class="gap"></div><div class="g-item" data-d="3"><div class="gt">❸ 법인</div><div>• 구성 : 법인 코드, 법인명, 국가, 기준 통화, 구성원 수</div><div>• 기타 : 인사정보 연동 값(읽기 전용). 정렬은 인사정보 연동 순서</div></div><div class="gap"></div><div class="g-item" data-d="4"><div class="gt">❹ 기안 항목</div><div>• 구성 : 출장 예산, 법인카드 실시간 한도증액, 출장 근태 신청의 ON/OFF 칩</div><div>• 기타 : 조회 전용. 변경은 [관리]에서 수행</div></div><div class="gap"></div><div class="g-item" data-d="5"><div class="gt">❺ 등급 규정</div><div>• 구성 : 등급명 칩(등록 순서), 개인 예외 건수</div><div>• 기타 : 등급이 없으면 "미등록", 예외가 없으면 "-"</div></div><div class="gap"></div><div class="g-item" data-d="6"><div class="gt">❻ 여비규정</div><div>• 구성 : 교통 / 숙박 / 일비·식비 / 기타 분류별 등록 항목명</div><div>• 기타 : 사용 안 함 항목은 흐리게 "(미사용)" 표기</div><div class="ind">: 항목이 없는 법인은 4개 열을 합쳐 "미등록" 표기</div></div><div class="gap"></div><div class="g-item" data-d="7"><div class="gt">❼ 변경 이력 버튼</div><div>• 기능 : 선택 → TRIP-06-P02 로 이동</div></div><div class="gap"></div><div class="g-item" data-d="8"><div class="gt">❽ 최종 수정 · 관리</div><div>• 구성 : 최종 저장 일자·수정자, 시행일, 적용 예정 칩, 미정의 칸 수 칩, [관리]</div><div>• 기능 : [관리] 선택 → TRIP-06-M01 호출</div></div></div></guide-trip-06-p01></screen-trip-06-p01></div></div>
+      <div class="g-sec g1"><div class="g-h">설계 정보</div><b>TRIP-06-P01 글로벌 법인별 관리 — 마스터 그리드</b><div class="gap"></div><div>Page ID: TRIP-06-P01</div><div>Definition: 해외 법인의 출장 시스템, 기안 항목, 등급 규정을 한 표로 조회하는 메인 화면</div><div>Path: 업무관리자 &gt; 출장 관리 &gt; 글로벌 법인별 관리</div></div>
+      <div class="g-sec g2"><div class="g-h">정책 정보</div><div>■ 주요 정책</div><div>• 기존 출장 관리에 추가되는 메뉴는 "글로벌 법인별 관리" 탭 1개</div><div>• 기본 화면은 해외 법인의 값을 보여주는 마스터 그리드</div><div>• HYB 및 국내 법인은 Redcap BTMS 를 사용하며 이 메뉴에 노출하지 않음</div><div>• HBA·HBL·HBJ 는 Concur (AMEX GBT) 사용 법인으로 AMEX GBT 와 하이브넷 모두 세팅 필요</div><div>• HBC·HBI 등 출장 시스템 미사용 법인은 "미사용"으로 노출하고 [관리] 비활성. AMEX GBT 합류 시 오픈</div><div>• 수정은 [관리] 모달에서만 수행. 모든 수정은 컨펌 팝업을 거쳐 저장하고 변경 이력에 기록</div><div>• 법인 목록은 인사정보 연동 결과를 그대로 사용(추가·삭제 불가)</div><div>• AMEX GBT 세팅 담당자(HYB TnM)가 이 화면의 관리자</div><div class="gap"></div><div class="red">■ 확인 필요 사항</div><div>• 출장 시스템 구분 값을 어디에서 관리할지(프로토타입: 시스템 설정 값, 화면에서 변경 불가)</div></div>
+      <div class="g-sec g3"><div class="g-h">화면 설명 및 디스크립션</div><div class="g-item" data-d="1"><div class="gt">❶ 검색/조회 조건</div><div>• 구성 : 출장 시스템 Select(전체, Concur (AMEX GBT), 미사용), 통합 검색</div><div>• 키워드 : 법인 코드, 법인명</div><div>• 플레이스홀더 : 법인 코드, 법인명 검색</div><div>• 기타 : 입력 즉시 반영. 결과가 없으면 "검색 결과가 없습니다." 문구 노출</div></div><div class="gap"></div><div class="g-item" data-d="2"><div class="gt">❷ 그리드</div><div>• 구성 : 번호, 법인, 출장 시스템, 구성원 수, 기안 항목(출장 예산, 법인카드 실시간 한도증액, 출장 근태 신청), 등급 규정(등급, 개인 예외, 미할당 직책), 최종 수정, [관리]</div></div><div class="gap"></div><div class="g-item" data-d="3"><div class="gt">❸ 법인</div><div>• 구성 : 법인 코드, 법인명, 국가, 구성원 수</div><div>• 기타 : HAM 데이터 연동(읽기 전용) 값</div><div class="ind">: HAM 데이터 기준 순서 노출</div></div><div class="gap"></div><div class="g-item" data-d="4"><div class="gt">❹ 출장 시스템</div><div>• 구성 : Concur (AMEX GBT) / 미사용 칩</div><div>• 기타 : 미사용 법인은 기안 항목·등급 규정 칸을 합쳐 안내 문구 표기</div></div><div class="gap"></div><div class="g-item" data-d="5"><div class="gt">❺ 기안 항목</div><div>• 구성 : 출장 예산, 법인카드 실시간 한도증액, 출장 근태 신청 ON/OFF 칩</div><div>• 기타 : 조회 전용</div></div><div class="gap"></div><div class="g-item" data-d="6"><div class="gt">❻ 등급 규정</div><div>• 구성 : 등급명 칩(등록 순서), 개인 예외 건수, 미할당 직책 수</div><div>• 기타</div><div class="ind">: 개인 예외 건수는 적용 중 + 예정 기준(만료 제외)</div><div class="ind">: 등급이 없으면 "미등록", 미할당 직책이 있으면 빨간 칩 표기</div></div><div class="gap"></div><div class="g-item" data-d="7"><div class="gt">❼ 최종 수정 · 관리</div><div>• 구성 : 최종 저장 일자, 수정자, [관리]</div><div>• 기능 : [관리] 선택 → 각 법인별 TRIP-06-M01 호출</div><div>• 기타 : 미사용 법인은 [관리] 비활성</div></div><div class="gap"></div><div class="g-item" data-d="8"><div class="gt">❽ 구성원 최종 등급 버튼</div><div>• 기능 : 선택 → TRIP-06-P03 로 전환</div></div><div class="gap"></div><div class="g-item" data-d="9"><div class="gt">❾ 변경 이력 버튼</div><div>• 기능 : 선택 → TRIP-06-P02 로 전환</div></div></div></guide-trip-06-p01></screen-trip-06-p01></div></div>
 </main></body></html>

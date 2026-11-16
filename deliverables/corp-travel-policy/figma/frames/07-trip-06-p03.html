@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>TRIP-06-M06</title>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=1920"><title>TRIP-06-P03</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ===== HYBENET 출장 관리 · 법인별 세팅 — 공통 스타일 (레퍼런스 톤앤매너) ===== */
@@ -457,6 +457,9 @@ body.desc-on .ov{right:408px}
 .g-item{border-radius:4px;margin:0 -4px;padding:0 4px}
 .g-item.hot{background:#FEF2F2}
 .g-item .gt{font-weight:500}
+.banner.red{background:#FEF2F2;color:#B91C1C;border-color:#FECACA}
+.banner .mk{margin-left:0}
+.ditem{grid-template-columns:minmax(0,1fr) 96px}
 
 /* ===== 정적 캔버스 (Figma 임포트용) ===== */
 html,body{height:auto}
@@ -464,10 +467,10 @@ body{margin:0;background:#E5E5E5}
 .canvas{display:flex;flex-direction:column;gap:300px;padding:100px;width:max-content;background:#E5E5E5}
 .canvas-row{display:flex;gap:240px;align-items:flex-start}
 .cell{display:flex;flex-direction:column;gap:16px}
-label-trip-06-p01,label-trip-06-m01,label-trip-06-m02,label-trip-06-m04,label-trip-06-m03-a,label-trip-06-m03-b,label-trip-06-m03-c,label-trip-06-m03-d,label-trip-06-m08,label-trip-06-m05,label-trip-06-m06,label-trip-06-m02-empty,label-trip-06-m03-empty,label-trip-06-m03-scheduled,label-trip-06-m07,label-trip-06-p02{display:block;font-size:64px;line-height:80px;font-weight:500;color:#8A8A8A;white-space:nowrap}
-screen-trip-06-p01,screen-trip-06-m01,screen-trip-06-m02,screen-trip-06-m04,screen-trip-06-m03-a,screen-trip-06-m03-b,screen-trip-06-m03-c,screen-trip-06-m03-d,screen-trip-06-m08,screen-trip-06-m05,screen-trip-06-m06,screen-trip-06-m02-empty,screen-trip-06-m03-empty,screen-trip-06-m03-scheduled,screen-trip-06-m07,screen-trip-06-p02{display:flex;align-items:stretch;width:1920px;min-height:1080px;background:#fff}
-ui-trip-06-p01,ui-trip-06-m01,ui-trip-06-m02,ui-trip-06-m04,ui-trip-06-m03-a,ui-trip-06-m03-b,ui-trip-06-m03-c,ui-trip-06-m03-d,ui-trip-06-m08,ui-trip-06-m05,ui-trip-06-m06,ui-trip-06-m02-empty,ui-trip-06-m03-empty,ui-trip-06-m03-scheduled,ui-trip-06-m07,ui-trip-06-p02{display:block;position:relative;width:1512px;min-height:1080px;flex:none;background:#fff;overflow:hidden}
-guide-trip-06-p01,guide-trip-06-m01,guide-trip-06-m02,guide-trip-06-m04,guide-trip-06-m03-a,guide-trip-06-m03-b,guide-trip-06-m03-c,guide-trip-06-m03-d,guide-trip-06-m08,guide-trip-06-m05,guide-trip-06-m06,guide-trip-06-m02-empty,guide-trip-06-m03-empty,guide-trip-06-m03-scheduled,guide-trip-06-m07,guide-trip-06-p02{display:flex;flex-direction:column;gap:8px;width:408px;min-height:1080px;flex:none;box-sizing:border-box;padding:12px;background:#F8FAFC;border-left:1px solid #E2E8F0}
+label-trip-06-p01,label-trip-06-m01,label-trip-06-m02,label-trip-06-m02-1,label-trip-06-m01-1,label-trip-06-m01-2,label-trip-06-p03,label-trip-06-p02{display:block;font-size:64px;line-height:80px;font-weight:500;color:#8A8A8A;white-space:nowrap}
+screen-trip-06-p01,screen-trip-06-m01,screen-trip-06-m02,screen-trip-06-m02-1,screen-trip-06-m01-1,screen-trip-06-m01-2,screen-trip-06-p03,screen-trip-06-p02{display:flex;align-items:stretch;width:1920px;min-height:1080px;background:#fff}
+ui-trip-06-p01,ui-trip-06-m01,ui-trip-06-m02,ui-trip-06-m02-1,ui-trip-06-m01-1,ui-trip-06-m01-2,ui-trip-06-p03,ui-trip-06-p02{display:block;position:relative;width:1512px;min-height:1080px;flex:none;background:#fff;overflow:hidden}
+guide-trip-06-p01,guide-trip-06-m01,guide-trip-06-m02,guide-trip-06-m02-1,guide-trip-06-m01-1,guide-trip-06-m01-2,guide-trip-06-p03,guide-trip-06-p02{display:flex;flex-direction:column;gap:8px;width:408px;min-height:1080px;flex:none;box-sizing:border-box;padding:12px;background:#F8FAFC;border-left:1px solid #E2E8F0}
 .uiroot .frame{display:grid;grid-template-columns:247px minmax(0,1fr);min-height:1080px}
 .uiroot.dim{background:#9CA0A8;display:flex;align-items:center;justify-content:center;padding:60px 0}
 .uiroot.dim .xmodal,.uiroot.dim .cmodal{margin:0;max-width:none;min-height:0;flex:none}
@@ -475,9 +478,194 @@ guide-trip-06-p01,guide-trip-06-m01,guide-trip-06-m02,guide-trip-06-m04,guide-tr
 
 </style></head>
 <body><main class="canvas">
-<div class="canvas-row"><div class="cell"><label-trip-06-m06>TRIP-06-M06</label-trip-06-m06>
-<screen-trip-06-m06><ui-trip-06-m06 class="uiroot dim"><div class="cmodal" role="alertdialog" aria-modal="true" style="width:420px"><div class="xh"><div class="t">변경 내용을 저장하지 않고 닫을까요?</div></div><div class="xb" style="padding-top:10px"><p>저장하지 않은 변경 3건이 사라집니다.</p></div><div class="xf"><span class="sp"></span><button type="button" class="btn" data-a="c-back">계속 수정</button><button type="button" class="btn pri" data-a="c-discard">저장하지 않고 닫기</button></div></div></ui-trip-06-m06><guide-trip-06-m06>
-      <div class="g-sec g1"><div class="g-h">설계 정보</div><b>TRIP-06-M06 닫기 확인</b><div class="gap"></div><div>Page ID: TRIP-06-M06</div><div>Definition: 저장하지 않은 변경이 있을 때 관리 모달을 닫기 전에 확인하는 팝업</div><div>Path: 업무관리자 &gt; 출장 관리 &gt; 법인별 출장여비규정 &gt; [관리] &gt; [취소] (모달)</div></div>
-      <div class="g-sec g2"><div class="g-h">정책 정보</div><div>■ 주요 정책</div><div>• 저장하지 않은 변경이 1건 이상일 때만 호출</div><div>• 변경이 없으면 확인 없이 닫음</div></div>
-      <div class="g-sec g3"><div class="g-h">화면 설명 및 디스크립션</div><div class="g-item" data-d="1"><div class="gt">❶ 안내 · 버튼</div><div>• 구성 : 안내 문구(사라지는 변경 건수), [계속 수정][저장하지 않고 닫기]</div><div>• 기능</div><div class="ind">: [계속 수정] 선택 → 관리 모달로 복귀(입력 유지)</div><div class="ind">: [저장하지 않고 닫기] 선택 → 변경을 버리고 관리 모달 닫기</div><div>• 기타 : 호출 경로 - 관리 모달의 [취소], ✕, Esc, [이 법인 변경 이력]</div></div></div></guide-trip-06-m06></screen-trip-06-m06></div></div>
+<div class="canvas-row"><div class="cell"><label-trip-06-p03>TRIP-06-P03</label-trip-06-p03>
+<screen-trip-06-p03><ui-trip-06-p03 class="uiroot"><div class="frame">
+  <aside class="side" aria-label="전역 메뉴">
+    <div class="logo">HYBENET ADMIN</div>
+    <nav>
+      <div class="m1">홈</div>
+      <div class="m1">커뮤니티</div>
+      <div class="m1">업무공간</div>
+      <div class="m1">조직</div>
+      <div class="m1 on">업무관리자</div>
+      <div class="sub">
+        <div class="m2">계약 관리</div><div class="m2">공문 관리</div><div class="m2 on">출장 관리</div><div class="m2">하이브 사다리 관리</div>
+        <div class="m2">카페 관리</div><div class="m2">컨시어지 공통 자원</div><div class="m2">컨디셔닝 운영 관리</div><div class="m2">P.A.T 어워즈 관리</div>
+      </div>
+    </nav>
+    <div class="foot">인사정보 최종 동기화<br>2026-11-16 06:00</div>
+  </aside>
+  <div class="main">
+    <header class="gnb"><span class="ext">HYPLE</span><span class="ext">ONHYBE</span><span>협업지원 ▾</span><span class="me"><i></i>차영록 <span>서비스전략팀(HYB)</span></span></header>
+    <main class="page">
+      <div class="crumb">업무관리자 / <b>출장</b></div>
+      <h1 class="ptitle">출장 관리</h1>
+      <div class="tabs"><span class="t">일별 출장자</span><span class="t">출장 신청</span><span class="t">출장 알림</span><span class="t">출장지 관리</span><span class="t">규정 예외 신청</span><span class="t on">글로벌 법인별 관리</span></div>
+      <div id="view">
+      <button type="button" class="back" data-a="grid">← 이전</button>
+      <div class="toolbar" style="margin-top:10px">
+        <h3 class="h3" style="margin:0">구성원 최종 등급 <em>21</em><i class="mk" data-mk="1">1</i></h3><span class="chip">조회 기준 <b class="num">2026.11.16</b> (법인 현지 시간)</span><span class="sp"></span>
+        <select class="sel" data-me="corp" aria-label="법인"><option value="">전체 법인</option><option>HBA</option><option>HBL</option><option>HBJ</option></select>
+        <select class="sel" data-me="f" aria-label="구분"><option value="">전체 구분</option><option value="exc">개인 예외 적용</option><option value="none">등급 미할당</option><option value="fail">전송 실패</option></select>
+        <input class="inp" data-me="q" value="" placeholder="이름, 이메일" maxlength="30" style="width:200px" aria-label="구성원 검색"><i class="mk" data-mk="2">2</i>
+      </div>
+      <div class="tbl-wrap"><table class="tbl hist-tbl">
+        <colgroup><col style="width:5%"><col style="width:6%"><col style="width:20%"><col style="width:15%"><col style="width:11%"><col style="width:11%"><col style="width:13%"><col style="width:19%"></colgroup>
+        <thead><tr><th class="c">번호</th><th>법인</th><th>구성원</th><th>소속 · 직책</th><th>매핑 등급</th><th>개인 예외<i class="mk" data-mk="3">3</i></th><th>최종 등급 (연동 코드)<i class="mk" data-mk="4">4</i></th><th>AMEX GBT 전송<i class="mk" data-mk="5">5</i></th></tr></thead>
+        <tbody><tr>
+          <td class="c dim num">1</td><td><b>HBA</b></td>
+          <td><b>David Kim</b><div class="help">davidkim@hybecorp.com</div></td>
+          <td>A&amp;R<div class="help">Senior Director</div></td>
+          <td>Tier 3</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 3</b><div class="help num">HBA_TIER3</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">2</td><td><b>HBA</b></td>
+          <td><b>Olivia Brown</b><div class="help">oliviabrown@hybecorp.com</div></td>
+          <td>A&amp;R<div class="help">Manager</div></td>
+          <td>Tier 3</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 3</b><div class="help num">HBA_TIER3</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">3</td><td><b>HBA</b></td>
+          <td><b>Chris Park</b><div class="help">chrispark@hybecorp.com</div></td>
+          <td>Label Operations<div class="help">Director</div></td>
+          <td>Tier 3</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 3</b><div class="help num">HBA_TIER3</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">4</td><td><b>HBA</b></td>
+          <td><b>Noah Wilson</b><div class="help">noahwilson@hybecorp.com</div></td>
+          <td>Label Operations<div class="help">Staff</div></td>
+          <td>Tier 3</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 3</b><div class="help num">HBA_TIER3</div></td>
+          <td><span class="badge red">전송 실패</span> <span class="help num">2026.11.16 00:00</span> <button type="button" class="btn sm" data-a="resend" data-code="HBA" data-email="noahwilson@hybecorp.com">재전송</button></td></tr><tr>
+          <td class="c dim num">5</td><td><b>HBA</b></td>
+          <td><b>Jordan Lee</b><div class="help">jordanlee@hybecorp.com</div></td>
+          <td>Artist Relations<div class="help">Senior Director</div></td>
+          <td>Tier 3</td>
+          <td><span class="badge green">적용 중</span><div class="help num">2026.01.01 ~ 2026.12.31</div></td>
+          <td><b>Tier 2</b><div class="help num">HBA_TIER2</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">6</td><td><b>HBA</b></td>
+          <td><b>Mia Johnson</b><div class="help">miajohnson@hybecorp.com</div></td>
+          <td>Artist Relations<div class="help">Associate</div></td>
+          <td><span class="badge red">미할당 직책</span></td>
+          <td><span class="dim">-</span></td>
+          <td><span class="badge red">등급 없음</span><div class="help">OBT 사용 불가</div></td>
+          <td><span class="dim">전송 대상 아님</span></td></tr><tr>
+          <td class="c dim num">7</td><td><b>HBA</b></td>
+          <td><b>Maria Santos</b><div class="help">mariasantos@hybecorp.com</div></td>
+          <td>Global Touring<div class="help">Director</div></td>
+          <td>Tier 3</td>
+          <td><span class="badge green">적용 중</span><div class="help num">2026.03.01 ~ 2026.11.30</div></td>
+          <td><b>Tier 2</b><div class="help num">HBA_TIER2</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">8</td><td><b>HBA</b></td>
+          <td><b>Ethan Clark</b><div class="help">ethanclark@hybecorp.com</div></td>
+          <td>Global Touring<div class="help">Manager</div></td>
+          <td>Tier 3</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 3</b><div class="help num">HBA_TIER3</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">9</td><td><b>HBA</b></td>
+          <td><b>Emily Chen</b><div class="help">emilychen@hybecorp.com</div></td>
+          <td>Finance<div class="help">Manager</div></td>
+          <td>Tier 3</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 3</b><div class="help num">HBA_TIER3</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">10</td><td><b>HBA</b></td>
+          <td><b>Robert Hall</b><div class="help">roberthall@hybecorp.com</div></td>
+          <td>Finance<div class="help">VP</div></td>
+          <td>Tier 2</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 2</b><div class="help num">HBA_TIER2</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">11</td><td><b>HBA</b></td>
+          <td><b>Grace Lewis</b><div class="help">gracelewis@hybecorp.com</div></td>
+          <td>People<div class="help">Director</div></td>
+          <td>Tier 3</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 3</b><div class="help num">HBA_TIER3</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">12</td><td><b>HBL</b></td>
+          <td><b>Sofía Ramírez</b><div class="help">sofiaramirez@hybecorp.com</div></td>
+          <td>Marketing<div class="help">Manager</div></td>
+          <td>Tier 3</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 3</b><div class="help num">HBL_TIER3</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">13</td><td><b>HBL</b></td>
+          <td><b>Lucas Fernández</b><div class="help">lucasfernandez@hybecorp.com</div></td>
+          <td>Marketing<div class="help">Staff</div></td>
+          <td>Tier 3</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 3</b><div class="help num">HBL_TIER3</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">14</td><td><b>HBL</b></td>
+          <td><b>Diego Torres</b><div class="help">diegotorres@hybecorp.com</div></td>
+          <td>Artist Development<div class="help">Director</div></td>
+          <td>Tier 3</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 3</b><div class="help num">HBL_TIER3</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">15</td><td><b>HBL</b></td>
+          <td><b>Ana López</b><div class="help">analopez@hybecorp.com</div></td>
+          <td>Finance<div class="help">Manager</div></td>
+          <td>Tier 3</td>
+          <td><span class="dim">-</span></td>
+          <td><b>Tier 3</b><div class="help num">HBL_TIER3</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">16</td><td><b>HBJ</b></td>
+          <td><b>佐藤 美咲</b><div class="help">misaki.sato@hybecorp.com</div></td>
+          <td>Artist Management<div class="help">チーム員</div></td>
+          <td>일반 구성원</td>
+          <td><span class="badge green">적용 중</span><div class="help num">2026.04.01 ~ 무기한</div></td>
+          <td><b>리더그룹·SP 이상</b><div class="help num">HBJ_LEADER</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">17</td><td><b>HBJ</b></td>
+          <td><b>鈴木 花</b><div class="help">hana.suzuki@hybecorp.com</div></td>
+          <td>Artist Management<div class="help">職責者</div></td>
+          <td>일반 구성원</td>
+          <td><span class="dim">-</span></td>
+          <td><b>일반 구성원</b><div class="help num">HBJ_STAFF</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">18</td><td><b>HBJ</b></td>
+          <td><b>田中 健</b><div class="help">ken.tanaka@hybecorp.com</div></td>
+          <td>Concert Business<div class="help">チーム員</div></td>
+          <td>일반 구성원</td>
+          <td><span class="dim">-</span></td>
+          <td><b>일반 구성원</b><div class="help num">HBJ_STAFF</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">19</td><td><b>HBJ</b></td>
+          <td><b>伊藤 大輔</b><div class="help">daisuke.ito@hybecorp.com</div></td>
+          <td>Concert Business<div class="help">事業リーダー</div></td>
+          <td>리더그룹·SP 이상</td>
+          <td><span class="dim">-</span></td>
+          <td><b>리더그룹·SP 이상</b><div class="help num">HBJ_LEADER</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr><tr>
+          <td class="c dim num">20</td><td><b>HBJ</b></td>
+          <td><b>山本 翔</b><div class="help">sho.yamamoto@hybecorp.com</div></td>
+          <td>財務会計チーム<div class="help">契約社員</div></td>
+          <td><span class="badge red">미할당 직책</span></td>
+          <td><span class="dim">-</span></td>
+          <td><span class="badge red">등급 없음</span><div class="help">OBT 사용 불가</div></td>
+          <td><span class="dim">전송 대상 아님</span></td></tr><tr>
+          <td class="c dim num">21</td><td><b>HBJ</b></td>
+          <td><b>高橋 優</b><div class="help">yu.takahashi@hybecorp.com</div></td>
+          <td>People Experience<div class="help">SP</div></td>
+          <td>리더그룹·SP 이상</td>
+          <td><span class="dim">-</span></td>
+          <td><b>리더그룹·SP 이상</b><div class="help num">HBJ_LEADER</div></td>
+          <td><span class="badge gray">전송 완료</span> <span class="help num">2026.11.16 00:00</span></td></tr></tbody>
+      </table></div></div>
+    </main>
+  </div>
+  
+</div></ui-trip-06-p03><guide-trip-06-p03>
+      <div class="g-sec g1"><div class="g-h">설계 정보</div><b>TRIP-06-P03 구성원 최종 등급</b><div class="gap"></div><div>Page ID: TRIP-06-P03</div><div>Definition: AMEX GBT로 전송되는 구성원별 최종 등급과 전송 상태를 조회하는 화면</div><div>Path: 업무관리자 &gt; 출장 관리 &gt; 글로벌 법인별 관리 &gt; [구성원 최종 등급]</div></div>
+      <div class="g-sec g2"><div class="g-h">정책 정보</div><div>■ 주요 정책</div><div>• 여비규정은 AMEX GBT(Egencia)에서 세팅하고, 하이브넷은 법인·구성원·최종 등급만 전달</div><div>• 전달 항목 : 법인 코드, 이메일(SSO 계정과 동일), 최종 등급의 연동 코드</div><div>• 최종 등급 = 조회 시점에 적용 중인 개인 예외 &gt; 직책 매핑(법인 현지 시간 기준)</div><div>• 연동 방향 : 하이브넷이 Egencia User Sync API(SCIM 2.0)를 호출해 전송. Egencia 는 하이브넷을 조회하지 않음</div><div>• 전송 시점 : 등급 규정·개인 예외 저장 직후, 개인 예외 시작·종료일이 도래하는 법인 현지 자정, 인사정보 동기화로 직책·소속이 바뀐 때</div><div>• 인증 : OAuth 2.0 client credentials(Egencia 발급 Client ID/Secret)</div><div>• 미할당 직책 구성원은 최종 등급이 없어 전송 대상에서 제외(OBT 사용 불가)</div><div>• 조회 대상은 출장 시스템이 Concur (AMEX GBT)인 법인</div><div class="gap"></div><div class="red">■ 확인 필요 사항</div><div>• User Sync API 로 traveler group 을 지정할 수 있는지와 정확한 필드명(Egencia 담당자 확인 필요)</div><div>• 전송 실패 시 자동 재시도 횟수·간격과 관리자 알림 여부</div><div>• 엑셀 다운로드 · 페이지네이션 필요 여부</div></div>
+      <div class="g-sec g3"><div class="g-h">화면 설명 및 디스크립션</div><div class="g-item" data-d="1"><div class="gt">❶ 목록</div><div>• 구성 : 번호, 법인, 구성원(이름·이메일), 소속·직책, 매핑 등급, 개인 예외, 최종 등급(연동 코드), AMEX GBT 전송</div><div>• 기능 : [← 이전] 선택 → TRIP-06-P01 로 이동</div><div>• 기타 : 조회 기준일(법인 현지 시간) 표기. 건수는 필터 결과 기준</div></div><div class="gap"></div><div class="g-item" data-d="2"><div class="gt">❷ 필터 · 검색</div><div>• 구성 : 법인 Select, 구분 Select(개인 예외 적용/등급 미할당/전송 실패), 통합 검색</div><div>• 키워드 : 이름, 이메일(부분 일치, 30자)</div><div>• 기타 : 입력 즉시 반영. 결과가 없으면 "조건에 맞는 구성원이 없습니다." 문구 노출</div></div><div class="gap"></div><div class="g-item" data-d="3"><div class="gt">❸ 개인 예외</div><div>• 구성 : 적용 중 칩, 적용 기간</div><div>• 기타 : 조회 시점에 적용 중인 예외만 표기(예정·만료는 "-")</div></div><div class="gap"></div><div class="g-item" data-d="4"><div class="gt">❹ 최종 등급</div><div>• 구성 : 등급명, 연동 코드</div><div>• 기타 : 미할당 직책이면 "등급 없음 · OBT 사용 불가" 표기</div></div><div class="gap"></div><div class="g-item" data-d="5"><div class="gt">❺ AMEX GBT 전송</div><div>• 구성 : 전송 완료/전송 실패 칩, 마지막 전송 일시, [재전송]</div><div>• 기능 : [재전송] 선택 → 해당 구성원의 최종 등급 즉시 재전송</div><div>• 기타 : 등급 없음 구성원은 "전송 대상 아님" 표기</div></div></div></guide-trip-06-p03></screen-trip-06-p03></div></div>
 </main></body></html>

@@ -52,7 +52,6 @@ ${tags.map((t) => 'guide-' + t).join(',')}{display:flex;flex-direction:column;ga
     frames.push({ row, sid: await sidNow(), note, kind: 'modal', html: r, guide: await guide() });
   }
   const tab = (v) => p.click(`[data-a=m-tab][data-v=${v}]`);
-  const cat = (v) => p.click(`[data-a=p-cat][data-v="${v}"]`);
 
   // 1행: 마스터 그리드 + 관리 모달 계열
   await snapPage(0);
@@ -63,33 +62,21 @@ ${tags.map((t) => 'guide-' + t).join(',')}{display:flex;flex-direction:column;ga
   await p.click('.org-node >> text=Label Operations');
   await snapModal(0, '.cmodal');
   await p.click('[data-a=o-close]');
-  await tab('policy');
-  for (const c of ['교통', '숙박', '일비·식비', '기타']) { await cat(c); await snapModal(0, '.xmodal', c); }
-  await p.click('[data-a=p-copy]'); await snapModal(0, '.cmodal'); await p.click('#cp-no');
   // 변경을 만들어 컨펌 팝업
   await tab('draft'); await p.click('[data-a=tg][data-k=attendance]');
-  await tab('grade'); await p.click('[data-a=g-add]'); await p.locator('[data-f=name][data-g]').last().fill('Tier 4');
-  await tab('policy'); await cat('숙박'); await p.locator('[data-cell][data-ri="0"][data-ci="0"]').fill('650'); await cat('교통'); await cat('숙박');
+  await tab('grade'); await p.locator('[data-f=code][data-g]').nth(2).fill('HBA_TIER3_STD');
+  await p.locator('select[data-a=g-map]').last().selectOption('Associate');
+  await p.locator('[data-a=x-del]').last().click();
   await p.click('[data-a=m-save]'); await snapModal(0, '.cmodal');
   await p.click('[data-a=c-back]'); await p.click('[data-a=m-close]'); await snapModal(0, '.cmodal');
   await p.click('[data-a=c-discard]');
-  // 2행: 상태 변형 (미등록 법인, 적용 예정)
-  await p.click('[data-a=manage][data-code=HBC]'); await tab('grade'); await snapModal(1, '.xmodal', '미등록 법인');
-  await tab('policy'); await snapModal(1, '.xmodal', '미등록 법인');
-  await p.keyboard.press('Escape');
-  await p.click('[data-a=manage][data-code=HBJ]'); await tab('policy'); await cat('일비·식비');
-  await p.locator('[data-cell][data-ri="0"][data-ci="4"]').first().fill('US$60'); await p.click('[data-a=m-save]');
-  await p.locator('input[value=date]').check(); await p.fill('#cf-date', '2027.01.01'); await p.fill('#cf-reason', '그 외 지역 식비 한도 추가');
-  await p.click('[data-a=c-save]');
-  await p.click('[data-a=manage][data-code=HBJ]'); await tab('policy'); await cat('일비·식비');
-  await snapModal(1, '.xmodal', '적용 예정 변경 있음');
-  await p.click('[data-a=p-cancel]'); await snapModal(1, '.cmodal'); await p.click('[data-a=c-back]'); await p.keyboard.press('Escape');
-  // 3행: 변경 이력
+  // 2행: 구성원 최종 등급, 3행: 변경 이력
+  await p.click('[data-a=members]'); await snapPage(1); await p.click('[data-a=grid]');
   await p.click('[data-a=history]'); await snapPage(2);
   await b.close();
   if (errs.length) throw new Error(errs.join('\n'));
 
-  const NOTE = { '교통': 'a', '숙박': 'b', '일비·식비': 'c', '기타': 'd', '미등록 법인': 'empty', '적용 예정 변경 있음': 'scheduled' };
+  const NOTE = {};
   frames.forEach((f) => { f.tag = f.sid.toLowerCase() + (f.note ? '-' + NOTE[f.note] : ''); f.label = f.sid + (f.note ? ` (${f.note})` : ''); });
   const tags = frames.map((f) => f.tag);
   if (new Set(tags).size !== tags.length) throw new Error('duplicate frame tag: ' + tags.join(' '));
@@ -108,7 +95,7 @@ ${body}
 `;
   fs.rmSync(OUT, { recursive: true, force: true }); fs.mkdirSync(path.join(OUT, 'frames'), { recursive: true });
   const rows = [0, 1, 2].map((r) => `<div class="canvas-row">\n${frames.filter((f) => f.row === r).map(cell).join('\n')}\n</div>`).join('\n');
-  fs.writeFileSync(path.join(OUT, 'corp-travel-policy-figma.html'), doc('법인별 출장여비규정 통합 UI·UX·디스크립션', rows));
+  fs.writeFileSync(path.join(OUT, 'corp-travel-policy-figma.html'), doc('글로벌 법인별 관리 통합 UI·UX·디스크립션', rows));
   frames.forEach((f, i) => fs.writeFileSync(path.join(OUT, 'frames', String(i + 1).padStart(2, '0') + '-' + f.tag + '.html'), doc(f.label, `<div class="canvas-row">${cell(f)}</div>`)));
   console.log(frames.map((f) => `row${f.row}  ${f.label}  ${f.kind}`).join('\n'));
 })();
