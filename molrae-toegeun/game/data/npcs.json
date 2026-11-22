@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "npcs": [
+    {
+      "id": "security_guard",
+      "nameKey": "npc.security_guard.name",
+      "codexKey": "codex.npc.security_guard",
+      "role": "gate",
+      "mvp": true,
+      "unlockRank": "intern",
+      "firstDay": 1,
+      "props": ["cap", "radio", "lanyard_black"],
+      "spawn": { "type": "event_phase", "eventId": "leave", "phaseId": "gate" },
+      "tell": null,
+      "gaze": null,
+      "params": {
+        "beepAttractsTeamLeadLook": false,
+        "earlyQuestion": true
+      },
+      "counters": [],
+      "frozenByCeo": true,
+      "reactionKeys": ["react.security_guard.gate_fail", "react.security_guard.early"],
+      "rankScaling": {},
+      "_toneNote": "경비팀은 유능하고 친절한 프로로만 묘사. 놀림·무시 연출 금지."
+    },
+    {
+      "id": "snitch",
+      "nameKey": "npc.snitch.name",
+      "codexKey": "codex.npc.snitch",
+      "role": "obstruct",
+      "mvp": true,
+      "unlockRank": "staff",
+      "firstDay": 8,
+      "props": ["clipboard_small", "glasses_round_or_none", "lanyard_blue"],
+      "spawn": {
+        "type": "while_holding",
+        "segments": ["work"],
+        "probPerHoldSec": 0.04,
+        "maxPerDay": 1,
+        "minDayTimeSec": 10,
+        "requiresBoss": "team_lead",
+        "cooldownSec": 15
+      },
+      "tell": { "durationSec": [0.6, 0.6], "visual": "exclaim_stand_up", "sfx": "sfx_gasp" },
+      "gaze": null,
+      "params": {
+        "walkToBossSec": 4.0,
+        "waitIfBossSuppressedMaxSec": 8.0,
+        "reportSuspicion": 0.15
+      },
+      "counters": [
+        { "id": "stop_slacking", "input": "release_continuous", "durationSec": 1.5, "result": "snitch_doubts_and_returns" },
+        { "id": "share_snack", "input": "tap", "cost": { "snackStock": 1 }, "result": "snitch_cancels" }
+      ],
+      "frozenByCeo": true,
+      "reactionKeys": ["react.snitch.reported", "react.snitch.snack"],
+      "rankScaling": {
+        "staff": {
+          "start": { "spawn.probPerHoldSec": 0.04, "spawn.maxPerDay": 1, "params.walkToBossSec": 4.0 },
+          "end": { "spawn.probPerHoldSec": 0.045, "spawn.maxPerDay": 1, "params.walkToBossSec": 3.8 }
+        },
+        "assistant_manager": {
+          "start": { "spawn.probPerHoldSec": 0.05, "spawn.maxPerDay": 1, "params.walkToBossSec": 3.6 },
+          "end": { "spawn.probPerHoldSec": 0.05, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.5 }
+        },
+        "manager": {
+          "start": { "spawn.probPerHoldSec": 0.06, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.4 },
+          "end": { "spawn.probPerHoldSec": 0.06, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.2 }
+        },
+        "deputy_general_manager": {
+          "start": { "spawn.probPerHoldSec": 0.06, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.2 },
+          "end": { "spawn.probPerHoldSec": 0.065, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.0 }
+        },
+        "general_manager": {
+          "start": { "spawn.probPerHoldSec": 0.065, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.0 },
+          "end": { "spawn.probPerHoldSec": 0.07, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.0 }
+        },
+        "executive": {
+          "start": { "spawn.probPerHoldSec": 0.07, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.0 },
+          "end": { "spawn.probPerHoldSec": 0.07, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.0 }
+        }
+      },
+      "_toneNote": "악역이 아니라 '눈치 없는 정의파'. 간식을 받으면 금방 풀리는 허당. 따돌림·괴롭힘 연출 금지."
+    },
+    {
+      "id": "accomplice",
+      "nameKey": "npc.accomplice.name",
+      "codexKey": "codex.npc.accomplice",
+      "role": "assist",
+      "mvp": true,
+      "unlockRank": "staff",
+      "firstDay": 7,
+      "props": ["tumbler", "headphones_neck", "lanyard_orange"],
+      "spawn": {
+        "type": "event_offer",
+        "eventIds": ["coffee", "snack"],
+        "offerProb": 0.6,
+        "offerSec": 2.5,
+        "maxPerDay": 1
+      },
+      "tell": null,
+      "gaze": null,
+      "params": {
+        "acceptInput": "tap",
+        "rewardMultiplier": 2.0,
+        "suspicionGainMultiplier": 1.25,
+        "lookoutCoughLeadSec": 0.3
+      },
+      "counters": [],
+      "frozenByCeo": true,
+      "reactionKeys": ["react.accomplice.caught_together"],
+      "rankScaling": {},
+      "_designNote": "진행 요구량 증가는 이벤트별 accompliceEffect에 정의(커피 2잔, 간식 ×1.5)."
+    },
+    {
+      "id": "hr_inspector",
+      "nameKey": "npc.hr_inspector.name",
+      "codexKey": "codex.npc.hr_inspector",
+      "role": "inspect",
+      "mvp": true,
+      "unlockRank": "staff",
+      "firstDay": 10,
+      "props": ["clipboard_large", "lanyard_purple", "badge_reader"],
+      "spawn": {
+        "type": "day_chance",
+        "dayChance": 0.4,
+        "maxPerDay": 1,
+        "allowedSegments": ["work", "event"],
+        "allowedEventFlag": "hrInspectionAllowed",
+        "notDuringCeo": true,
+        "notInFinale": true,
+        "minDayTimeSec": 12
+      },
+      "tell": { "durationSec": [1.0, 1.0], "visual": "door_open_clipboard", "sfx": "sfx_door_clipboard" },
+      "gaze": { "type": "global", "suspicionPerSec": 0.5 },
+      "params": {
+        "arriveSec": 2.0,
+        "inspectSec": 5.0,
+        "mustBeAtDesk": true,
+        "urgentReturnCountdownSec": 4.0,
+        "absentSuspicion": 0.25
+      },
+      "counters": [
+        { "id": "return_to_desk", "input": "hold", "durationSec": null, "result": "present_at_desk" }
+      ],
+      "frozenByCeo": true,
+      "reactionKeys": ["react.hr_inspector.absent", "react.hr_inspector.caught"],
+      "rankScaling": {
+        "staff": { "start": { "spawn.dayChance": 0.4 }, "end": { "spawn.dayChance": 0.45 } },
+        "assistant_manager": { "start": { "spawn.dayChance": 0.6 }, "end": { "spawn.dayChance": 0.6 } },
+        "manager": { "start": { "spawn.dayChance": 0.7 }, "end": { "spawn.dayChance": 0.7 } },
+        "deputy_general_manager": { "start": { "spawn.dayChance": 0.7 }, "end": { "spawn.dayChance": 0.7 } },
+        "general_manager": { "start": { "spawn.dayChance": 0.7 }, "end": { "spawn.dayChance": 0.7 } },
+        "executive": { "start": { "spawn.dayChance": 0.7 }, "end": { "spawn.dayChance": 0.7 } }
+      },
+      "_toneNote": "인사팀은 규칙을 지키는 깔끔한 프로. 위협·징계 묘사 금지('기록만 남길게요' 수준)."
+    }
+  ]
+}
