@@ -44,11 +44,11 @@
       "source": "vendor/fonts/galmuri/Galmuri7.bdf",
       "sourceSha256": "2a6fd090ac6d24f7392d6cc49db02ce54b9d1c01048bf8c97cbcdbc5a885cb15",
       "glyphs": 100,
-      "atlas": "256x256",
+      "atlas": "64x64",
       "lineHeight": 8,
       "base": 7,
-      "pngSha256": "f9b51b86b40e8dd368d21c3ae8225adc36f343d7f8bbcd88bf1ee9544115ece8",
-      "jsonSha256": "723ad8b3cdd585050998a414bffbe4cb9183b3b24f49e8231c1b4c325f493ce9",
+      "pngSha256": "72c6e0b2e06a6add65ece15b5e05b78c32c41a11d48ba836d2c14bc624276431",
+      "jsonSha256": "e1ed45ffbce5c51ab5e23172bebf7cf01f46b5138f6264fefb7924a852fa3803",
       "allowedMissing": []
     }
   ]

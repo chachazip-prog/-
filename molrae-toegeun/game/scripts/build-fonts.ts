@@ -164,7 +164,7 @@ interface Placed { g: Glyph; x: number; y: number }
 function pack(glyphs: Glyph[]): { w: number; h: number; placed: Placed[] } {
   const PAD = 1; // 최근접 샘플링에서 이웃 글리프 번짐 방지
   const sorted = [...glyphs].sort((a, b) => b.h - a.h || b.w - a.w || a.cp - b.cp);
-  for (const [w, h] of [[256, 256], [512, 256], [512, 512], [1024, 512], [1024, 1024], [2048, 1024], [2048, 2048]] as const) {
+  for (const [w, h] of [[64, 64], [128, 64], [128, 128], [256, 128], [256, 256], [512, 256], [512, 512], [1024, 512], [1024, 1024], [2048, 1024], [2048, 2048]] as const) {
     const placed: Placed[] = [];
     let x = PAD, y = PAD, rowH = 0, ok = true;
     for (const g of sorted) {
