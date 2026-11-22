@@ -1,0 +1,209 @@
+/**
+ * 한 층(하루 한 판) 시뮬레이션 — 렌더링 무관. 씬과 QA 헤드리스 봇이 같은 API를 쓴다.
+ * 결정성: 고정 스텝(rules.fixedStepSec) 적분 + 시드 RNG + 고정된 NPC 갱신 순서.
+ * 같은 시드 + 같은 스텝 시점의 같은 입력 → 같은 결과.
+ */
+import {
+  buildGridMap, isWalkable, nearestWalkable, zoneAt,
+  type GridMap, type LegendEntry, type Tile,
+} from './grid';
+import { findPath } from './pathfinding';
+import { PatrolNpc, type NpcDef } from './patrol';
+import { PlayerMover } from './player';
+import { createRng, type Rng } from './rng';
+import { createSuspicion, updateSuspicion, type SuspicionRules, type SuspicionState } from './suspicion';
+import { canSee, inCone } from './vision';
+
+/** 레벨(층) 정의. 지금은 src/dev/ 임시 데이터, 추후 game/data/ 로더가 같은 모양으로 공급 */
+export interface LevelDef {
+  readonly id: string;
+  readonly rows: readonly string[];
+  readonly legend: Readonly<Record<string, LegendEntry>>;
+  readonly playerStart: Tile;
+  /** 이 구역 타일에 도달하면 퇴근 성공 */
+  readonly exitZone: string;
+  readonly npcs: readonly NpcDef[];
+}
+
+export interface FloorRules {
+  readonly fixedStepSec: number;
+  /** 한 번의 advance에서 처리할 최대 시간(탭 전환·프레임 드랍 시 폭주 방지) */
+  readonly maxAdvanceSec: number;
+  readonly playerSpeedTilesPerSec: number;
+  /** 통행 불가 타일을 탭했을 때 가까운 통행 가능 타일을 찾을 반경 */
+  readonly tapSnapRadius: number;
+  readonly suspicion: SuspicionRules;
+  readonly threat: {
+    /** 경고용 넓은 콘: 실제 콘 거리 + 이 값 (화면 위로 약 11타일, 아래로 약 8타일이 보이므로 그보다 커야 화면 밖 경고가 의미 있음) */
+    readonly approachExtraRange: number;
+    /** 경고용 넓은 콘: 실제 콘 반각 + 이 값 */
+    readonly approachExtraAngleDeg: number;
+  };
+}
+
+export interface FloorContent {
+  readonly level: LevelDef;
+  readonly rules: FloorRules;
+}
+
+export type Outcome = 'playing' | 'escaped' | 'caught';
+export type TapResult = 'stopped' | 'moving' | 'unreachable' | 'ignored';
+/** 위협 수준: 지금 보는 중 > 돌아보기 직전(전조) 방향에 내가 있음 > 근처에서 이쪽을 향함 */
+export type Threat = 'seeing' | 'turning' | 'approaching' | 'none';
+
+export type SimEvent =
+  | { t: number; type: 'tap'; x: number; y: number; result: TapResult }
+  | { t: number; type: 'talk'; npc: string }
+  | { t: number; type: 'tell'; npc: string }
+  | { t: number; type: 'spotted'; npc: string }
+  | { t: number; type: 'escaped' }
+  | { t: number; type: 'caught' };
+
+export class FloorSim {
+  readonly map: GridMap;
+  readonly level: LevelDef;
+  readonly rules: FloorRules;
+  readonly player: PlayerMover;
+  readonly npcs: PatrolNpc[];
+  readonly suspicion: SuspicionState = createSuspicion();
+  outcome: Outcome = 'playing';
+  /** 경과 시간(초, 고정 스텝 누적) */
+  time = 0;
+  steps = 0;
+  /** npc 인덱스별 이번 스텝 시선 여부 */
+  seeing: boolean[];
+  /** 마지막 이동 목적지 (경로 표시용) */
+  destination: Tile | null = null;
+  private readonly rng: Rng;
+  private acc = 0;
+  private events: SimEvent[] = [];
+
+  constructor(content: FloorContent, seed: string | number) {
+    this.level = content.level;
+    this.rules = content.rules;
+    this.map = buildGridMap(content.level.rows, content.level.legend);
+    const s = content.level.playerStart;
+    if (!isWalkable(this.map, s.x, s.y)) throw new Error('sim: 시작 타일 통행 불가');
+    this.rng = createRng(seed);
+    this.player = new PlayerMover(s);
+    this.npcs = content.level.npcs.map((d) => new PatrolNpc(d, this.map, this.rng));
+    this.seeing = this.npcs.map(() => false);
+  }
+
+  /** 쌓인 이벤트를 꺼낸다 (QA 로그·사운드 트리거용) */
+  drainEvents(): SimEvent[] {
+    const out = this.events;
+    this.events = [];
+    return out;
+  }
+
+  /**
+   * 화면 탭(타일 좌표). D-033: 이동 중이면 정지·위장, 아니면 그 타일로 경로 이동.
+   */
+  tap(tx: number, ty: number): TapResult {
+    let result: TapResult;
+    if (this.outcome !== 'playing' || this.player.mode === 'talked') result = 'ignored';
+    else if (this.player.mode === 'moving') {
+      this.player.stop();
+      this.destination = null;
+      result = 'stopped';
+    } else {
+      const goal = nearestWalkable(this.map, tx, ty, this.rules.tapSnapRadius);
+      const path = goal ? findPath(this.map, this.player.tile, goal) : null;
+      if (goal && path && this.player.move(path)) {
+        this.destination = goal;
+        result = 'moving';
+      } else result = 'unreachable';
+    }
+    this.events.push({ t: this.time, type: 'tap', x: tx, y: ty, result });
+    return result;
+  }
+
+  /** 실시간 경과를 고정 스텝으로 나눠 진행 */
+  advance(dtSec: number): void {
+    this.acc += Math.min(Math.max(0, dtSec), this.rules.maxAdvanceSec);
+    const h = this.rules.fixedStepSec;
+    while (this.acc >= h) {
+      this.acc -= h;
+      this.step();
+    }
+  }
+
+  step(): void {
+    if (this.outcome !== 'playing') return;
+    const dt = this.rules.fixedStepSec;
+    this.steps++;
+    this.time = this.steps * dt;
+    const p = this.player;
+    p.step(dt, this.rules.playerSpeedTilesPerSec);
+    if (p.mode !== 'moving') this.destination = null;
+
+    for (const npc of this.npcs) {
+      const before = npc.mode;
+      npc.step(dt, this.rng);
+      if (npc.mode === 'tell' && before !== 'tell') this.events.push({ t: this.time, type: 'tell', npc: npc.def.id });
+    }
+
+    // 말걸기(강제 정지)
+    for (const npc of this.npcs) {
+      const talk = npc.def.talk;
+      if (!talk || !npc.canTalk() || p.mode === 'talked') continue;
+      const dx = p.x - npc.x, dy = p.y - npc.y;
+      if (Math.hypot(dx, dy) <= talk.radius) {
+        p.forceTalk(talk.durationSec);
+        npc.startTalk(Math.atan2(dy, dx));
+        this.destination = null;
+        this.events.push({ t: this.time, type: 'talk', npc: npc.def.id });
+      }
+    }
+
+    // 시선 판정: 동시 시선은 배율 최댓값 하나만
+    let mult = 0;
+    for (let i = 0; i < this.npcs.length; i++) {
+      const npc = this.npcs[i]!;
+      const sees = canSee(this.map, npc.pos, npc.facing, npc.def.cone, p.pos);
+      if (sees && !this.seeing[i]) this.events.push({ t: this.time, type: 'spotted', npc: npc.def.id });
+      this.seeing[i] = sees;
+      if (sees) mult = Math.max(mult, npc.def.gazeMultiplier);
+    }
+    updateSuspicion(this.suspicion, this.rules.suspicion, mult, p.mode, p.modeTime, dt);
+
+    if (this.suspicion.value >= this.rules.suspicion.max) {
+      this.outcome = 'caught';
+      this.events.push({ t: this.time, type: 'caught' });
+    } else {
+      const t = p.tile;
+      if (zoneAt(this.map, t.x, t.y) === this.level.exitZone) {
+        this.outcome = 'escaped';
+        this.events.push({ t: this.time, type: 'escaped' });
+      }
+    }
+  }
+
+  /** NPC가 플레이어에게 주는 위협 수준 (화면 밖 경고 표시용) */
+  threatOf(index: number): Threat {
+    const npc = this.npcs[index];
+    if (!npc) return 'none';
+    if (this.seeing[index]) return 'seeing';
+    const pp = this.player.pos;
+    // 경고용 '넓은 콘'(가림 무시): 화면 밖 NPC는 보통 실제 시야보다 멀리 있으므로 실제 콘으로는 경고가 거의 뜨지 않는다
+    const t = this.rules.threat;
+    const wide = {
+      range: npc.def.cone.range + t.approachExtraRange,
+      halfAngleDeg: npc.def.cone.halfAngleDeg + t.approachExtraAngleDeg,
+    };
+    if (npc.mode === 'tell' && npc.pendingFacing !== null && inCone(npc.pos, npc.pendingFacing, wide, pp)) return 'turning';
+    if (npc.mode !== 'talk' && inCone(npc.pos, npc.facing, wide, pp)) return 'approaching';
+    return 'none';
+  }
+
+  /** 결정성 검증용 상태 요약 문자열 */
+  fingerprint(): string {
+    const r = (v: number) => v.toFixed(4);
+    const parts = [
+      this.steps, this.outcome, r(this.suspicion.value), r(this.player.x), r(this.player.y), this.player.mode,
+      ...this.npcs.map((n) => `${n.def.id}:${r(n.x)},${r(n.y)},${r(n.facing)},${n.mode}`),
+    ];
+    return parts.join('|');
+  }
+}

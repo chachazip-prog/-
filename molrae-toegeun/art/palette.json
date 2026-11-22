@@ -1,0 +1,41 @@
+{
+ "id": "b",
+ "version": 2,
+ "label": "B VIVID TOPDOWN",
+ "name": "선명한 고대비 (확정, D-025)",
+ "description": "톤 B 확정본. 남색 외곽선, 높은 채도. 탑다운 전환에 맞춰 바닥·벽·나무를 밝게 조정하고, 빨강(point)과 헷갈리는 주황·적갈색을 노란 기운 쪽으로 옮김. point 는 상사·경고 UI 전용(pixelgen --check 가 강제)",
+ "colors": {
+  "outline": "#16152b",
+  "dark": "#3b3a5e",
+  "mid": "#7b809e",
+  "light": "#c8cde2",
+  "white": "#ffffff",
+  "skin": "#ffc993",
+  "skin_sh": "#e8a46e",
+  "hair": "#2c2244",
+  "shirt": "#2f9bff",
+  "shirt_sh": "#1d5fd1",
+  "suit": "#7a4fe0",
+  "suit_sh": "#4b2ca3",
+  "wall": "#e3e9f5",
+  "wall_sh": "#aeb9d3",
+  "floor": "#f1e2c2",
+  "floor_sh": "#dcc79c",
+  "wood": "#d9a35b",
+  "wood_sh": "#9c6a33",
+  "cool": "#3dd3e6",
+  "cool_sh": "#1b8db3",
+  "green": "#3ee073",
+  "green_sh": "#169a4a",
+  "point": "#ff2e55",
+  "point2": "#ffd21f"
+ },
+ "overlay": {
+  "_doc": "코드로 그리는 반투명 오버레이. base=팔레트 역할, alpha=채움 불투명도, edge_alpha=1px 테두리 불투명도. 스프라이트에는 반투명 픽셀을 쓰지 않는다",
+  "cone_boss":   {"base": "point",   "alpha": 0.22, "edge_alpha": 0.55, "warning": true,  "use": "상사 4종 시선 콘(평상시)"},
+  "cone_alert":  {"base": "point",   "alpha": 0.38, "edge_alpha": 0.80, "warning": true,  "use": "발각 직전·발각 순간(모든 콘 공통, 0.25초 주기 깜빡임)"},
+  "cone_guard":  {"base": "point2",  "alpha": 0.30, "edge_alpha": 0.65, "warning": false, "use": "경비 손전등 콘"},
+  "cone_npc":    {"base": "cool",    "alpha": 0.20, "edge_alpha": 0.50, "warning": false, "use": "방해 NPC(고자질 동료 등) 시선 콘"},
+  "shadow":      {"base": "outline", "alpha": 0.22, "edge_alpha": 0.22, "warning": false, "use": "캐릭터 발밑 타원 그림자 11x4"}
+ }
+}
