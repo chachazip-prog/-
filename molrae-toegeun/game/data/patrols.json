@@ -1,0 +1,693 @@
+{
+  "schemaVersion": 2,
+  "_comment": "순찰 경로. 한 항목 = 개발 NpcDef의 waypoints 부분. 로더가 NpcDef = {...actor.sim(직급 보간 후), ...overrides, id, name, role, waypoints}로 합침. 좌표는 타일, 방향은 Dir. 스키마: design/data-schema.md §4",
+  "patrols": [
+    {
+      "id": "p_senior_seat",
+      "actorId": "senior",
+      "mapId": "office_floor_1",
+      "kind": "seated",
+      "loop": true,
+      "waypoints": [
+        {
+          "x": 5,
+          "y": 30,
+          "waitSec": 3.0,
+          "lookChance": 1.0,
+          "lookDirs": [
+            "down"
+          ],
+          "facing": "up"
+        }
+      ],
+      "_designNote": "인턴 주간 선배 메트로놈: idle 3.0 → tell 1.0 → look 1.2 → return 0.3 = 5.5초 주기(v1 그대로). 팀장 자리에 앉음(팀장 출장 설정) → 6일차 팀장과 같은 자리·같은 방향이라 배운 것이 그대로 이어짐"
+    },
+    {
+      "id": "p_tl_seat",
+      "actorId": "team_lead",
+      "mapId": "office_floor_1",
+      "kind": "seated",
+      "loop": true,
+      "waypoints": [
+        {
+          "x": 5,
+          "y": 30,
+          "waitSec": 0.0,
+          "useActorIdle": true,
+          "lookChance": 1.0,
+          "lookDirs": [
+            "down"
+          ],
+          "facing": "up"
+        }
+      ],
+      "_designNote": "팀장 자리. 평소 북쪽(모니터)을 보고 시선 없음, 돌아볼 때만 남쪽 콘(5타일·반각 30°)이 팀 좌석 줄(y33~35)과 중앙 통로를 덮음. 대기 시간은 bosses.team_lead.sim.idleSecRange(직급 보간)"
+    },
+    {
+      "id": "p_tl2_seat",
+      "actorId": "team_lead",
+      "mapId": "office_floor_1",
+      "kind": "seated",
+      "loop": true,
+      "waypoints": [
+        {
+          "x": 5,
+          "y": 13,
+          "waitSec": 0.0,
+          "useActorIdle": true,
+          "lookChance": 1.0,
+          "lookDirs": [
+            "down"
+          ],
+          "facing": "up"
+        }
+      ],
+      "_designNote": "옆 팀 팀장(차장~). 돌아보면 옆 팀 중앙 통로(x4~7, y14~16)를 덮음. 화분(5,15) 뒤 (5,16)은 가려짐 → 엄폐 학습 지점",
+      "instance": 2
+    },
+    {
+      "id": "p_snitch_seat",
+      "actorId": "snitch",
+      "mapId": "office_floor_1",
+      "kind": "seated",
+      "loop": true,
+      "waypoints": [
+        {
+          "x": 6,
+          "y": 33,
+          "waitSec": 0.0,
+          "useActorIdle": true,
+          "lookChance": 1.0,
+          "lookDirs": [
+            "left"
+          ],
+          "facing": "up"
+        }
+      ],
+      "_designNote": "정의로운 동료. 가끔 왼쪽(내 자리)을 힐끔 봄(발견 콘 3타일·반각 45°, 의심 상승 없음). 미션 행동을 0.4초 이상 보면 '보고 달리기'(INT-03) 시작"
+    },
+    {
+      "id": "p_accomplice_seat",
+      "actorId": "accomplice",
+      "mapId": "office_floor_1",
+      "kind": "seated",
+      "loop": true,
+      "waypoints": [
+        {
+          "x": 7,
+          "y": 36,
+          "waitSec": 0.0,
+          "facing": "up"
+        }
+      ],
+      "_designNote": "공범 동료 자리. 시선 없음"
+    },
+    {
+      "id": "p_guard_gatehall",
+      "actorId": "security_guard",
+      "mapId": "office_floor_1",
+      "kind": "loop",
+      "loop": true,
+      "waypoints": [
+        {
+          "x": 3,
+          "y": 5,
+          "waitSec": 2.0,
+          "lookChance": 0.6,
+          "lookDirs": [
+            "right"
+          ]
+        },
+        {
+          "x": 8,
+          "y": 6,
+          "waitSec": 1.0,
+          "lookChance": 0.5,
+          "lookDirs": [
+            "left",
+            "up"
+          ]
+        },
+        {
+          "x": 2,
+          "y": 6,
+          "waitSec": 1.0,
+          "lookChance": 0.5,
+          "lookDirs": [
+            "right",
+            "up"
+          ]
+        }
+      ],
+      "_designNote": "PM 지시 4) 출구 앞 동선 가로지르기. 게이트 앞 홀(y5~6)을 왕복하며 콘(4타일·반각 35°)이 게이트 사용 칸(5,5)과 로비 병목(4~6,7)을 덮음. 한 바퀴 약 15초"
+    },
+    {
+      "id": "p_director_walkdown",
+      "actorId": "director",
+      "mapId": "office_floor_1",
+      "kind": "route",
+      "loop": false,
+      "waypoints": [
+        {
+          "x": 2,
+          "y": 10,
+          "waitSec": 0.0
+        },
+        {
+          "x": 4,
+          "y": 10,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 10,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 16,
+          "waitSec": 1.5,
+          "lookChance": 0.5,
+          "lookDirs": [
+            "left",
+            "right"
+          ],
+          "stopId": "stop_next_team"
+        },
+        {
+          "x": 5,
+          "y": 21,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 25,
+          "waitSec": 1.5,
+          "lookChance": 0.5,
+          "lookDirs": [
+            "right"
+          ],
+          "stopId": "stop_meeting_glass"
+        },
+        {
+          "x": 6,
+          "y": 28,
+          "waitSec": 0.0
+        },
+        {
+          "x": 6,
+          "y": 31,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 34,
+          "waitSec": 2.0,
+          "lookChance": 0.5,
+          "lookDirs": [
+            "left",
+            "right"
+          ],
+          "stopId": "stop_team_aisle"
+        },
+        {
+          "x": 5,
+          "y": 37,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 41,
+          "waitSec": 1.5,
+          "lookChance": 0.0,
+          "stopId": "stop_pantry_coffee"
+        },
+        {
+          "x": 5,
+          "y": 45,
+          "waitSec": 0.0
+        }
+      ],
+      "_designNote": "본부장 순찰(위→아래): 임원실 → 중앙 통로 → 우리 팀 → 탕비실(커피, 흘림 기회) → 화물 엘리베이터로 퇴장. 34+11타일 ÷ 2.0타일/초 ≈ 22초 + 정지. 중앙 병목(x5, y22~27)을 반드시 지나서 지름길과 정면으로 만남. 시야 6타일이라 화면 밖 경고가 먼저 뜸",
+      "despawnAtEnd": true,
+      "spawnTellSec": 1.5
+    },
+    {
+      "id": "p_director_walkup",
+      "actorId": "director",
+      "mapId": "office_floor_1",
+      "kind": "route",
+      "loop": false,
+      "waypoints": [
+        {
+          "x": 5,
+          "y": 45,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 41,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 37,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 34,
+          "waitSec": 2.0,
+          "lookChance": 0.5,
+          "lookDirs": [
+            "left",
+            "right"
+          ],
+          "stopId": "stop_team_aisle"
+        },
+        {
+          "x": 6,
+          "y": 31,
+          "waitSec": 0.0
+        },
+        {
+          "x": 6,
+          "y": 28,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 25,
+          "waitSec": 1.5,
+          "lookChance": 0.5,
+          "lookDirs": [
+            "right"
+          ],
+          "stopId": "stop_meeting_glass"
+        },
+        {
+          "x": 5,
+          "y": 21,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 16,
+          "waitSec": 1.5,
+          "lookChance": 0.5,
+          "lookDirs": [
+            "left",
+            "right"
+          ],
+          "stopId": "stop_next_team"
+        },
+        {
+          "x": 5,
+          "y": 10,
+          "waitSec": 0.0
+        },
+        {
+          "x": 4,
+          "y": 10,
+          "waitSec": 0.0
+        },
+        {
+          "x": 2,
+          "y": 10,
+          "waitSec": 0.0
+        }
+      ],
+      "_designNote": "본부장 복귀(아래→위). 퇴근 중이면 등 뒤에서 따라오는 형태 → 뒤돌아보기(glanceBack) 전조가 핵심 위협",
+      "despawnAtEnd": true,
+      "spawnTellSec": 1.5
+    },
+    {
+      "id": "p_hr_attendance",
+      "actorId": "hr_inspector",
+      "mapId": "office_floor_1",
+      "kind": "route",
+      "loop": false,
+      "waypoints": [
+        {
+          "x": 5,
+          "y": 2,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 7,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 16,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 25,
+          "waitSec": 0.0
+        },
+        {
+          "x": 6,
+          "y": 28,
+          "waitSec": 0.0
+        },
+        {
+          "x": 6,
+          "y": 31,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 34,
+          "waitSec": 5.0,
+          "lookChance": 1.0,
+          "lookDirs": [
+            "left",
+            "right"
+          ],
+          "stopId": "stop_inspect"
+        },
+        {
+          "x": 5,
+          "y": 41,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 45,
+          "waitSec": 0.0
+        }
+      ],
+      "_designNote": "근태 점검(INT-05). 엘리베이터 → 팀 통로(5,34)에서 5초 점검(좌우 콘) → 화물 엘리베이터 퇴장. 36타일 ÷ 2.6 ≈ 13.8초가 '자리 복귀 카운트다운'",
+      "despawnAtEnd": true,
+      "spawnTellSec": 1.0
+    },
+    {
+      "id": "p_hr_corridor",
+      "actorId": "hr_inspector",
+      "mapId": "office_floor_1",
+      "kind": "route",
+      "loop": false,
+      "waypoints": [
+        {
+          "x": 5,
+          "y": 2,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 7,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 16,
+          "waitSec": 1.5,
+          "lookChance": 1.0,
+          "lookDirs": [
+            "left",
+            "right"
+          ],
+          "stopId": "stop_hr_next_team"
+        },
+        {
+          "x": 5,
+          "y": 25,
+          "waitSec": 1.0,
+          "lookChance": 1.0,
+          "lookDirs": [
+            "down"
+          ],
+          "stopId": "stop_hr_mid"
+        },
+        {
+          "x": 5,
+          "y": 16,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 7,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 2,
+          "waitSec": 0.0
+        }
+      ],
+      "_designNote": "복도 사원증 확인(INT-06). 옆 팀 통로·중앙 병목을 훑고 돌아감. 마주치면 말걸기(사원증 확인 1.5초)",
+      "despawnAtEnd": true,
+      "spawnTellSec": 1.0
+    },
+    {
+      "id": "p_tl_meeting",
+      "actorId": "team_lead",
+      "mapId": "office_floor_1",
+      "kind": "route",
+      "loop": false,
+      "waypoints": [
+        {
+          "x": 5,
+          "y": 30,
+          "waitSec": 0.0
+        },
+        {
+          "x": 6,
+          "y": 28,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 25,
+          "waitSec": 0.0
+        },
+        {
+          "x": 6,
+          "y": 25,
+          "waitSec": 0.0
+        },
+        {
+          "x": 9,
+          "y": 23,
+          "waitSec": 10.0,
+          "lookChance": 0.0,
+          "stopId": "stop_in_meeting",
+          "coneOff": true
+        },
+        {
+          "x": 6,
+          "y": 25,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 27,
+          "waitSec": 0.0
+        },
+        {
+          "x": 6,
+          "y": 28,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 30,
+          "waitSec": 0.0
+        }
+      ],
+      "_designNote": "팀장 회의(INT-08). 자리가 비는 10초가 기회, 회의 끝나고 돌아오는 길(18타일 ÷ 1.8 ≈ 10초)은 걷는 콘 + 말걸기 위협. 끝나면 p_tl_seat로 복귀",
+      "despawnAtEnd": false,
+      "thenPatrol": "p_tl_seat",
+      "spawnTellSec": 0.6
+    },
+    {
+      "id": "p_ceo_visit",
+      "actorId": "ceo",
+      "mapId": "office_floor_1",
+      "kind": "route",
+      "loop": false,
+      "waypoints": [
+        {
+          "x": 5,
+          "y": 45,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 41,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 37,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 34,
+          "waitSec": 0.0,
+          "stopId": "stop_ceo_greet",
+          "holdForQte": true
+        },
+        {
+          "x": 5,
+          "y": 31,
+          "waitSec": 4.0,
+          "facing": "up",
+          "lookChance": 0.35,
+          "lookDirs": [
+            "down"
+          ],
+          "stopId": "stop_ceo_talk",
+          "lookIsRecheck": true
+        },
+        {
+          "x": 5,
+          "y": 37,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 45,
+          "waitSec": 0.0
+        }
+      ],
+      "_designNote": "대표님 순시(INT-09). 화물 엘리베이터 → 11타일 ÷ 2.4 ≈ 4.6초 입장(= 얼음 구간, 최대 5초) → 내 자리 앞 인사 QTE → 팀장과 대화 4초 → 35% 재확인 → 퇴장",
+      "despawnAtEnd": true,
+      "spawnTellSec": 1.0
+    },
+    {
+      "id": "p_ceo_elevator",
+      "actorId": "ceo",
+      "mapId": "office_floor_1",
+      "kind": "route",
+      "loop": false,
+      "waypoints": [
+        {
+          "x": 6,
+          "y": 2,
+          "waitSec": 2.5,
+          "lookChance": 0.0,
+          "stopId": "stop_ceo_lift",
+          "holdForQte": true,
+          "facing": "left"
+        }
+      ],
+      "_designNote": "퇴근길 엘리베이터 문이 열리자 대표님(INT-11). 플레이어가 엘리베이터 앞(exit)에서 기다릴 때만 발생. 콘 없음, 인사 QTE만",
+      "despawnAtEnd": true,
+      "spawnTellSec": 0.8,
+      "coneOff": true
+    },
+    {
+      "id": "p_gossip_snitch",
+      "actorId": "snitch",
+      "mapId": "office_floor_1",
+      "kind": "route",
+      "loop": false,
+      "waypoints": [
+        {
+          "x": 6,
+          "y": 33,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 23,
+          "waitSec": 4.0,
+          "stopId": "stop_gossip",
+          "coneOff": true
+        },
+        {
+          "x": 6,
+          "y": 33,
+          "waitSec": 0.0
+        }
+      ],
+      "_designNote": "복도 수다 길막(INT-04) 한쪽. 중앙 병목 (5,23)에 4초 서 있음",
+      "despawnAtEnd": false,
+      "thenPatrol": "p_snitch_seat",
+      "spawnTellSec": 0.6
+    },
+    {
+      "id": "p_gossip_accomplice",
+      "actorId": "accomplice",
+      "mapId": "office_floor_1",
+      "kind": "route",
+      "loop": false,
+      "waypoints": [
+        {
+          "x": 7,
+          "y": 36,
+          "waitSec": 0.0
+        },
+        {
+          "x": 5,
+          "y": 24,
+          "waitSec": 4.0,
+          "stopId": "stop_gossip",
+          "coneOff": true
+        },
+        {
+          "x": 7,
+          "y": 36,
+          "waitSec": 0.0
+        }
+      ],
+      "_designNote": "복도 수다 길막(INT-04) 다른 쪽. (5,24). 둘이 서면 병목이 완전히 막혀 회의실 서쪽 문(6,25)으로 우회해야 함",
+      "despawnAtEnd": false,
+      "thenPatrol": "p_accomplice_seat",
+      "spawnTellSec": 0.6
+    },
+    {
+      "id": "p_snitch_report",
+      "actorId": "snitch",
+      "mapId": "office_floor_1",
+      "kind": "route",
+      "loop": false,
+      "waypoints": [
+        {
+          "x": 6,
+          "y": 33,
+          "waitSec": 0.0
+        },
+        {
+          "x": 6,
+          "y": 30,
+          "waitSec": 0.0,
+          "stopId": "stop_report",
+          "holdForReport": true
+        },
+        {
+          "x": 6,
+          "y": 33,
+          "waitSec": 0.0
+        }
+      ],
+      "_designNote": "보고 달리기(INT-03). 5타일 ÷ 1.5 ≈ 3.3초. 이동 경로를 파란 점선으로 표시",
+      "despawnAtEnd": false,
+      "thenPatrol": "p_snitch_seat",
+      "spawnTellSec": 0.6,
+      "speedOverride": 1.5
+    },
+    {
+      "id": "p_accomplice_follow",
+      "actorId": "accomplice",
+      "mapId": "office_floor_1",
+      "kind": "follow",
+      "loop": false,
+      "waypoints": [
+        {
+          "x": 7,
+          "y": 36,
+          "waitSec": 0.0
+        }
+      ],
+      "_designNote": "공범 합류(INT-12). 플레이어 1타일 뒤를 따라다님(경로 기록 추종). 미션이 끝나면 자리로 복귀",
+      "followGapTiles": 1,
+      "thenPatrol": "p_accomplice_seat"
+    }
+  ]
+}

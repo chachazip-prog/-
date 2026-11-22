@@ -1,26 +1,66 @@
 {
-  "schemaVersion": 1,
-  "_comment": "전역 규칙 상수. 시간 단위는 모두 초(sec), 게이지는 0~1. 근거는 design/gdd.md §4.",
+  "schemaVersion": 2,
+  "_comment": "전역 규칙 상수(탑다운 v2). 시간=초, 게이지=0~1, 거리=타일. 필드명은 개발 core/floorSim.ts FloorRules·core/suspicion.ts SuspicionRules에 맞춤(같은 이름 = 같은 의미). 근거는 design/gdd.md §4~5.",
+  "fixedStepSec": 0.016666666666666666,
+  "maxAdvanceSec": 0.1,
+  "playerSpeedTilesPerSec": 3.0,
+  "tapSnapRadius": 2,
   "input": {
     "tapMaxPressSec": 0.25,
-    "inputGraceSec": 0.12
+    "inputGraceSec": 0.12,
+    "hudTapDoesNotStop": true,
+    "tapWhileMoving": "stop_and_disguise",
+    "tapWhileStopped": "move_to_tile",
+    "tapOnSelfWhileStopped": "resume_previous_destination",
+    "_designNote": "D-033: 이동 중 화면 탭 = 그 자리 정지·위장. HUD(미션 칩·말풍선 수락)는 화면 탭으로 치지 않음 → 이동 중에도 목적지를 바로 바꿀 수 있음. 멈춘 상태에서 내 캐릭터를 탭하면 원래 목적지로 이어 감(두 번 탭할 필요 없게)."
+  },
+  "movement": {
+    "pathfinding": "astar_4dir",
+    "tapNonWalkable": "nearest_walkable_within_tapSnapRadius",
+    "tapInteractable": "go_to_use_spot",
+    "blockedWaitSec": 0.5,
+    "rerouteMaxExtraTiles": 12,
+    "rerouteRecheckSec": 0.5,
+    "npcPassThroughPlayerAfterSec": 1.0,
+    "resumeAfterTalk": true,
+    "showPathPreviewSec": 0.6,
+    "_designNote": "길막을 만나면 0.5초 기다린 뒤 다른 길이 +12타일 이내면 자동 우회, 아니면 그 자리에서 대기(대기 = idle, 위장 아님 → 탭해서 위장해야 안전). D-039: 말걸기가 끝나면 원래 목적지로 자동 재개. NPC는 플레이어를 1초 기다린 뒤 겹쳐 지나감(교착 방지)."
   },
   "suspicion": {
     "max": 1.0,
+    "movingPerSec": 0.45,
+    "idlePerSec": 0.2,
+    "disguisedPerSec": 0.03,
+    "talkedPerSec": 0.0,
+    "seatedWorkingPerSec": 0.0,
+    "activityPerSec": 0.55,
+    "activityPausedPerSec": 0.0,
+    "disguiseSettleSec": 0.15,
+    "graceSec": 0.12,
     "decayPerSec": 0.02,
-    "decayRequires": "released_and_unobserved",
     "gazeStacking": "max",
     "star3PeakBelow": 0.3,
-    "continueResetTo": 0.6
+    "continueResetTo": 0.6,
+    "_designNote": "최종 상승률 = 상태별 값 × 보는 사람의 gazeMultiplier(동시 시선은 최댓값 하나). 팀장(×1.0) 콘을 걸어서 가로지르는 시간 ≈ 1.3초 → 0.45×1.18 ≈ 0.53: 한 번은 버티고 두 번이면 위험. 위장 0.03은 '오래 서 있으면 결국 이상함'(팀장 2초 = 0.06)으로, 위장을 남발하지 않고 엄폐·우회를 쓰게 함. T-123 임시값(이동 0.6·위장 0.08)보다 이동은 낮지만 콘이 주요 동선을 가로지르도록 배치를 바꿔 총 노출이 늘어남(gdd §11)."
   },
-  "work": {
-    "fillPerSec": 0.04,
-    "fillOnlyInWorkSegment": true,
-    "max": 1.0
+  "leavePhase": {
+    "suspicionOverrides": { "talkedPerSec": 0.2, "idlePerSec": 0.25 },
+    "_designNote": "퇴근 중엔 가방을 들고 있어서 말걸기·멀뚱히 서 있기도 의심을 삼. 위장(가방 뒤로 숨기기)은 평소와 같음."
   },
-  "slack": {
-    "pointsPerSecInWorkSegment": 10,
-    "eventRewardsAreSlackPoints": true
+  "disguise": {
+    "closeCallWindowSec": [-0.3, 0.12],
+    "closeCallBonusPoints": 30,
+    "closeCallMaxPerDay": 3,
+    "poseByZone": { "corridor": "read_document", "pantry": "drink_water", "near_copier": "copying", "near_plant": "water_plant", "lobby": "check_phone", "default": "read_document" },
+    "_designNote": "정지·위장 타이밍 판정(D-035 ④): 콘이 나를 덮기 0.3초 전 ~ 덮은 뒤 0.12초 안에 위장하면 '아슬아슬!' +30점(하루 3회까지, 결정적). 일찍 멈출수록 안전하지만 시간이 들고, 늦으면 의심이 오름."
+  },
+  "sight": {
+    "losModel": "grid_raycast_dda",
+    "renderEqualsJudgement": true,
+    "seatedConeOnlyWhileLooking": true,
+    "cornerTurnTellSec": 0.5,
+    "returnSec": 0.3,
+    "_designNote": "보이는 콘 = 실제 판정(vision.ts rayDistance 공용). D-038: 걷는 NPC가 모퉁이에서 방향을 틀 때 새 방향 콘이 플레이어를 덮을 수 있으면 0.5초 전조(고개 먼저 돌림 + 점선 콘 예고) 후 회전. 앉은 상사는 돌아볼 때만 콘이 켜짐."
   },
   "tell": {
     "minSec": 0.4,
@@ -31,24 +71,62 @@
     "absoluteCapProb": 0.35,
     "noConsecutiveFakes": true
   },
+  "threat": {
+    "approachExtraRange": 9,
+    "approachExtraAngleDeg": 25,
+    "_comment": "개발 FloorRules.threat과 동일 이름. 경고용 넓은 콘 = 실제 콘 + 거리 9타일·반각 25°"
+  },
+  "offscreenWarning": {
+    "sources": ["boss", "security_guard", "snitch", "hr_inspector"],
+    "showWhenThreat": ["approaching", "turning"],
+    "minLeadSecBeforeGaze": 0.4,
+    "offscreenSourceNoGain": true,
+    "arrowColorBy": "lanyard",
+    "pulseOnTell": true,
+    "missionMarkerArrows": true,
+    "_designNote": "억울한 실패 0 보장 장치 두 겹: ① 콘의 주인이 화면 밖에 있으면 의심이 오르지 않음 ② 화면 안으로 들어와 나를 볼 수 있기 전까지 가장자리 화살표가 최소 0.4초 먼저 떠 있어야 함. 화살표 색은 사원증 줄 색(상사=빨강, 경비=검정, 정의로운 동료=파랑, 인사팀=보라, D-037)."
+  },
+  "characters": {
+    "maxOnFloor": 8,
+    "_comment": "D-036. 플레이어 포함 층 전체 동시 존재 8명 이하(화면 동시 8명 이하를 구조적으로 보장). 일정 생성기가 검사"
+  },
+  "work": {
+    "fillPerSec": 0.04,
+    "fillOnlyWhen": "seated_working",
+    "max": 1.0,
+    "_designNote": "내 자리에 앉아 아무 미션도 안 할 때만 참. 할당량 0.40 = 자리에서 10초."
+  },
   "day": {
     "clockStart": "09:00",
-    "finaleClockStart": "17:52",
-    "clockEnd": "18:00",
+    "dayPhaseClockEnd": "17:48",
+    "leaveClockStart": "17:48",
+    "leaveGameMinutesPerSec": 1.0,
+    "earlyLeaveBefore": "18:00",
+    "overtimeAt": "18:18",
     "introSec": 2.0,
     "targetDurationSec": [60, 90],
-    "tutorialDayDurationSec": [50, 75]
+    "tutorialDayDurationSec": [50, 75],
+    "clockPausedDuring": ["ceo_visit"]
   },
   "stars": {
     "caught": 0,
     "overtimeEnding": 1,
+    "missionsShortLeave": 1,
     "leaveSuccess": 2,
-    "leaveSuccessAndPeakSuspicionBelow": 3
+    "leaveSuccessAndPeakSuspicionBelow": 3,
+    "_designNote": "★2 = 퇴근 성공 + 업무 할당량 + 필수 미션 수(rank.missionsRequired) 달성. 미션 없이 자리만 지키면 ★1 '찝찝한 칼퇴' → 땡땡이를 해야 하는 이유."
   },
   "salary": {
     "starMultiplier": [0.3, 0.6, 1.0, 1.3],
     "slackPointsPerWon": 10,
-    "_comment": "월급(소프트 재화, 원 단위 표기) = rank.salaryBase × starMultiplier[별] + floor(slackPoints / slackPointsPerWon)"
+    "_comment": "월급(소프트 재화) = rank.salaryBase × starMultiplier[별] + floor(땡땡이 점수 / 10). 결정적 계산"
+  },
+  "slack": {
+    "missionRewardsAreSlackPoints": true,
+    "restroomInsidePointsPerSec": 20,
+    "ceoTalkWindowMultiplier": 2.0,
+    "ceoEyeContactPoints": 300,
+    "earlyLeavePoints": 100
   },
   "snackStock": {
     "startPerDay": 1,
@@ -57,12 +135,15 @@
   },
   "continueAd": {
     "maxPerDay": 1,
-    "restartCurrentEvent": true
+    "restorePlayerTo": "last_checkpoint",
+    "checkpoints": ["player_seat", "gate_use"],
+    "_comment": "적발 컷인 뒤(플레이 정지 상태) 제안. 의심 0.6으로 자리(퇴근 중이면 게이트 앞)에서 재개. 광고 규칙은 ads.json"
   },
   "assist": {
     "consecutiveCaughtThreshold": 3,
     "suspicionGainMultiplier": 0.85,
     "showHint": true,
-    "_comment": "같은 날을 연속 3회 적발되면 다음 시도부터 의심 상승률 -15%와 힌트. 무료, 결제·광고 무관."
+    "showRouteHint": true,
+    "_comment": "같은 날 3연속 적발 시 다음 시도부터 상승률 -15% + 힌트(안전한 우회로 점선). 무료, 광고·결제 무관"
   }
 }
