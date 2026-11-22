@@ -438,7 +438,7 @@ def build_anims(anims, texture_key, out_dir):
 # ---------------------------------------------------------------- 장면
 
 
-def draw_cone(c, cone, rgba, edge_rgba, ox, oy):
+def draw_cone(c, cone, rgba, edge_rgba, ox, oy, dash=None):
     """시선 콘(부채꼴). 게임에서는 코드로 그리며, 여기서는 미리보기용으로 합성한다."""
     cx, cy = cone["x"] + ox, cone["y"] + oy
     ang, half, ln = math.radians(cone["dir"]), math.radians(cone["half"]), cone["len"]
@@ -459,6 +459,9 @@ def draw_cone(c, cone, rgba, edge_rgba, ox, oy):
             if not inside(x, y):
                 continue
             edge = not (inside(x - 1, y) and inside(x + 1, y) and inside(x, y - 1) and inside(x, y + 1))
+            if edge and dash and ((x + y) // dash[0]) % 2:
+                c.blend(x, y, rgba)  # 점선 콘(전조): 테두리를 dash[0]px 간격으로 끊는다
+                continue
             c.blend(x, y, edge_rgba if edge else rgba)
 
 
@@ -508,7 +511,8 @@ def build_scene(sc, by_key, legend, colors, pal):
                 draw_shadow(c, x + ox + f["w"] / 2.0, y + oy + f["h"] + 1, 11, 4, sh)
     for cone in sc.get("cones", []):
         draw_cone(c, cone, overlay_rgba(pal, colors, cone["color"]),
-                  overlay_rgba(pal, colors, cone["color"], "edge_alpha"), ox, oy)
+                  overlay_rgba(pal, colors, cone["color"], "edge_alpha"), ox, oy,
+                  pal["overlay"][cone["color"]].get("dash"))
     for _, _, x, y, f, ob in obs:
         c.blit(render(f, legend, colors, ob.get("swap")), x + ox, y + oy, ob.get("flip", False))
     for ob in sc.get("ui", []):

@@ -1,0 +1,9 @@
+{
+ "name": "edge_boss",
+ "group": "warning-ui",
+ "base": "edge-tpl",
+ "swap": {
+  "$lanyard": "point"
+ },
+ "note": "화면 밖 경고 화살표 — 상사 4종(빨강)"
+}

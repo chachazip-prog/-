@@ -32,10 +32,175 @@
  },
  "overlay": {
   "_doc": "코드로 그리는 반투명 오버레이. base=팔레트 역할, alpha=채움 불투명도, edge_alpha=1px 테두리 불투명도. 스프라이트에는 반투명 픽셀을 쓰지 않는다",
-  "cone_boss":   {"base": "point",   "alpha": 0.22, "edge_alpha": 0.55, "warning": true,  "use": "상사 4종 시선 콘(평상시)"},
-  "cone_alert":  {"base": "point",   "alpha": 0.38, "edge_alpha": 0.80, "warning": true,  "use": "발각 직전·발각 순간(모든 콘 공통, 0.25초 주기 깜빡임)"},
-  "cone_guard":  {"base": "point2",  "alpha": 0.30, "edge_alpha": 0.65, "warning": false, "use": "경비 손전등 콘"},
-  "cone_npc":    {"base": "cool",    "alpha": 0.20, "edge_alpha": 0.50, "warning": false, "use": "방해 NPC(고자질 동료 등) 시선 콘"},
-  "shadow":      {"base": "outline", "alpha": 0.22, "edge_alpha": 0.22, "warning": false, "use": "캐릭터 발밑 타원 그림자 11x4"}
+  "cone_boss": {
+   "base": "point",
+   "alpha": 0.22,
+   "edge_alpha": 0.55,
+   "warning": true,
+   "use": "상사 4종 시선 콘(평상시)"
+  },
+  "cone_alert": {
+   "base": "point",
+   "alpha": 0.38,
+   "edge_alpha": 0.8,
+   "warning": true,
+   "use": "발각 직전·발각 순간(모든 콘 공통, 0.25초 주기 깜빡임)"
+  },
+  "cone_guard": {
+   "base": "point2",
+   "alpha": 0.3,
+   "edge_alpha": 0.65,
+   "warning": false,
+   "use": "경비 손전등 콘"
+  },
+  "cone_npc": {
+   "base": "cool",
+   "alpha": 0.2,
+   "edge_alpha": 0.5,
+   "warning": false,
+   "use": "방해 NPC(고자질 동료 등) 시선 콘"
+  },
+  "shadow": {
+   "base": "outline",
+   "alpha": 0.22,
+   "edge_alpha": 0.22,
+   "warning": false,
+   "use": "캐릭터 발밑 타원 그림자 11x4"
+  },
+  "cone_tell": {
+   "base": "point",
+   "alpha": 0.08,
+   "edge_alpha": 0.85,
+   "warning": true,
+   "dash": [
+    2,
+    2
+   ],
+   "use": "T-130 전조 점선 콘(상사). 테두리만 2px 칠·2px 띄움 점선, 채움은 아주 옅게. 0.5초 전조 동안 점선이 콘 방향으로 1px/0.1초 흐름"
+  },
+  "cone_tell_guard": {
+   "base": "point2",
+   "alpha": 0.08,
+   "edge_alpha": 0.85,
+   "warning": false,
+   "dash": [
+    2,
+    2
+   ],
+   "use": "T-130 경비 전조 점선 콘"
+  },
+  "cone_tell_npc": {
+   "base": "cool",
+   "alpha": 0.06,
+   "edge_alpha": 0.75,
+   "warning": false,
+   "dash": [
+    2,
+    2
+   ],
+   "use": "T-130 방해 NPC 전조 점선 콘"
+  },
+  "cover_tile": {
+   "base": "green",
+   "alpha": 0.18,
+   "edge_alpha": 0.0,
+   "warning": false,
+   "pulse": [
+    0.1,
+    0.28
+   ],
+   "period_sec": 1.0,
+   "use": "T-130 엄폐 칸 바닥 채움(코드). 위에 fx/cover_glint 스프라이트 애니메이션을 얹음"
+  },
+  "path_line": {
+   "base": "white",
+   "alpha": 1.0,
+   "edge_alpha": 0.6,
+   "warning": false,
+   "dot_px": 2,
+   "spacing_px": 4,
+   "use": "T-130 경로 점선(코드로 그릴 때). 2x2 흰 점 4px 간격 + 외곽선 60%. 스프라이트는 dot/path, 안전 우회 힌트 dot/hint(초록), 지름길 주의 dot/caution(노랑)"
+  },
+  "gate_fail_flash": {
+   "base": "point",
+   "alpha": 0.45,
+   "edge_alpha": 0.9,
+   "warning": true,
+   "flashes": 3,
+   "on_sec": 0.1,
+   "off_sec": 0.1,
+   "use": "T-130 무음 대응: 게이트 태그 실패 — 게이트 칸 빨강 채움 3회 깜빡 + ui/gate_fail 아이콘 0.6초"
+  },
+  "gate_pass_flash": {
+   "base": "green",
+   "alpha": 0.4,
+   "edge_alpha": 0.8,
+   "warning": false,
+   "flashes": 1,
+   "on_sec": 0.3,
+   "off_sec": 0.0,
+   "use": "T-130 무음 대응: 게이트 통과 — 게이트 칸 초록 1회 + hud/gate_pass 아이콘 위로 4px 떠오르며 0.6초"
+  },
+  "gauge_danger": {
+   "base": "point",
+   "alpha": 0.75,
+   "edge_alpha": 1.0,
+   "warning": true,
+   "pulse": [
+    0.35,
+    0.75
+   ],
+   "period_sec": 0.5,
+   "threshold": 0.7,
+   "use": "T-130 의심 게이지 0.7 이상: 채움을 point 로 바꾸고 0.5초 주기 맥동 + 게이지 테두리 1px 흰색↔point 교대. 0.7 미만 채움은 point2(노랑)"
+  },
+  "border_calm": {
+   "base": "outline",
+   "alpha": 0.0,
+   "edge_alpha": 0.0,
+   "warning": false,
+   "width_px": 0,
+   "period_sec": 0,
+   "use": "T-130 화면 테두리 위험도 calm: 표시 없음"
+  },
+  "border_alert": {
+   "base": "point2",
+   "alpha": 0.22,
+   "edge_alpha": 0.5,
+   "warning": false,
+   "width_px": 4,
+   "pulse": [
+    0.1,
+    0.22
+   ],
+   "period_sec": 1.2,
+   "use": "T-130 화면 테두리 alert(전조·접근): 노랑 4px 느린 맥동"
+  },
+  "border_finale": {
+   "base": "green",
+   "alpha": 0.22,
+   "edge_alpha": 0.5,
+   "warning": false,
+   "width_px": 4,
+   "pulse": [
+    0.1,
+    0.22
+   ],
+   "period_sec": 0.9,
+   "use": "T-130 화면 테두리 finale(퇴근 구간): 초록 4px 맥동(출구 = 초록)"
+  },
+  "border_danger": {
+   "base": "point",
+   "alpha": 0.35,
+   "edge_alpha": 0.7,
+   "warning": true,
+   "width_px": 6,
+   "pulse": [
+    0.15,
+    0.35
+   ],
+   "period_sec": 0.5,
+   "use": "T-130 화면 테두리 danger(발각 직전·의심 0.7 이상): 빨강 6px 빠른 맥동. 색약 대비 두께도 단계마다 다름(0/4/4/6)"
+  }
  }
 }

@@ -9,7 +9,7 @@
   0.5,
   1
  ],
- "note": "탑다운 3/4 가구 16x16(바닥 1칸 차지). 윗면(위에서 본 면) + 앞면(아래쪽 띠). 깊이 정렬 기준 = 스프라이트 아래 변. desk_* 는 가로로 이어 붙이는 책상 블록(모니터 화면이 카메라 쪽 = 앉은 사람 등이 보임). T-130: 세로 파티션 이어 붙이기 — partition_v_top(윗끝) + partition_v_mid(중간, 여러 칸) + partition_v(아랫끝, 앞면 보임). T-130: 세로 파티션 이어 붙이기 — partition_v_top(윗끝) + partition_v_mid(중간, 여러 칸) + partition_v(아랫끝, 앞면 보임). T-130: 세로 파티션 이어 붙이기 — partition_v_top(윗끝) + partition_v_mid(중간, 여러 칸) + partition_v(아랫끝, 앞면 보임)",
+ "note": "탑다운 3/4 가구 16x16(바닥 1칸 차지). 윗면(위에서 본 면) + 앞면(아래쪽 띠). 깊이 정렬 기준 = 스프라이트 아래 변. desk_* 는 가로로 이어 붙이는 책상 블록(모니터 화면이 카메라 쪽 = 앉은 사람 등이 보임). T-130: 세로 파티션 이어 붙이기 — partition_v_top(윗끝) + partition_v_mid(중간, 여러 칸) + partition_v(아랫끝, 앞면 보임). T-130: 세로 파티션 이어 붙이기 — partition_v_top(윗끝) + partition_v_mid(중간, 여러 칸) + partition_v(아랫끝, 앞면 보임). T-130: 세로 파티션 이어 붙이기 — partition_v_top(윗끝) + partition_v_mid(중간, 여러 칸) + partition_v(아랫끝, 앞면 보임). T-130: 세로 파티션 이어 붙이기 — partition_v_top(윗끝) + partition_v_mid(중간, 여러 칸) + partition_v(아랫끝, 앞면 보임)",
  "frames": [
   {
    "name": "desk_monitor",

@@ -218,6 +218,771 @@
    "frames": [
     {
      "duration": 0,
+     "frame": "bg_a/idle_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_a/idle_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_a/idle_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_a/idle_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_a/idle_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_a/idle_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_a/idle_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_a/idle_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_a/walk_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/idle_down",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/walk_down_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/idle_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_a/walk_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_a/walk_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/idle_up",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/walk_up_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/idle_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_a/walk_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_a/walk_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/idle_left",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/walk_left_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/idle_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_a/walk_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_a/walk_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/idle_right",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/walk_right_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/idle_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_a/walk_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 4,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_a/sit_type_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/sit_type_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_a/sit_type",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_a/sit_type_0",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_a/sit_idle",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/idle_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/idle_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/idle_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/idle_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 7,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/walk_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_down",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/walk_down_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/walk_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 7,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/walk_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_up",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/walk_up_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/walk_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 7,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/walk_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_left",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/walk_left_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/walk_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 7,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/walk_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_right",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/walk_right_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/idle_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/walk_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 4,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/sit_type_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/sit_type_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/sit_type",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/sit_type_0",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/sit_idle",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_c/idle_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_c/idle_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_c/idle_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_c/idle_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_c/walk_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_down",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/walk_down_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_c/walk_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_c/walk_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_up",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/walk_up_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_c/walk_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_c/walk_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_left",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/walk_left_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_c/walk_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_c/walk_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_right",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/walk_right_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/idle_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_c/walk_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 4,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_c/sit_type_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_c/sit_type_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_c/sit_type",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_c/sit_type_0",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_c/sit_idle",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
      "frame": "ceo/idle_down",
      "key": "sprites"
     }
@@ -629,6 +1394,64 @@
    ],
    "hideOnComplete": false,
    "key": "exec/walk_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 4,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "fx/cover_glint_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "fx/cover_glint_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "fx/cover_glint_2",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "fx/cover_glint_3",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "fx/cover_glint",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 3,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "fx/dest_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "fx/dest_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "fx/dest",
    "repeat": -1,
    "repeatDelay": 0,
    "showOnStart": false,
@@ -1062,6 +1885,35 @@
   },
   {
    "delay": 0,
+   "frameRate": 5,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "hud/talk_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "hud/talk_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "hud/talk_2",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "hud/talk",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
    "frameRate": 1,
    "frames": [
     {
@@ -1304,6 +2156,351 @@
    "hideOnComplete": false,
    "key": "player/caught",
    "repeat": 0,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/disguise",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_read_document_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_read_document_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_read_document_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_read_document_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_read_document_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_drink_water_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_drink_water_down_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_drink_water_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_drink_water_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_drink_water_right_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_drink_water_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_drink_water_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_drink_water_left_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_drink_water_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_copying_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_copying_down_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_copying_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_copying_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_copying_right_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_copying_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_copying_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_copying_left_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_copying_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_water_plant_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_water_plant_down_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_water_plant_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_water_plant_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_water_plant_right_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_water_plant_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_water_plant_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_water_plant_left_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_water_plant_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_check_phone_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_check_phone_down_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_check_phone_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_check_phone_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_check_phone_right_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_check_phone_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_check_phone_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_check_phone_left_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_check_phone_left",
+   "repeat": -1,
    "repeatDelay": 0,
    "showOnStart": false,
    "skipMissedFrames": true,

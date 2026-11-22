@@ -1,0 +1,9 @@
+{
+ "name": "edge_hr",
+ "group": "ui",
+ "base": "edge-tpl",
+ "swap": {
+  "$lanyard": "suit"
+ },
+ "note": "화면 밖 경고 화살표 — 인사팀(보라)"
+}

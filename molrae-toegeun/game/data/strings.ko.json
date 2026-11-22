@@ -51,6 +51,8 @@
     "hud.suspicion_pct": "{n}%",
     "hud.tell_mark": "!",
     "hud.unreachable": "거긴 못 가요",
+    "hud.gate_attempts_left": "남은 기회 {n}번",
+    "hud.gate_ok": "통과!",
     "player.mode.disguised": "서류 보는 척",
     "player.mode.talked": "이야기 듣는 중…",
     "talk.warn_default": "저기요?",

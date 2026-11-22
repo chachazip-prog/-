@@ -1,0 +1,457 @@
+{
+ "_doc": "T-130 견본(192x352, 12x22칸). 위: 로비(메인 엘리베이터 닫힘·열림, 경비 부스). 가운데: 팀 구역(세로 파티션 이어 붙이기, 배경 동료 앉아 타이핑, 엄폐 칸 반짝임, 경로 점선·목적지, 위장 포즈 5종, 말걸기 전조 말풍선, 전조 점선 콘). 아래: 화장실(하늘빛 모자이크, 칸 3종)·탕비실(화물 엘리베이터 닫힘·열림 + 경고 줄무늬 발판). 레벨 배치 예시가 아니라 견본",
+ "name": "t130-sample",
+ "preview": "t130-scene",
+ "size": [
+  192,
+  352
+ ],
+ "tile": [
+  16,
+  16
+ ],
+ "offset": [
+  0,
+  0
+ ],
+ "bg": "floor",
+ "depth_sort": true,
+ "tiles": {
+  "#": "tile/wall_cap",
+  "[": "tile/wall_cap_l",
+  "]": "tile/wall_cap_r",
+  "=": "tile/wall_face",
+  "v": "tile/wall_cap_v",
+  "s": "tile/wall_rest_sign",
+  "M": "tile/wall_mirror",
+  "f": "tile/wall_shelf",
+  "w": "tile/wall_window",
+  "1": "tile/elev_l",
+  "2": "tile/elev_m",
+  "3": "tile/elev_r",
+  "4": "tile/elev_open_l",
+  "5": "tile/elev_open_m",
+  "6": "tile/elev_open_r",
+  "7": "tile/freight_l",
+  "8": "tile/freight_m",
+  "9": "tile/freight_r",
+  "a": "tile/freight_open_l",
+  "b": "tile/freight_open_m",
+  "c": "tile/freight_open_r",
+  ".": "tile/floor",
+  ",": "tile/floor_b",
+  "l": "tile/floor_lobby",
+  "_": "tile/floor_rest",
+  "p": "tile/floor_pantry",
+  "z": "tile/floor_freight",
+  " ": null
+ },
+ "layers": [
+  [
+   "llllllllllll",
+   "llllllllllll",
+   "llllllllllll",
+   "llllllllllll",
+   "llllllllllll",
+   "llllllllllll",
+   "............",
+   ".....,......",
+   "............",
+   "..,.........",
+   "............",
+   "........,...",
+   "............",
+   "............",
+   "............",
+   "______pppppp",
+   "______pppppp",
+   "______pppppp",
+   "______pppppp",
+   "______pppppp",
+   "zzz___pzzzpp",
+   "____________"
+  ],
+  [
+   "############",
+   "[=123=456=w]",
+   "[          ]",
+   "[          ]",
+   "[          ]",
+   "###### #####",
+   "======w=====",
+   "[          ]",
+   "[          ]",
+   "[          ]",
+   "[          ]",
+   "[          ]",
+   "[          ]",
+   "######v#####",
+   "=s=M==vf====",
+   "[     v    ]",
+   "[     v    ]",
+   "[     v    ]",
+   "[     v    ]",
+   "[     v    ]",
+   "[     v    ]",
+   "abc###v789##"
+  ]
+ ],
+ "cones": [
+  {
+   "x": 168,
+   "y": 140,
+   "dir": 200,
+   "half": 22,
+   "len": 52,
+   "color": "cone_tell"
+  }
+ ],
+ "objects": [
+  {
+   "sprite": "dot/path",
+   "x": 80,
+   "y": 166,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/path",
+   "x": 86,
+   "y": 166,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/path",
+   "x": 92,
+   "y": 166,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/path",
+   "x": 94,
+   "y": 160,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/path",
+   "x": 94,
+   "y": 154,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/path",
+   "x": 94,
+   "y": 148,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/hint",
+   "x": 22,
+   "y": 202,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/hint",
+   "x": 22,
+   "y": 196,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/hint",
+   "x": 22,
+   "y": 190,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/hint",
+   "x": 22,
+   "y": 184,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/caution",
+   "x": 120,
+   "y": 202,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/caution",
+   "x": 120,
+   "y": 196,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "dot/caution",
+   "x": 120,
+   "y": 190,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "fx/cover_glint_1",
+   "tx": 1,
+   "ty": 9,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "fx/cover_glint_0",
+   "tx": 10,
+   "ty": 9,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "fx/dest_0",
+   "x": 88,
+   "y": 136,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "booth/guard",
+   "tx": 8,
+   "ty": 3,
+   "dx": 8
+  },
+  {
+   "sprite": "guard/idle_down",
+   "tx": 6,
+   "ty": 4,
+   "shadow": true
+  },
+  {
+   "sprite": "furn/gate_l",
+   "tx": 1,
+   "ty": 4
+  },
+  {
+   "sprite": "furn/gate_r",
+   "tx": 2,
+   "ty": 4
+  },
+  {
+   "sprite": "hr/walk_down_0",
+   "tx": 6,
+   "ty": 2,
+   "shadow": true
+  },
+  {
+   "sprite": "bg_a/walk_right_0",
+   "tx": 3,
+   "ty": 3,
+   "shadow": true
+  },
+  {
+   "sprite": "furn/partition_v_top",
+   "tx": 2,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/partition_v_mid",
+   "tx": 2,
+   "ty": 8
+  },
+  {
+   "sprite": "furn/partition_v",
+   "tx": 2,
+   "ty": 9
+  },
+  {
+   "sprite": "furn/partition_v_top",
+   "tx": 9,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/partition_v",
+   "tx": 9,
+   "ty": 8
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 4,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/desk_papers",
+   "tx": 5,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 6,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 7,
+   "ty": 7
+  },
+  {
+   "sprite": "bg_b/sit_type_0",
+   "tx": 4,
+   "ty": 8,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 4,
+   "ty": 8
+  },
+  {
+   "sprite": "bg_c/sit_type_1",
+   "tx": 6,
+   "ty": 8,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 6,
+   "ty": 8
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 7,
+   "ty": 8
+  },
+  {
+   "sprite": "player/pose_drink_water_down_0",
+   "tx": 1,
+   "ty": 11,
+   "shadow": true
+  },
+  {
+   "sprite": "player/pose_copying_right_0",
+   "tx": 3,
+   "ty": 11,
+   "shadow": true
+  },
+  {
+   "sprite": "player/pose_water_plant_right_0",
+   "tx": 7,
+   "ty": 11,
+   "shadow": true
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 8,
+   "ty": 11
+  },
+  {
+   "sprite": "player/pose_check_phone_down_0",
+   "tx": 5,
+   "ty": 11,
+   "shadow": true
+  },
+  {
+   "sprite": "player/walk_left_0",
+   "tx": 5,
+   "ty": 10,
+   "shadow": true
+  },
+  {
+   "sprite": "teamlead/walk_left_1",
+   "tx": 10,
+   "ty": 8,
+   "shadow": true
+  },
+  {
+   "sprite": "player/pose_read_document_right",
+   "tx": 10,
+   "ty": 11,
+   "shadow": true
+  },
+  {
+   "sprite": "senior/idle_left",
+   "tx": 10,
+   "ty": 12,
+   "shadow": true
+  },
+  {
+   "sprite": "tall/stall",
+   "tx": 1,
+   "ty": 16
+  },
+  {
+   "sprite": "tall/stall_open",
+   "tx": 2,
+   "ty": 16
+  },
+  {
+   "sprite": "tall/stall_hiding",
+   "tx": 3,
+   "ty": 16
+  },
+  {
+   "sprite": "furn/sink",
+   "tx": 3,
+   "ty": 15
+  },
+  {
+   "sprite": "bg_a/idle_down",
+   "tx": 4,
+   "ty": 18,
+   "shadow": true
+  },
+  {
+   "sprite": "tall/fridge",
+   "tx": 9,
+   "ty": 15
+  },
+  {
+   "sprite": "tall/water",
+   "tx": 10,
+   "ty": 15
+  },
+  {
+   "sprite": "exec/walk_up_0",
+   "tx": 8,
+   "ty": 19,
+   "shadow": true
+  },
+  {
+   "sprite": "accomplice/idle_down",
+   "tx": 9,
+   "ty": 17,
+   "shadow": true
+  },
+  {
+   "sprite": "bg_c/walk_down_1",
+   "tx": 7,
+   "ty": 17,
+   "shadow": true
+  }
+ ],
+ "ui": [
+  {
+   "sprite": "hud/hey",
+   "x": 162,
+   "y": 114
+  },
+  {
+   "sprite": "hud/talk_2",
+   "x": 162,
+   "y": 182
+  },
+  {
+   "sprite": "hud/offer",
+   "x": 146,
+   "y": 254
+  },
+  {
+   "sprite": "edge_boss/down_3",
+   "x": 2,
+   "y": 88
+  },
+  {
+   "sprite": "edge_guard/down_2",
+   "x": 16,
+   "y": 88
+  },
+  {
+   "sprite": "edge_snitch/down_1",
+   "x": 30,
+   "y": 88
+  },
+  {
+   "sprite": "edge_hr/down_3",
+   "x": 44,
+   "y": 88
+  }
+ ]
+}

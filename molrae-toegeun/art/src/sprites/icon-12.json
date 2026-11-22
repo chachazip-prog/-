@@ -1,0 +1,152 @@
+{
+ "name": "icons",
+ "flat": true,
+ "group": "ui",
+ "size": [
+  12,
+  12
+ ],
+ "origin": [
+  0.5,
+  0.5
+ ],
+ "note": "T-130 미션 칩·UI 아이콘(D-047 이모지 대체). flat 키 = events.json iconSprite / strings.uiIcons 값 그대로. 12x12, 원점 중앙. 빨강 없음, 로고·상표 없음",
+ "frames": [
+  {
+   "name": "icon_coffee",
+   "rows": [
+    "...M..M.....",
+    "....M..M....",
+    "...M..M.....",
+    "............",
+    ".OOOOOOOO...",
+    ".OtTTTTtOO..",
+    ".OWWWWWWOWO.",
+    ".OWWWWWWOWO.",
+    ".OWWWWWWOO..",
+    ".OLWWWWLO...",
+    "..OOOOOO....",
+    "............"
+   ]
+  },
+  {
+   "name": "icon_restroom",
+   "rows": [
+    "............",
+    ".OOOOOOOOOO.",
+    "OCCCCCCCCCCO",
+    "OWCCCWCCWWCO",
+    "OWCCCWCWCCCO",
+    "OWCWCWCWCCCO",
+    "OWCWCWCWCCCO",
+    "OCWCWCCCWWCO",
+    "OCCCCCCCCCCO",
+    "OccccccccccO",
+    ".OOOOOOOOOO.",
+    "............"
+   ]
+  },
+  {
+   "name": "icon_nap",
+   "rows": [
+    "........DDD.",
+    "...OO.....D.",
+    "..OYYO...D..",
+    ".OYYYO..DDD.",
+    "OYYYO.......",
+    "OYYYYO......",
+    "OYYYYO......",
+    "OYYYYYOOOO..",
+    "OYYYYYYYYYO.",
+    ".OYYYYYYYO..",
+    "..OYYYYYO...",
+    "...OOOOO...."
+   ]
+  },
+  {
+   "name": "icon_shopping",
+   "rows": [
+    "............",
+    "....OOOO....",
+    "...O....O...",
+    "...O....O...",
+    ".OOOOOOOOOO.",
+    ".OCWCCCCCcO.",
+    ".OCCCCCCCcO.",
+    ".OCCCCCCCcO.",
+    ".OCCCCCCCcO.",
+    ".OCCCCCCCcO.",
+    ".OccccccccO.",
+    ".OOOOOOOOOO."
+   ]
+  },
+  {
+   "name": "icon_snack",
+   "rows": [
+    "....OOOO....",
+    "..OOTTTTOO..",
+    ".OTTTTTTTTO.",
+    ".OTWTTTDTTO.",
+    "OTTTDTTTTTtO",
+    "OTTTTTTTTttO",
+    "OTTTTTDTtttO",
+    "OTTTTTTtDttO",
+    ".OTTDTttttO.",
+    ".OTTTtttttO.",
+    "..OOttttOO..",
+    "....OOOO...."
+   ]
+  },
+  {
+   "name": "icon_leave",
+   "rows": [
+    "............",
+    ".OOOOOOOOOO.",
+    ".OGGGGGGGGO.",
+    ".OGGGGWGGGO.",
+    ".OGGGGWWGGO.",
+    ".OGWWWWWWGO.",
+    ".OGWWWWWWGO.",
+    ".OGGGGWWGGO.",
+    ".OGGGGWGGGO.",
+    ".OggggggggO.",
+    ".OOOOOOOOOO.",
+    "............"
+   ]
+  },
+  {
+   "name": "ui_icon_megaphone",
+   "rows": [
+    "............",
+    "........OO..",
+    "......OOYO.M",
+    ".....OYYYO..",
+    ".OOOOYYYYO.M",
+    ".OWOYYYYYO..",
+    ".OWOYYYYYO.M",
+    ".OOOOYYYYO..",
+    "..OOOOYYYO.M",
+    "..ODO.OOYO..",
+    "..ODO...OO..",
+    "..OOO......."
+   ]
+  },
+  {
+   "name": "icon_done",
+   "rows": [
+    "............",
+    "...OOOOOO...",
+    "..OGGGGGGO..",
+    ".OGGGGGGWGO.",
+    ".OGGGGGWWGO.",
+    ".OGWGGWWGGO.",
+    ".OGWWWWGGGO.",
+    ".OGGWWGGGGO.",
+    ".OgGGGGGGgO.",
+    "..OggggggO..",
+    "...OOOOOO...",
+    "............"
+   ]
+  }
+ ]
+}

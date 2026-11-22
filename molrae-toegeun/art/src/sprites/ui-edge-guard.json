@@ -1,0 +1,9 @@
+{
+ "name": "edge_guard",
+ "group": "ui",
+ "base": "edge-tpl",
+ "swap": {
+  "$lanyard": "dark"
+ },
+ "note": "화면 밖 경고 화살표 — 경비(검정 계열: 외곽선과 구분되게 dark)"
+}

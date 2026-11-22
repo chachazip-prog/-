@@ -1,0 +1,42 @@
+{
+ "name": "dot",
+ "group": "ui",
+ "size": [
+  4,
+  4
+ ],
+ "origin": [
+  0.5,
+  0.5
+ ],
+ "note": "T-130 경로 점선 점(4x4, 4px 간격으로 찍음). path = 일반 경로(흰색), hint = 안전 우회 힌트(초록), caution = 지름길 주의(노랑, 빨강 아님)",
+ "frames": [
+  {
+   "name": "path",
+   "rows": [
+    ".OO.",
+    "OWWO",
+    "OWWO",
+    ".OO."
+   ]
+  },
+  {
+   "name": "hint",
+   "rows": [
+    ".OO.",
+    "OGGO",
+    "OGgO",
+    ".OO."
+   ]
+  },
+  {
+   "name": "caution",
+   "rows": [
+    ".OO.",
+    "OYYO",
+    "OYYO",
+    ".OO."
+   ]
+  }
+ ]
+}

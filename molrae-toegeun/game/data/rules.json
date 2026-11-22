@@ -78,6 +78,7 @@
     "renderEqualsJudgement": true,
     "seatedConeOnlyWhileLooking": true,
     "cornerTurnTellSec": 0.5,
+    "cornerTurnTellSfx": "sfx_look_swish",
     "returnSec": 0.3,
     "_designNote": "보이는 콘 = 실제 판정(vision.ts rayDistance 공용). D-038/D-044(조건부 확정): 걷는 NPC가 모퉁이·재출발로 방향을 틀 때 새 방향의 실제 콘이 플레이어를 덮을 수 있을 때만 0.5초 전조(고개 먼저 + 점선 콘) 후 회전. 무조건 전조는 분당 30회 넘게 떠서 노이즈(QA 측정). 앉은 상사는 돌아볼 때만 콘이 켜짐.",
     "cornerTellCondition": "new_facing_real_cone_could_cover_player"
@@ -85,7 +86,33 @@
   "tell": {
     "minSec": 0.4,
     "mustHaveVisual": true,
-    "mustHaveAudio": true
+    "mustHaveAudio": true,
+    "defaultWalkTellSfx": "sfx_look_swish",
+    "_comment": "T-132(사운드 T-113): 걷는 NPC(본부장·인사팀·경비·회의 복귀 팀장)의 둘러보기·뒤돌아보기·모퉁이 회전·정지 돌아보기 전조는 sim.walkTellSfx(없으면 defaultWalkTellSfx). 화면 안일 때만 재생, 화면 밖은 화살표 깜빡임 + 진동"
+  },
+  "visualCues": {
+    "alwaysOn": true,
+    "_designNote": "T-132: 소리를 꺼도(무음 모드·기기 음소거) 모든 정보가 화면으로 전달되도록 효과음·BGM과 짝을 이루는 시각 신호. 소리 설정과 무관하게 항상 표시(소리가 켜져 있어도 같음). 깜빡임은 초당 3회 이하(광과민 안전)",
+    "gateFail": { "pairsWith": "sfx_gate_beep", "visual": "gate_red_blink", "blinks": 2, "durationSec": 0.4, "showAttemptsLeftKey": "hud.gate_attempts_left", "showAttemptsLeftSec": 1.0 },
+    "gateOk": { "pairsWith": "sfx_gate_ok", "visual": "gate_green_flash", "durationSec": 0.3, "textKey": "hud.gate_ok" },
+    "tapDestination": { "pairsWith": "sfx_tap", "visual": "tile_marker_ring", "shrinkSec": 0.35, "unreachableVisual": "tile_marker_x", "unreachableTextKey": "hud.unreachable" },
+    "missionChipDone": { "pairsWith": "sfx_mission_complete", "visual": "chip_check_stamp", "durationSec": 0.6, "textKey": "hud.mission_done" },
+    "suspicionHigh": { "pairsWith": "sfx_suspicion_loop", "threshold": 0.7, "visual": "gauge_red_pulse", "pulseHz": 2.0, "_note": "의심 ≥ 0.7이면 게이지 빨강 맥동(초당 2회). 0.5~0.7은 기존 흔들림만" },
+    "dangerBorder": {
+      "pairsWith": "bgm_office.stages",
+      "visual": "screen_border_pulse",
+      "byStage": {
+        "calm": { "show": false },
+        "alert": { "show": true, "color": "yellow", "alpha": 0.25, "pulseHz": 0.8 },
+        "finale": { "show": true, "color": "yellow", "alpha": 0.3, "pulseHz": 1.0 },
+        "danger": { "show": true, "color": "red", "alpha": 0.4, "pulseHz": 2.0 },
+        "freeze": { "show": true, "color": "dark", "alpha": 0.35, "pulseHz": 0.0, "_note": "대표님 순시 비네트와 같음" },
+        "stopped": { "show": false }
+      },
+      "borderPx": 2,
+      "followsBgmHysteresis": true,
+      "_note": "오디오 매니페스트 bgm_office.stages와 같은 단계·같은 전환 시점(내릴 때 1.5초 지연 포함). 화면 밖 화살표·콘 표시를 가리지 않게 가장자리 2px만"
+    }
   },
   "fake": {
     "absoluteCapProb": 0.35,

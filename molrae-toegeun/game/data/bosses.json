@@ -120,6 +120,13 @@
           1.6
         ],
         "lookChance": 1.0,
+        "walkTellSfx": {
+          "lookAround": "sfx_look_swish",
+          "glanceBack": "sfx_look_swish",
+          "cornerTurn": "sfx_look_swish",
+          "stopLook": "sfx_look_swish",
+          "onScreenOnly": true
+        },
         "glanceBackChancePerTile": 0.04,
         "idleSecRange": [
           2.5,
@@ -461,6 +468,13 @@
           2.5
         ],
         "lookChance": 0.5,
+        "walkTellSfx": {
+          "lookAround": "sfx_look_swish",
+          "glanceBack": "sfx_look_swish",
+          "cornerTurn": "sfx_look_swish",
+          "stopLook": "sfx_look_swish",
+          "onScreenOnly": true
+        },
         "glanceBackChancePerTile": 0.03,
         "coneActiveIn": [
           "walk",

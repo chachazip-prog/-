@@ -4,15 +4,16 @@
  * 같은 시드 + 같은 스텝 시점의 같은 입력 → 같은 결과.
  */
 import {
-  buildGridMap, isWalkable, nearestWalkable, zoneAt,
+  buildGridMap, isWalkable, kindAt, nearCover, nearestWalkable, tileOf, zoneAt,
   type GridMap, type LegendEntry, type Tile,
 } from './grid';
-import { findPath } from './pathfinding';
+import { distanceField, findPath } from './pathfinding';
+import { CameraModel, type CameraRules, type CameraView } from './camera';
 import { PatrolNpc, type NpcDef, type StepContext } from './patrol';
 import { PlayerMover } from './player';
 import { createRng, type Rng } from './rng';
-import { createSuspicion, updateSuspicion, type SuspicionRules, type SuspicionState } from './suspicion';
-import { canSee, inCone } from './vision';
+import { createSuspicion, exposureRate, updateSuspicionRate, type SuspicionRules, type SuspicionState } from './suspicion';
+import { canSee, hasLineOfSight, inCone } from './vision';
 
 /** 레벨(층) 정의. 지금은 src/dev/ 임시 데이터, 추후 game/data/ 로더가 같은 모양으로 공급 */
 export interface LevelDef {
@@ -38,7 +39,44 @@ export interface FloorRules {
     readonly approachExtraRange: number;
     /** 경고용 넓은 콘: 실제 콘 반각 + 이 값 */
     readonly approachExtraAngleDeg: number;
+    /** X6: 넓은 콘 경고에 가림(LOS) 반영 */
+    readonly approachRequiresLineOfSight?: boolean;
+    /** X6: NPC→플레이어 통행 경로가 이 타일 이하이고 줄어드는 중이면 approaching */
+    readonly approachPathTilesWithin?: number;
+    readonly approachPathMustBeDecreasing?: boolean;
   };
+  // ── v2 확장(rules.json). 없으면 T-127 동작 ──
+  readonly input?: { readonly tapOnSelfWhileStopped?: string };
+  readonly movement?: {
+    readonly blockedWaitSec?: number;
+    readonly rerouteMaxExtraTiles?: number;
+    readonly rerouteRecheckSec?: number;
+    readonly postTalkHoldSec?: number;
+  };
+  readonly disguise?: { readonly closeCallWindowSec: readonly [number, number]; readonly closeCallMaxPerDay: number };
+  /** X10: 콘 주인이 화면 밖이면 의심 상승 없음(카메라 모델 필요) */
+  readonly offscreenSourceNoGain?: boolean;
+}
+
+/** DaySim 등 상위 규칙이 FloorSim 판정에 끼어드는 지점 (모두 선택) */
+export interface FloorHooks {
+  /** 플레이어 상태별 기본 상승률(base)을 덮어씀(자리 업무·미션 상태, X9) */
+  playerRate?(base: number): number;
+  /** 이 NPC의 시선을 지금 판정에 넣는가(대표님 얼음·로비 안전 등) */
+  gazeAllowed?(npc: PatrolNpc): boolean;
+  /** 이 NPC가 지금 말을 걸 수 있는가(enabledBy·onlyWhilePlayerAway·onlyWhen) */
+  talkAllowed?(npc: PatrolNpc): boolean;
+  /** 플레이어에게 추가로 막힌 타일(게이트 등) */
+  blockedForPlayer?(x: number, y: number): boolean;
+  /** 순찰이 끝난 NPC 처리: 새 NpcDef(thenPatrol)를 돌려주면 교체, null이면 제거(despawnAtEnd)·유지 */
+  onNpcEnded?(npc: PatrolNpc): NpcDef | null;
+}
+
+export interface FloorOptions {
+  readonly camera?: { readonly rules: CameraRules; readonly view: CameraView };
+  readonly hooks?: FloorHooks;
+  /** exitZone 도달 시 자동 탈출(기본 true). DaySim은 퇴근 단계가 직접 처리 */
+  readonly autoEscape?: boolean;
 }
 
 export interface FloorContent {
@@ -54,7 +92,7 @@ export type Outcome = 'playing' | 'escaped' | 'caught';
  * - unreachable: 보정 반경 안에 통행 타일이 없거나 경로가 없음
  * - ignored: 입력을 받지 않는 상태(말걸기 중·판 종료)
  */
-export type TapResult = 'stopped' | 'moving' | 'here' | 'unreachable' | 'ignored';
+export type TapResult = 'stopped' | 'moving' | 'here' | 'unreachable' | 'ignored' | 'nod';
 /** 위협 수준: 지금 보는 중 > 돌아보기 직전(전조) 방향에 내가 있음 > 근처에서 이쪽을 향함 */
 export type Threat = 'seeing' | 'turning' | 'approaching' | 'none';
 
@@ -64,6 +102,11 @@ export type SimEvent =
   | { t: number; type: 'talk'; npc: string }
   | { t: number; type: 'tell'; npc: string }
   | { t: number; type: 'spotted'; npc: string }
+  | { t: number; type: 'talkCancel'; npc: string; reason: 'disguised' | 'escaped' | 'missed' }
+  | { t: number; type: 'talkEnd'; npc: string }
+  | { t: number; type: 'closeCall' }
+  | { t: number; type: 'blocked' }
+  | { t: number; type: 'npcEnded'; npc: string; patrol: string }
   | { t: number; type: 'escaped' }
   | { t: number; type: 'caught' };
 

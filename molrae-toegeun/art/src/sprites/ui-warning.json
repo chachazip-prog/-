@@ -1,51 +1,83 @@
 {
  "name": "ui",
  "group": "warning-ui",
- "size": [12, 12],
- "origin": [0.5, 1],
- "note": "경고 UI. alert(!) = 발각, edge_down = 화면 밖 상사 경고 화살표(아래 방향 원본, 개발에서 90도 단위 회전), suspect(?) = 의심(노랑, point 아님)",
+ "size": [
+  12,
+  12
+ ],
+ "origin": [
+  0.5,
+  1
+ ],
+ "note": "경고 UI. alert(!) = 발각, edge_down = 화면 밖 상사 경고 화살표(아래 방향 원본, 개발에서 90도 단위 회전), suspect(?) = 의심(노랑, point 아님). T-130: gate_fail = 게이트 태그 실패(빨강 X, 무음 모드 시각 신호). 0.1초 간격 3회 깜빡임 권장",
  "frames": [
-  {"name": "alert", "rows": [
-   "..OOOOOOOO..",
-   ".ORRRRRRRRO.",
-   "ORRRRWWRRRRO",
-   "ORRRRWWRRRRO",
-   "ORRRRWWRRRRO",
-   "ORRRRRRRRRRO",
-   "ORRRRWWRRRRO",
-   ".ORRRRRRRRO.",
-   "..OOOORROOO.",
-   "......ROO...",
-   "......OO....",
-   "............"
-  ]},
-  {"name": "suspect", "rows": [
-   "..OOOOOOOO..",
-   ".OYYYYYYYYO.",
-   "OYYYYWWWYYYO",
-   "OYYYYYYWYYYO",
-   "OYYYYYWYYYYO",
-   "OYYYYYYYYYYO",
-   "OYYYYYWYYYYO",
-   ".OYYYYYYYYO.",
-   "..OOOOYYOOO.",
-   "......YOO...",
-   "......OO....",
-   "............"
-  ]},
-  {"name": "edge_down", "rows": [
-   "OOOOOOOOOOOO",
-   "ORRRRRRRRRRO",
-   "ORRRRWWRRRRO",
-   ".ORRRWWRRRO.",
-   ".ORRRWWRRRO.",
-   "..ORRRRRRO..",
-   "..ORRWWRRO..",
-   "...ORRRRO...",
-   "....ORRO....",
-   ".....OO.....",
-   "............",
-   "............"
-  ]}
+  {
+   "name": "alert",
+   "rows": [
+    "..OOOOOOOO..",
+    ".ORRRRRRRRO.",
+    "ORRRRWWRRRRO",
+    "ORRRRWWRRRRO",
+    "ORRRRWWRRRRO",
+    "ORRRRRRRRRRO",
+    "ORRRRWWRRRRO",
+    ".ORRRRRRRRO.",
+    "..OOOORROOO.",
+    "......ROO...",
+    "......OO....",
+    "............"
+   ]
+  },
+  {
+   "name": "suspect",
+   "rows": [
+    "..OOOOOOOO..",
+    ".OYYYYYYYYO.",
+    "OYYYYWWWYYYO",
+    "OYYYYYYWYYYO",
+    "OYYYYYWYYYYO",
+    "OYYYYYYYYYYO",
+    "OYYYYYWYYYYO",
+    ".OYYYYYYYYO.",
+    "..OOOOYYOOO.",
+    "......YOO...",
+    "......OO....",
+    "............"
+   ]
+  },
+  {
+   "name": "edge_down",
+   "rows": [
+    "OOOOOOOOOOOO",
+    "ORRRRRRRRRRO",
+    "ORRRRWWRRRRO",
+    ".ORRRWWRRRO.",
+    ".ORRRWWRRRO.",
+    "..ORRRRRRO..",
+    "..ORRWWRRO..",
+    "...ORRRRO...",
+    "....ORRO....",
+    ".....OO.....",
+    "............",
+    "............"
+   ]
+  },
+  {
+   "name": "gate_fail",
+   "rows": [
+    "............",
+    ".OOOOOOOOOO.",
+    "ORRRRRRRRRRO",
+    "ORWWRRRRWWRO",
+    "ORRWWRRWWRRO",
+    "ORRRWWWWRRRO",
+    "ORRRRWWRRRRO",
+    "ORRRWWWWRRRO",
+    "ORRWWRRWWRRO",
+    "ORWWRRRRWWRO",
+    ".OOOOOOOOOO.",
+    "............"
+   ]
+  }
  ]
 }

@@ -1,0 +1,9 @@
+{
+ "name": "edge_snitch",
+ "group": "ui",
+ "base": "edge-tpl",
+ "swap": {
+  "$lanyard": "shirt"
+ },
+ "note": "화면 밖 경고 화살표 — 정의로운(고자질) 동료(파랑)"
+}

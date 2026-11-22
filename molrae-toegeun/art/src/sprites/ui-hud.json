@@ -1,0 +1,129 @@
+{
+ "name": "hud",
+ "group": "ui",
+ "size": [
+  12,
+  12
+ ],
+ "origin": [
+  0.5,
+  1
+ ],
+ "note": "T-130 말걸기 전조 말풍선(D-043). talk_0~2 = 점 1~3개 차오름(전조 0.5~1.0초 동안 재생), hey = 부르는 '!'(남색, 빨강 아님 — 빨강 '!'는 발각 ui/alert 전용), offer = 공범 동료 제안(초록 슬리브 컵, 톡 = 수락). 흰 바탕 + 남색 외곽선",
+ "frames": [
+  {
+   "name": "talk_0",
+   "rows": [
+    "............",
+    "............",
+    "............",
+    ".OOOOOOOOOO.",
+    "OWWWWWWWWWWO",
+    "OWDDWWWWWWWO",
+    "OWDDWWWWWWWO",
+    "OWWWWWWWWWWO",
+    ".OOOOWWOOOO.",
+    "....OWO.....",
+    "....OO......",
+    "............"
+   ]
+  },
+  {
+   "name": "talk_1",
+   "rows": [
+    "............",
+    "............",
+    "............",
+    ".OOOOOOOOOO.",
+    "OWWWWWWWWWWO",
+    "OWDDWDDWWWWO",
+    "OWDDWDDWWWWO",
+    "OWWWWWWWWWWO",
+    ".OOOOWWOOOO.",
+    "....OWO.....",
+    "....OO......",
+    "............"
+   ]
+  },
+  {
+   "name": "talk_2",
+   "rows": [
+    "............",
+    "............",
+    "............",
+    ".OOOOOOOOOO.",
+    "OWWWWWWWWWWO",
+    "OWDDWDDWDDWO",
+    "OWDDWDDWDDWO",
+    "OWWWWWWWWWWO",
+    ".OOOOWWOOOO.",
+    "....OWO.....",
+    "....OO......",
+    "............"
+   ]
+  },
+  {
+   "name": "hey",
+   "rows": [
+    "............",
+    "............",
+    ".OOOOOOOOOO.",
+    "OWWWWDDWWWWO",
+    "OWWWWDDWWWWO",
+    "OWWWWDDWWWWO",
+    "OWWWWWWWWWWO",
+    "OWWWWDDWWWWO",
+    ".OOOOWWOOOO.",
+    "....OWO.....",
+    "....OO......",
+    "............"
+   ]
+  },
+  {
+   "name": "offer",
+   "rows": [
+    ".OOOOOOOOOO.",
+    "OWWWWWWWWWWO",
+    "OWWOOOOOWWWO",
+    "OWWOWWWOOOWO",
+    "OWWOGGGOWOWO",
+    "OWWOGGGOOOWO",
+    "OWWWOOOWWWWO",
+    ".OOOOWWOOOO.",
+    "....OWO.....",
+    "....OO......",
+    "............",
+    "............"
+   ]
+  },
+  {
+   "name": "gate_pass",
+   "rows": [
+    "............",
+    ".OOOOOOOOOO.",
+    "OGGGGGGGGGGO",
+    "OGGGGGGGGWGO",
+    "OGGGGGGGWWGO",
+    "OGWGGGGWWGGO",
+    "OGWWGGWWGGGO",
+    "OGGWWWWGGGGO",
+    "OGGGWWGGGGGO",
+    "OggggggggggO",
+    ".OOOOOOOOOO.",
+    "............"
+   ]
+  }
+ ],
+ "anims": [
+  {
+   "key": "talk",
+   "frames": [
+    "talk_0",
+    "talk_1",
+    "talk_2"
+   ],
+   "frameRate": 5,
+   "repeat": -1
+  }
+ ]
+}
