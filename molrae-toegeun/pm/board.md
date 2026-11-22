@@ -10,11 +10,11 @@
 ### 1차 병렬 배분 (서로 의존 없음, 동시에 착수)
 | ID | 담당 | 작업 | 산출물 | 의존 | 상태 |
 |---|---|---|---|---|---|
-| T-101 | mt-game-designer | GDD v1, 데이터 스키마, `events`·`bosses`·`npcs`·`ranks` 테이블 v1(MVP 범위) | `design/gdd.md`, `design/data-schema.md`, `game/data/*.json` | - | 대기 |
-| T-102 | mt-client-dev | Phaser + TS + Vite 프로젝트 골격, SDK 3.x 어댑터 계층과 목(mock), 빌드 파이프라인 | `game/` 골격, 빌드 성공 | - | 대기 |
-| T-103 | mt-pixel-artist | 스타일 가이드, 팔레트(Q-002 결정 전에는 시안 3종), 픽셀 생성 파이프라인 | `art/style-guide.md`, `art/palette*.json`, 생성 스크립트, 미리보기 | - | 대기 |
-| T-104 | mt-compliance | 행정 절차 안내서(사업자 → 게임제작업 → 등급분류), 출시 체크리스트 v1 | `compliance/admin-procedures.md`, `compliance/launch-checklist.md` | - | 대기 |
-| T-105 | mt-marketer | 게임명 후보 검토(중복 1차 확인), 톤앤매너 가이드 | `marketing/naming.md`, `marketing/tone-guide.md` | - | 대기 |
+| T-101 | mt-game-designer | GDD v1, 데이터 스키마, `events`·`bosses`·`npcs`·`ranks` 테이블 v1(MVP 범위) | `design/gdd.md`, `design/data-schema.md`, `game/data/*.json` | - | 진행 |
+| T-102 | mt-client-dev | Phaser + TS + Vite 프로젝트 골격, SDK 3.x 어댑터 계층과 목(mock), 빌드 파이프라인 | `game/` 골격, 빌드 성공 | - | 진행 |
+| T-103 | mt-pixel-artist | 스타일 가이드, 팔레트(Q-002 결정 전에는 시안 3종), 픽셀 생성 파이프라인 | `art/style-guide.md`, `art/palette*.json`, 생성 스크립트, 미리보기 | - | 진행 |
+| T-104 | mt-compliance | 행정 절차 안내서(사업자 → 게임제작업 → 등급분류), 출시 체크리스트 v1 | `compliance/admin-procedures.md`, `compliance/launch-checklist.md` | - | 진행 |
+| T-105 | mt-marketer | 게임명 후보 검토(중복 1차 확인), 톤앤매너 가이드 | `marketing/naming.md`, `marketing/tone-guide.md` | - | 진행 |
 
 ### 2차 배분 (1차 결과 필요)
 | ID | 담당 | 작업 | 의존 | 상태 |
@@ -28,8 +28,8 @@
 ### 오너 작업
 | ID | 작업 | 상태 |
 |---|---|---|
-| O-101 | Q-001~Q-005 답변 | 대기 |
-| O-102 | 회사 겸업 규정 확인, 개인사업자 등록(필요한 경우) | 대기 |
+| O-101 | Q-001~Q-004 답변 | 완료 |
+| O-102 | 회사 겸업 규정 확인, 개인사업자 등록(필요한 경우) — Q-005 | 진행 |
 | O-103 | 관할 구청에 게임제작업 등록 문의 | 대기 |
 | O-104 | 앱인토스 콘솔 가입, 수수료·약관 확인 | 대기 |
 
