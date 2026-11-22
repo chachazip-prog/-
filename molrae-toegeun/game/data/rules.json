@@ -92,26 +92,81 @@
   },
   "visualCues": {
     "alwaysOn": true,
-    "_designNote": "T-132: 소리를 꺼도(무음 모드·기기 음소거) 모든 정보가 화면으로 전달되도록 효과음·BGM과 짝을 이루는 시각 신호. 소리 설정과 무관하게 항상 표시(소리가 켜져 있어도 같음). 깜빡임은 초당 3회 이하(광과민 안전)",
-    "gateFail": { "pairsWith": "sfx_gate_beep", "visual": "gate_red_blink", "blinks": 2, "durationSec": 0.4, "showAttemptsLeftKey": "hud.gate_attempts_left", "showAttemptsLeftSec": 1.0 },
-    "gateOk": { "pairsWith": "sfx_gate_ok", "visual": "gate_green_flash", "durationSec": 0.3, "textKey": "hud.gate_ok" },
-    "tapDestination": { "pairsWith": "sfx_tap", "visual": "tile_marker_ring", "shrinkSec": 0.35, "unreachableVisual": "tile_marker_x", "unreachableTextKey": "hud.unreachable" },
-    "missionChipDone": { "pairsWith": "sfx_mission_complete", "visual": "chip_check_stamp", "durationSec": 0.6, "textKey": "hud.mission_done" },
-    "suspicionHigh": { "pairsWith": "sfx_suspicion_loop", "threshold": 0.7, "visual": "gauge_red_pulse", "pulseHz": 2.0, "_note": "의심 ≥ 0.7이면 게이지 빨강 맥동(초당 2회). 0.5~0.7은 기존 흔들림만" },
+    "_designNote": "T-132: 소리를 꺼도(무음 모드·기기 음소거) 모든 정보가 화면으로 전달되도록 효과음·BGM과 짝을 이루는 시각 신호. 소리 설정과 무관하게 항상 표시. 시각 ID·색·두께는 아트 T-130(art/style-guide.md v2.2 장면 오버레이·HUD)과 같음. 깜빡임은 1초에 3회 이하(광과민 안전, 검사기)",
+    "gateFail": {
+      "pairsWith": "sfx_gate_beep",
+      "visual": "gate_fail_flash",
+      "overlayIcon": "ui/gate_fail",
+      "flashes": 3,
+      "durationSec": 0.6,
+      "showAttemptsLeftKey": "hud.gate_attempts_left",
+      "showAttemptsLeftSec": 1.0
+    },
+    "gateOk": {
+      "pairsWith": "sfx_gate_ok",
+      "visual": "gate_pass_flash",
+      "overlayIcon": "hud/gate_pass",
+      "durationSec": 0.3,
+      "iconRiseSec": 0.6,
+      "textKey": "hud.gate_ok"
+    },
+    "tapDestination": {
+      "pairsWith": "sfx_tap",
+      "visual": "fx/dest",
+      "unreachableTextKey": "hud.unreachable",
+      "_note": "갈 수 없는 곳 탭(unreachable)은 마커 대신 '거긴 못 가요' 0.8초. 'here'(제자리)는 피드백 없음(BUG-004)"
+    },
+    "missionChipDone": {
+      "pairsWith": "sfx_mission_complete",
+      "visual": "chip_done_border_green_sh",
+      "overlayIcon": "icon_done",
+      "textKey": "hud.mission_done"
+    },
+    "suspicionHigh": {
+      "pairsWith": "sfx_suspicion_loop",
+      "threshold": 0.7,
+      "visual": "gauge_danger",
+      "pulseHz": 2.0,
+      "_note": "의심 0.7 이상이면 게이지 빨강 맥동(0.5초 주기). 0.5~0.7은 기존 흔들림"
+    },
     "dangerBorder": {
       "pairsWith": "bgm_office.stages",
-      "visual": "screen_border_pulse",
-      "byStage": {
-        "calm": { "show": false },
-        "alert": { "show": true, "color": "yellow", "alpha": 0.25, "pulseHz": 0.8 },
-        "finale": { "show": true, "color": "yellow", "alpha": 0.3, "pulseHz": 1.0 },
-        "danger": { "show": true, "color": "red", "alpha": 0.4, "pulseHz": 2.0 },
-        "freeze": { "show": true, "color": "dark", "alpha": 0.35, "pulseHz": 0.0, "_note": "대표님 순시 비네트와 같음" },
-        "stopped": { "show": false }
-      },
-      "borderPx": 2,
       "followsBgmHysteresis": true,
-      "_note": "오디오 매니페스트 bgm_office.stages와 같은 단계·같은 전환 시점(내릴 때 1.5초 지연 포함). 화면 밖 화살표·콘 표시를 가리지 않게 가장자리 2px만"
+      "byStage": {
+        "calm": {
+          "show": false,
+          "visual": "border_calm"
+        },
+        "alert": {
+          "show": true,
+          "visual": "border_alert",
+          "color": "point2",
+          "borderPx": 4,
+          "pulseHz": 0.83
+        },
+        "finale": {
+          "show": true,
+          "visual": "border_finale",
+          "color": "green",
+          "borderPx": 4,
+          "pulseHz": 1.11
+        },
+        "danger": {
+          "show": true,
+          "visual": "border_danger",
+          "color": "point",
+          "borderPx": 6,
+          "pulseHz": 2.0
+        },
+        "freeze": {
+          "show": false,
+          "_note": "대표님 순시 비네트(all_heads_up_vignette)가 대신함"
+        },
+        "stopped": {
+          "show": false
+        }
+      },
+      "_note": "오디오 매니페스트 bgm_office.stages와 같은 단계·같은 전환 시점(내릴 때 1.5초 지연 포함). 두께가 단계마다 달라 색약에도 구분됨(아트). 화면 밖 화살표를 가리지 않게 가장자리만"
     }
   },
   "fake": {

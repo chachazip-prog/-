@@ -12,3 +12,6 @@ export {
   FloorSim,
   type FloorContent, type FloorRules, type LevelDef, type Outcome, type SimEvent, type TapResult, type Threat,
 } from './floorSim';
+export * from './camera';
+export type { FloorHooks, FloorOptions } from './floorSim';
+export * from './day';

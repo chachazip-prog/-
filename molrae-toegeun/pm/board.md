@@ -56,7 +56,7 @@
 | T-128 | mt-compliance | 폰트 대장 FNT-001 갱신(D-046: 출처 npm, 해시, RFN 미선언 확인) | T-126 | 완료 (FNT-001 승인) |
 | T-129 | mt-client-dev | 데이터 v2 연동: data-schema.md §9 확장 X1~X10(앉은 모드, 위장 규칙, threat.stages, 미션·시계, 화물 엘리베이터 등), src/content를 data 로더로 교체, ads.json 반영(D-048), 배경 동료(D-049) | T-127 완료 후 | 진행 |
 | T-130 | mt-pixel-artist | 기획 v2 추가 에셋: 경비 부스·화물 엘리베이터·화장실 칸·유리벽 타일, 엄폐 칸 반짝임·경로 점선·전조 점선 콘·말풍선, 화면 밖 화살표(사원증 색 4종 × 3단계), 위장 포즈 5종, 배경 동료 2~3종, 확성기 아이콘 | T-125 완료 후 | 완료 |
-| T-132 | mt-game-designer | 데이터 필드 보강: talk.warnSec/catchRadius/releaseSec, resultInputGuardSec, ads 첫 5판 면제 제거, 플레이어 줄 하늘색, 임시 문자열 이관, 배경 동료 정의 | D-043, D-048~054 | 진행 |
+| T-132 | mt-game-designer | 데이터 필드 보강: talk.warnSec/catchRadius/releaseSec, resultInputGuardSec, ads 첫 5판 면제 제거, 플레이어 줄 하늘색, 임시 문자열 이관, 배경 동료 정의 | D-043, D-048~054 | 완료 |
 | T-131 | mt-qa-tester | (T-127 변경에 맞춘 테스트 기대값 수정 포함: advance 분할 테스트를 판이 끝나지 않는 조건으로, 벽 탭 'here' 결과) GDD §16 합격선 9개로 재측정(화면 밖 원인 의심 0틱, 직진 봇 최고 의심 ≥0.6, 전조 없는 시선, 하루 성공률, CEO 생존율) | T-129 완료 후 | 대기 |
 | T-124 | mt-qa-tester | 탑다운 프로토타입 스모크 테스트와 밸런스 시뮬레이터 틀(경로·시선 기반) | T-123 | 완료 (P1 1건) |
 
