@@ -1,0 +1,55 @@
+{
+ "name": "exec",
+ "group": "boss",
+ "base": "body-b",
+ "note": "임원(상사). 바디 B + 청록 정장(cool_sh/dark) + 흰 깃 + 빨간 사원증 줄(D-037) + 금(노랑) 배지 + 테이크아웃 커피(허당: 커피 흘림 연출용). 머리: 올백(앞머리 없이 뒤로 넘김, 광택 하이라이트 L 4px). 얼굴: 가로 2px 느긋한 눈",
+ "swap": {"shirt": "cool_sh", "shirt_sh": "dark", "$lanyard": "point"},
+ "stamps": [
+  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   "..OOOOOOOOOOOO..",
+   "..OHHHLLLLHHHO..",
+   ".OHHHHHHMMHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHSSSSSSSSSSHO.",
+   ".OSSSSSSSSSSSSO.",
+   ".OSSOOSSSSOOSSO.",
+   ".OSSSSSSSSSSSSO.",
+   ".OSSSSSssSSSSSO.",
+   "..OOOOssssOOOO.."
+  ]},
+  {"dir": "up", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   "..OOOOOOOOOOOO..",
+   "..OHHHLLLLHHHO..",
+   ".OHHHHMMHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OSHHHHHHHHHHSO.",
+   ".OHHHHHHHHHHHHO.",
+   "..OOOOssssOOOO.."
+  ]},
+  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   "..OOOOOOOOOO....",
+   "..OHHHLLLLHO....",
+   ".OHHHHHHMHHHO...",
+   ".OHHHHHHHHHHHO..",
+   ".OHHHHHHHSSSSO..",
+   ".OHHHHHHSSSSSO..",
+   ".OHHHHHSSSOOSO..",
+   ".OHHHHHsSSSSSO..",
+   ".OHHHHHSSSSSSO..",
+   "..OOOOOsssOOO..."
+  ]},
+  {"dir": "down", "x": 7, "y": 11, "rows": ["WW"]},
+  {"dir": "down", "x": 4, "y": 12, "rows": ["Y"]},
+  {"dir": "down", "x": 12, "y": 11, "rows": ["OOOO", "OMMO", "OWWO", "SWWO", "OOOO"]},
+  {"dir": "up", "x": 0, "y": 11, "rows": ["OOOO", "OMMO", "OWWO", "OWWS", "OOOO"]},
+  {"dir": "right", "x": 10, "y": 11, "rows": ["W"]},
+  {"dir": "right", "x": 8, "y": 12, "rows": ["Y"]},
+  {"dir": "right", "x": 6, "y": 13, "rows": ["OOOO", "OMMO", "SWWO", "OOOO"]}
+ ]
+}

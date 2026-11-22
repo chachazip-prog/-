@@ -1,0 +1,53 @@
+{
+ "name": "accomplice",
+ "group": "npc",
+ "base": "body-a",
+ "note": "공범 동료(NPC, 조력). 바디 A + 노랑 후드티(point2/wood) + 초록 사원증 줄(D-037) + 초록 헤드폰 + 양손에 종이컵 2개(초록 슬리브) + 정면 윙크",
+ "swap": {"shirt": "point2", "shirt_sh": "wood", "$lanyard": "green"},
+ "stamps": [
+  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   ".....OOOOOO.....",
+   "...OOGGGGGGOO...",
+   "..OGHHHDDHHHGO..",
+   ".OGHHHHHHHHHHGO.",
+   "OGGOHHHHHHHHOGGO",
+   "OGgOSSSSSSSSOgGO",
+   "OGgSSOSSSSSSSgGO",
+   ".OOSSOSSSOOSSOO.",
+   "..OSSSSssSSSSO..",
+   "...OOOssssOOO..."
+  ]},
+  {"dir": "up", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   ".....OOOOOO.....",
+   "...OOGGGGGGOO...",
+   "..OGHHHHHHDDGO..",
+   ".OGHHHHHHHHHDGO.",
+   "OGGOHHHHHHHHOGGO",
+   "OGgOHHHHHHHHOgGO",
+   "OGgOHHHHHHHHOgGO",
+   ".OOSHHHHHHHHSOO.",
+   "..OHHHHHHHHHHO..",
+   "...OOOssssOOO..."
+  ]},
+  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   "....OOOOOO......",
+   "...OHHGGHHOO....",
+   "..OHHHGGHDDHO...",
+   ".OHHHHGGHHHDHO..",
+   ".OHHOOOOOHHHHO..",
+   ".OHHOGGgOHSSSO..",
+   ".OHHOGGgOSSOSO..",
+   ".OHHHOOOsSSOSO..",
+   "..OHHHHSSSSSSO..",
+   "...OOOOsssOOO..."
+  ]},
+  {"dir": "down", "x": 1, "y": 12, "rows": ["OOOO", "OWWO", "OGGS", "OOOO"]},
+  {"dir": "down", "x": 11, "y": 12, "rows": ["OOOO", "OWWO", "SGGO", "OOOO"]},
+  {"dir": "up", "x": 1, "y": 12, "rows": ["OOOO", "OWWO", "OGGS", "OOOO"]},
+  {"dir": "up", "x": 11, "y": 12, "rows": ["OOOO", "OWWO", "SGGO", "OOOO"]},
+  {"dir": "right", "x": 6, "y": 13, "rows": ["OOOO", "OWWO", "SGGO", "OOOO"]}
+ ]
+}

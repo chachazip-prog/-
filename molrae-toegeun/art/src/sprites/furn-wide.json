@@ -1,0 +1,63 @@
+{
+ "name": "wide",
+ "group": "furniture",
+ "size": [32, 16],
+ "origin": [0.5, 1],
+ "note": "넓은 가구 32x16(바닥 2칸). 장면에서 tx 로 놓으면 tx 칸 중심에 맞으므로 dx:8 로 두 칸(tx, tx+1)에 맞춘다. exec_desk = 임원 책상(노란 명패·모니터 뒷면·서류·펜꽂이), guard_desk = 로비 경비 데스크(노란 스탠드·노란 엠블럼), sofa = 로비 소파(쿨톤)",
+ "frames": [
+  {"name": "exec_desk", "rows": [
+   "................................",
+   "...........OOOOOOOOOO...........",
+   "...........ODDDDDDDDO...........",
+   "...........ODMDDDDDDO...........",
+   "...........OOOODDOOOO...........",
+   "OOOOOOOOOOOOOOODDOOOOOOOOOOOOOOO",
+   "OTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTO",
+   "OTOOOOOOTTTTTTTTTTTTTTTTTOOOTTTO",
+   "OTOWWWWOTTTTTTTTTTTTTTTTTOCOTTTO",
+   "OTOWMMWOTTTTTTTTTTTTTTTTTOOOTTTO",
+   "OTOOOOOOTTTOOOOOOOOOOTTTTTTTTTTO",
+   "OOOOOOOOOOOOYDYYDDYDOOOOOOOOOOOO",
+   "OttttttttttOOOOOOOOOOttttttttttO",
+   "OttOtttttttttttttttttttttttttOtO",
+   "OttOtttttttttttttttttttttttttOtO",
+   "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+  ]},
+  {"name": "guard_desk", "rows": [
+   "................................",
+   "................................",
+   "......OOOOOOOO..................",
+   "......ODDDDDDO..........OOO.....",
+   "......ODMDDDDO.........OYYYO....",
+   "......ODDDDDDO..........OMO.....",
+   "OOOOOOOOOOOOOOOOOOOOOOOOOMOOOOOO",
+   "OWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWO",
+   "OWWWWWWWWWWLLLLLWWWWWWWWWWWWWWWO",
+   "OLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLO",
+   "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+   "ODDDDDDDDDDDDDDDDDDDDDDDDDDDDDDO",
+   "ODDDDDDDDDDDDOYYYYODDDDDDDDDDDDO",
+   "ODDDDDDDDDDDDDDDDDDDDDDDDDDDDDDO",
+   "OMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMO",
+   "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO"
+  ]},
+  {"name": "sofa", "rows": [
+   "................................",
+   "................................",
+   "..OOOOOOOOOOOOOOOOOOOOOOOOOOOO..",
+   ".OccccccccccccccccccccccccccccO.",
+   ".OCCCCCCCCCCCCCCCCCCCCCCCCCCCCO.",
+   ".OCCCCCCCCCCCCCCCCCCCCCCCCCCCCO.",
+   "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+   "OcOCCCCCCCCCCCCCOCCCCCCCCCCCCOcO",
+   "OcOCWCCCCCCCCCCCOCWCCCCCCCCCCOcO",
+   "OcOCCCCCCCCCCCCCOCCCCCCCCCCCCOcO",
+   "OcOOOOOOOOOOOOOOOOOOOOOOOOOOOOcO",
+   "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+   "OccccccccccccccccccccccccccccccO",
+   "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+   ".OMO........................OMO.",
+   ".OOO........................OOO."
+  ]}
+ ]
+}

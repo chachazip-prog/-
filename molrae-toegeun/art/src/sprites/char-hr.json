@@ -1,0 +1,51 @@
+{
+ "name": "hr",
+ "group": "npc",
+ "base": "body-a",
+ "note": "인사팀(NPC, 근태 점검). 바디 A + 흰 셔츠(white/light) + 보라 사원증 줄(D-037) + 출입 명부 클립보드(회색 판 + 흰 종이 + 집게). 머리: 가운데 가르마 + 양옆으로 갈라진 커튼 앞머리. 깔끔한 프로",
+ "swap": {"shirt": "white", "shirt_sh": "light", "$lanyard": "suit"},
+ "stamps": [
+  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   ".....OOOOOO.....",
+   "...OOHHMHHHOO...",
+   "..OHHHHMHHHHHO..",
+   ".OHHHHHMHHHHHHO.",
+   ".OHHHHSSSHHHHHO.",
+   ".OHHHSSSSSSHHHO.",
+   ".OHSSOSSSSOSSHO.",
+   ".OSSSOSSSSOSSSO.",
+   "..OSSSSssSSSSO..",
+   "...OOOssssOOO..."
+  ]},
+  {"dir": "up", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   ".....OOOOOO.....",
+   "...OOHHHMHHOO...",
+   "..OHHHHHMHHHHO..",
+   ".OHHHHHHMHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OSHHHHHHHHHHSO.",
+   "..OHHHHHHHHHHO..",
+   "...OOOssssOOO..."
+  ]},
+  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   "....OOOOOO......",
+   "...OHHHHHHOO....",
+   "..OHHHHHHMHHO...",
+   ".OHHHHHHHHMHHO..",
+   ".OHHHHHHHHHHHO..",
+   ".OHHHHHHHSSHHO..",
+   ".OHHHHHSSSSOSO..",
+   ".OHHHHHsSSSOSO..",
+   "..OHHHHSSSSSSO..",
+   "...OOOOsssOOO..."
+  ]},
+  {"dir": "down", "x": 0, "y": 11, "rows": ["OOOOO", "OWDWO", "OWMWO", "OWWWS", "OWMWO", "OOOOO"]},
+  {"dir": "up", "x": 11, "y": 11, "rows": ["OOOOO", "OMMMO", "OMMMO", "SMMMO", "OMMMO", "OOOOO"]},
+  {"dir": "right", "x": 2, "y": 12, "rows": ["OOOO", "OWMO", "OWWO", "OWMO", "OOOO"]}
+ ]
+}

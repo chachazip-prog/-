@@ -10,37 +10,73 @@
       "unlockRank": "intern",
       "firstDay": 1,
       "role": "boss",
-      "props": ["lanyard_red", "mug_with_sticker", "cardigan_silhouette"],
-      "tell": { "visual": "speech_dots", "sfx": "sfx_senior_hmm" },
+      "props": [
+        "lanyard_red",
+        "mug_with_sticker",
+        "cardigan_silhouette"
+      ],
+      "tell": {
+        "visual": "speech_dots",
+        "sfx": "sfx_senior_hmm"
+      },
       "sim": {
-        "cone": { "range": 4, "halfAngleDeg": 30 },
+        "cone": {
+          "range": 4,
+          "halfAngleDeg": 30
+        },
         "speedTilesPerSec": 1.8,
         "gazeMultiplier": 0.67,
         "tellSec": 1.0,
-        "tellSecRange": [1.0, 1.0],
+        "tellSecRange": [
+          1.0,
+          1.0
+        ],
         "lookSec": 1.2,
-        "lookSecRange": [1.2, 1.2],
+        "lookSecRange": [
+          1.2,
+          1.2
+        ],
         "lookChance": 1.0,
         "glanceBackChancePerTile": 0.0,
-        "idleSecRange": [3.0, 3.0],
-        "coneActiveIn": ["look"],
-        "fake": { "chance": 0.0, "capChance": 0.0 },
-        "doubleLook": { "chance": 0.0, "capChance": 0.0 },
+        "idleSecRange": [
+          3.0,
+          3.0
+        ],
+        "coneActiveIn": [
+          "look"
+        ],
+        "fake": {
+          "chance": 0.0,
+          "capChance": 0.0
+        },
+        "doubleLook": {
+          "chance": 0.0,
+          "capChance": 0.0
+        },
         "talk": {
           "radius": 1.5,
           "noticeRadius": 2.5,
           "tellSec": 1.0,
           "durationSec": 1.5,
           "cooldownSec": 15,
-          "cancelIfDisguisedAtTellEnd": true,
           "nodShortenSec": 0.4,
           "minDurationSec": 1.0,
-          "enabledBy": "INT-02"
+          "enabledBy": "INT-02",
+          "skipIfPlayerDisguised": true,
+          "approachMotion": true
         }
       },
       "opportunities": [],
-      "hierarchy": { "suppressedBy": ["ceo"], "suppressedState": "frozen", "resumeDelaySec": 1.0 },
-      "reactionKeys": ["react.senior.caught"],
+      "hierarchy": {
+        "suppressedBy": [
+          "ceo"
+        ],
+        "suppressedState": "frozen",
+        "resumeDelaySec": 1.0
+      },
+      "reactionKeys": [
+        "react.senior.caught"
+      ],
       "rankScaling": {},
       "_designNote": "메트로놈(5.5초 고정 주기, 페이크 없음). 0.67×0.45 = 0.30/초(v1 값 유지). 인턴 주간엔 팀장이 출장이라 선배가 팀장 자리에 앉음."
     },
@@ -52,73 +88,330 @@
       "unlockRank": "staff",
       "firstDay": 6,
       "role": "boss",
-      "props": ["lanyard_red", "tie_navy", "name_plate"],
-      "tell": { "visual": "back_twitch", "sfx": "sfx_chair_creak" },
+      "props": [
+        "lanyard_red",
+        "tie_navy",
+        "name_plate"
+      ],
+      "tell": {
+        "visual": "back_twitch",
+        "sfx": "sfx_chair_creak"
+      },
       "sim": {
-        "cone": { "range": 5, "halfAngleDeg": 30 },
+        "cone": {
+          "range": 5,
+          "halfAngleDeg": 30
+        },
         "speedTilesPerSec": 1.8,
         "gazeMultiplier": 1.0,
         "tellSec": 0.7,
-        "tellSecRange": [0.6, 0.8],
+        "tellSecRange": [
+          0.6,
+          0.8
+        ],
         "lookSec": 1.3,
-        "lookSecRange": [1.0, 1.6],
+        "lookSecRange": [
+          1.0,
+          1.6
+        ],
         "lookChance": 1.0,
         "glanceBackChancePerTile": 0.04,
-        "idleSecRange": [2.5, 4.5],
-        "coneActiveIn": ["look"],
-        "fake": { "chance": 0.1, "capChance": 0.3, "afterFakeSec": 0.3, "visual": "cough", "sfx": "sfx_cough" },
-        "doubleLook": { "chance": 0.0, "capChance": 0.25, "gapSec": 0.5, "secondTellSec": 0.4, "secondLookSecRange": [0.8, 1.2] },
+        "idleSecRange": [
+          2.5,
+          4.5
+        ],
+        "coneActiveIn": [
+          "look"
+        ],
+        "fake": {
+          "chance": 0.1,
+          "capChance": 0.3,
+          "afterFakeSec": 0.3,
+          "visual": "cough",
+          "sfx": "sfx_cough"
+        },
+        "doubleLook": {
+          "chance": 0.0,
+          "capChance": 0.25,
+          "gapSec": 0.5,
+          "secondTellSec": 0.4,
+          "secondLookSecRange": [
+            0.8,
+            1.2
+          ]
+        },
         "talk": {
           "radius": 1.5,
           "noticeRadius": 2.5,
           "tellSec": 0.6,
           "durationSec": 2.0,
           "cooldownSec": 12,
-          "cancelIfDisguisedAtTellEnd": true,
           "nodShortenSec": 0.4,
           "minDurationSec": 1.0,
           "onlyWhilePlayerAway": true,
-          "enabledBy": "INT-01"
+          "enabledBy": "INT-01",
+          "skipIfPlayerDisguised": true,
+          "approachMotion": true
         }
       },
       "opportunities": [
-        { "type": "phone_call", "probPerCycle": 0.2, "durationSecRange": [3.0, 5.0], "gazeOff": true, "talkOff": true, "visual": "phone_icon", "endTellSec": 0.5 },
-        { "type": "meeting", "byInterrupt": "INT-08", "gazeOff": true, "seatEmpty": true }
+        {
+          "type": "phone_call",
+          "probPerCycle": 0.2,
+          "durationSecRange": [
+            3.0,
+            5.0
+          ],
+          "gazeOff": true,
+          "talkOff": true,
+          "visual": "phone_icon",
+          "endTellSec": 0.5
+        },
+        {
+          "type": "meeting",
+          "byInterrupt": "INT-08",
+          "gazeOff": true,
+          "seatEmpty": true
+        }
       ],
       "hierarchy": {
-        "suppressedBy": ["director", "ceo"],
+        "suppressedBy": [
+          "director",
+          "ceo"
+        ],
         "suppressedState": "greeting",
         "greetSpot": "tl_greet_spot",
         "greetTriggerZone": "team",
         "resumeDelaySec": 1.0,
         "receivesSnitchReport": true,
-        "snitchForcedLook": { "tellSec": 0.5, "lookSec": 2.5, "coneRange": 7, "aimAtPlayer": true }
+        "snitchForcedLook": {
+          "tellSec": 0.5,
+          "lookSec": 2.5,
+          "coneRange": 7,
+          "aimAtPlayer": true
+        }
       },
-      "reactionKeys": ["react.team_lead.caught", "react.team_lead.snitched", "react.team_lead.bag_spotted"],
+      "reactionKeys": [
+        "react.team_lead.caught",
+        "react.team_lead.snitched",
+        "react.team_lead.bag_spotted"
+      ],
       "rankScaling": {
         "staff": {
-          "start": { "sim.tellSecRange": [0.6, 0.8], "sim.idleSecRange": [2.5, 4.5], "sim.lookSecRange": [1.0, 1.6], "sim.fake.chance": 0.1, "sim.doubleLook.chance": 0.0, "opportunities.phone_call.probPerCycle": 0.2 },
-          "end": { "sim.tellSecRange": [0.55, 0.8], "sim.idleSecRange": [2.2, 4.2], "sim.lookSecRange": [1.0, 1.8], "sim.fake.chance": 0.15, "sim.doubleLook.chance": 0.1, "opportunities.phone_call.probPerCycle": 0.18 }
+          "start": {
+            "sim.tellSecRange": [
+              0.6,
+              0.8
+            ],
+            "sim.idleSecRange": [
+              2.5,
+              4.5
+            ],
+            "sim.lookSecRange": [
+              1.0,
+              1.6
+            ],
+            "sim.fake.chance": 0.1,
+            "sim.doubleLook.chance": 0.0,
+            "opportunities.phone_call.probPerCycle": 0.2
+          },
+          "end": {
+            "sim.tellSecRange": [
+              0.55,
+              0.8
+            ],
+            "sim.idleSecRange": [
+              2.2,
+              4.2
+            ],
+            "sim.lookSecRange": [
+              1.0,
+              1.8
+            ],
+            "sim.fake.chance": 0.15,
+            "sim.doubleLook.chance": 0.1,
+            "opportunities.phone_call.probPerCycle": 0.18
+          }
         },
         "assistant_manager": {
-          "start": { "sim.tellSecRange": [0.5, 0.75], "sim.idleSecRange": [2.0, 4.0], "sim.lookSecRange": [1.0, 2.0], "sim.fake.chance": 0.15, "sim.doubleLook.chance": 0.12, "opportunities.phone_call.probPerCycle": 0.15 },
-          "end": { "sim.tellSecRange": [0.5, 0.75], "sim.idleSecRange": [2.0, 4.0], "sim.lookSecRange": [1.0, 2.0], "sim.fake.chance": 0.22, "sim.doubleLook.chance": 0.18, "opportunities.phone_call.probPerCycle": 0.15 }
+          "start": {
+            "sim.tellSecRange": [
+              0.5,
+              0.75
+            ],
+            "sim.idleSecRange": [
+              2.0,
+              4.0
+            ],
+            "sim.lookSecRange": [
+              1.0,
+              2.0
+            ],
+            "sim.fake.chance": 0.15,
+            "sim.doubleLook.chance": 0.12,
+            "opportunities.phone_call.probPerCycle": 0.15
+          },
+          "end": {
+            "sim.tellSecRange": [
+              0.5,
+              0.75
+            ],
+            "sim.idleSecRange": [
+              2.0,
+              4.0
+            ],
+            "sim.lookSecRange": [
+              1.0,
+              2.0
+            ],
+            "sim.fake.chance": 0.22,
+            "sim.doubleLook.chance": 0.18,
+            "opportunities.phone_call.probPerCycle": 0.15
+          }
         },
         "manager": {
-          "start": { "sim.tellSecRange": [0.45, 0.7], "sim.idleSecRange": [1.8, 3.8], "sim.lookSecRange": [1.2, 2.0], "sim.fake.chance": 0.22, "sim.doubleLook.chance": 0.18, "opportunities.phone_call.probPerCycle": 0.12 },
-          "end": { "sim.tellSecRange": [0.45, 0.7], "sim.idleSecRange": [1.8, 3.8], "sim.lookSecRange": [1.2, 2.0], "sim.fake.chance": 0.28, "sim.doubleLook.chance": 0.22, "opportunities.phone_call.probPerCycle": 0.12 }
+          "start": {
+            "sim.tellSecRange": [
+              0.45,
+              0.7
+            ],
+            "sim.idleSecRange": [
+              1.8,
+              3.8
+            ],
+            "sim.lookSecRange": [
+              1.2,
+              2.0
+            ],
+            "sim.fake.chance": 0.22,
+            "sim.doubleLook.chance": 0.18,
+            "opportunities.phone_call.probPerCycle": 0.12
+          },
+          "end": {
+            "sim.tellSecRange": [
+              0.45,
+              0.7
+            ],
+            "sim.idleSecRange": [
+              1.8,
+              3.8
+            ],
+            "sim.lookSecRange": [
+              1.2,
+              2.0
+            ],
+            "sim.fake.chance": 0.28,
+            "sim.doubleLook.chance": 0.22,
+            "opportunities.phone_call.probPerCycle": 0.12
+          }
         },
         "deputy_general_manager": {
-          "start": { "sim.tellSecRange": [0.4, 0.65], "sim.idleSecRange": [1.8, 3.6], "sim.lookSecRange": [1.2, 2.0], "sim.fake.chance": 0.28, "sim.doubleLook.chance": 0.22, "opportunities.phone_call.probPerCycle": 0.12 },
-          "end": { "sim.tellSecRange": [0.4, 0.65], "sim.idleSecRange": [1.8, 3.6], "sim.lookSecRange": [1.2, 2.0], "sim.fake.chance": 0.3, "sim.doubleLook.chance": 0.25, "opportunities.phone_call.probPerCycle": 0.1 }
+          "start": {
+            "sim.tellSecRange": [
+              0.4,
+              0.65
+            ],
+            "sim.idleSecRange": [
+              1.8,
+              3.6
+            ],
+            "sim.lookSecRange": [
+              1.2,
+              2.0
+            ],
+            "sim.fake.chance": 0.28,
+            "sim.doubleLook.chance": 0.22,
+            "opportunities.phone_call.probPerCycle": 0.12
+          },
+          "end": {
+            "sim.tellSecRange": [
+              0.4,
+              0.65
+            ],
+            "sim.idleSecRange": [
+              1.8,
+              3.6
+            ],
+            "sim.lookSecRange": [
+              1.2,
+              2.0
+            ],
+            "sim.fake.chance": 0.3,
+            "sim.doubleLook.chance": 0.25,
+            "opportunities.phone_call.probPerCycle": 0.1
+          }
         },
         "general_manager": {
-          "start": { "sim.tellSecRange": [0.4, 0.65], "sim.idleSecRange": [1.8, 3.6], "sim.lookSecRange": [1.2, 2.0], "sim.fake.chance": 0.3, "sim.doubleLook.chance": 0.25, "opportunities.phone_call.probPerCycle": 0.1 },
-          "end": { "sim.tellSecRange": [0.4, 0.6], "sim.idleSecRange": [1.8, 3.4], "sim.lookSecRange": [1.2, 2.0], "sim.fake.chance": 0.3, "sim.doubleLook.chance": 0.25, "opportunities.phone_call.probPerCycle": 0.1 }
+          "start": {
+            "sim.tellSecRange": [
+              0.4,
+              0.65
+            ],
+            "sim.idleSecRange": [
+              1.8,
+              3.6
+            ],
+            "sim.lookSecRange": [
+              1.2,
+              2.0
+            ],
+            "sim.fake.chance": 0.3,
+            "sim.doubleLook.chance": 0.25,
+            "opportunities.phone_call.probPerCycle": 0.1
+          },
+          "end": {
+            "sim.tellSecRange": [
+              0.4,
+              0.6
+            ],
+            "sim.idleSecRange": [
+              1.8,
+              3.4
+            ],
+            "sim.lookSecRange": [
+              1.2,
+              2.0
+            ],
+            "sim.fake.chance": 0.3,
+            "sim.doubleLook.chance": 0.25,
+            "opportunities.phone_call.probPerCycle": 0.1
+          }
         },
         "executive": {
-          "start": { "sim.tellSecRange": [0.4, 0.6], "sim.idleSecRange": [1.6, 3.4], "sim.lookSecRange": [1.2, 2.0], "sim.fake.chance": 0.3, "sim.doubleLook.chance": 0.25, "opportunities.phone_call.probPerCycle": 0.1 },
-          "end": { "sim.tellSecRange": [0.4, 0.6], "sim.idleSecRange": [1.6, 3.4], "sim.lookSecRange": [1.2, 2.0], "sim.fake.chance": 0.3, "sim.doubleLook.chance": 0.25, "opportunities.phone_call.probPerCycle": 0.1 }
+          "start": {
+            "sim.tellSecRange": [
+              0.4,
+              0.6
+            ],
+            "sim.idleSecRange": [
+              1.6,
+              3.4
+            ],
+            "sim.lookSecRange": [
+              1.2,
+              2.0
+            ],
+            "sim.fake.chance": 0.3,
+            "sim.doubleLook.chance": 0.25,
+            "opportunities.phone_call.probPerCycle": 0.1
+          },
+          "end": {
+            "sim.tellSecRange": [
+              0.4,
+              0.6
+            ],
+            "sim.idleSecRange": [
+              1.6,
+              3.4
+            ],
+            "sim.lookSecRange": [
+              1.2,
+              2.0
+            ],
+            "sim.fake.chance": 0.3,
+            "sim.doubleLook.chance": 0.25,
+            "opportunities.phone_call.probPerCycle": 0.1
+          }
         }
       },
       "_designNote": "v1 타이밍·페이크 곡선을 그대로 계승(검증된 리듬). 콘 반각 30°는 T-123 값 유지: 내 자리(18°)는 확실히, 팀 좌석 줄 전체를 덮음. 말걸기는 내가 자리를 비웠을 때 1.5타일 안을 지나가면 발동 → 최단 경로(팀장 옆)에 함정."
@@ -131,49 +424,177 @@
       "unlockRank": "assistant_manager",
       "firstDay": 16,
       "role": "boss",
-      "props": ["lanyard_red", "badge_gold", "briefcase"],
-      "tell": { "visual": "door_open_shadow", "sfx": "sfx_footsteps_crescendo" },
+      "props": [
+        "lanyard_red",
+        "badge_gold",
+        "briefcase"
+      ],
+      "tell": {
+        "visual": "door_open_shadow",
+        "sfx": "sfx_footsteps_crescendo"
+      },
       "sim": {
-        "cone": { "range": 6, "halfAngleDeg": 25 },
+        "cone": {
+          "range": 6,
+          "halfAngleDeg": 25
+        },
         "speedTilesPerSec": 2.0,
         "gazeMultiplier": 1.33,
         "tellSec": 1.5,
-        "tellSecRange": [1.5, 1.5],
+        "tellSecRange": [
+          1.5,
+          1.5
+        ],
         "lookSec": 2.0,
-        "lookSecRange": [1.5, 2.5],
+        "lookSecRange": [
+          1.5,
+          2.5
+        ],
         "lookChance": 0.5,
         "glanceBackChancePerTile": 0.03,
-        "coneActiveIn": ["walk", "wait", "tell", "look"],
+        "coneActiveIn": [
+          "walk",
+          "wait",
+          "tell",
+          "look"
+        ],
         "stopLookTellSec": 0.5,
-        "fake": { "chance": 0.0, "capChance": 0.0 },
-        "doubleLook": { "chance": 0.0, "capChance": 0.0 }
+        "fake": {
+          "chance": 0.0,
+          "capChance": 0.0
+        },
+        "doubleLook": {
+          "chance": 0.0,
+          "capChance": 0.0
+        }
       },
       "opportunities": [
-        { "type": "coffee_spill", "atStop": "stop_pantry_coffee", "probPerPatrol": 0.1, "durationSecRange": [2.0, 2.0], "gazeOff": true, "visual": "spill_puddle" }
+        {
+          "type": "coffee_spill",
+          "atStop": "stop_pantry_coffee",
+          "probPerPatrol": 0.1,
+          "durationSecRange": [
+            2.0,
+            2.0
+          ],
+          "gazeOff": true,
+          "visual": "spill_puddle"
+        }
       ],
-      "patrols": { "variants": ["p_director_walkdown", "p_director_walkup"], "perDayRange": [1, 1], "minGapSec": 12 },
-      "hierarchy": { "suppressedBy": ["ceo"], "suppressedState": "frozen", "suppresses": ["team_lead"], "resumeDelaySec": 1.0 },
-      "reactionKeys": ["react.director.caught"],
+      "patrols": {
+        "variants": [
+          "p_director_walkdown",
+          "p_director_walkup"
+        ],
+        "perDayRange": [
+          1,
+          1
+        ],
+        "minGapSec": 12
+      },
+      "hierarchy": {
+        "suppressedBy": [
+          "ceo"
+        ],
+        "suppressedState": "frozen",
+        "suppresses": [
+          "team_lead"
+        ],
+        "resumeDelaySec": 1.0
+      },
+      "reactionKeys": [
+        "react.director.caught"
+      ],
       "rankScaling": {
         "assistant_manager": {
-          "start": { "patrols.perDayRange": [1, 1], "sim.lookChance": 0.4, "sim.speedTilesPerSec": 2.0 },
-          "end": { "patrols.perDayRange": [1, 2], "sim.lookChance": 0.5, "sim.speedTilesPerSec": 2.0 }
+          "start": {
+            "patrols.perDayRange": [
+              1,
+              1
+            ],
+            "sim.lookChance": 0.4,
+            "sim.speedTilesPerSec": 2.0
+          },
+          "end": {
+            "patrols.perDayRange": [
+              1,
+              2
+            ],
+            "sim.lookChance": 0.5,
+            "sim.speedTilesPerSec": 2.0
+          }
         },
         "manager": {
-          "start": { "patrols.perDayRange": [1, 2], "sim.lookChance": 0.5, "sim.speedTilesPerSec": 2.0 },
-          "end": { "patrols.perDayRange": [1, 2], "sim.lookChance": 0.6, "sim.speedTilesPerSec": 2.2 }
+          "start": {
+            "patrols.perDayRange": [
+              1,
+              2
+            ],
+            "sim.lookChance": 0.5,
+            "sim.speedTilesPerSec": 2.0
+          },
+          "end": {
+            "patrols.perDayRange": [
+              1,
+              2
+            ],
+            "sim.lookChance": 0.6,
+            "sim.speedTilesPerSec": 2.2
+          }
         },
         "deputy_general_manager": {
-          "start": { "patrols.perDayRange": [1, 2], "sim.lookChance": 0.6, "sim.speedTilesPerSec": 2.2 },
-          "end": { "patrols.perDayRange": [2, 2], "sim.lookChance": 0.6, "sim.speedTilesPerSec": 2.2 }
+          "start": {
+            "patrols.perDayRange": [
+              1,
+              2
+            ],
+            "sim.lookChance": 0.6,
+            "sim.speedTilesPerSec": 2.2
+          },
+          "end": {
+            "patrols.perDayRange": [
+              2,
+              2
+            ],
+            "sim.lookChance": 0.6,
+            "sim.speedTilesPerSec": 2.2
+          }
         },
         "general_manager": {
-          "start": { "patrols.perDayRange": [2, 2], "sim.lookChance": 0.6, "sim.speedTilesPerSec": 2.2 },
-          "end": { "patrols.perDayRange": [2, 2], "sim.lookChance": 0.65, "sim.speedTilesPerSec": 2.3 }
+          "start": {
+            "patrols.perDayRange": [
+              2,
+              2
+            ],
+            "sim.lookChance": 0.6,
+            "sim.speedTilesPerSec": 2.2
+          },
+          "end": {
+            "patrols.perDayRange": [
+              2,
+              2
+            ],
+            "sim.lookChance": 0.65,
+            "sim.speedTilesPerSec": 2.3
+          }
         },
         "executive": {
-          "start": { "patrols.perDayRange": [2, 2], "sim.lookChance": 0.65, "sim.speedTilesPerSec": 2.3 },
-          "end": { "patrols.perDayRange": [2, 2], "sim.lookChance": 0.65, "sim.speedTilesPerSec": 2.3 }
+          "start": {
+            "patrols.perDayRange": [
+              2,
+              2
+            ],
+            "sim.lookChance": 0.65,
+            "sim.speedTilesPerSec": 2.3
+          },
+          "end": {
+            "patrols.perDayRange": [
+              2,
+              2
+            ],
+            "sim.lookChance": 0.65,
+            "sim.speedTilesPerSec": 2.3
+          }
         }
       },
       "_designNote": "걷는 콘(6타일, 반각 25°)은 화면 밖 경고가 의미 있는 '긴 시야' 캐릭터(PM 공지 5). 플레이어(3.0)보다 느려(2.0~2.3) 앞질러 피할 수 있음. 0.6/초. 등장 1.5초 전 발소리+문 열림+가장자리 화살표."
@@ -186,31 +607,87 @@
       "unlockRank": "manager",
       "firstDay": 28,
       "role": "boss",
-      "props": ["lanyard_red", "suit_long_silhouette", "folder_leather"],
-      "tell": { "visual": "all_heads_up_vignette", "sfx": "sfx_elevator_ding", "bgm": "stop" },
+      "props": [
+        "lanyard_red",
+        "suit_long_silhouette",
+        "folder_leather"
+      ],
+      "tell": {
+        "visual": "all_heads_up_vignette",
+        "sfx": "sfx_elevator_ding",
+        "bgm": "stop"
+      },
       "sim": {
-        "cone": { "range": 6, "halfAngleDeg": 30 },
+        "cone": {
+          "range": 6,
+          "halfAngleDeg": 30
+        },
         "speedTilesPerSec": 2.4,
         "gazeMultiplier": 2.0,
         "tellSec": 1.0,
-        "tellSecRange": [1.0, 1.0],
+        "tellSecRange": [
+          1.0,
+          1.0
+        ],
         "lookSec": 1.0,
-        "lookSecRange": [1.0, 1.0],
+        "lookSecRange": [
+          1.0,
+          1.0
+        ],
         "lookChance": 0.35,
         "glanceBackChancePerTile": 0.0,
-        "coneActiveIn": ["walk", "look"],
-        "fake": { "type": "recheck", "chance": 0.35, "capChance": 0.35, "tellSec": 0.5, "visual": "stop_and_shoulder", "sfx": "sfx_footstep_stop" },
-        "doubleLook": { "chance": 0.0, "capChance": 0.0 }
+        "coneActiveIn": [
+          "walk",
+          "look"
+        ],
+        "fake": {
+          "type": "recheck",
+          "chance": 0.35,
+          "capChance": 0.35,
+          "tellSec": 0.5,
+          "visual": "stop_and_shoulder",
+          "sfx": "sfx_footstep_stop"
+        },
+        "doubleLook": {
+          "chance": 0.0,
+          "capChance": 0.0
+        }
       },
       "visit": {
         "patrolId": "p_ceo_visit",
         "spawnRequires": "player_seated",
-        "freeze": { "global": true, "untilStop": "stop_ceo_greet", "maxSec": 5.0, "moveStartInstantSuspicion": 0.2, "gainWhile": ["moving", "activity"], "safeStates": ["seated_working", "disguised", "activity_paused", "idle_in_safe_zone"] },
-        "talkWindow": { "atStop": "stop_ceo_talk", "durationSec": 4.0, "gazeOffFor": ["team_lead", "director"], "slackMultiplier": 2.0 },
+        "freeze": {
+          "global": true,
+          "untilStop": "stop_ceo_greet",
+          "maxSec": 5.0,
+          "moveStartInstantSuspicion": 0.2,
+          "gainWhile": [
+            "moving",
+            "activity"
+          ],
+          "safeStates": [
+            "seated_working",
+            "disguised",
+            "activity_paused",
+            "idle_in_safe_zone"
+          ]
+        },
+        "talkWindow": {
+          "atStop": "stop_ceo_talk",
+          "durationSec": 4.0,
+          "gazeOffFor": [
+            "team_lead",
+            "director"
+          ],
+          "slackMultiplier": 2.0
+        },
         "exitResumeDelaySec": 1.0
       },
       "greetingQte": {
-        "preCueSecRange": [0.6, 1.2],
+        "preCueSecRange": [
+          0.6,
+          1.2
+        ],
         "windowSec": 0.6,
         "maxPressSec": 0.4,
         "earlyPenalty": 0.1,
@@ -232,27 +709,66 @@
       },
       "hierarchy": {
         "suppressedBy": [],
-        "suppresses": ["team_lead", "director", "senior"],
-        "freezesNpcs": ["snitch", "accomplice", "hr_inspector", "security_guard"],
+        "suppresses": [
+          "team_lead",
+          "director",
+          "senior"
+        ],
+        "freezesNpcs": [
+          "snitch",
+          "accomplice",
+          "hr_inspector",
+          "security_guard"
+        ],
         "resumeDelaySec": 1.0
       },
-      "reactionKeys": ["react.ceo.caught", "react.ceo.early_bow", "react.ceo.long_bow"],
+      "reactionKeys": [
+        "react.ceo.caught",
+        "react.ceo.early_bow",
+        "react.ceo.long_bow"
+      ],
       "rankScaling": {
         "manager": {
-          "start": { "greetingQte.windowSec": 0.6, "sim.fake.chance": 0.3 },
-          "end": { "greetingQte.windowSec": 0.6, "sim.fake.chance": 0.35 }
+          "start": {
+            "greetingQte.windowSec": 0.6,
+            "sim.fake.chance": 0.3
+          },
+          "end": {
+            "greetingQte.windowSec": 0.6,
+            "sim.fake.chance": 0.35
+          }
         },
         "deputy_general_manager": {
-          "start": { "greetingQte.windowSec": 0.55, "sim.fake.chance": 0.35 },
-          "end": { "greetingQte.windowSec": 0.5, "sim.fake.chance": 0.35 }
+          "start": {
+            "greetingQte.windowSec": 0.55,
+            "sim.fake.chance": 0.35
+          },
+          "end": {
+            "greetingQte.windowSec": 0.5,
+            "sim.fake.chance": 0.35
+          }
         },
         "general_manager": {
-          "start": { "greetingQte.windowSec": 0.5, "sim.fake.chance": 0.35 },
-          "end": { "greetingQte.windowSec": 0.5, "sim.fake.chance": 0.35 }
+          "start": {
+            "greetingQte.windowSec": 0.5,
+            "sim.fake.chance": 0.35
+          },
+          "end": {
+            "greetingQte.windowSec": 0.5,
+            "sim.fake.chance": 0.35
+          }
         },
         "executive": {
-          "start": { "greetingQte.windowSec": 0.5, "sim.fake.chance": 0.35, "occurrence.randomChancePerDay": 0.12 },
-          "end": { "greetingQte.windowSec": 0.5, "sim.fake.chance": 0.35, "occurrence.randomChancePerDay": 0.12 }
+          "start": {
+            "greetingQte.windowSec": 0.5,
+            "sim.fake.chance": 0.35,
+            "occurrence.randomChancePerDay": 0.12
+          },
+          "end": {
+            "greetingQte.windowSec": 0.5,
+            "sim.fake.chance": 0.35,
+            "occurrence.randomChancePerDay": 0.12
+          }
         }
       },
       "_designNote": "얼음 = 대표님이 화물 엘리베이터에서 내 자리 앞까지 걸어오는 4.6초(최대 5초). 전역 규칙이라 화면 밖 규칙의 예외지만, 전조가 화면 전체(BGM 정지·비네트·모두 고개 듦·'얼음!' 문구)라 놓칠 수 없음. 등장 조건 '내가 자리에 앉아 있을 때'로 눈도장 기회를 항상 보장. 랜덤 출현일도 시드로 미리 정해져 '출근 준비' 화면에 예보(D-027)."

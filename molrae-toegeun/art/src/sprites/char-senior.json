@@ -1,0 +1,52 @@
+{
+ "name": "senior",
+ "group": "boss",
+ "base": "body-a",
+ "note": "선배(상사, 튜토리얼). 바디 A + 황갈색 가디건(안에 흰 셔츠) + 빨간 사원증 줄(D-037) + 스티커 붙은 머그(하늘색 스티커). 부드러운 인상: 구름처럼 둥글게 부푼 머리(옆으로 1px 넓음), 웃는 눈(^ ^), 볼터치(skin_sh). '…' 전조 말풍선은 UI",
+ "swap": {"shirt": "wood", "shirt_sh": "wood_sh", "$lanyard": "point"},
+ "stamps": [
+  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
+   ".....OO..OO.....",
+   "...OOHHOOHHOO...",
+   "..OHHHHHHHHHHO..",
+   ".OHHDHHHHDHHHHO.",
+   "OHHHHHHHHHHHHHHO",
+   "OHHHHHHHHHHHHHHO",
+   ".OHHSSSSSSSSHHO.",
+   ".OHSSOSSSSOSSHO.",
+   ".OSSOSOSSOSOSSO.",
+   "..OsSSSssSSSsO..",
+   "...OOOssssOOO..."
+  ]},
+  {"dir": "up", "clear": true, "x": 0, "y": 0, "rows": [
+   ".....OO..OO.....",
+   "...OOHHOOHHOO...",
+   "..OHHHHHHHHHHO..",
+   ".OHHHHHDHHHHDHO.",
+   "OHHHHHHHHHHHHHHO",
+   "OHHHHHHHHHHHHHHO",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OSHHHHHHHHHHSO.",
+   "..OHHHHHHHHHHO..",
+   "...OOOssssOOO..."
+  ]},
+  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
+   "....OO..OO......",
+   "..OOHHOOHHOO....",
+   ".OHHHHHHHHHHO...",
+   "OHHDHHHHHDHHHO..",
+   "OHHHHHHHHHHHHO..",
+   "OHHHHHHHHHHHHO..",
+   ".OHHHHHHHSSSSO..",
+   ".OHHHHHSSSSOSO..",
+   ".OHHHHHsSOSOSO..",
+   "..OHHHHSSsSSSO..",
+   "...OOOOsssOOO..."
+  ]},
+  {"dir": "down", "x": 7, "y": 11, "rows": ["WW"]},
+  {"dir": "down", "x": 0, "y": 12, "rows": ["OOOO", "OCWO", "OWWS", "OOOO"]},
+  {"dir": "up", "x": 12, "y": 12, "rows": ["OOOO", "OWWO", "SWWO", "OOOO"]},
+  {"dir": "right", "x": 7, "y": 13, "rows": ["OOOO", "OCWO", "SWWO", "OOOO"]}
+ ]
+}

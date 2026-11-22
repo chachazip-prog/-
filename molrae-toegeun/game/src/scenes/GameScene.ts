@@ -3,19 +3,19 @@ import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
 import { loadFloorContent, loadFloorPresentation } from '../content';
 import { FloorSim, conePolygon, daySeed, tilesInZone, type Threat } from '../core';
 import { SceneKey } from './keys';
-import { TEXT_STYLE } from './style';
+import { addPixelText, fitPanel, placeText, setPixelText, type UIText } from '../ui/pixelText';
 
 /** 렌더링 기준값 (게임플레이 수치 아님) */
 const TILE = 16;
 const HUD_H = 18;
+/** HUD 게이지 막대 세로 중심 (barY 5 + barH 8 / 2) */
+const HUD_BAR_MID = 9;
 /** 카메라 추적 시 화면 안 플레이어 세로 위치 비율 (위로 진행하므로 아래쪽에 둠) */
 const CAM_ANCHOR_Y = 0.6;
 /** 카메라 추적 지수 감쇠 속도(1/초). 프레임레이트 무관 */
 const CAM_FOLLOW_RATE = 8;
 const CONE_RAYS = 14;
 const ARROW_MARGIN = 7;
-/** 작은 한글 텍스트: 위쪽 글리프 잘림 방지 여백. (캔버스가 180×320으로 CSS 확대되므로 해상도 배율은 효과 없음 → 비트맵 폰트 필요) */
-const SMALL_TEXT: Phaser.Types.GameObjects.Text.TextStyle = { ...TEXT_STYLE, padding: { top: 2, bottom: 1 } };
 
 /** 회색 박스 팔레트 (라이트 모드 기준. 빨강은 상사·위험 신호 전용 — D-025) */
 const COLOR = {
@@ -36,6 +36,10 @@ const COLOR = {
   barBg: 0xc8c8d0,
   barFill: 0xd02a2a,
   warnApproach: 0xe0b020,
+  text: 0x1b1b22,
+  textMuted: 0x4a4a55,
+  textDev: 0x55555f,
+  panel: 0xffffff,
 } as const;
 
 const KIND_COLOR: Readonly<Record<string, number>> = {
@@ -62,16 +66,17 @@ export class GameScene extends Phaser.Scene {
   private offsetX = 0;
   private camY = 0;
   private player!: Phaser.GameObjects.Rectangle;
-  private playerLabel!: Phaser.GameObjects.Text;
+  private playerLabel!: UIText;
+  private playerLabelBg!: Phaser.GameObjects.Rectangle;
   private npcBodies: Phaser.GameObjects.Rectangle[] = [];
-  private npcTells: Phaser.GameObjects.Text[] = [];
+  private npcTells: UIText[] = [];
   private cones!: Phaser.GameObjects.Graphics;
   private pathGfx!: Phaser.GameObjects.Graphics;
   private hudGfx!: Phaser.GameObjects.Graphics;
   private arrows!: Phaser.GameObjects.Graphics;
-  private pctText!: Phaser.GameObjects.Text;
-  private fpsText: Phaser.GameObjects.Text | null = null;
-  private endText: Phaser.GameObjects.Text | null = null;
+  private pctText!: UIText;
+  private fpsText: UIText | null = null;
+  private endText: UIText | null = null;
   private blink = 0;
 
   constructor() { super(SceneKey.Game); }
@@ -95,25 +100,25 @@ export class GameScene extends Phaser.Scene {
     // 캐릭터: 회색 박스 단계는 12×16 몸통 사각형 (스프라이트 프레임 16×20 — D-036 — 확정 시 교체)
     for (const npc of this.sim.npcs) {
       const body = this.add.rectangle(0, 0, 12, 16, ROLE_COLOR[npc.def.role] ?? COLOR.guard).setOrigin(0.5, 0.75);
-      const tell = this.add.text(0, 0, '!', { ...TEXT_STYLE, fontSize: '12px', color: '#d02a2a', fontStyle: 'bold' })
-        .setOrigin(0.5, 1).setVisible(false);
+      const tell = addPixelText(this, 0, 0, '!', { role: 'body', color: COLOR.boss }).setVisible(false);
       this.npcBodies.push(body);
       this.npcTells.push(tell);
     }
     this.player = this.add.rectangle(0, 0, 12, 16, COLOR.player).setOrigin(0.5, 0.75).setStrokeStyle(1, 0xffffff);
-    this.playerLabel = this.add.text(0, 0, '', { ...SMALL_TEXT, fontSize: '8px', color: '#1b1b22', backgroundColor: '#ffffffcc' })
-      .setOrigin(0.5, 1);
+    // 한글 라벨은 10px(8px 한글 금지 — D-042). 배경은 BitmapText 뒤 사각형
+    this.playerLabelBg = this.add.rectangle(0, 0, 1, 1, COLOR.panel, 0.8);
+    this.playerLabel = addPixelText(this, 0, 0, '', { role: 'label', color: COLOR.text });
 
     // HUD (카메라 고정)
     this.arrows = this.add.graphics().setScrollFactor(0);
     this.hudGfx = this.add.graphics().setScrollFactor(0);
-    this.add.text(4, 2, '의심', { ...SMALL_TEXT, fontSize: '10px', color: '#1b1b22', align: 'left' })
-      .setScrollFactor(0);
-    this.pctText = this.add.text(124, 2, '', { ...SMALL_TEXT, fontSize: '10px', color: '#1b1b22', align: 'left' })
-      .setScrollFactor(0);
+    // HUD 텍스트 세로 위치: 게이지 막대(y 5~13)의 가운데에 잉크 영역을 맞춤
+    placeText(addPixelText(this, 0, 0, '의심', { role: 'label', color: COLOR.text }).setScrollFactor(0), 4, HUD_BAR_MID, 0, 0.5);
+    this.pctText = addPixelText(this, 124, 0, '0%', { role: 'label', color: COLOR.text }).setScrollFactor(0);
+    placeText(this.pctText, 124, HUD_BAR_MID, 0, 0.5);
     if (import.meta.env.DEV) {
-      this.fpsText = this.add.text(LOGICAL_WIDTH - 3, 3, '', { ...SMALL_TEXT, fontSize: '8px', color: '#55555f', align: 'right' })
-        .setOrigin(1, 0).setScrollFactor(0);
+      this.fpsText = addPixelText(this, 0, 0, '60fps', { role: 'num', color: COLOR.textDev }).setScrollFactor(0);
+      placeText(this.fpsText, LOGICAL_WIDTH - 3, HUD_BAR_MID, 1, 0.5);
     }
 
     // 카메라 초기 위치: 플레이어 기준 즉시 맞춤
@@ -184,8 +189,8 @@ export class GameScene extends Phaser.Scene {
       if (tiles.length === 0) continue;
       let sx = 0, sy = 0;
       for (const t of tiles) { sx += t.x + 0.5; sy += t.y + 0.5; }
-      this.add.text(Math.round(this.offsetX + (sx / tiles.length) * TILE), Math.round((sy / tiles.length) * TILE), label,
-        { ...SMALL_TEXT, fontSize: '9px', color: '#4a4a55' }).setOrigin(0.5).setAlpha(0.85);
+      const t = addPixelText(this, 0, 0, label, { role: 'label', color: COLOR.textMuted }).setAlpha(0.85);
+      placeText(t, this.offsetX + (sx / tiles.length) * TILE, (sy / tiles.length) * TILE, 0.5, 0.5);
     }
   }
 
@@ -218,8 +223,9 @@ export class GameScene extends Phaser.Scene {
     this.player.setPosition(Math.round(pw.x), Math.round(pw.y));
     this.player.setFillStyle(p.mode === 'disguised' ? COLOR.playerDisguised : COLOR.player);
     const label = MODE_LABEL[p.mode];
-    this.playerLabel.setText(label).setVisible(label !== '')
-      .setPosition(Math.round(pw.x), Math.round(pw.y) - 13);
+    setPixelText(this.playerLabel, label).setVisible(label !== '');
+    placeText(this.playerLabel, pw.x, Math.round(pw.y) - 15, 0.5, 1);
+    fitPanel(this.playerLabelBg, this.playerLabel, 2, 1);
 
     // 경로 표시
     this.pathGfx.clear();
@@ -253,7 +259,8 @@ export class GameScene extends Phaser.Scene {
       // 전조: 머리 위 '!' 깜빡임 + 돌아볼 방향 점선
       const tell = this.npcTells[i]!;
       const telling = npc.mode === 'tell';
-      tell.setVisible(telling && blinkOn).setPosition(Math.round(w.x), Math.round(w.y) - 12);
+      tell.setVisible(telling && blinkOn);
+      placeText(tell, w.x, Math.round(w.y) - 14, 0.5, 1);
       if (telling && npc.pendingFacing !== null) {
         this.cones.lineStyle(1, color, 0.8);
         const len = npc.def.cone.range * TILE * 0.5;
@@ -270,14 +277,19 @@ export class GameScene extends Phaser.Scene {
 
     // HUD
     this.drawHud();
-    if (this.fpsText) this.fpsText.setText(`${Math.round(this.game.loop.actualFps)}fps`);
+    if (this.fpsText) {
+      setPixelText(this.fpsText, `${Math.round(this.game.loop.actualFps)}fps`);
+      placeText(this.fpsText, LOGICAL_WIDTH - 3, HUD_BAR_MID, 1, 0.5);
+    }
 
     if (sim.outcome !== 'playing' && !this.endText) {
       const msg = sim.outcome === 'escaped' ? '퇴근 성공!' : '들킴…';
-      this.endText = this.add.text(LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2,
+      const panel = this.add.rectangle(0, 0, 1, 1, COLOR.panel, 0.9).setScrollFactor(0);
+      this.endText = addPixelText(this, 0, 0,
         `${msg}\n\n최고 의심 ${Math.round(sim.suspicion.peak * 100)}%\n${sim.time.toFixed(1)}초\n\n탭해서 다시`,
-        { ...TEXT_STYLE, fontSize: '14px', color: '#1b1b22', backgroundColor: '#ffffffe6', padding: { x: 10, y: 8 } })
-        .setOrigin(0.5).setScrollFactor(0);
+        { role: 'body', color: COLOR.text, align: 'center', lineSpacing: 2 }).setScrollFactor(0);
+      placeText(this.endText, LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2, 0.5, 0.5);
+      fitPanel(panel, this.endText, 10, 8);
     }
   }
 
@@ -316,6 +328,6 @@ export class GameScene extends Phaser.Scene {
       g.lineStyle(1, COLOR.barFill, 1);
       g.strokeRect(barX - 0.5, barY - 0.5, barW + 1, barH + 1);
     }
-    this.pctText.setText(`${Math.round(v * 100)}%`);
+    setPixelText(this.pctText, `${Math.round(v * 100)}%`);
   }
 }

@@ -24,13 +24,14 @@
     "npcPassThroughPlayerAfterSec": 1.0,
     "resumeAfterTalk": true,
     "showPathPreviewSec": 0.6,
-    "_designNote": "길막을 만나면 0.5초 기다린 뒤 다른 길이 +12타일 이내면 자동 우회, 아니면 그 자리에서 대기(대기 = idle, 위장 아님 → 탭해서 위장해야 안전). D-039: 말걸기가 끝나면 원래 목적지로 자동 재개. NPC는 플레이어를 1초 기다린 뒤 겹쳐 지나감(교착 방지)."
+    "_designNote": "길막을 만나면 0.5초 기다린 뒤 다른 길이 +12타일 이내면 자동 우회, 아니면 그 자리에서 대기(대기 = 위장으로 간주). D-039: 말걸기가 끝나면 원래 목적지로 자동 재개하되, 재개 시점에 콘 안이면 postTalkHoldSec 동안 위장 상태로 기다렸다가 출발. NPC는 플레이어를 1초 기다린 뒤 겹쳐 지나감(교착 방지).",
+    "postTalkHoldSec": 0.5
   },
   "suspicion": {
     "max": 1.0,
     "movingPerSec": 0.45,
-    "idlePerSec": 0.2,
-    "disguisedPerSec": 0.03,
+    "idlePerSec": 0.0,
+    "disguisedPerSec": 0.0,
     "talkedPerSec": 0.0,
     "seatedWorkingPerSec": 0.0,
     "activityPerSec": 0.55,
@@ -41,17 +42,31 @@
     "gazeStacking": "max",
     "star3PeakBelow": 0.3,
     "continueResetTo": 0.6,
-    "_designNote": "최종 상승률 = 상태별 값 × 보는 사람의 gazeMultiplier(동시 시선은 최댓값 하나). 팀장(×1.0) 콘을 걸어서 가로지르는 시간 ≈ 1.3초 → 0.45×1.18 ≈ 0.53: 한 번은 버티고 두 번이면 위험. 위장 0.03은 '오래 서 있으면 결국 이상함'(팀장 2초 = 0.06)으로, 위장을 남발하지 않고 엄폐·우회를 쓰게 함. T-123 임시값(이동 0.6·위장 0.08)보다 이동은 낮지만 콘이 주요 동선을 가로지르도록 배치를 바꿔 총 노출이 늘어남(gdd §11)."
+    "_designNote": "최종 상승률 = 상태별 값 × 보는 사람의 gazeMultiplier(동시 시선은 최댓값 하나). 팀장(×1.0) 콘을 걸어서 가로지르는 시간 ≈ 1.3초 → 0.45×1.18 ≈ 0.53. T-124 반영: 위장(멈춤)이 손해가 되지 않게 위장 0/초, 콘 안에서 3초 넘게 서 있을 때만 0.03/초(엄폐물 옆은 면제). 멈춤은 모두 위장으로 간주(anyStopIsDisguised: 길막 대기·말걸기 후·도착 포함) → idle 0. 기획 측 검증(개발 FloorSim + QA 봇, 퇴근 동선 400판): 직진 봇 탈출 40~100%·★3 0%, 위장 봇 탈출 100%, 느린 초보 66~100%(design/gdd.md §16-1).",
+    "disguiseStaleAfterSec": 3.0,
+    "disguiseStalePerSec": 0.03,
+    "disguiseStaleExemptNearCover": true,
+    "anyStopIsDisguised": true
   },
   "leavePhase": {
-    "suspicionOverrides": { "talkedPerSec": 0.2, "idlePerSec": 0.25 },
-    "_designNote": "퇴근 중엔 가방을 들고 있어서 말걸기·멀뚱히 서 있기도 의심을 삼. 위장(가방 뒤로 숨기기)은 평소와 같음."
+    "suspicionOverrides": {},
+    "_designNote": "D-043: 말걸기 중에는 퇴근 중에도 의심이 오르지 않음(시간 손실만). v2 초안의 퇴근 중 말걸기 0.2/초·멀뚱 0.25/초는 삭제."
   },
   "disguise": {
-    "closeCallWindowSec": [-0.3, 0.12],
+    "closeCallWindowSec": [
+      -0.3,
+      0.12
+    ],
     "closeCallBonusPoints": 30,
     "closeCallMaxPerDay": 3,
-    "poseByZone": { "corridor": "read_document", "pantry": "drink_water", "near_copier": "copying", "near_plant": "water_plant", "lobby": "check_phone", "default": "read_document" },
+    "poseByZone": {
+      "corridor": "read_document",
+      "pantry": "drink_water",
+      "near_copier": "copying",
+      "near_plant": "water_plant",
+      "lobby": "check_phone",
+      "default": "read_document"
+    },
     "_designNote": "정지·위장 타이밍 판정(D-035 ④): 콘이 나를 덮기 0.3초 전 ~ 덮은 뒤 0.12초 안에 위장하면 '아슬아슬!' +30점(하루 3회까지, 결정적). 일찍 멈출수록 안전하지만 시간이 들고, 늦으면 의심이 오름."
   },
   "sight": {
@@ -60,7 +75,8 @@
     "seatedConeOnlyWhileLooking": true,
     "cornerTurnTellSec": 0.5,
     "returnSec": 0.3,
-    "_designNote": "보이는 콘 = 실제 판정(vision.ts rayDistance 공용). D-038: 걷는 NPC가 모퉁이에서 방향을 틀 때 새 방향 콘이 플레이어를 덮을 수 있으면 0.5초 전조(고개 먼저 돌림 + 점선 콘 예고) 후 회전. 앉은 상사는 돌아볼 때만 콘이 켜짐."
+    "_designNote": "보이는 콘 = 실제 판정(vision.ts rayDistance 공용). D-038/D-044(조건부 확정): 걷는 NPC가 모퉁이·재출발로 방향을 틀 때 새 방향의 실제 콘이 플레이어를 덮을 수 있을 때만 0.5초 전조(고개 먼저 + 점선 콘) 후 회전. 무조건 전조는 분당 30회 넘게 떠서 노이즈(QA 측정). 앉은 상사는 돌아볼 때만 콘이 켜짐.",
+    "cornerTellCondition": "new_facing_real_cone_could_cover_player"
   },
   "tell": {
     "minSec": 0.4,
@@ -74,11 +90,42 @@
   "threat": {
     "approachExtraRange": 9,
     "approachExtraAngleDeg": 25,
-    "_comment": "개발 FloorRules.threat과 동일 이름. 경고용 넓은 콘 = 실제 콘 + 거리 9타일·반각 25°"
+    "approachRequiresLineOfSight": true,
+    "approachPathTilesWithin": 6,
+    "approachPathMustBeDecreasing": true,
+    "stages": [
+      {
+        "id": "seeing",
+        "rule": "실제 콘(가림 반영)이 플레이어를 덮음",
+        "onScreen": "콘 진하게 + 의심 게이지 흔들림",
+        "offScreen": "판정 없음(화면 밖 시선은 의심 0)"
+      },
+      {
+        "id": "turning",
+        "rule": "전조 중이고, pendingFacing 방향의 실제 콘이 가림 반영해 플레이어를 덮을 수 있음",
+        "onScreen": "머리 위 '!' + 점선 콘",
+        "offScreen": "화살표 빨강 깜빡임 + 진동(설정)"
+      },
+      {
+        "id": "approaching",
+        "rule": "(넓은 콘 = 거리 +9·반각 +25° 안 그리고 넓은 콘 거리까지 레이 가림 없음) 또는 (NPC→플레이어 통행 경로 ≤ 6타일 그리고 줄어드는 중)",
+        "onScreen": "표시 없음",
+        "offScreen": "화살표(색 = 사원증 줄), 크기 = 거리 3단계"
+      }
+    ],
+    "_comment": "개발 FloorRules.threat과 같은 이름 + 확장. T-124: 기존 넓은 콘은 approaching 경고의 76%가 벽 뒤 NPC → 가림 반영 + 경로 거리 조건으로 교체. 문 너머에서 다가오는 경우는 경로 거리 조건이 잡음"
   },
   "offscreenWarning": {
-    "sources": ["boss", "security_guard", "snitch", "hr_inspector"],
-    "showWhenThreat": ["approaching", "turning"],
+    "sources": [
+      "boss",
+      "security_guard",
+      "snitch",
+      "hr_inspector"
+    ],
+    "showWhenThreat": [
+      "approaching",
+      "turning"
+    ],
     "minLeadSecBeforeGaze": 0.4,
     "offscreenSourceNoGain": true,
     "arrowColorBy": "lanyard",
@@ -104,9 +151,17 @@
     "earlyLeaveBefore": "18:00",
     "overtimeAt": "18:18",
     "introSec": 2.0,
-    "targetDurationSec": [60, 90],
-    "tutorialDayDurationSec": [50, 75],
-    "clockPausedDuring": ["ceo_visit"]
+    "targetDurationSec": [
+      60,
+      90
+    ],
+    "tutorialDayDurationSec": [
+      50,
+      75
+    ],
+    "clockPausedDuring": [
+      "ceo_visit"
+    ]
   },
   "stars": {
     "caught": 0,
@@ -117,7 +172,12 @@
     "_designNote": "★2 = 퇴근 성공 + 업무 할당량 + 필수 미션 수(rank.missionsRequired) 달성. 미션 없이 자리만 지키면 ★1 '찝찝한 칼퇴' → 땡땡이를 해야 하는 이유."
   },
   "salary": {
-    "starMultiplier": [0.3, 0.6, 1.0, 1.3],
+    "starMultiplier": [
+      0.3,
+      0.6,
+      1.0,
+      1.3
+    ],
     "slackPointsPerWon": 10,
     "_comment": "월급(소프트 재화) = rank.salaryBase × starMultiplier[별] + floor(땡땡이 점수 / 10). 결정적 계산"
   },
@@ -136,7 +196,10 @@
   "continueAd": {
     "maxPerDay": 1,
     "restorePlayerTo": "last_checkpoint",
-    "checkpoints": ["player_seat", "gate_use"],
+    "checkpoints": [
+      "player_seat",
+      "gate_use"
+    ],
     "_comment": "적발 컷인 뒤(플레이 정지 상태) 제안. 의심 0.6으로 자리(퇴근 중이면 게이트 앞)에서 재개. 광고 규칙은 ads.json"
   },
   "assist": {
@@ -145,5 +208,14 @@
     "showHint": true,
     "showRouteHint": true,
     "_comment": "같은 날 3연속 적발 시 다음 시도부터 상승률 -15% + 힌트(안전한 우회로 점선). 무료, 광고·결제 무관"
+  },
+  "talk": {
+    "tellSecMin": 0.5,
+    "tellVisual": "speech_bubble_over_head",
+    "approachMotion": true,
+    "skipIfPlayerDisguised": true,
+    "suspicionDuringTalk": 0.0,
+    "suspicionAfterTalk": 0.0,
+    "_designNote": "D-043: 모든 말걸기 전에 말풍선 0.5초 이상 + 다가오는 동작. 말걸기 중·후 의심 가산 없음(시간 손실만). T-124: 위장 중인 플레이어에게는 지나가는 NPC가 말을 걸지 않음 → 위장이 보상받음."
   }
 }

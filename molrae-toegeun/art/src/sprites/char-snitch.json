@@ -1,0 +1,38 @@
+{
+ "name": "snitch",
+ "group": "npc",
+ "base": "body-b",
+ "note": "고자질 동료(NPC, 화면 표시명 '정의로운 동료'). 바디 B + 초록 셔츠 + 파랑 사원증 줄(D-037) + 반짝이는 사각 안경(하늘색 렌즈 + 흰 반사 1px) + 일자 앞머리(바가지) + 메모장. 악당이 아니라 눈치 없는 정의파",
+ "swap": {"shirt": "green", "shirt_sh": "green_sh", "$lanyard": "shirt"},
+ "stamps": [
+  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   "..OOOOOOOOOOOO..",
+   "..OHHHHHHHHHHO..",
+   ".OHHHHDDHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHSSSSSSSSSSHO.",
+   ".OSOCCOOOOCCOSO.",
+   ".OSOWCOSSOWCOSO.",
+   ".OSSSSSssSSSSSO.",
+   "..OOOOssssOOOO.."
+  ]},
+  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   "..OOOOOOOOOO....",
+   "..OHHHHHHHHO....",
+   ".OHHHHHHDDHHO...",
+   ".OHHHHHHHHHHHO..",
+   ".OHHHHHHHHHHHO..",
+   ".OHHHHHHHSSSSO..",
+   ".OHHHHHOOOCCOO..",
+   ".OHHHHHsSOWCOO..",
+   ".OHHHHHSSSSSSO..",
+   "..OOOOOsssOOO..."
+  ]},
+  {"dir": "down", "x": 0, "y": 12, "rows": ["OOOO", "OWWO", "OMWS", "OOOO"]},
+  {"dir": "up", "x": 12, "y": 12, "rows": ["OOOO", "OWWO", "SWMO", "OOOO"]},
+  {"dir": "right", "x": 7, "y": 13, "rows": ["OOOO", "OWMO", "SWWO", "OOOO"]}
+ ]
+}

@@ -1,56 +1,76 @@
-# 몰래퇴근 데이터 스키마 v1 (schemaVersion: 1)
+# 몰래퇴근 데이터 스키마 v2 (schemaVersion: 2)
 
-- 작성: mt-game-designer / T-101 / 2026-11-22
-- 대상 파일: `game/data/*.json` (클라이언트는 `src/data/loader.ts`로 읽기만 함)
-- 규칙(GDD)은 `design/gdd.md`. 이 문서는 **필드·타입·단위**만 정의합니다.
-
-> ⚠️ **상태: 초안, 구현 착수 보류 (2026-11-22)**. 탑다운 시점으로 바뀌고 D-001이 폐기될 예정이라 T-111에서 아직 타입으로 옮기지 마세요.
-> - **유지 예상**: §0 공통 규칙, §5 ranks, §6 days의 슬롯·생성·승진 구조, §7 strings, §0-1 스케일링 방식
-> - **재작성 예정**: §2 events `params`(메카닉별 타입 전체), §3 bosses `gaze`·`timing`(탑다운 이동·시야 모델로 교체), §4 npcs `spawn.while_holding`·`counters`, §1 rules `input`·`work`·`slack`
+- 작성: mt-game-designer / T-121 / 2026-11-22
+- 대상 파일: `game/data/*.json` (클라이언트는 `src/data/loader.ts`로 읽기만 함. 파일명 = 테이블 이름, `strings.ko.json` → `strings.ko`)
+- 규칙(GDD)은 `design/gdd.md` v2. 이 문서는 **필드·타입·단위와 개발 타입 대응**만 정의합니다.
+- 검사: `python3 -I design/tools/validate_data.py` (§10)
+- 상태: **구현 착수 가능**. 개발 T-123 인터페이스(`core/floorSim.ts` LevelDef·FloorRules, `core/patrol.ts` NpcDef, `core/suspicion.ts` SuspicionRules)에 맞췄습니다. 같은 이름 = 같은 의미입니다. 새 필드는 🔧로 표시했고 §9에 모았습니다.
 
 ## 0. 공통 규칙
 
 | 항목 | 규칙 |
 |---|---|
-| 버전 | 모든 파일 최상위에 `schemaVersion: 1`. 필드 의미가 바뀌면 +1 하고 §9 변경 이력에 기록 |
-| 시간 | **초(sec), 실수**. 클라이언트 내부가 ms라면 로드 시 ×1000. 필드명 접미사 `Sec` |
-| 게이지·확률 | **0~1 실수**. 접미사 `Prob`(확률), `Multiplier`(배수), 게이지 값은 접미사 없음 |
-| 거리 | **타일(16px)**. 접미사 `Tiles`. 속도는 `TilesPerSec` |
-| 범위 | `[min, max]` 2원소 배열(`Range`). 균등 추첨. min==max면 고정값 |
-| 시각 | `"HH:MM"` 문자열(게임 내 시계) |
-| ID | 소문자 snake_case 문자열. 테이블 간 참조는 ID로만 |
-| 문자열 | 화면 문구는 직접 넣지 않고 `*Key`로 `strings.ko.json` 참조 |
-| `_comment`, `_toneNote`, `_designNote` | 사람용 메모. 런타임은 무시 |
-| 난수 | 모든 추첨은 `core/rng.ts`의 시드 RNG. 시드 규칙은 §6 `generator` |
+| 버전 | 모든 파일 최상위 `schemaVersion: 2`. 필드 의미가 바뀌면 +1, §11 변경 이력에 기록 |
+| 시간 | 초(sec) 실수. 접미사 `Sec` |
+| 게이지·확률 | 0~1 실수. 확률은 v2부터 `chance`(개발 `lookChance`와 통일) 또는 `Prob`(기존 필드) |
+| 거리 | 타일(16px). `range`, `radius`, `*Tiles`. 속도 `speedTilesPerSec` |
+| 좌표 | 타일 정수 `{x, y}` 또는 `[x, y]`, 원점 왼쪽 위, y는 아래로 증가. 연속 좌표에서 타일 중심 = (x+0.5, y+0.5) (`grid.ts`) |
+| 방향 | `Dir = 'up' \| 'down' \| 'left' \| 'right'` (`vision.ts` `DIR_ANGLE`) |
+| 범위 | `[min, max]` (`*Range`). 균등 추첨. 개발 코어가 단일값만 받으면 로더가 시드 RNG로 추첨하거나, 같은 이름의 단일값 필드(예: `tellSec`)를 씀 |
+| 시각 | `"HH:MM"` (게임 시계) |
+| ID | snake_case. 방해 이벤트만 `INT-01` 형식(기획 문서 참조용) + `key` |
+| 문자열 | 화면 문구는 `*Key`로 `strings.ko.json` 참조. 스프라이트 이름은 `iconSprite`, `visual`, `sfx`, `props`(아트·사운드 ID) |
+| 메모 | `_comment`, `_designNote`, `_toneNote`, `_note`는 사람용. 런타임은 무시 |
+| 난수 | 모든 추첨은 `core/rng.ts` 시드 RNG. 시드 규칙은 §7 `generator` |
 
 ```ts
-type Sec = number;            // 초
-type Ratio01 = number;        // 0~1
-type Prob = number;           // 0~1 확률
-type Tiles = number;          // 16px 타일 단위
+type Sec = number; type Ratio01 = number; type Prob = number; type Tiles = number;
 type Range<T = number> = [T, T];
-type ClockHHMM = string;      // "17:52"
-type StringKey = string;      // strings.ko.json 키
-type RankId = 'intern' | 'staff' | 'assistant_manager' | 'manager'
-  | 'deputy_general_manager' | 'general_manager' | 'executive';
+type Dir = 'up' | 'down' | 'left' | 'right';
+type StringKey = string;
+type RankId = 'intern' | 'staff' | 'assistant_manager' | 'manager' | 'deputy_general_manager' | 'general_manager' | 'executive';
 type BossId = 'senior' | 'team_lead' | 'director' | 'ceo';
 type NpcId = 'security_guard' | 'snitch' | 'accomplice' | 'hr_inspector';
+type ActorId = BossId | NpcId;
 type EventId = 'coffee' | 'restroom' | 'nap' | 'shopping' | 'snack' | 'leave';
+type InterruptId = `INT-${string}`;
 ```
 
-### 0-1. 직급 스케일링 두 가지 방식
+### 0-1. 개발 타입으로 조립하는 법 (로더 책임)
 
-| 방식 | 사용 테이블 | 형식 | 해석 |
+```ts
+// LevelDef (core/floorSim.ts)
+level = {
+  id: map.id, rows: map.rows,
+  legend: map.legend,                    // {kind, walkable, blocksSight, zone?} 그대로(확장 필드는 무시 가능)
+  playerStart: map.playerStart, exitZone: map.exitZone,
+  npcs: day.castPatrols.map(toNpcDef),   // + 방해 이벤트가 등장시키는 순찰은 런타임에 추가
+};
+// NpcDef (core/patrol.ts)
+toNpcDef(patrolId) = {
+  ...interpolate(actor.sim, rank, t),    // bosses/npcs.json 의 sim 블록, §0-2 보간 후
+  ...patrol.overrides,                   // speedOverride 등
+  id: patrol.id, name: strings[actor.nameKey], role: actor.role ?? actor.renderRole,
+  waypoints: patrol.waypoints,           // {x, y, waitSec, lookChance?, lookDirs?} + 🔧 확장
+  talk: actor.sim.talk && isEnabled(actor.sim.talk.enabledBy, day) ? actor.sim.talk : undefined,
+};
+// FloorRules
+rules = { fixedStepSec, maxAdvanceSec, playerSpeedTilesPerSec, tapSnapRadius, suspicion, threat } // rules.json 최상위 그대로
+```
+
+### 0-2. 직급 스케일링 (v1과 같음)
+| 방식 | 테이블 | 형식 | 해석 |
 |---|---|---|---|
-| **덮어쓰기** | `events` | `rankScaling[rankId] = { 필드: 값 }` | 해당 직급에서 `params`의 같은 필드를 교체. **누적 아님**(직급마다 독립). 없는 직급은 기본 `params` |
-| **보간** | `bosses`, `npcs` | `rankScaling[rankId] = { start: {...}, end: {...} }` | 직급 내 진행도 `t`(§6)로 선형 보간. 숫자·Range는 원소별 보간, 정수 필드(`patrolsPerDay`, `maxPerDay`)는 반올림, 그 외 타입은 `t<0.5`면 start. 없는 직급은 기본값 |
+| 덮어쓰기 | `events` | `rankScaling[rankId] = { 필드: 값 }` | 해당 직급에서 `params`의 같은 필드를 교체. 누적 아님. 점 경로(`"pack.sec"`)는 `params.phases`에서 `id == "pack"`인 원소의 `sec` |
+| 보간 | `bosses`, `npcs`, `interrupts` | `rankScaling[rankId] = { start: {...}, end: {...} }` | 직급 내 진행도 `t`로 선형 보간. 숫자·Range는 원소별, 정수 필드(`perDayRange`, `maxPerDay`)는 반올림, 그 외는 `t < 0.5`면 start |
 
-키는 **점 경로**입니다. 예: `"tell.durationSec"`는 `boss.tell.durationSec`, `"gate.windowRatio"`는 `leave.params.phases`에서 `id == "gate"`인 원소의 `windowRatio`.
+키는 액터 기준 점 경로입니다. 예: `"sim.tellSecRange"`, `"sim.fake.chance"`, `"patrols.perDayRange"`, `"opportunities.phone_call.probPerCycle"`(배열은 `type`으로 찾음), `"gate.windowRatio"`, `"spawn.dayChance"`.
 
-**불변식(로더에서 검사 권장)**
-- 보간·덮어쓰기 후에도 모든 `tell.durationSec[0] ≥ rules.tell.minSec(0.4)`
-- 모든 `fake.prob ≤ fake.capProb ≤ rules.fake.absoluteCapProb(0.35)`
-- 모든 `doubleLook.prob ≤ doubleLook.capProb`
+**불변식**(검사기가 확인)
+- 모든 전조(`tellSec`, `tellSecRange[0]`, `secondTellSec`, `stopLookTellSec`, `tell.sec`, 보간 후 값) ≥ `rules.tell.minSec`(0.4). 말걸기 전조는 ≥ `rules.talk.tellSecMin`(0.5, D-043)
+- `fake.chance ≤ fake.capChance ≤ rules.fake.absoluteCapProb(0.35)`, `doubleLook.chance ≤ doubleLook.capChance`
+- 상사 `props`에 `lanyard_red`, NPC는 경비 `lanyard_black` / 정의로운 `lanyard_blue` / 공범 `lanyard_green` / 인사팀 `lanyard_purple`, NPC 소품에 red·orange 금지(D-037)
+- 층 동시 인원 ≤ `rules.characters.maxOnFloor`(8)
 
 ---
 
@@ -58,302 +78,387 @@ type EventId = 'coffee' | 'restroom' | 'nap' | 'shopping' | 'snack' | 'leave';
 
 ```ts
 interface RulesTable {
-  schemaVersion: 1;
-  input: {
-    tapMaxPressSec: Sec;      // 0.25. 이보다 짧게 눌렀다 떼면 '탭'
-    inputGraceSec: Sec;       // 0.12. 시선 시작 후 이 시간 동안은 홀드해도 의심 0 (입력 지연 보정)
-  };
-  suspicion: {
-    max: Ratio01;                     // 1.0 도달 시 적발
-    decayPerSec: number;              // 0.02/초
-    decayRequires: 'released_and_unobserved';
-    gazeStacking: 'max';              // 동시에 여러 시선이면 가장 높은 상승률 하나만 적용
-    star3PeakBelow: Ratio01;          // 0.3. 하루 최고 의심도가 이 값 미만이면 ★3 조건 충족
-    continueResetTo: Ratio01;         // 0.6. 이어하기 광고 후 의심도
-  };
-  work: { fillPerSec: number; fillOnlyInWorkSegment: boolean; max: Ratio01 };  // 0.04/초
-  slack: { pointsPerSecInWorkSegment: number; eventRewardsAreSlackPoints: boolean }; // 10점/초
-  tell: { minSec: Sec; mustHaveVisual: boolean; mustHaveAudio: boolean };  // 0.4
-  fake: { absoluteCapProb: Prob; noConsecutiveFakes: boolean };            // 0.35
-  day: {
-    clockStart: ClockHHMM; finaleClockStart: ClockHHMM; clockEnd: ClockHHMM;
-    introSec: Sec; targetDurationSec: Range<Sec>; tutorialDayDurationSec: Range<Sec>;
-  };
-  stars: { caught: 0; overtimeEnding: 1; leaveSuccess: 2; leaveSuccessAndPeakSuspicionBelow: 3 };
+  schemaVersion: 2;
+  // ── 개발 FloorRules와 같은 이름 ──
+  fixedStepSec: Sec;              // 1/60
+  maxAdvanceSec: Sec;             // 0.1
+  playerSpeedTilesPerSec: number; // 3.0
+  tapSnapRadius: Tiles;           // 2
+  suspicion: SuspicionRulesV2;
+  threat: ThreatRules;
+  // ── 확장 ──
+  input: { tapMaxPressSec: Sec; inputGraceSec: Sec; hudTapDoesNotStop: boolean;
+           tapWhileMoving: 'stop_and_disguise'; tapWhileStopped: 'move_to_tile';
+           tapOnSelfWhileStopped: 'resume_previous_destination' };          // 🔧 마지막 항목
+  movement: { pathfinding: 'astar_4dir'; tapNonWalkable: string; tapInteractable: 'go_to_use_spot';
+              blockedWaitSec: Sec; rerouteMaxExtraTiles: Tiles; rerouteRecheckSec: Sec;
+              npcPassThroughPlayerAfterSec: Sec; resumeAfterTalk: boolean;     // D-039
+              postTalkHoldSec: Sec; showPathPreviewSec: Sec };                 // 🔧
+  leavePhase: { suspicionOverrides: Partial<SuspicionRulesV2> };              // v2 현재 비어 있음(D-043)
+  talk: { tellSecMin: Sec; tellVisual: string; approachMotion: boolean;
+          skipIfPlayerDisguised: boolean; suspicionDuringTalk: 0; suspicionAfterTalk: 0 };  // 🔧 D-043
+  disguise: { closeCallWindowSec: Range<Sec>; closeCallBonusPoints: number; closeCallMaxPerDay: number;
+              poseByZone: Record<string, string> };
+  sight: { losModel: 'grid_raycast_dda'; renderEqualsJudgement: true; seatedConeOnlyWhileLooking: boolean;
+           cornerTurnTellSec: Sec; cornerTellCondition: 'new_facing_real_cone_could_cover_player';  // D-038/D-044
+           returnSec: Sec };
+  tell: { minSec: Sec; mustHaveVisual: boolean; mustHaveAudio: boolean };
+  fake: { absoluteCapProb: Prob; noConsecutiveFakes: boolean };
+  offscreenWarning: { sources: string[]; showWhenThreat: ('approaching'|'turning')[]; minLeadSecBeforeGaze: Sec;
+                      offscreenSourceNoGain: boolean; arrowColorBy: 'lanyard'; pulseOnTell: boolean; missionMarkerArrows: boolean };
+  characters: { maxOnFloor: number };
+  work: { fillPerSec: number; fillOnlyWhen: 'seated_working'; max: Ratio01 };
+  day: { clockStart; dayPhaseClockEnd; leaveClockStart; leaveGameMinutesPerSec; earlyLeaveBefore; overtimeAt;
+         introSec; targetDurationSec: Range; tutorialDayDurationSec: Range; clockPausedDuring: string[] };
+  stars: { caught: 0; overtimeEnding: 1; missionsShortLeave: 1; leaveSuccess: 2; leaveSuccessAndPeakSuspicionBelow: 3 };
   salary: { starMultiplier: [number, number, number, number]; slackPointsPerWon: number };
-  snackStock: { startPerDay: number; max: number; gainOnSnackSuccess: number };
-  continueAd: { maxPerDay: number; restartCurrentEvent: boolean };
-  assist: { consecutiveCaughtThreshold: number; suspicionGainMultiplier: number; showHint: boolean };
+  slack: { restroomInsidePointsPerSec; ceoTalkWindowMultiplier; ceoEyeContactPoints; earlyLeavePoints; ... };
+  snackStock: { startPerDay; max; gainOnSnackSuccess };
+  continueAd: { maxPerDay; restorePlayerTo: 'last_checkpoint'; checkpoints: string[] };
+  assist: { consecutiveCaughtThreshold; suspicionGainMultiplier; showHint; showRouteHint };
+}
+
+interface SuspicionRulesV2 {           // 개발 SuspicionRules + 확장
+  max: 1; movingPerSec: 0.45; idlePerSec: 0; disguisedPerSec: 0; talkedPerSec: 0;
+  disguiseSettleSec: 0.15; graceSec: 0.12; decayPerSec: 0.02;
+  seatedWorkingPerSec: 0; activityPerSec: 0.55; activityPausedPerSec: 0;           // 🔧 미션 상태
+  disguiseStaleAfterSec: 3.0; disguiseStalePerSec: 0.03; disguiseStaleExemptNearCover: true;  // 🔧
+  anyStopIsDisguised: true;                                                          // 🔧 멈춤 = 위장
+  gazeStacking: 'max'; star3PeakBelow: 0.3; continueResetTo: 0.6;
+}
+
+interface ThreatRules {                // 개발 FloorRules.threat + 확장
+  approachExtraRange: 9; approachExtraAngleDeg: 25;
+  approachRequiresLineOfSight: true;   // 🔧 넓은 콘에도 가림 반영(T-124: 벽 뒤 경고 76%)
+  approachPathTilesWithin: 6; approachPathMustBeDecreasing: true;  // 🔧 문 너머 접근
+  stages: { id: 'seeing'|'turning'|'approaching'; rule: string; onScreen: string; offScreen: string }[];
 }
 ```
 
-예시: `"suspicion": { "decayPerSec": 0.02, "star3PeakBelow": 0.3 }`
+📐 의심 최종 상승률 = `suspicion[상태별]` × 보는 사람 `gazeMultiplier`(동시 시선은 최댓값). 상태 대응: 개발 `PlayerMode` `moving`→`movingPerSec`, `disguised`→`disguisedPerSec`(settle 동안은 moving), `idle`→`idlePerSec`(v2는 0, 멈춤 = 위장), `talked`→`talkedPerSec`. 🔧 추가 모드 `seated`(자리 업무), `activity`, `activity_paused`.
 
 ---
 
-## 2. events.json — 이벤트
+## 2. maps.json — 층 맵 (신규)
 
 ```ts
-interface EventsTable { schemaVersion: 1; events: EventDef[] }
-
-type Mechanic = 'pour' | 'sneak_walk' | 'nap_balance' | 'screen_swap' | 'rhythm_tap' | 'leave_sequence';
-
-interface EventDef {
-  id: EventId;
-  nameKey: StringKey; descKey: StringKey;
-  mvp: boolean;
-  mechanic: Mechanic;
-  input: 'hold' | 'tap';                // 주 입력
-  location: 'desk' | 'pantry' | 'corridor' | 'office_to_lobby';
-  awayFromDesk: boolean;                // true면 인사팀 점검 시 '부재'
-  observable: boolean;                  // 상사 시선이 적용되는가
-  isFinale: boolean;                    // 하루 마지막 이벤트(퇴근)
-  unlockRank: RankId;
-  timeLimitSec: Sec;                    // 초과 시 timeout
-  expectedDurationSec: Sec;             // 일정 예산·시뮬 기준값(판정에 쓰지 않음)
-  suspicionGainMultiplier: number;      // 이벤트 중 시선 상승률 배수
-  accompliceAllowed: boolean;
-  hrInspectionAllowed: boolean;
-  reward: { slackPoints: number; snackStock?: number; earlyLeaveBonusPoints?: number };
-  failPenalty: { suspicion: Ratio01; result?: 'overtime_ending' };
-  timeoutPenalty: { suspicion: Ratio01; result?: 'overtime_ending' };
-  params: PourParams | SneakWalkParams | NapParams | ScreenSwapParams | RhythmTapParams | LeaveParams;
-  rankScaling: Partial<Record<RankId, Record<string, unknown>>>;   // 덮어쓰기 방식(§0-1)
-  accompliceEffect?: { cupsRequired?: number; bitesRequiredMultiplier?: number };
-  failReactionKeys: StringKey[];
-  tutorialId: string;                   // strings 'tutorial.<id>'
+interface MapsTable { schemaVersion: 2; maps: MapDef[] }
+interface MapDef {
+  id: string; nameKey: StringKey; mvp: boolean;
+  tileSizePx: 16; widthTiles: number; heightTiles: number; pixelSize: [number, number];
+  playerStart: { x: number; y: number };      // = LevelDef.playerStart
+  exitZone: string;                            // = LevelDef.exitZone ('exit')
+  camera: { viewportTiles: [number, number]; visibleAboveTiles: number; visibleBelowTiles: number;
+            followAxis: 'y'; deadZoneTiles: Tiles; lerpPerFrame: number; clampToMap: boolean };
+  legend: Record<string, LegendEntryV2>;
+  rows: string[];                              // = LevelDef.rows. 길이 heightTiles, 각 행 widthTiles
+  zones: { id: string; nameKey: StringKey; rect: [x: number, y: number, w: number, h: number];
+           parent?: string; outsideOffice?: boolean }[];   // 구역 이름·판정용. legend.zone이 있는 칸은 그쪽 우선
+  spots: Record<string, { tile: [number, number]; type: 'seat'|'stand'|'use'|'door'|'spawn';
+                          facing?: Dir; target?: string }>;
+  coverSpots: { tile: [number, number]; by: 'partition'|'plant'|'copier'; hidesFrom: string }[];  // 바닥 반짝임 표시용
+  routeNodes: Record<string, [number, number]>;            // 순찰 작성용 이름표
+  playerRoutes: { id; labelKey; from: string; to: string; via: [number, number][]; lengthTiles; risk: string }[];  // 튜토리얼 점선·힌트
+  chokepoints: { id: string; tiles: [number, number][]; bypass: string | null }[];
+  measuredPathsTiles: Record<string, number>;               // 설계 실측(QA 재현용)
 }
-
-interface PourParams {          // coffee
-  pourRatePerSec: number;       // 0.45/초. 컵 수위 증가 속도
-  targetBand: Range<Ratio01>;   // [0.75, 0.92]. 이 안에서 떼면 성공
-  overflowAt: Ratio01;          // 1.0. 도달 즉시 실패
-  cupsRequired: number;         // 1 (공범 수락 시 2)
+interface LegendEntryV2 {                     // = grid.ts LegendEntry + 확장
+  kind: string; walkable: boolean; blocksSight: boolean; zone?: string;
+  cover?: boolean; disguiseSpot?: boolean;     // 엄폐물(아트), 옆에서 멈추면 전용 위장 포즈
+  gateOnly?: boolean;                          // 🔧 플레이어는 게이트 태그 성공 시에만 통과
+  safeZone?: boolean;                          // 화장실 칸(blocksSight=true라 자동으로 안 보임)
 }
-interface SneakWalkParams {     // restroom
-  walkSpeedTilesPerSec: number; // 2.0
-  distanceTiles: Tiles;         // 6 (편도)
-  hideSpotTiles: Tiles[];       // 책상 기준 화분 위치 [2, 4]
-  hideSpotWidthTiles: Tiles;    // 0.8. 중심 ±0.4 안에서 멈추면 은신
-  walkingSuspicionMultiplier: number;      // 1.2. 걷는 중 시선
-  exposedStandSuspicionMultiplier: number; // 0.5. 은신처 밖에서 멈춘 채 시선
-  insideRestSec: Sec;           // 3.0. 화장실 안(시선 없음)
-  insideHoldPointsPerSec: number; // 20. 안에서 홀드 시 추가 점수
-  urgentReturnSpeedMultiplier: number; // 1.5. 인사팀 급복귀 시
-}
-interface NapParams {
-  fatigueStart: Ratio01;        // 1.0 → 0이 되면 성공
-  fatigueRecoverPerSec: number; // 0.25 (홀드 중)
-  headDropPerSec: number;       // 0.35 (홀드 중 고개 각도 증가)
-  headRaisePerSec: number;      // 0.7 (떼는 중 감소)
-  headThudAt: Ratio01;          // 1.0 도달 시 '쿵' 실패
-  headDownSuspicionThreshold: Ratio01;  // 0.5. 떼고 있어도 이 이상이면 시선에 걸림
-  headDownSuspicionMultiplier: number;  // 0.5
-}
-interface ScreenSwapParams {    // shopping
-  cartFillPerSec: number;       // 0.3. 아이템 1개 = 진행도 1.0
-  itemsRequired: number;        // 3 (마지막 1개는 결제 단계)
-  checkoutHoldSec: Sec;         // 0.8. 마지막 결제는 연속 홀드
-  checkoutResetsOnRelease: boolean;
-  releaseShowsSpreadsheet: boolean;
-}
-interface RhythmTapParams {     // snack
-  bitesRequired: number;        // 6
-  minIntervalSec: Sec;          // 0.55. 직전 탭 이후 이보다 빠르면 소음
-  perfectWindowSec: Range<Sec>; // [0.55, 1.1]. 링 초록 구간
-  maxPressSec: Sec;             // 0.35. 이보다 길게 누르면 소음
-  noiseSuspicion: Ratio01;      // 0.08 즉시 가산
-  noiseShortensBossIdleTo: Sec; // 0.0. 소음 시 현재 상사 idle 잔여를 이 값으로(전조는 그대로 재생)
-  biteUnderGazeSuspicion: Ratio01; // 0.12. 시선 중 한 입마다 즉시 가산
-  perfectBonusPoints: number;   // 10
-}
-interface LeaveParams {
-  clockStart: ClockHHMM;        // "17:52"
-  gameMinutesPerSec: number;    // 1.0 (실제 1초 = 게임 1분)
-  phases: LeavePhase[];
-}
-type LeavePhase =
-  | { id: 'pack'; type: 'hold_progress'; holdSec: Sec }
-  | ({ id: 'walk'; type: 'sneak_walk' } & Omit<SneakWalkParams, 'insideRestSec' | 'insideHoldPointsPerSec' | 'urgentReturnSpeedMultiplier'>)
-  | { id: 'gate'; type: 'timing_tap'; npc: 'security_guard'; markerCycleSec: Sec; windowRatio: Ratio01;
-      maxAttempts: number; beepSuspicion: Ratio01; earlyQuestionBeforeClock: ClockHHMM; earlyQuestionDelaySec: Sec }
-  | { id: 'elevator'; type: 'wait_hold'; waitSec: Range<Sec>; doorCloseHoldSec: Sec; releaseIsSafe: boolean };
 ```
 
-예시(축약):
-```json
-{ "id": "coffee", "mechanic": "pour", "params": { "pourRatePerSec": 0.45, "targetBand": [0.75, 0.92] },
-  "rankScaling": { "manager": { "targetBand": [0.8, 0.9], "pourRatePerSec": 0.5 } } }
-```
+- MVP 맵 `office_floor_1`: **11×47 타일(176×752px)**. 세로 스크롤 약 2.35화면.
+- legend 문자: `# . @ h = D P T C g G e E B K M X S r` (의미는 파일 안 `kind`·`_note`).
+- `h`(다른 사람 의자)는 통행 가능 칸이지만, 주인이 앉아 있으면 점유로 처리(🔧 점유 = 경로 탐색 시 임시 통행 불가).
 
 ---
 
-## 3. bosses.json — 상사
+## 3. bosses.json / npcs.json — 액터
 
 ```ts
-interface BossesTable { schemaVersion: 1; bosses: BossDef[] }
+interface BossesTable { schemaVersion: 2; bosses: BossDef[] }
+interface NpcsTable { schemaVersion: 2; npcs: NpcDefData[] }
+
+interface ActorSim {                 // = 개발 NpcDef에서 id·name·role·waypoints를 뺀 부분 + 확장
+  cone: { range: Tiles; halfAngleDeg: number };
+  speedTilesPerSec: number;
+  gazeMultiplier: number;            // 의심 배율(0 = 의심 없음, 발견 트리거 전용)
+  tellSec: Sec; lookSec: Sec; lookChance: Prob; glanceBackChancePerTile: Prob;
+  tellSecRange?: Range<Sec>; lookSecRange?: Range<Sec>;   // 🔧 범위 추첨
+  idleSecRange?: Range<Sec>;                              // 🔧 앉은 순찰의 대기(waypoint.useActorIdle)
+  coneActiveIn: ('walk'|'wait'|'tell'|'look')[];          // 🔧 앉은 상사 = ['look']
+  stopLookTellSec?: Sec;                                  // 정지 후 둘러보기 전조
+  fake?: { chance: Prob; capChance: Prob; type?: 'recheck'; afterFakeSec?: Sec; tellSec?: Sec; visual?: string; sfx?: string };  // 🔧
+  doubleLook?: { chance: Prob; capChance: Prob; gapSec?: Sec; secondTellSec?: Sec; secondLookSecRange?: Range<Sec> };          // 🔧
+  talk?: TalkDefV2;
+  spot?: { dwellSec: Sec; triggerStates: string[]; startsInterrupt: InterruptId };  // 정의로운 동료 발견
+}
+interface TalkDefV2 {                // = 개발 TalkDef {radius, durationSec, cooldownSec} + 확장(D-043)
+  radius: Tiles; durationSec: Sec; cooldownSec: Sec;
+  noticeRadius: Tiles; tellSec: Sec;           // 🔧 이 반경에서 말풍선 전조 시작(≥ 0.5초)
+  approachMotion: boolean;                     // 🔧 전조 동안 플레이어 쪽으로 한 걸음
+  skipIfPlayerDisguised: boolean;              // 🔧 위장 중이면 말 걸지 않음
+  nodShortenSec: Sec; minDurationSec: Sec;     // 🔧 맞장구 탭
+  onlyWhilePlayerAway?: boolean; onlyWhen?: string;  // 🔧 조건
+  enabledBy: InterruptId;                      // 이 방해가 그날 켜져 있을 때만 talk 활성
+}
 
 interface BossDef {
-  id: BossId; nameKey: StringKey; codexKey: StringKey;
-  tier: 1 | 2 | 3 | 4;                 // 위계. 높을수록 상위
-  unlockRank: RankId;
-  behavior: 'periodic' | 'seated_random' | 'patrol' | 'freeze_event';
-  props: string[];                     // 아트 구분용 소품 ID (D-009, 외형 아닌 소품·실루엣)
-  gaze: {
-    type: 'facing' | 'cone' | 'global';
-    suspicionPerSec: number;           // 홀드 중 시선에 걸리면 초당 의심 증가
-    coneLengthTiles?: Tiles; coneAngleDeg?: number;
-    deskWarnLeadSec?: Sec;             // cone이 책상에 닿기 N초 전 책상 테두리 깜빡(전조 보장)
-    holdStartInstantSuspicion?: Ratio01; // CEO 얼음 중 누르기 시작하는 순간 즉시 가산
-  };
-  tell: { durationSec: Range<Sec>; visual: string; sfx: string; bgm?: 'stop' };
-  timing: Record<string, number | Range>;  // behavior별(아래)
-  fake: { prob: Prob; capProb: Prob; type?: 'recheck'; afterFakeSec?: Sec; tellSec?: Sec; lookSec?: Sec;
-          visual?: string; sfx?: string };
-  doubleLook: { prob: Prob; capProb: Prob; gapSec?: Sec; secondTellSec?: Sec; secondLookSec?: Range<Sec> };
-  opportunity: null | {
-    type: 'phone_call' | 'coffee_spill' | 'talk_to_team_lead';
-    probPerCycle?: Prob; probPerPatrol?: Prob; durationSec?: Range<Sec>;
-    gazeOff: boolean; visual?: string; endTellSec?: Sec; affects?: BossId[];
-  };
-  greetingQte?: { preCueSec: Range<Sec>; windowSec: Sec; maxPressSec: Sec;
-                  earlyPenalty: Ratio01; missPenalty: Ratio01; longPressPenalty: Ratio01 };  // CEO 전용
-  occurrence?: { scheduledWeekday: 0|1|2|3|4; randomChancePerDay: Prob; maxPerDay: number; skippableByAd: boolean };
-  survival?: { maxSuspicionGain: Ratio01; requireQteSuccess: boolean; rewardSlackPoints: number; codexKey: StringKey };
-  hierarchy: {
-    suppressedBy: BossId[];            // 이 상사가 있으면 나의 시선 OFF
-    suppressedState?: 'greeting' | 'frozen';
-    suppresses?: BossId[];
-    freezesNpcs?: NpcId[];
-    resumeDelaySec: Sec;               // 상위 상사 퇴장 후 복귀까지(복귀 직후 첫 시선도 반드시 전조부터)
-    receivesSnitchReport?: boolean;
-    snitchForcedLook?: { tellSec: Sec; lookSec: Sec };
-  };
-  reactionKeys: StringKey[];
-  rankScaling: Partial<Record<RankId, { start: Record<string, unknown>; end: Record<string, unknown> }>>; // 보간(§0-1)
-}
-```
-
-`timing` 필드(behavior별)
-
-| behavior | 필드 | 단위 | 의미 |
-|---|---|---|---|
-| periodic / seated_random | `idleSec: Range` | 초 | 등 돌리고 일하는 시간 |
-| | `lookSec: Range` | 초 | 돌아보는 시간 |
-| | `returnSec` | 초 | 다시 돌아서는 애니메이션(시선 OFF) |
-| patrol | `walkSpeedTilesPerSec`, `corridorLengthTiles` | 타일 | 복도 통과 |
-| | `stopProb`, `stopSec: Range`, `sweepTurnTellSec` | 확률/초 | 정지 후 좌우 둘러보기, 방향 전환 전 고개 돌림 전조 |
-| | `patrolsPerDay: Range<int>` | 회 | 하루 순찰 횟수 |
-| freeze_event | `freezeSec: Range`, `freezeMaxSec` | 초 | 얼음 구간(최대 5초) |
-| | `talkWindowSec`, `talkSlackMultiplier` | 초/배수 | 팀장과 대화 = 기회 구간, 땡땡이 점수 배수 |
-| | `exitSec` | 초 | 퇴장 연출 |
-
----
-
-## 4. npcs.json — NPC
-
-```ts
-interface NpcsTable { schemaVersion: 1; npcs: NpcDef[] }
-
-interface NpcDef {
-  id: NpcId; nameKey: StringKey; codexKey: StringKey;
-  role: 'gate' | 'obstruct' | 'assist' | 'inspect';
-  mvp: boolean; unlockRank: RankId; firstDay: number;
-  props: string[];
-  spawn:
-    | { type: 'event_phase'; eventId: EventId; phaseId: string }
-    | { type: 'while_holding'; segments: ('work'|'event')[]; probPerHoldSec: Prob; maxPerDay: number;
-        minDayTimeSec: Sec; requiresBoss: BossId; cooldownSec: Sec }
-    | { type: 'event_offer'; eventIds: EventId[]; offerProb: Prob; offerSec: Sec; maxPerDay: number }
-    | { type: 'day_chance'; dayChance: Prob; maxPerDay: number; allowedSegments: ('work'|'event')[];
-        allowedEventFlag: 'hrInspectionAllowed'; notDuringCeo: boolean; notInFinale: boolean; minDayTimeSec: Sec };
-  tell: null | { durationSec: Range<Sec>; visual: string; sfx: string };
-  gaze: null | { type: 'global'; suspicionPerSec: number };
-  params: Record<string, number | boolean | string>;
-  counters: { id: string; input: 'tap' | 'hold' | 'release_continuous'; durationSec?: Sec | null;
-              cost?: { snackStock: number }; result: string }[];
-  frozenByCeo: boolean;
+  id: BossId; nameKey; codexKey; tier: 1|2|3|4; unlockRank: RankId; firstDay: number;
+  role: 'boss'; props: string[];               // 첫 원소 lanyard_red (D-037)
+  tell: { visual: string; sfx: string; bgm?: 'stop' };
+  sim: ActorSim;
+  opportunities: { type: 'phone_call'|'meeting'|'coffee_spill'; probPerCycle?; probPerPatrol?; atStop?: string;
+                   durationSecRange?: Range; gazeOff: boolean; talkOff?: boolean; seatEmpty?: boolean;
+                   byInterrupt?: InterruptId; visual?: string; endTellSec?: Sec }[];
+  patrols?: { variants: string[]; perDayRange: Range<number>; minGapSec: Sec };     // 본부장
+  visit?: { patrolId; spawnRequires: 'player_seated';
+            freeze: { global: true; untilStop: string; maxSec: Sec; moveStartInstantSuspicion: Ratio01;
+                      gainWhile: string[]; safeStates: string[] };
+            talkWindow: { atStop: string; durationSec: Sec; gazeOffFor: BossId[]; slackMultiplier: number };
+            exitResumeDelaySec: Sec };                                            // 대표님
+  greetingQte?: { preCueSecRange: Range; windowSec; maxPressSec; earlyPenalty; missPenalty; longPressPenalty };
+  occurrence?: { scheduledWeekday: 0|1|2|3|4; randomChancePerDay: Prob; maxPerDay: number;
+                 announcedOnPrepScreen: boolean; skippableByAd: boolean };
+  survival?: { maxSuspicionGain; requireQteSuccess; rewardSlackPoints; codexKey };
+  hierarchy: { suppressedBy: BossId[]; suppressedState?: 'greeting'|'frozen'; suppresses?: BossId[];
+               freezesNpcs?: NpcId[]; resumeDelaySec: Sec; greetSpot?: string; greetTriggerZone?: string;
+               receivesSnitchReport?: boolean;
+               snitchForcedLook?: { tellSec; lookSec; coneRange: Tiles; aimAtPlayer: boolean } };
   reactionKeys: StringKey[];
   rankScaling: Partial<Record<RankId, { start: Record<string, unknown>; end: Record<string, unknown> }>>;
 }
-```
 
-`probPerHoldSec`: 플레이어가 **홀드 중일 때 1초마다** 한 번 판정하는 확률(0.04 = 홀드 1초당 4%).
+interface NpcDefData {
+  id: NpcId; nameKey; codexKey; role: 'gate'|'obstruct'|'assist'|'inspect'; renderRole: string;
+  mvp: boolean; unlockRank: RankId; firstDay: number; ambientFromDay?: number;   // 배경 동료로 먼저 앉아 있음
+  props: string[]; defaultPatrol: string | null;
+  sim: ActorSim;
+  gate?: { useSpot; markerCycleSec; windowRatio; maxAttempts; beepSuspicion; beepAttractsGuardLook; firstTryWindowMultiplierOnDay1 };
+  offer?: { eventIds: EventId[]; offerProb: Prob; offerSec: Sec; maxPerDay; acceptInput: 'tap_bubble'; startsInterrupt };
+  effects?: { rewardMultiplier; suspicionGainMultiplier; hitboxIncludesAccomplice; lookoutCoughLeadSec; lookoutRadiusTiles };
+  inspection?: { patrolId; countdownSec: 'eta_to_stop_inspect'; countdownMinSec; inspectSec; mustBeSeated; absentSuspicion; activitySeenUsesCone };
+  spawn?: { dayChance: Prob; maxPerDay; notDuringCeo; minDayTimeSec };
+  frozenByCeo: boolean; reactionKeys: StringKey[]; rankScaling: ...;
+}
+```
 
 ---
 
-## 5. ranks.json — 직급
+## 4. patrols.json — 순찰 경로 (신규)
 
 ```ts
-interface RanksTable { schemaVersion: 1; ranks: RankDef[] }
+interface PatrolsTable { schemaVersion: 2; patrols: PatrolDef[] }
+interface PatrolDef {
+  id: string; actorId: ActorId; mapId: string;
+  kind: 'seated' | 'loop' | 'route' | 'follow';
+  loop: boolean;                     // 🔧 false면 마지막 웨이포인트에서 멈춤(개발 코어는 현재 항상 순환)
+  waypoints: WaypointDefV2[];
+  despawnAtEnd?: boolean;            // 🔧 route 끝에서 퇴장(엘리베이터 등)
+  thenPatrol?: string;               // 🔧 끝나면 이 순찰로 전환(예: 회의 → 자리)
+  spawnTellSec?: Sec;                // 등장 전 전조(문 열림·발소리·띵). 이 동안 정지
+  speedOverride?: number;            // actor.sim.speedTilesPerSec 대신
+  coneOff?: boolean;                 // 이 순찰 전체 시선 없음
+  followGapTiles?: Tiles;            // kind: 'follow' (공범 합류)
+  instance?: number;                 // 같은 액터의 두 번째 인스턴스(옆 팀 팀장 = 2)
+}
+interface WaypointDefV2 {            // = 개발 WaypointDef {x, y, waitSec, lookChance?, lookDirs?} + 확장
+  x: number; y: number; waitSec: Sec; lookChance?: Prob; lookDirs?: Dir[];
+  facing?: Dir;                      // 🔧 대기 중 바라보는 방향(앉은 상사: look 후 이 방향으로 복귀)
+  useActorIdle?: boolean;            // 🔧 waitSec 대신 actor.sim.idleSecRange 추첨
+  stopId?: string;                   // 방해·연출이 참조하는 정지 이름(예: stop_ceo_greet)
+  coneOff?: boolean; holdForQte?: boolean; holdForReport?: boolean; lookIsRecheck?: boolean;  // 🔧
+}
+```
+
+| id | 액터 | 종류 | 요약 |
+|---|---|---|---|
+| p_senior_seat / p_tl_seat | 선배 / 팀장 | seated | (5,30) 북쪽 대기, 남쪽 돌아보기 |
+| p_tl2_seat | 팀장 #2 | seated | (5,13), 차장~ |
+| p_snitch_seat | 정의로운 동료 | seated | (6,33), 왼쪽 힐끔 |
+| p_accomplice_seat | 공범 | seated | (7,36) |
+| p_guard_gatehall | 경비 | loop | 게이트 홀 3점 왕복 |
+| p_director_walkdown / walkup | 본부장 | route | 본부장실 ↔ 화물 엘리베이터, 정지 3곳 |
+| p_hr_attendance / p_hr_corridor | 인사팀 | route | 근태 점검 / 복도 사원증 |
+| p_tl_meeting | 팀장 | route | 자리 → 회의실 10초 → 자리 |
+| p_ceo_visit / p_ceo_elevator | 대표님 | route | 순시 / 퇴근 엘리베이터 |
+| p_gossip_snitch / p_gossip_accomplice | 동료 2 | route | 병목 (5,23)(5,24) 길막 |
+| p_snitch_report | 정의로운 동료 | route | 자리 → 팀장 옆 (6,30) |
+| p_accomplice_follow | 공범 | follow | 플레이어 1타일 뒤 |
+
+---
+
+## 5. interrupts.json — 방해·개입 이벤트 (신규)
+
+```ts
+interface InterruptsTable { schemaVersion: 2; interrupts: InterruptDef[] }
+interface InterruptDef {
+  id: InterruptId; key: string; nameKey: StringKey;
+  category: 'talk_stop'|'block'|'report_run'|'countdown'|'walker'|'walker_talk'|'walker_opportunity'|'freeze'|'qte'|'assist';
+  actors: ActorId[]; mvp: boolean; unlockDay: number; lastDay?: number;
+  phases: ('day'|'leave')[];                      // leave 포함 = '퇴근 방해'
+  trigger:
+    | { type: 'proximity_talk'; talkDefOf: ActorId; requiresPlayerAway?: boolean; condition?: string }
+    | { type: 'spotted_by'; actor: ActorId; dwellSec: Sec; states: string[] }
+    | { type: 'scheduled'; dayAtSec: 'from_day_plan'; leaveTrigger?: 'on_leave_start'|'player_enters_zone'; leaveZone?: string;
+        leaveUnlockDay?: number; notDuring?: string[] }
+    | { type: 'scheduled_when'; dayAtSec: 'from_day_plan'; condition: 'player_seated' }
+    | { type: 'chance_on_exit_wait'; chance: Prob; notOnCeoVisitDays: boolean }
+    | { type: 'mission_offer'; offerRef: string };
+  tell: { sec: Sec; visual: string; sfx: string; bgm?: 'stop'; textKey?: StringKey };   // sec ≥ 0.4 (말걸기 ≥ 0.5)
+  effect: Record<string, unknown>;                // category별(아래)
+  counters: { id: string; input: string; result: string; [k: string]: unknown }[];
+  cooldownSec: Sec; maxPerDay: number;
+  rankScaling?: ...;                              // 보간 방식
+  reactionKeys: StringKey[];
+}
+```
+
+| category | 주요 effect 필드 |
+|---|---|
+| talk_stop | `forcedStop`, `talkLineKey`, `leaveLineKey?`, `leaveExtraSuspicion`(v2 = 0, D-043), `earlyLeavePoints?` |
+| report_run | `patrolId`, `showPath`, `arrivalSuspicion`, `forcedLookBy`, `forcedLook{tellSec, lookSec, coneRange, aimAtPlayer}`, `waitIfReceiverSuppressedMaxSec` |
+| block | `patrolIds[]`, `blockTiles`, `blockSec`, `leavePrePositioned`, `leaveBlockSec`, `talkIfAdjacent{radius, durationSec, lineKey}` |
+| countdown | `patrolId`, `countdownSec: 'eta_to_stop_inspect'`, `countdownMinSec`, `inspectSec`, `absentSuspicion` |
+| walker / walker_talk / walker_opportunity | `patrolId` 또는 `patrolVariants[]`, `leaveVariant`, `teamLeadGreeting{whenDirectorInZone, moveTo, gazeOff, talkOff}`, `meetingSec`, `letoutTellSec`, `blocksMissions[]` |
+| freeze | `seeBoss: 'ceo.visit'`, `clockPaused` |
+| qte | `patrolId`, `qteRef`, `successPoints`, `failSuspicion` |
+| assist | `patrolId`, `effectsRef` |
+
+---
+
+## 6. events.json — 미션 (개정)
+
+```ts
+interface EventsTable { schemaVersion: 2; events: EventDef[] }
+interface EventDef {
+  id: EventId; nameKey; descKey; iconSprite: string; mvp: boolean;
+  mechanic: 'pour_tap_stop'|'trip_safe_zone'|'nap_tap_toggle'|'screen_swap_tap'|'rhythm_tap'|'leave_sequence';
+  location: { spot: string; zone: string };         // maps.spots / zones 참조
+  startsAt: 'arrive_spot'|'chip_tap_at_seat'|'clock_leave_start';
+  completeAt: 'return_to_seat'|'on_success'|'exit_elevator';
+  awayFromDesk: boolean; isFinale: boolean; unlockRank: RankId;
+  timeLimitSec: Sec;                  // 미션 시작(자리를 뜬 순간)부터
+  expectedDurationSec: Sec;           // 시간 예산·시뮬 기준(판정에 안 씀)
+  accompliceAllowed: boolean;
+  reward: { slackPoints: number; snackStock?: number; earlyLeaveBonusPoints?: number };
+  failPenalty: { suspicion: Ratio01; result?: 'overtime_ending' };
+  timeoutPenalty: { suspicion: Ratio01; result?: 'overtime_ending' };
+  params: Record<string, unknown>;    // mechanic별(아래)
+  accompliceEffect?: { cupsRequired?: number; bitesRequiredMultiplier?: number };
+  rankScaling: Partial<Record<RankId, Record<string, unknown>>>;   // 덮어쓰기
+  failReactionKeys: StringKey[]; tutorialId: string;
+}
+```
+| mechanic | params |
+|---|---|
+| pour_tap_stop (coffee) | `pourRatePerSec`, `targetBand`, `overflowAt`, `cupsRequired`, `tapBelowBand: 'pause'`, `tapInBand: 'success'`, `carryCupWhileReturning` |
+| trip_safe_zone (restroom) | `insideRestSec`, `insideBonusMaxSec`, `insidePointsPerSec`, `tapInsideAfterRest: 'leave_stall'`, `stallIsSafeZone` |
+| nap_tap_toggle (nap) | `fatigueStart`, `fatigueRecoverPerSec`, `headDropPerSec`, `headRaisePerSec`, `headThudAt`, `headDownVisibleThreshold`, `headDownVisibleStateMultiplier`, `tapToggles`, `lockedDuringInterrupt` |
+| screen_swap_tap (shopping) | `cartFillPerSec`, `itemsRequired`, `checkoutHoldSec`, `tapDuringCheckout`, `pausedShowsSpreadsheet` |
+| rhythm_tap (snack) | `bitesRequired`, `minIntervalSec`, `perfectWindowSec`, `maxPressSec`, `noiseSuspicion`, `noiseAlertsRadiusTiles`, `noiseShortensBossIdleTo`, `biteUnderGazeSuspicion`, `activityStateAfterBiteSec`, `perfectBonusPoints` |
+| leave_sequence | `clockStart`, `gameMinutesPerSec`, `phases[]`: `pack{sec, tapPauses, ifAwayWalkToSeatFirst}` → `walk{to, carryingBag}` → `gate{npc, ref}` → `elevator{waitSecRange, safeAfterGate, interruptHook}` |
+
+---
+
+## 7. ranks.json / days.json (개정)
+
+```ts
+interface RanksTable { schemaVersion: 2; budgetModel: {...}; ranks: RankDef[] }
 interface RankDef {
-  id: RankId; order: number; nameKey: StringKey;
-  dayRange: [number, number | null];   // null = 엔드리스
-  contentTier: 'authored' | 'generated' | 'endless';
-  mvp: boolean;
-  starsToPromote: number | null;       // 직급 내 '날짜별 최고 별' 합계 기준
-  maxStars: number | null;
-  regularEventsPerDay: Range<number>;  // 퇴근 제외 일반 이벤트 수 (정수)
-  workSegmentSec: Sec;                 // 업무 구간 1개 길이
-  workQuota: Ratio01;                  // 업무 게이지 할당량
-  salaryBase: number;                  // 월급 기준(원, 소프트 재화)
-  bosses: Partial<Record<BossId, number>>;  // 등장 상사와 인스턴스 수
-  npcs: NpcId[];
+  id: RankId; order; nameKey; dayRange: [number, number | null]; contentTier: 'authored'|'generated'|'endless'; mvp;
+  starsToPromote: number | null; maxStars: number | null;
+  dayPhaseSec: Sec;                    // 09:00→17:48 실시간 길이 (v1 workSegmentSec 대체)
+  ceoDayPhaseReductionSec: Sec;
+  missionsPerDay: Range<number>; missionsRequired: Range<number>;   // [t<0.5, t≥0.5]
+  workQuota: Ratio01; salaryBase: number;
+  cast: { bosses: Partial<Record<BossId, number>>; npcs: NpcId[] };
   eventPool: { eventId: EventId; weight: number }[];
+  dayInterrupts: { countRange: Range<number>; pool: { id: InterruptId; weight: number }[] };
+  leaveInterrupts: { countRange: Range<number>; pool: { id: InterruptId; weight: number }[] };
   promotionTitleKey: StringKey | null;
 }
-```
 
----
-
-## 6. days.json — 하루 구성
-
-```ts
-interface DaysTable { schemaVersion: 1; authoredDays: AuthoredDay[]; generator: DayGenerator }
-
+interface DaysTable { schemaVersion: 2; authoredDays: AuthoredDay[]; generator: DayGenerator }
 interface AuthoredDay {
-  day: number; rankId: RankId; weekday: 0|1|2|3|4; seed: string;  // "day-<n>" (core/rng.ts daySeed와 동일)
-  titleKey: StringKey;
-  tutorialIds: string[];
-  workQuotaOverride?: Ratio01;         // 1일차 0.35
-  bosses: Partial<Record<BossId, number>>;
-  slots: ({ type: 'work'; sec: Sec } | { type: 'event'; eventId: EventId })[];  // 마지막은 반드시 leave
-  scripted: ScriptedBeat[];
-  npc: { accompliceOffer: boolean; snitch: boolean; hrInspector: boolean };
-  ceo: 'none' | 'scheduled' | 'random';
-  expectedDurationSec: Sec;            // intro + 슬롯 합 + 이벤트 expectedDuration (+튜토리얼 여유)
+  day; rankId; weekday: 0|1|2|3|4; seed: `day-${number}`; mapId; titleKey; tutorialIds: string[];
+  dayPhaseSec: Sec; workQuotaOverride?: Ratio01;
+  missions: { eventId: EventId; unlockAtSec: Sec }[];   // 근무 구간 시작 기준
+  missionsRequired: number;
+  castPatrols: string[];                                 // 하루 종일 있는 순찰
+  ambientOnly?: NpcId[];                                 // 앉아만 있는 배경 동료(상호작용 없음)
+  dayInterrupts: { id: InterruptId; atSec: Sec; trigger?: string }[];   // atSec 0 = 하루 종일 활성(근접형), -1 = trigger로만
+  leaveInterrupts: { id: InterruptId }[];
+  scripted: ScriptedBeat[];                              // type별 자유 필드(튜토리얼 연출)
+  ceo: 'none'|'scheduled'|'random';
+  expectedDurationSec: Sec;
 }
-type ScriptedBeat =
-  | { type: 'boss_look'; bossId: BossId; slot: number; atSec: Sec; tellSec: Sec; suspicionGainMultiplier: number }
-  | { type: 'boss_opportunity'; bossId: BossId; opportunity: string; slot: number; atSec: Sec; durationSec: Sec }
-  | { type: 'accomplice_offer'; eventId: EventId; forced: boolean }
-  | { type: 'snitch_spawn'; slot: number; atSec: Sec; requiresHolding: boolean; fallbackAtSec: Sec }
-  | { type: 'hr_inspection'; slot: number; trigger: 'restroom_inside_rest_start' };
 ```
-- `slot`은 `slots` 배열 인덱스(0부터). `atSec`은 해당 슬롯 시작 기준.
-- `generator`는 16일차 이후 생성 규칙(자연어+수식). 개발자는 `generateDay(day: number): AuthoredDay`를 구현해 같은 형태로 돌려주면 됩니다. RNG 스트림은 `"day-{day}-{stream}"`(plan / boss / npc / event)로 분리해, 한 요소를 고쳐도 다른 요소의 추첨이 밀리지 않게 합니다.
-- `t = (day - dayRange[0]) / (dayRange[1] - dayRange[0])`, 엔드리스는 0.
+- `generator`는 16일차 이후 규칙(자연어 + 수식). 개발은 `generateDay(day): AuthoredDay`로 같은 모양을 돌려주면 됩니다. RNG 스트림 `day-{n}-{plan|boss|npc|event|leave}`.
+- `t = (day − dayRange[0]) / (dayRange[1] − dayRange[0])`, 엔드리스 t = 0.
 
 ---
 
-## 7. strings.ko.json — 문구
+## 8. ads.json (신규) / strings.ko.json
 
 ```ts
-interface StringsTable {
-  schemaVersion: 1; locale: 'ko-KR';
-  strings: Record<StringKey, string | string[]>;  // 배열 = 변형 대사(표시용 무작위)
+interface AdsTable {
+  schemaVersion: 2;
+  global: { neverDuringPlay: true; playStates: string[]; bannerEnabled: false; shareReward: false };
+  interstitial: { enabled; placement: 'result_to_next_day'; noticeKey; noticeSec; installDayMaxShows: 0;
+                  exemptFirstGamesLifetime: 5; everyNGames: 3; maxPerDay: 5; minIntervalSec: 180;
+                  skipIfRewardedWatchedThisGame: true; removedByIap: 'remove_ads'; dayBoundary: 'local_midnight' };
+  rewarded: { enabled; maxPerDay: 12;
+              placements: { id: 'ceo_pass'|'continue'|'salary_double'; screen: 'prep'|'caught_offer'|'result';
+                            labelKey; descKey?; condition: string; maxPerDay: number; effect: string }[] };
+  iap: { remove_ads: { priceKrw: 2900; removes: ['interstitial']; keepsRewarded: true; featureFlag: string; enabledUntilBusinessApproved: false } };
+  counters: { persist: string[]; storage: 'apps_in_toss_storage' };
 }
 ```
-- 치환자: `{name}`(플레이어 호칭, 기본 `ui.player_default_name`), `{n}`, `{total}`, `{time}`, `{rank}`, `{weekday}`
-- 키 접두사: `ui.` `hud.` `result.` `ad.` `rank.` `day.` `event.` `boss.` `npc.` `tutorial.` `react.` `codex.`
-- `react.*` 키는 리액션 도감 항목 ID를 겸합니다(처음 보면 해금).
+- 전면광고 판정 순서(개발): `iap 구매` → `global.neverDuringPlay` → `설치 당일` → `평생 판수 < 5` → `오늘 횟수 ≥ 5` → `마지막 광고 후 < 180초` → `이번 판 보상형 봄` → `판수 % 3`. 하나라도 걸리면 건너뜀.
+- strings: v1과 같은 구조(`{ schemaVersion, locale, strings: Record<key, string | string[]> }`). 새 접두사 `prep.` `map.` `zone.` `route.` `int.`.
 
 ---
 
-## 8. 예약 테이블 (이번 버전 미작성)
-- `modifiers.json`(요일·시즌 수정자), `items.json`(위장 아이템·책상 꾸미기): MVP 후순위. `design/backlog.md` 참고.
+## 9. 🔧 개발 확장 요청 목록 (T-123 코어 대비)
 
-## 9. 변경 이력
+| # | 확장 | 위치 | 근거 |
+|---|---|---|---|
+| X1 | 앉은 모드: `coneActiveIn`, waypoint `facing`(look 후 복귀 0.3초), `useActorIdle` + `idleSecRange` | patrol.ts | 앉은 상사는 돌아볼 때만 시선 |
+| X2 | 범위 추첨 `tellSecRange`/`lookSecRange`, 페이크(전조 후 시선 없음, 연속 금지)·연속 두 번 보기 | patrol.ts | v1 팀장 패턴 계승 |
+| X3 | **D-043** 말걸기 전조: `noticeRadius`에서 말풍선 `tellSec`(≥ 0.5) + 다가오는 동작 → 끝났을 때 `radius` 안이면 시작. `skipIfPlayerDisguised`. 말걸기 중 의심 0 | floorSim.ts | QA: 전조 없는 말걸기 판당 0.36회 |
+| X4 | **D-044** 조건부 모퉁이·재출발 전조: 새 방향 실제 콘이 플레이어를 덮을 수 있으면 `cornerTurnTellSec` 0.5 | patrol.ts `walk()`·wait→walk | QA: 모퉁이·재출발 판당 0.12~0.20회 |
+| X5 | `anyStopIsDisguised`(멈춤 = 위장), `disguiseStaleAfterSec`, `postTalkHoldSec`, D-039 자동 재개 | player.ts·suspicion.ts | T-124: 위장이 손해였음 |
+| X6 | `threat.approaching`에 가림·경로 거리 조건(`stages`) | floorSim.ts `threatOf` | T-124: 벽 뒤 경고 76% |
+| X7 | `loop: false`, `despawnAtEnd`, `thenPatrol`, `spawnTellSec`, 순찰 런타임 추가·제거 | patrol.ts·floorSim.ts | 방해 이벤트 등장·퇴장 |
+| X8 | 의자 점유(`h`), `gateOnly`, NPC가 1초 뒤 플레이어 통과 | grid/pathfinding | 길막·게이트 |
+| X9 | 미션 상태 `seated`/`activity`/`activity_paused`, 업무 게이지, 시계 | 신규 | 하루 루프 |
+| X10 | `offscreenSourceNoGain`(화면 밖 콘 주인 판정 제외) | floorSim.ts | 억울한 실패 0 |
+
+---
+
+## 10. 검사기 `design/tools/validate_data.py`
+`python3 -I molrae-toegeun/design/tools/validate_data.py` → `OK` 또는 오류 목록(종료 코드 1). 검사 항목: schemaVersion, `*Key`·`reactionKeys` 문자열 존재, 전조 최소·페이크 상한(보간 값 포함), 맵 크기·legend·스폿/웨이포인트 통행·도달, 테이블 간 ID 참조, 방해 phase·unlockDay, 하루 예상 길이 범위, 층 인원 ≤ 8, D-037 사원증 색. 데이터를 고칠 때마다 실행하세요. CI 편입은 개발·QA 판단입니다.
+
+---
+
+## 11. 변경 이력
+
 | 버전 | 날짜 | 내용 |
 |---|---|---|
-| 1 | 2026-11-22 | 최초 작성 (T-101). `rules.json` 추가(에이전트 기본 테이블 목록 외, 전역 상수용) |
+| 1 | 2026-11-22 | 최초 작성(T-101, 측면 홀드/떼기 기준) |
+| 2 | 2026-11-22 | **탑다운 전면 개정(T-121)**. 아래 상세 |
+
+### v1 → v2 상세
+- **신규 테이블**: `maps`, `patrols`, `interrupts`, `ads`.
+- **rules**: `input.inputGraceSec`(유지) 외 v1 `input`·`work.fillOnlyInWorkSegment`·`slack.pointsPerSecInWorkSegment` 삭제. 최상위에 개발 `FloorRules` 필드 추가. `suspicion`을 개발 `SuspicionRules` 이름으로 교체(`decayRequires` 삭제). `movement`·`talk`·`disguise`·`sight`·`threat`·`offscreenWarning`·`characters`·`leavePhase` 추가. `day.finaleClockStart` → `leaveClockStart`(17:52 → 17:48), `overtimeAt` 추가. `stars.missionsShortLeave` 추가.
+- **bosses**: `behavior`·`gaze`·`timing` 삭제 → `sim`(개발 NpcDef 모양) + `patrols`(본부장) + `visit`(대표님). `fake.prob`/`doubleLook.prob` → `sim.fake.chance`/`sim.doubleLook.chance`. `opportunity`(단일) → `opportunities[]`. 사원증 줄 전원 `lanyard_red`(D-037). rankScaling 키 `tell.durationSec`→`sim.tellSecRange`, `timing.idleSec`→`sim.idleSecRange`, `timing.lookSec`→`sim.lookSecRange`, `timing.stopProb`→`sim.lookChance`, `timing.patrolsPerDay`→`patrols.perDayRange`, `timing.freezeSec` 삭제(얼음 = 입장 걷기 시간).
+- **npcs**: `spawn.while_holding`·`counters`·`tell`·`gaze`·`params` 삭제 → `sim`, `gate`, `offer`, `effects`, `inspection`, `spawn`. 방해 행동은 `interrupts`로 이동. 공범 줄 주황 → 초록(D-037). `ambientFromDay` 추가.
+- **events**: `input`·`observable`·`suspicionGainMultiplier`·`hrInspectionAllowed` 삭제, `location`을 문자열 → `{spot, zone}`, `startsAt`·`completeAt`·`iconSprite` 추가. mechanic 이름과 params 전부 교체(§6).
+- **ranks**: `regularEventsPerDay`·`workSegmentSec`·`bosses`·`npcs` → `missionsPerDay`·`missionsRequired`·`dayPhaseSec`·`cast`·`dayInterrupts`·`leaveInterrupts`. `budgetModel` 추가. 할당량 하향(0.45~0.65 → 0.40~0.50).
+- **days**: `slots`·`bosses`·`npc`·`scripted(boss_look 등 슬롯 기준)` → `missions`·`castPatrols`·`dayInterrupts`·`leaveInterrupts`·`scripted(자유)`. `generator` 재작성(스트림 `leave` 추가).
+- **strings**: 홀드/떼기 문구 전부 탭 기준으로 교체, `prep.` `map.` `zone.` `route.` `int.` 추가.
+- **T-124 반영(같은 날, 버전 유지)**: 위장 0/초 + 3초 초과 시 0.03, `anyStopIsDisguised`, 말걸기 전조·위장 시 생략·의심 0(D-043), 조건부 모퉁이 전조(D-044), `threat.stages`(가림·경로 거리).

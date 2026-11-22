@@ -11,30 +11,49 @@
       "mvp": true,
       "unlockRank": "intern",
       "firstDay": 1,
-      "props": ["lanyard_black", "cap", "radio"],
+      "props": [
+        "lanyard_black",
+        "cap",
+        "radio"
+      ],
       "defaultPatrol": "p_guard_gatehall",
       "sim": {
-        "cone": { "range": 4, "halfAngleDeg": 35 },
+        "cone": {
+          "range": 4,
+          "halfAngleDeg": 35
+        },
         "speedTilesPerSec": 1.2,
         "gazeMultiplier": 0.6,
         "tellSec": 0.5,
-        "tellSecRange": [0.5, 0.5],
+        "tellSecRange": [
+          0.5,
+          0.5
+        ],
         "lookSec": 1.2,
-        "lookSecRange": [1.2, 1.2],
+        "lookSecRange": [
+          1.2,
+          1.2
+        ],
         "lookChance": 0.5,
         "glanceBackChancePerTile": 0.04,
-        "coneActiveIn": ["walk", "wait", "tell", "look"],
+        "coneActiveIn": [
+          "walk",
+          "wait",
+          "tell",
+          "look"
+        ],
         "talk": {
           "radius": 1.1,
           "noticeRadius": 2.0,
           "tellSec": 0.5,
           "durationSec": 1.5,
           "cooldownSec": 6,
-          "cancelIfDisguisedAtTellEnd": false,
           "nodShortenSec": 0.0,
           "minDurationSec": 1.5,
           "onlyWhen": "leave_phase_before_1800",
-          "enabledBy": "INT-07"
+          "enabledBy": "INT-07",
+          "skipIfPlayerDisguised": true,
+          "approachMotion": true
         }
       },
       "gate": {
@@ -47,12 +66,43 @@
         "firstTryWindowMultiplierOnDay1": 2.0
       },
       "frozenByCeo": true,
-      "reactionKeys": ["react.security_guard.gate_fail", "react.security_guard.early"],
+      "reactionKeys": [
+        "react.security_guard.gate_fail",
+        "react.security_guard.early"
+      ],
       "rankScaling": {
-        "manager": { "start": { "gate.windowRatio": 0.18 }, "end": { "gate.windowRatio": 0.16 } },
-        "deputy_general_manager": { "start": { "gate.windowRatio": 0.16 }, "end": { "gate.windowRatio": 0.15 } },
-        "general_manager": { "start": { "gate.windowRatio": 0.15 }, "end": { "gate.windowRatio": 0.14 } },
-        "executive": { "start": { "gate.windowRatio": 0.14 }, "end": { "gate.windowRatio": 0.14 } }
+        "manager": {
+          "start": {
+            "gate.windowRatio": 0.18
+          },
+          "end": {
+            "gate.windowRatio": 0.16
+          }
+        },
+        "deputy_general_manager": {
+          "start": {
+            "gate.windowRatio": 0.16
+          },
+          "end": {
+            "gate.windowRatio": 0.15
+          }
+        },
+        "general_manager": {
+          "start": {
+            "gate.windowRatio": 0.15
+          },
+          "end": {
+            "gate.windowRatio": 0.14
+          }
+        },
+        "executive": {
+          "start": {
+            "gate.windowRatio": 0.14
+          },
+          "end": {
+            "gate.windowRatio": 0.14
+          }
+        }
       },
       "_toneNote": "유능하고 친절한 프로. 놀림·무시 연출 금지. 시선 배율 0.6: '퇴근하시나 보다' 정도로 덜 무서움.",
       "_designNote": "PM 공지 4) 출구 앞을 순찰하며 게이트 사용 칸을 콘으로 덮음 → 게이트 태그 직전에 멈춤·위장 타이밍을 요구. 18시 전에 다가가면 '벌써 퇴근하세요?'(INT-07)."
@@ -67,35 +117,146 @@
       "unlockRank": "staff",
       "firstDay": 8,
       "ambientFromDay": 1,
-      "props": ["lanyard_blue", "clipboard_small", "glasses_round"],
+      "props": [
+        "lanyard_blue",
+        "clipboard_small",
+        "glasses_round"
+      ],
       "defaultPatrol": "p_snitch_seat",
       "sim": {
-        "cone": { "range": 3, "halfAngleDeg": 45 },
+        "cone": {
+          "range": 3,
+          "halfAngleDeg": 45
+        },
         "speedTilesPerSec": 1.5,
         "gazeMultiplier": 0.0,
         "tellSec": 0.5,
-        "tellSecRange": [0.5, 0.5],
+        "tellSecRange": [
+          0.5,
+          0.5
+        ],
         "lookSec": 1.5,
-        "lookSecRange": [1.5, 1.5],
+        "lookSecRange": [
+          1.5,
+          1.5
+        ],
         "lookChance": 1.0,
         "glanceBackChancePerTile": 0.0,
-        "idleSecRange": [5.0, 8.0],
-        "coneActiveIn": ["look"],
+        "idleSecRange": [
+          5.0,
+          8.0
+        ],
+        "coneActiveIn": [
+          "look"
+        ],
         "spot": {
           "dwellSec": 0.4,
-          "triggerStates": ["activity", "leaving_with_bag"],
+          "triggerStates": [
+            "activity",
+            "leaving_with_bag"
+          ],
           "startsInterrupt": "INT-03"
         }
       },
       "frozenByCeo": true,
-      "reactionKeys": ["react.snitch.reported", "react.snitch.snack", "react.snitch.doubt"],
+      "reactionKeys": [
+        "react.snitch.reported",
+        "react.snitch.snack",
+        "react.snitch.doubt"
+      ],
       "rankScaling": {
-        "staff": { "start": { "sim.idleSecRange": [6.0, 9.0] }, "end": { "sim.idleSecRange": [5.5, 8.5] } },
-        "assistant_manager": { "start": { "sim.idleSecRange": [5.0, 8.0] }, "end": { "sim.idleSecRange": [5.0, 8.0] } },
-        "manager": { "start": { "sim.idleSecRange": [4.5, 7.5], "sim.speedTilesPerSec": 1.6 }, "end": { "sim.idleSecRange": [4.5, 7.0], "sim.speedTilesPerSec": 1.7 } },
-        "deputy_general_manager": { "start": { "sim.idleSecRange": [4.5, 7.0], "sim.speedTilesPerSec": 1.7 }, "end": { "sim.idleSecRange": [4.0, 7.0], "sim.speedTilesPerSec": 1.7 } },
-        "general_manager": { "start": { "sim.idleSecRange": [4.0, 7.0], "sim.speedTilesPerSec": 1.7 }, "end": { "sim.idleSecRange": [4.0, 6.5], "sim.speedTilesPerSec": 1.7 } },
-        "executive": { "start": { "sim.idleSecRange": [4.0, 6.5], "sim.speedTilesPerSec": 1.7 }, "end": { "sim.idleSecRange": [4.0, 6.5], "sim.speedTilesPerSec": 1.7 } }
+        "staff": {
+          "start": {
+            "sim.idleSecRange": [
+              6.0,
+              9.0
+            ]
+          },
+          "end": {
+            "sim.idleSecRange": [
+              5.5,
+              8.5
+            ]
+          }
+        },
+        "assistant_manager": {
+          "start": {
+            "sim.idleSecRange": [
+              5.0,
+              8.0
+            ]
+          },
+          "end": {
+            "sim.idleSecRange": [
+              5.0,
+              8.0
+            ]
+          }
+        },
+        "manager": {
+          "start": {
+            "sim.idleSecRange": [
+              4.5,
+              7.5
+            ],
+            "sim.speedTilesPerSec": 1.6
+          },
+          "end": {
+            "sim.idleSecRange": [
+              4.5,
+              7.0
+            ],
+            "sim.speedTilesPerSec": 1.7
+          }
+        },
+        "deputy_general_manager": {
+          "start": {
+            "sim.idleSecRange": [
+              4.5,
+              7.0
+            ],
+            "sim.speedTilesPerSec": 1.7
+          },
+          "end": {
+            "sim.idleSecRange": [
+              4.0,
+              7.0
+            ],
+            "sim.speedTilesPerSec": 1.7
+          }
+        },
+        "general_manager": {
+          "start": {
+            "sim.idleSecRange": [
+              4.0,
+              7.0
+            ],
+            "sim.speedTilesPerSec": 1.7
+          },
+          "end": {
+            "sim.idleSecRange": [
+              4.0,
+              6.5
+            ],
+            "sim.speedTilesPerSec": 1.7
+          }
+        },
+        "executive": {
+          "start": {
+            "sim.idleSecRange": [
+              4.0,
+              6.5
+            ],
+            "sim.speedTilesPerSec": 1.7
+          },
+          "end": {
+            "sim.idleSecRange": [
+              4.0,
+              6.5
+            ],
+            "sim.speedTilesPerSec": 1.7
+          }
+        }
       },
       "_toneNote": "악역이 아니라 '눈치 없는 정의파'. 간식을 받으면 금방 풀리는 허당. 따돌림·괴롭힘 연출 금지. 화면 표시명은 '정의로운 동료', snitch는 내부 ID만.",
       "_designNote": "1~7일차는 자리에 앉아만 있는 배경 동료(ambient, 상호작용 없음) → 처음부터 사무실이 붐벼 보이게. 콘은 의심을 올리지 않고 '보고 달리기' 트리거만."
@@ -110,10 +271,17 @@
       "unlockRank": "staff",
       "firstDay": 7,
       "ambientFromDay": 1,
-      "props": ["lanyard_green", "tumbler", "headphones_neck"],
+      "props": [
+        "lanyard_green",
+        "tumbler",
+        "headphones_neck"
+      ],
       "defaultPatrol": "p_accomplice_seat",
       "sim": {
-        "cone": { "range": 0, "halfAngleDeg": 0 },
+        "cone": {
+          "range": 0,
+          "halfAngleDeg": 0
+        },
         "speedTilesPerSec": 3.0,
         "gazeMultiplier": 0.0,
         "tellSec": 0.5,
@@ -123,7 +291,10 @@
         "coneActiveIn": []
       },
       "offer": {
-        "eventIds": ["coffee", "snack"],
+        "eventIds": [
+          "coffee",
+          "snack"
+        ],
         "offerProb": 0.6,
         "offerSec": 2.5,
         "maxPerDay": 1,
@@ -138,7 +309,9 @@
         "lookoutRadiusTiles": 6
       },
       "frozenByCeo": true,
-      "reactionKeys": ["react.accomplice.caught_together"],
+      "reactionKeys": [
+        "react.accomplice.caught_together"
+      ],
       "rankScaling": {},
       "_designNote": "합류하면 1타일 뒤를 따라와 '맞는 면적'이 2배(공범이 콘에 걸려도 내가 걸린 것으로 계산, ×1.25). 대신 반경 6타일 안 상사 전조 0.3초 전에 헛기침으로 미리 알려 줌. 확률은 제안 여부(연출)일 뿐 보상은 결정적."
     },
@@ -151,30 +324,49 @@
       "mvp": true,
       "unlockRank": "staff",
       "firstDay": 10,
-      "props": ["lanyard_purple", "clipboard_large", "badge_reader"],
+      "props": [
+        "lanyard_purple",
+        "clipboard_large",
+        "badge_reader"
+      ],
       "defaultPatrol": null,
       "sim": {
-        "cone": { "range": 3, "halfAngleDeg": 35 },
+        "cone": {
+          "range": 3,
+          "halfAngleDeg": 35
+        },
         "speedTilesPerSec": 2.6,
         "gazeMultiplier": 1.1,
         "tellSec": 0.6,
-        "tellSecRange": [0.6, 0.6],
+        "tellSecRange": [
+          0.6,
+          0.6
+        ],
         "lookSec": 2.5,
-        "lookSecRange": [2.5, 2.5],
+        "lookSecRange": [
+          2.5,
+          2.5
+        ],
         "lookChance": 1.0,
         "glanceBackChancePerTile": 0.03,
-        "coneActiveIn": ["walk", "wait", "tell", "look"],
+        "coneActiveIn": [
+          "walk",
+          "wait",
+          "tell",
+          "look"
+        ],
         "talk": {
           "radius": 1.1,
           "noticeRadius": 2.0,
           "tellSec": 0.6,
           "durationSec": 1.5,
           "cooldownSec": 10,
-          "cancelIfDisguisedAtTellEnd": true,
           "nodShortenSec": 0.0,
           "minDurationSec": 1.5,
           "onlyWhilePlayerAway": true,
-          "enabledBy": "INT-06"
+          "enabledBy": "INT-06",
+          "skipIfPlayerDisguised": true,
+          "approachMotion": true
         }
       },
       "inspection": {
@@ -187,16 +379,67 @@
         "activitySeenUsesCone": true
       },
       "frozenByCeo": true,
-      "reactionKeys": ["react.hr_inspector.absent", "react.hr_inspector.caught", "react.hr_inspector.badge"],
+      "reactionKeys": [
+        "react.hr_inspector.absent",
+        "react.hr_inspector.caught",
+        "react.hr_inspector.badge"
+      ],
       "rankScaling": {
-        "staff": { "start": { "spawn.dayChance": 0.4 }, "end": { "spawn.dayChance": 0.45 } },
-        "assistant_manager": { "start": { "spawn.dayChance": 0.6 }, "end": { "spawn.dayChance": 0.6 } },
-        "manager": { "start": { "spawn.dayChance": 0.7 }, "end": { "spawn.dayChance": 0.7 } },
-        "deputy_general_manager": { "start": { "spawn.dayChance": 0.7 }, "end": { "spawn.dayChance": 0.7 } },
-        "general_manager": { "start": { "spawn.dayChance": 0.7 }, "end": { "spawn.dayChance": 0.7 } },
-        "executive": { "start": { "spawn.dayChance": 0.7 }, "end": { "spawn.dayChance": 0.7 } }
+        "staff": {
+          "start": {
+            "spawn.dayChance": 0.4
+          },
+          "end": {
+            "spawn.dayChance": 0.45
+          }
+        },
+        "assistant_manager": {
+          "start": {
+            "spawn.dayChance": 0.6
+          },
+          "end": {
+            "spawn.dayChance": 0.6
+          }
+        },
+        "manager": {
+          "start": {
+            "spawn.dayChance": 0.7
+          },
+          "end": {
+            "spawn.dayChance": 0.7
+          }
+        },
+        "deputy_general_manager": {
+          "start": {
+            "spawn.dayChance": 0.7
+          },
+          "end": {
+            "spawn.dayChance": 0.7
+          }
+        },
+        "general_manager": {
+          "start": {
+            "spawn.dayChance": 0.7
+          },
+          "end": {
+            "spawn.dayChance": 0.7
+          }
+        },
+        "executive": {
+          "start": {
+            "spawn.dayChance": 0.7
+          },
+          "end": {
+            "spawn.dayChance": 0.7
+          }
+        }
       },
-      "spawn": { "dayChance": 0.4, "maxPerDay": 1, "notDuringCeo": true, "minDayTimeSec": 12 },
+      "spawn": {
+        "dayChance": 0.4,
+        "maxPerDay": 1,
+        "notDuringCeo": true,
+        "minDayTimeSec": 12
+      },
       "_toneNote": "규칙을 지키는 깔끔한 프로. 위협·징계 묘사 금지('기록만 남길게요' 수준).",
       "_designNote": "엘리베이터에서 내려 팀까지 걸어오는 실제 시간(36타일 ÷ 2.6 ≈ 13.8초)이 곧 '자리 복귀 카운트다운' → 숫자와 화면 속 이동이 일치. 화장실(17타일, 5.7초)에서도 넉넉히 돌아올 수 있음."
     }

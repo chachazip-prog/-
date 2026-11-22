@@ -12,5 +12,5 @@
 
 ## 알려진 한계
 - 19.5:9 기기(예: 390×844)는 640px 높이만 쓰고 위아래 약 100px씩 레터박스. 필요하면 추후 "가로 180 고정 + 세로 320~390 가변" 방식으로 확장(레이아웃을 세로 가변 대응으로 작성해야 함).
-- 12px 시스템 폰트는 임시. 한글 도트 비트맵 폰트(상업 이용 가능한 OFL 등) 선정 필요 → 아트·컴플라이언스.
+- 텍스트는 도트 비트맵 폰트(T-126, D-042): `mt-pixel-12`(대사·UI) / `mt-pixel-10`(라벨) / `mt-pixel-8`(숫자·영문 전용). Galmuri 2.40.3(OFL 1.1) 서브셋 변환물. 생성 `npm run fonts`(scripts/build-fonts.ts, `npm run build`에 포함), 사용 `src/ui/pixelText.ts`. 크게 쓸 때는 정수 배율(scale 2, 3)만. 고지 `public/licenses/OFL-galmuri.txt`.
 - 토스 내비게이션 바·세이프 에어리어 높이만큼 가용 높이가 줄 수 있음(SDK `getSafeAreaInsets` 존재, 미연동).

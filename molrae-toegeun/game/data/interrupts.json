@@ -7,44 +7,103 @@
       "key": "callout_team_lead",
       "nameKey": "int.callout_team_lead.name",
       "category": "talk_stop",
-      "actors": ["team_lead"],
+      "actors": [
+        "team_lead"
+      ],
       "mvp": true,
       "unlockDay": 6,
-      "phases": ["day", "leave"],
-      "trigger": { "type": "proximity_talk", "talkDefOf": "team_lead", "requiresPlayerAway": true },
-      "tell": { "sec": 0.6, "visual": "exclaim_raise_hand", "sfx": "sfx_hey", "textKey": "int.callout_team_lead.tell" },
+      "phases": [
+        "day",
+        "leave"
+      ],
+      "trigger": {
+        "type": "proximity_talk",
+        "talkDefOf": "team_lead",
+        "requiresPlayerAway": true
+      },
+      "tell": {
+        "sec": 0.6,
+        "visual": "exclaim_raise_hand",
+        "sfx": "sfx_hey",
+        "textKey": "int.callout_team_lead.tell"
+      },
       "effect": {
         "forcedStop": true,
         "talkLineKey": "int.callout_team_lead.talk",
-        "leaveExtraSuspicion": 0.1,
+        "leaveExtraSuspicion": 0.0,
         "leaveLineKey": "int.callout_team_lead.leave_talk"
       },
       "counters": [
-        { "id": "disguise_during_tell", "input": "tap_while_moving", "result": "cancel", "lineKey": "int.callout_team_lead.cancel" },
-        { "id": "nod", "input": "tap_during_talk", "result": "shorten", "shortenSec": 0.4, "minDurationSec": 1.0 },
-        { "id": "detour", "input": "route_choice", "result": "avoid", "hint": "route_left" }
+        {
+          "id": "disguise_during_tell",
+          "input": "tap_while_moving",
+          "result": "skip_talk",
+          "lineKey": "int.callout_team_lead.cancel"
+        },
+        {
+          "id": "nod",
+          "input": "tap_during_talk",
+          "result": "shorten",
+          "shortenSec": 0.4,
+          "minDurationSec": 1.0
+        },
+        {
+          "id": "detour",
+          "input": "route_choice",
+          "result": "avoid",
+          "hint": "route_left"
+        }
       ],
       "cooldownSec": 12,
       "maxPerDay": 3,
       "reactionKeys": [],
-      "_designNote": "최단 경로가 팀장 1.5타일 안을 지나도록 맵을 짰음(지름길=위험). '!'가 뜬 0.6초 안에 탭해서 멈춰 바쁜 척하면 말을 안 검 → 정지 타이밍 판정의 기본 교재. 말걸기 2초 동안 다른 시선은 계속 돌아감(그게 진짜 위험). 끝나면 원래 목적지로 자동 재개(D-039)."
+      "_designNote": "최단 경로가 팀장 1.5타일 안을 지나도록 맵을 짰음(지름길=위험). '!' 말풍선 0.6초 동안 탭해서 위장하면 말을 안 검(위장 중인 플레이어는 말걸기 대상 제외) → 정지 타이밍 판정의 기본 교재. 말걸기 2초 동안 의심은 오르지 않지만(D-043) 시간이 흐르고 다른 시선은 계속 돌아감. 끝나면 원래 목적지로 자동 재개(D-039)."
     },
     {
       "id": "INT-02",
       "key": "senior_smalltalk",
       "nameKey": "int.senior_smalltalk.name",
       "category": "talk_stop",
-      "actors": ["senior"],
+      "actors": [
+        "senior"
+      ],
       "mvp": true,
       "unlockDay": 4,
       "lastDay": 5,
-      "phases": ["day", "leave"],
-      "trigger": { "type": "proximity_talk", "talkDefOf": "senior", "requiresPlayerAway": true },
-      "tell": { "sec": 1.0, "visual": "exclaim_wave", "sfx": "sfx_senior_hmm", "textKey": "int.senior_smalltalk.tell" },
-      "effect": { "forcedStop": true, "talkLineKey": "int.senior_smalltalk.talk", "leaveExtraSuspicion": 0.0 },
+      "phases": [
+        "day",
+        "leave"
+      ],
+      "trigger": {
+        "type": "proximity_talk",
+        "talkDefOf": "senior",
+        "requiresPlayerAway": true
+      },
+      "tell": {
+        "sec": 1.0,
+        "visual": "exclaim_wave",
+        "sfx": "sfx_senior_hmm",
+        "textKey": "int.senior_smalltalk.tell"
+      },
+      "effect": {
+        "forcedStop": true,
+        "talkLineKey": "int.senior_smalltalk.talk",
+        "leaveExtraSuspicion": 0.0
+      },
       "counters": [
-        { "id": "disguise_during_tell", "input": "tap_while_moving", "result": "cancel", "lineKey": "int.senior_smalltalk.cancel" },
-        { "id": "nod", "input": "tap_during_talk", "result": "shorten", "shortenSec": 0.4, "minDurationSec": 1.0 }
+        {
+          "id": "disguise_during_tell",
+          "input": "tap_while_moving",
+          "result": "skip_talk",
+          "lineKey": "int.senior_smalltalk.cancel"
+        },
+        {
+          "id": "nod",
+          "input": "tap_during_talk",
+          "result": "shorten",
+          "shortenSec": 0.4,
+          "minDurationSec": 1.0
+        }
       ],
       "cooldownSec": 15,
       "maxPerDay": 2,
@@ -56,35 +115,120 @@
       "key": "snitch_report",
       "nameKey": "int.snitch_report.name",
       "category": "report_run",
-      "actors": ["snitch", "team_lead"],
+      "actors": [
+        "snitch",
+        "team_lead"
+      ],
       "mvp": true,
       "unlockDay": 8,
-      "phases": ["day", "leave"],
-      "trigger": { "type": "spotted_by", "actor": "snitch", "dwellSec": 0.4, "states": ["activity", "leaving_with_bag"] },
-      "tell": { "sec": 0.6, "visual": "exclaim_stand_up", "sfx": "sfx_gasp", "textKey": "npc.snitch.spot" },
+      "phases": [
+        "day",
+        "leave"
+      ],
+      "trigger": {
+        "type": "spotted_by",
+        "actor": "snitch",
+        "dwellSec": 0.4,
+        "states": [
+          "activity",
+          "leaving_with_bag"
+        ]
+      },
+      "tell": {
+        "sec": 0.6,
+        "visual": "exclaim_stand_up",
+        "sfx": "sfx_gasp",
+        "textKey": "npc.snitch.spot"
+      },
       "effect": {
         "patrolId": "p_snitch_report",
         "showPath": true,
         "arrivalSuspicion": 0.15,
         "forcedLookBy": "team_lead",
-        "forcedLook": { "tellSec": 0.5, "lookSec": 2.5, "coneRange": 7, "aimAtPlayer": true },
+        "forcedLook": {
+          "tellSec": 0.5,
+          "lookSec": 2.5,
+          "coneRange": 7,
+          "aimAtPlayer": true
+        },
         "waitIfReceiverSuppressedMaxSec": 8.0
       },
       "counters": [
-        { "id": "intercept_with_snack", "input": "move_adjacent", "radiusTiles": 1.0, "cost": { "snackStock": 1 }, "result": "cancel", "lineKey": "npc.snitch.snack_thanks", "reactionKey": "react.snitch.snack" },
-        { "id": "look_innocent", "input": "seated_working_continuous", "durationSec": 1.5, "checkedAt": "arrival", "result": "cancel", "lineKey": "npc.snitch.doubt", "reactionKey": "react.snitch.doubt" },
-        { "id": "receiver_busy", "input": "none", "result": "give_up_after_wait", "lineKey": "npc.snitch.give_up" }
+        {
+          "id": "intercept_with_snack",
+          "input": "move_adjacent",
+          "radiusTiles": 1.0,
+          "cost": {
+            "snackStock": 1
+          },
+          "result": "cancel",
+          "lineKey": "npc.snitch.snack_thanks",
+          "reactionKey": "react.snitch.snack"
+        },
+        {
+          "id": "look_innocent",
+          "input": "seated_working_continuous",
+          "durationSec": 1.5,
+          "checkedAt": "arrival",
+          "result": "cancel",
+          "lineKey": "npc.snitch.doubt",
+          "reactionKey": "react.snitch.doubt"
+        },
+        {
+          "id": "receiver_busy",
+          "input": "none",
+          "result": "give_up_after_wait",
+          "lineKey": "npc.snitch.give_up"
+        }
       ],
       "cooldownSec": 15,
       "maxPerDay": 1,
       "rankScaling": {
-        "assistant_manager": { "start": { "maxPerDay": 1 }, "end": { "maxPerDay": 2 } },
-        "manager": { "start": { "maxPerDay": 2 }, "end": { "maxPerDay": 2 } },
-        "deputy_general_manager": { "start": { "maxPerDay": 2 }, "end": { "maxPerDay": 2 } },
-        "general_manager": { "start": { "maxPerDay": 2 }, "end": { "maxPerDay": 2 } },
-        "executive": { "start": { "maxPerDay": 2 }, "end": { "maxPerDay": 2 } }
+        "assistant_manager": {
+          "start": {
+            "maxPerDay": 1
+          },
+          "end": {
+            "maxPerDay": 2
+          }
+        },
+        "manager": {
+          "start": {
+            "maxPerDay": 2
+          },
+          "end": {
+            "maxPerDay": 2
+          }
+        },
+        "deputy_general_manager": {
+          "start": {
+            "maxPerDay": 2
+          },
+          "end": {
+            "maxPerDay": 2
+          }
+        },
+        "general_manager": {
+          "start": {
+            "maxPerDay": 2
+          },
+          "end": {
+            "maxPerDay": 2
+          }
+        },
+        "executive": {
+          "start": {
+            "maxPerDay": 2
+          },
+          "end": {
+            "maxPerDay": 2
+          }
+        }
       },
-      "reactionKeys": ["react.snitch.reported", "react.team_lead.snitched"],
+      "reactionKeys": [
+        "react.snitch.reported",
+        "react.team_lead.snitched"
+      ],
       "_designNote": "탑다운의 핵심 추격전: 3.3초 안에 ① 간식을 들고 동료 옆으로 달려가 막거나(물리적 차단) ② 자리에 앉아 1.5초 '열일'하는 모습을 보여 주기. 팀장이 인사·회의·통화·얼음 중이면 최대 8초 기다리다 포기 → 위계 연쇄와 맞물림."
     },
     {
@@ -92,23 +236,64 @@
       "key": "gossip_block",
       "nameKey": "int.gossip_block.name",
       "category": "block",
-      "actors": ["snitch", "accomplice"],
+      "actors": [
+        "snitch",
+        "accomplice"
+      ],
       "mvp": true,
       "unlockDay": 11,
-      "phases": ["day", "leave"],
-      "trigger": { "type": "scheduled", "dayAtSec": "from_day_plan", "leaveTrigger": "on_leave_start" },
-      "tell": { "sec": 1.0, "visual": "chat_bubbles", "sfx": "sfx_chatter", "textKey": "int.gossip_block.tell" },
+      "phases": [
+        "day",
+        "leave"
+      ],
+      "trigger": {
+        "type": "scheduled",
+        "dayAtSec": "from_day_plan",
+        "leaveTrigger": "on_leave_start"
+      },
+      "tell": {
+        "sec": 1.0,
+        "visual": "chat_bubbles",
+        "sfx": "sfx_chatter",
+        "textKey": "int.gossip_block.tell"
+      },
       "effect": {
-        "patrolIds": ["p_gossip_snitch", "p_gossip_accomplice"],
-        "blockTiles": [[5, 23], [5, 24]],
+        "patrolIds": [
+          "p_gossip_snitch",
+          "p_gossip_accomplice"
+        ],
+        "blockTiles": [
+          [
+            5,
+            23
+          ],
+          [
+            5,
+            24
+          ]
+        ],
         "blockSec": 4.0,
         "leavePrePositioned": true,
         "leaveBlockSec": 7.0,
-        "talkIfAdjacent": { "radius": 1.1, "durationSec": 1.5, "lineKey": "int.gossip_block.talk" }
+        "talkIfAdjacent": {
+          "radius": 1.1,
+          "durationSec": 1.5,
+          "lineKey": "int.gossip_block.talk"
+        }
       },
       "counters": [
-        { "id": "reroute", "input": "auto_or_tap_waypoint", "result": "bypass", "via": "meeting_room", "extraTiles": 4 },
-        { "id": "wait_disguised", "input": "tap_while_moving", "result": "wait_safely" }
+        {
+          "id": "reroute",
+          "input": "auto_or_tap_waypoint",
+          "result": "bypass",
+          "via": "meeting_room",
+          "extraTiles": 4
+        },
+        {
+          "id": "wait_disguised",
+          "input": "tap_while_moving",
+          "result": "wait_safely"
+        }
       ],
       "cooldownSec": 20,
       "maxPerDay": 1,
@@ -120,12 +305,28 @@
       "key": "hr_attendance",
       "nameKey": "int.hr_attendance.name",
       "category": "countdown",
-      "actors": ["hr_inspector"],
+      "actors": [
+        "hr_inspector"
+      ],
       "mvp": true,
       "unlockDay": 10,
-      "phases": ["day"],
-      "trigger": { "type": "scheduled", "dayAtSec": "from_day_plan", "notDuring": ["ceo_visit", "leave"] },
-      "tell": { "sec": 1.0, "visual": "pa_speaker_clipboard", "sfx": "sfx_door_clipboard", "textKey": "npc.hr_inspector.arrive" },
+      "phases": [
+        "day"
+      ],
+      "trigger": {
+        "type": "scheduled",
+        "dayAtSec": "from_day_plan",
+        "notDuring": [
+          "ceo_visit",
+          "leave"
+        ]
+      },
+      "tell": {
+        "sec": 1.0,
+        "visual": "pa_speaker_clipboard",
+        "sfx": "sfx_door_clipboard",
+        "textKey": "npc.hr_inspector.arrive"
+      },
       "effect": {
         "patrolId": "p_hr_attendance",
         "countdownSec": "eta_to_stop_inspect",
@@ -135,12 +336,24 @@
         "absentReactionKey": "react.hr_inspector.absent"
       },
       "counters": [
-        { "id": "be_seated", "input": "reach_player_seat_before_countdown", "result": "pass", "lineKey": "npc.hr_inspector.ok" },
-        { "id": "pause_activity", "input": "tap_during_activity", "result": "safe_during_inspect" }
+        {
+          "id": "be_seated",
+          "input": "reach_player_seat_before_countdown",
+          "result": "pass",
+          "lineKey": "npc.hr_inspector.ok"
+        },
+        {
+          "id": "pause_activity",
+          "input": "tap_during_activity",
+          "result": "safe_during_inspect"
+        }
       ],
       "cooldownSec": 0,
       "maxPerDay": 1,
-      "reactionKeys": ["react.hr_inspector.absent", "react.hr_inspector.caught"],
+      "reactionKeys": [
+        "react.hr_inspector.absent",
+        "react.hr_inspector.caught"
+      ],
       "_designNote": "방송 1.0초 전조 + 화면 상단 보라색 화살표. 카운트다운 = 인사팀이 실제로 걸어오는 시간(약 13.8초)이라 정직함. 화장실·회의실에 있을 때 걸리면 서둘러 돌아오는 추격전이 됨."
     },
     {
@@ -148,45 +361,90 @@
       "key": "hr_badge_check",
       "nameKey": "int.hr_badge_check.name",
       "category": "walker_talk",
-      "actors": ["hr_inspector"],
+      "actors": [
+        "hr_inspector"
+      ],
       "mvp": true,
       "unlockDay": 12,
-      "phases": ["day", "leave"],
-      "trigger": { "type": "scheduled", "dayAtSec": "from_day_plan", "leaveTrigger": "player_enters_zone", "leaveZone": "team" },
-      "tell": { "sec": 1.0, "visual": "elevator_open_purple", "sfx": "sfx_door_clipboard", "textKey": "int.hr_badge_check.tell" },
+      "phases": [
+        "day",
+        "leave"
+      ],
+      "trigger": {
+        "type": "scheduled",
+        "dayAtSec": "from_day_plan",
+        "leaveTrigger": "player_enters_zone",
+        "leaveZone": "team"
+      },
+      "tell": {
+        "sec": 1.0,
+        "visual": "elevator_open_purple",
+        "sfx": "sfx_door_clipboard",
+        "textKey": "int.hr_badge_check.tell"
+      },
       "effect": {
         "patrolId": "p_hr_corridor",
-        "talkSuspicion": 0.05,
-        "leaveTalkSuspicion": 0.1,
+        "talkSuspicion": 0.0,
+        "leaveTalkSuspicion": 0.0,
         "leaveTalkDurationSec": 2.0,
         "talkLineKey": "int.hr_badge_check.talk",
         "leaveLineKey": "int.hr_badge_check.leave_talk"
       },
       "counters": [
-        { "id": "disguise_during_tell", "input": "tap_while_moving", "result": "cancel" },
-        { "id": "detour", "input": "route_choice", "result": "avoid", "hint": "route_window" }
+        {
+          "id": "disguise_during_tell",
+          "input": "tap_while_moving",
+          "result": "skip_talk"
+        },
+        {
+          "id": "detour",
+          "input": "route_choice",
+          "result": "avoid",
+          "hint": "route_window"
+        }
       ],
       "cooldownSec": 10,
       "maxPerDay": 1,
-      "reactionKeys": ["react.hr_inspector.badge"],
-      "_designNote": "인사팀이 옆 팀 통로·중앙 병목을 훑고 돌아감. 위에서 내려오므로 퇴근길과 정면으로 마주침. 콘(3타일)은 짧지만 시선 배율 1.1."
+      "reactionKeys": [
+        "react.hr_inspector.badge"
+      ],
+      "_designNote": "인사팀이 옆 팀 통로·중앙 병목을 훑고 돌아감. 위에서 내려오므로 퇴근길과 정면으로 마주침. 사원증 확인은 시간 손실만(1.5초, 퇴근 중 2.0초, D-043). 콘(3타일)은 짧지만 시선 배율 1.1."
     },
     {
       "id": "INT-07",
       "key": "guard_early_question",
       "nameKey": "int.guard_early_question.name",
       "category": "talk_stop",
-      "actors": ["security_guard"],
+      "actors": [
+        "security_guard"
+      ],
       "mvp": true,
       "unlockDay": 1,
-      "phases": ["leave"],
-      "trigger": { "type": "proximity_talk", "talkDefOf": "security_guard", "condition": "clock_before_1800" },
-      "tell": { "sec": 0.5, "visual": "exclaim_cap_tip", "sfx": "sfx_hey", "textKey": "int.guard_early_question.tell" },
-      "effect": { "forcedStop": true, "talkLineKey": "npc.security_guard.early", "earlyLeavePoints": 100 },
+      "phases": [
+        "leave"
+      ],
+      "trigger": {
+        "type": "proximity_talk",
+        "talkDefOf": "security_guard",
+        "condition": "clock_before_1800"
+      },
+      "tell": {
+        "sec": 0.5,
+        "visual": "exclaim_cap_tip",
+        "sfx": "sfx_hey",
+        "textKey": "int.guard_early_question.tell"
+      },
+      "effect": {
+        "forcedStop": true,
+        "talkLineKey": "npc.security_guard.early",
+        "earlyLeavePoints": 100
+      },
       "counters": [],
       "cooldownSec": 6,
       "maxPerDay": 1,
-      "reactionKeys": ["react.security_guard.early"],
+      "reactionKeys": [
+        "react.security_guard.early"
+      ],
       "_designNote": "18시 전에 게이트에 오면 1.5초 붙잡힘(그동안 경비 콘·뒤따라오는 상사 위협) 대신 +100점. 빨리 갈지, 18시까지 위장하고 기다릴지 선택."
     },
     {
@@ -194,12 +452,27 @@
       "key": "tl_meeting",
       "nameKey": "int.tl_meeting.name",
       "category": "walker_opportunity",
-      "actors": ["team_lead"],
+      "actors": [
+        "team_lead"
+      ],
       "mvp": true,
       "unlockDay": 9,
-      "phases": ["day", "leave"],
-      "trigger": { "type": "scheduled", "dayAtSec": "from_day_plan", "leaveTrigger": "on_leave_start", "leaveUnlockDay": 13 },
-      "tell": { "sec": 0.6, "visual": "stand_up_notebook", "sfx": "sfx_chair_creak", "textKey": "int.tl_meeting.tell" },
+      "phases": [
+        "day",
+        "leave"
+      ],
+      "trigger": {
+        "type": "scheduled",
+        "dayAtSec": "from_day_plan",
+        "leaveTrigger": "on_leave_start",
+        "leaveUnlockDay": 13
+      },
+      "tell": {
+        "sec": 0.6,
+        "visual": "stand_up_notebook",
+        "sfx": "sfx_chair_creak",
+        "textKey": "int.tl_meeting.tell"
+      },
       "effect": {
         "patrolId": "p_tl_meeting",
         "meetingSec": 10.0,
@@ -207,7 +480,9 @@
         "letoutVisual": "meeting_door_open",
         "letoutSfx": "sfx_meeting_end",
         "letoutLineKey": "int.tl_meeting.letout",
-        "blocksMissions": ["nap"],
+        "blocksMissions": [
+          "nap"
+        ],
         "leaveStartsAt": "stop_in_meeting"
       },
       "counters": [],
@@ -221,20 +496,50 @@
       "key": "ceo_visit",
       "nameKey": "int.ceo_visit.name",
       "category": "freeze",
-      "actors": ["ceo", "team_lead"],
+      "actors": [
+        "ceo",
+        "team_lead"
+      ],
       "mvp": true,
       "unlockDay": 28,
-      "phases": ["day"],
-      "trigger": { "type": "scheduled_when", "dayAtSec": "from_day_plan", "condition": "player_seated" },
-      "tell": { "sec": 1.0, "visual": "all_heads_up_vignette", "sfx": "sfx_elevator_ding", "bgm": "stop", "textKey": "int.ceo_visit.tell" },
-      "effect": { "seeBoss": "ceo.visit", "clockPaused": true },
+      "phases": [
+        "day"
+      ],
+      "trigger": {
+        "type": "scheduled_when",
+        "dayAtSec": "from_day_plan",
+        "condition": "player_seated"
+      },
+      "tell": {
+        "sec": 1.0,
+        "visual": "all_heads_up_vignette",
+        "sfx": "sfx_elevator_ding",
+        "bgm": "stop",
+        "textKey": "int.ceo_visit.tell"
+      },
+      "effect": {
+        "seeBoss": "ceo.visit",
+        "clockPaused": true
+      },
       "counters": [
-        { "id": "freeze_still", "input": "no_move", "result": "safe" },
-        { "id": "greet", "input": "tap_in_qte_window", "result": "eye_contact" }
+        {
+          "id": "freeze_still",
+          "input": "no_move",
+          "result": "safe"
+        },
+        {
+          "id": "greet",
+          "input": "tap_in_qte_window",
+          "result": "eye_contact"
+        }
       ],
       "cooldownSec": 0,
       "maxPerDay": 1,
-      "reactionKeys": ["react.ceo.caught", "react.ceo.early_bow", "react.ceo.long_bow"],
+      "reactionKeys": [
+        "react.ceo.caught",
+        "react.ceo.early_bow",
+        "react.ceo.long_bow"
+      ],
       "_designNote": "상세는 bosses.ceo.visit / gdd §7-4. 예정 시각 이후 '내가 자리에 앉아 있는 첫 순간'에 시작(자리에 없어서 눈도장을 못 받는 억울함 방지)."
     },
     {
@@ -242,24 +547,60 @@
       "key": "director_patrol",
       "nameKey": "int.director_patrol.name",
       "category": "walker",
-      "actors": ["director", "team_lead"],
+      "actors": [
+        "director",
+        "team_lead"
+      ],
       "mvp": true,
       "unlockDay": 16,
-      "phases": ["day", "leave"],
-      "trigger": { "type": "scheduled", "dayAtSec": "from_day_plan", "leaveTrigger": "player_enters_zone", "leaveZone": "corridor_mid" },
-      "tell": { "sec": 1.5, "visual": "door_open_shadow", "sfx": "sfx_footsteps_crescendo", "textKey": "int.director_patrol.tell" },
+      "phases": [
+        "day",
+        "leave"
+      ],
+      "trigger": {
+        "type": "scheduled",
+        "dayAtSec": "from_day_plan",
+        "leaveTrigger": "player_enters_zone",
+        "leaveZone": "corridor_mid"
+      },
+      "tell": {
+        "sec": 1.5,
+        "visual": "door_open_shadow",
+        "sfx": "sfx_footsteps_crescendo",
+        "textKey": "int.director_patrol.tell"
+      },
       "effect": {
-        "patrolVariants": ["p_director_walkdown", "p_director_walkup"],
+        "patrolVariants": [
+          "p_director_walkdown",
+          "p_director_walkup"
+        ],
         "leaveVariant": "p_director_walkdown",
-        "teamLeadGreeting": { "whenDirectorInZone": "team", "moveTo": "tl_greet_spot", "gazeOff": true, "talkOff": true, "lineKey": "boss.team_lead.greeting" }
+        "teamLeadGreeting": {
+          "whenDirectorInZone": "team",
+          "moveTo": "tl_greet_spot",
+          "gazeOff": true,
+          "talkOff": true,
+          "lineKey": "boss.team_lead.greeting"
+        }
       },
       "counters": [
-        { "id": "outpace", "input": "route_choice", "result": "avoid", "note": "플레이어 3.0 > 본부장 2.0~2.3타일/초" },
-        { "id": "cover", "input": "stop_at_cover_spot", "result": "hidden" }
+        {
+          "id": "outpace",
+          "input": "route_choice",
+          "result": "avoid",
+          "note": "플레이어 3.0 > 본부장 2.0~2.3타일/초"
+        },
+        {
+          "id": "cover",
+          "input": "stop_at_cover_spot",
+          "result": "hidden"
+        }
       ],
       "cooldownSec": 12,
       "maxPerDay": 2,
-      "reactionKeys": ["react.director.caught"],
+      "reactionKeys": [
+        "react.director.caught"
+      ],
       "_designNote": "위계 연쇄 H1의 탑다운 표현: 본부장이 우리 팀 구역에 들어오면 팀장이 일어나 통로(4,31)로 나와 인사 → 팀장 시선·말걸기 OFF(기회) 대신 최단 경로가 팀장 몸에 막힘(길막). 퇴근 중에는 내가 중앙 병목에 들어서는 순간 위에서 내려오기 시작 → 정면 대결 또는 회의실 우회."
     },
     {
@@ -267,12 +608,25 @@
       "key": "ceo_elevator_meet",
       "nameKey": "int.ceo_elevator_meet.name",
       "category": "qte",
-      "actors": ["ceo"],
+      "actors": [
+        "ceo"
+      ],
       "mvp": true,
       "unlockDay": 30,
-      "phases": ["leave"],
-      "trigger": { "type": "chance_on_exit_wait", "chance": 0.15, "notOnCeoVisitDays": true },
-      "tell": { "sec": 0.8, "visual": "elevator_door_open_red_glow", "sfx": "sfx_elevator_ding", "textKey": "int.ceo_elevator_meet.tell" },
+      "phases": [
+        "leave"
+      ],
+      "trigger": {
+        "type": "chance_on_exit_wait",
+        "chance": 0.15,
+        "notOnCeoVisitDays": true
+      },
+      "tell": {
+        "sec": 0.8,
+        "visual": "elevator_door_open_red_glow",
+        "sfx": "sfx_elevator_ding",
+        "textKey": "int.ceo_elevator_meet.tell"
+      },
       "effect": {
         "patrolId": "p_ceo_elevator",
         "qteRef": "ceo.greetingQte",
@@ -281,10 +635,18 @@
         "successLineKey": "int.ceo_elevator_meet.success",
         "failLineKey": "int.ceo_elevator_meet.fail"
       },
-      "counters": [{ "id": "greet", "input": "tap_in_qte_window", "result": "success" }],
+      "counters": [
+        {
+          "id": "greet",
+          "input": "tap_in_qte_window",
+          "result": "success"
+        }
+      ],
       "cooldownSec": 0,
       "maxPerDay": 1,
-      "reactionKeys": ["react.ceo.elevator_awkward"],
+      "reactionKeys": [
+        "react.ceo.elevator_awkward"
+      ],
       "_designNote": "퇴근 마지막 순간의 코미디 비트. 실패해도 적발로 이어지지 않음(+0.1). 15%는 '연출 확률'이며 보상 확률이 아님(성공 보상은 QTE 결과에 결정적)."
     },
     {
@@ -292,17 +654,40 @@
       "key": "accomplice_tagalong",
       "nameKey": "int.accomplice_tagalong.name",
       "category": "assist",
-      "actors": ["accomplice"],
+      "actors": [
+        "accomplice"
+      ],
       "mvp": true,
       "unlockDay": 7,
-      "phases": ["day"],
-      "trigger": { "type": "mission_offer", "offerRef": "accomplice.offer" },
-      "tell": { "sec": 0.5, "visual": "speech_bubble_offer", "sfx": "sfx_pop", "textKey": "npc.accomplice.offer" },
-      "effect": { "patrolId": "p_accomplice_follow", "effectsRef": "accomplice.effects" },
-      "counters": [{ "id": "accept", "input": "tap_bubble", "result": "join" }],
+      "phases": [
+        "day"
+      ],
+      "trigger": {
+        "type": "mission_offer",
+        "offerRef": "accomplice.offer"
+      },
+      "tell": {
+        "sec": 0.5,
+        "visual": "speech_bubble_offer",
+        "sfx": "sfx_pop",
+        "textKey": "npc.accomplice.offer"
+      },
+      "effect": {
+        "patrolId": "p_accomplice_follow",
+        "effectsRef": "accomplice.effects"
+      },
+      "counters": [
+        {
+          "id": "accept",
+          "input": "tap_bubble",
+          "result": "join"
+        }
+      ],
       "cooldownSec": 0,
       "maxPerDay": 1,
-      "reactionKeys": ["react.accomplice.caught_together"],
+      "reactionKeys": [
+        "react.accomplice.caught_together"
+      ],
       "_designNote": "조력형이지만 몸이 하나 더 생겨 숨기 어려움(엄폐 칸 1개에 둘이 못 들어감). 보상 ×2와 망보기 헛기침."
     }
   ]
