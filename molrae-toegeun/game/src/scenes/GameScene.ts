@@ -16,6 +16,10 @@ const CAM_ANCHOR_Y = 0.6;
 const CAM_FOLLOW_RATE = 8;
 const CONE_RAYS = 14;
 const ARROW_MARGIN = 7;
+/** 말걸기 전조 시 NPC 몸통이 플레이어 쪽으로 다가서는 표시 거리(px) */
+const TALK_LEAN_PX = 2;
+/** [임시 문자열] 말걸기 전조 말풍선 — strings.ko.json 확정 시 이동 */
+const TALK_WARN_TEXT = '저기요?';
 
 /** 회색 박스 팔레트 (라이트 모드 기준. 빨강은 상사·위험 신호 전용 — D-025) */
 const COLOR = {
@@ -77,6 +81,9 @@ export class GameScene extends Phaser.Scene {
   private pctText!: UIText;
   private fpsText: UIText | null = null;
   private endText: UIText | null = null;
+  /** 결과 화면이 뜬 뒤 경과 시간(초). 입력 보호용 (BUG-006) */
+  private endAge = 0;
+  private resultGuardSec = 0;
   private blink = 0;
 
   constructor() { super(SceneKey.Game); }
@@ -86,6 +93,8 @@ export class GameScene extends Phaser.Scene {
     this.npcBodies = [];
     this.npcTells = [];
     this.endText = null;
+    this.endAge = 0;
+    this.resultGuardSec = loadFloorPresentation().resultInputGuardSec;
     const map = this.sim.map;
     this.offsetX = Math.floor((LOGICAL_WIDTH - map.width * TILE) / 2);
     this.cameras.main.setBackgroundColor(COLOR.wall);
@@ -133,7 +142,8 @@ export class GameScene extends Phaser.Scene {
 
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
     if (this.sim.outcome !== 'playing') {
-      this.scene.restart();
+      // 연타하던 탭으로 결과를 못 보고 넘어가지 않도록, 결과 화면 표시 후 보호 시간 동안은 무시 (BUG-006)
+      if (this.endText && this.endAge >= this.resultGuardSec) this.scene.restart();
       return;
     }
     if (pointer.y < HUD_H && this.sim.player.mode !== 'moving') return; // HUD 영역 탭은 이동 명령으로 쓰지 않음
@@ -146,6 +156,7 @@ export class GameScene extends Phaser.Scene {
     const dt = delta / 1000;
     this.sim.advance(dt);
     this.sim.drainEvents(); // TODO: 사운드·연출 트리거 연결
+    if (this.endText) this.endAge += dt;
     this.syncView(dt);
   }
 
@@ -249,7 +260,12 @@ export class GameScene extends Phaser.Scene {
     sim.npcs.forEach((npc, i) => {
       const w = this.toWorld(npc.x, npc.y);
       const body = this.npcBodies[i]!;
-      body.setPosition(Math.round(w.x), Math.round(w.y));
+      // 말걸기 전조(D-043): 플레이어 쪽으로 다가서는 동작(표시 전용 2px 기울임 — 판정 위치는 그대로)
+      const talkWarn = npc.mode === 'tell' && npc.tellKind === 'talk';
+      const lean = talkWarn && npc.pendingFacing !== null ? Math.min(1, npc.modeTime / 0.25) * TALK_LEAN_PX : 0;
+      const leanX = npc.pendingFacing !== null ? Math.cos(npc.pendingFacing) * lean : 0;
+      const leanY = npc.pendingFacing !== null ? Math.sin(npc.pendingFacing) * lean : 0;
+      body.setPosition(Math.round(w.x + leanX), Math.round(w.y + leanY));
       const color = ROLE_COLOR[npc.def.role] ?? COLOR.guard;
       const seeing = sim.seeing[i] === true;
       const poly = conePolygon(sim.map, npc.pos, npc.facing, npc.def.cone, CONE_RAYS)
@@ -259,7 +275,9 @@ export class GameScene extends Phaser.Scene {
       // 전조: 머리 위 '!' 깜빡임 + 돌아볼 방향 점선
       const tell = this.npcTells[i]!;
       const telling = npc.mode === 'tell';
-      tell.setVisible(telling && blinkOn);
+      // 말걸기 전조는 깜빡이지 않는 말풍선 '…?' (돌아보기 전조 '!'와 구분)
+      setPixelText(tell, talkWarn ? TALK_WARN_TEXT : '!');
+      tell.setVisible(telling && (talkWarn || blinkOn));
       placeText(tell, w.x, Math.round(w.y) - 14, 0.5, 1);
       if (telling && npc.pendingFacing !== null) {
         this.cones.lineStyle(1, color, 0.8);

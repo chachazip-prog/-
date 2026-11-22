@@ -1,7 +1,8 @@
 /**
  * 의심 게이지 갱신 규칙 (0 ~ max).
  * - 노출(어느 NPC든 플레이어를 봄) 시 플레이어 상태별 초당 상승률 × NPC 배율(동시 시선은 최댓값 하나만, rules.json gazeStacking=max와 동일 취지)
- * - 이동 중 노출: 급상승 / 위장 중 노출: 완만 / 정지(idle)·말걸기: 별도 값
+ * - 이동 중 노출: 급상승 / 위장 중 노출: 완만 / 정지(idle): 별도 값
+ * - 말걸기(talked) 중에는 상승 0 (D-043: 조작 불가 상태에서 손해 금지, 시간 손실만). 코드로 고정한다
  * - 위장 직후 settleSec 동안은 아직 '움직이는 중'으로 본다(멈춤 타이밍 판정)
  * - 노출이 시작된 뒤 graceSec 안에는 상승하지 않는다(입력 유예, rules.json input.inputGraceSec 취지)
  * - 비노출 + 이동 중이 아닐 때 decayPerSec만큼 감소
@@ -13,6 +14,7 @@ export interface SuspicionRules {
   readonly movingPerSec: number;
   readonly idlePerSec: number;
   readonly disguisedPerSec: number;
+  /** @deprecated D-043으로 무시됨(말걸기 중 상승 0 고정). 기존 데이터·도구 호환용으로만 남김 */
   readonly talkedPerSec: number;
   readonly disguiseSettleSec: number;
   readonly graceSec: number;
@@ -35,7 +37,7 @@ export function exposureRate(rules: SuspicionRules, mode: PlayerMode, modeTime: 
     case 'moving': return rules.movingPerSec;
     case 'disguised': return modeTime < rules.disguiseSettleSec ? rules.movingPerSec : rules.disguisedPerSec;
     case 'idle': return rules.idlePerSec;
-    case 'talked': return rules.talkedPerSec;
+    case 'talked': return 0; // D-043 (rules.talkedPerSec 무시)
   }
 }
 

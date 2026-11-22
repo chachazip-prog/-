@@ -126,7 +126,8 @@ const LEVEL: LevelDef = {
         { x: 8, y: 9, waitSec: 1.0, lookDirs: ['up', 'left'] },
         { x: 2, y: 9, waitSec: 1.0, lookDirs: ['up', 'right'] },
       ],
-      talk: { radius: 1.1, durationSec: 1.5, cooldownSec: 6 },
+      // warnSec: D-043 말풍선 0.5초 / catchRadius·releaseSec: 개발 임시값(기획 미확정)
+      talk: { radius: 1.1, durationSec: 1.5, cooldownSec: 6, warnSec: 0.5, catchRadius: 2.0, releaseSec: 1.0 },
     },
   ],
 };
@@ -141,7 +142,7 @@ const RULES: FloorRules = {
     movingPerSec: 0.6,
     idlePerSec: 0.25,
     disguisedPerSec: 0.08,
-    talkedPerSec: 0.08,
+    talkedPerSec: 0, // D-043: 말걸기 중 상승 없음(코드에서도 0으로 고정, 필드는 호환용)
     disguiseSettleSec: 0.2,
     graceSec: 0.12, // rules.json input.inputGraceSec과 같은 값
     decayPerSec: 0.02, // rules.json suspicion.decayPerSec과 같은 값
@@ -150,6 +151,9 @@ const RULES: FloorRules = {
 };
 
 export const PROTO_FLOOR: FloorContent = { level: LEVEL, rules: RULES };
+
+/** [임시] 결과 화면 표시 직후 입력 보호 시간(초). BUG-006 — 기획 확정 시 rules/ui 데이터로 이동 */
+export const PROTO_RESULT_INPUT_GUARD_SEC = 0.6;
 
 /** 구역 이름표 (렌더링용, 임시 문자열 — strings.ko.json 확정 시 이동) */
 export const PROTO_ZONE_LABELS: Readonly<Record<string, string>> = {

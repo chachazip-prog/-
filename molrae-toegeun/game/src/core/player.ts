@@ -3,7 +3,7 @@
  *
  *   idle ──move──▶ moving ──도착──▶ idle
  *   disguised ──move──▶ moving ──stop(탭)──▶ disguised
- *   (talked 제외 모든 상태) ──forceTalk──▶ talked ──시간 종료──▶ idle   (경로는 취소됨)
+ *   (talked 제외 모든 상태) ──forceTalk──▶ talked ──시간 종료──▶ moving(이동 중이었으면 남은 경로 재개, D-039) | idle
  *
  * talked 동안에는 move/stop 입력을 무시한다.
  */
@@ -22,6 +22,9 @@ export class PlayerMover {
   private path: Vec[] = [];
   private pathIndex = 0;
   private talkLeft = 0;
+  /** 말걸기로 멈춘 경로 (D-039 자동 재개용) */
+  private savedPath: Vec[] = [];
+  private savedIndex = 0;
 
   constructor(start: Tile) {
     const c = tileCenter(start);
@@ -31,6 +34,12 @@ export class PlayerMover {
 
   get pos(): Vec { return { x: this.x, y: this.y }; }
   get tile(): Tile { return tileOf(this); }
+
+  /** 타일 중심에 정확히 서 있는가 */
+  get centered(): boolean {
+    const c = tileCenter(this.tile);
+    return Math.abs(c.x - this.x) <= 1e-6 && Math.abs(c.y - this.y) <= 1e-6;
+  }
 
   /** 남은 경로 노드(타일 중심). 렌더링용 */
   remainingPath(): readonly Vec[] { return this.path.slice(this.pathIndex); }
@@ -62,9 +71,11 @@ export class PlayerMover {
     return true;
   }
 
-  /** 말걸기 등 강제 정지 */
+  /** 말걸기 등 강제 정지. 이동 중이었다면 남은 경로를 보관했다가 종료 시 재개한다(D-039) */
   forceTalk(durationSec: number): boolean {
     if (this.mode === 'talked') return false;
+    if (this.mode === 'moving') { this.savedPath = this.path; this.savedIndex = this.pathIndex; }
+    else { this.savedPath = []; this.savedIndex = 0; }
     this.path = [];
     this.pathIndex = 0;
     this.talkLeft = durationSec;
@@ -76,7 +87,15 @@ export class PlayerMover {
     this.modeTime += dt;
     if (this.mode === 'talked') {
       this.talkLeft -= dt;
-      if (this.talkLeft <= 0) this.setMode('idle');
+      if (this.talkLeft <= 0) {
+        if (this.savedIndex < this.savedPath.length) {
+          this.path = this.savedPath;
+          this.pathIndex = this.savedIndex;
+          this.setMode('moving');
+        } else this.setMode('idle');
+        this.savedPath = [];
+        this.savedIndex = 0;
+      }
       return;
     }
     if (this.mode !== 'moving') return;

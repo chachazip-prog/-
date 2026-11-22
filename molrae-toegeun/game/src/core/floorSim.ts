@@ -8,7 +8,7 @@ import {
   type GridMap, type LegendEntry, type Tile,
 } from './grid';
 import { findPath } from './pathfinding';
-import { PatrolNpc, type NpcDef } from './patrol';
+import { PatrolNpc, type NpcDef, type StepContext } from './patrol';
 import { PlayerMover } from './player';
 import { createRng, type Rng } from './rng';
 import { createSuspicion, updateSuspicion, type SuspicionRules, type SuspicionState } from './suspicion';
@@ -47,17 +47,28 @@ export interface FloorContent {
 }
 
 export type Outcome = 'playing' | 'escaped' | 'caught';
-export type TapResult = 'stopped' | 'moving' | 'unreachable' | 'ignored';
+/**
+ * - stopped: 이동 중 탭 → 정지·위장
+ * - moving: 경로 이동 시작
+ * - here: 탭(보정 결과 포함)한 타일이 지금 서 있는 타일 → 아무 변화 없음(idle은 idle, 위장은 위장 유지). '못 가요' 피드백 대상 아님 (BUG-004)
+ * - unreachable: 보정 반경 안에 통행 타일이 없거나 경로가 없음
+ * - ignored: 입력을 받지 않는 상태(말걸기 중·판 종료)
+ */
+export type TapResult = 'stopped' | 'moving' | 'here' | 'unreachable' | 'ignored';
 /** 위협 수준: 지금 보는 중 > 돌아보기 직전(전조) 방향에 내가 있음 > 근처에서 이쪽을 향함 */
 export type Threat = 'seeing' | 'turning' | 'approaching' | 'none';
 
 export type SimEvent =
   | { t: number; type: 'tap'; x: number; y: number; result: TapResult }
+  | { t: number; type: 'talkWarn'; npc: string }
   | { t: number; type: 'talk'; npc: string }
   | { t: number; type: 'tell'; npc: string }
   | { t: number; type: 'spotted'; npc: string }
   | { t: number; type: 'escaped' }
   | { t: number; type: 'caught' };
+
+/** advance() 경계 비교 허용 오차(초). 수치 튜닝값이 아니라 부동소수 보정값 */
+const STEP_EPS = 1e-9;
 
 export class FloorSim {
   readonly map: GridMap;
@@ -75,6 +86,7 @@ export class FloorSim {
   /** 마지막 이동 목적지 (경로 표시용) */
   destination: Tile | null = null;
   private readonly rng: Rng;
+  /** advance()에 받았지만 아직 스텝으로 소비하지 않은 시간(초). 부동소수 오차로 h보다 아주 약간 작을 수 있다 */
   private acc = 0;
   private events: SimEvent[] = [];
 
@@ -110,7 +122,9 @@ export class FloorSim {
     } else {
       const goal = nearestWalkable(this.map, tx, ty, this.rules.tapSnapRadius);
       const path = goal ? findPath(this.map, this.player.tile, goal) : null;
-      if (goal && path && this.player.move(path)) {
+      if (goal && path && path.length === 0 && this.player.centered) {
+        result = 'here'; // 이미 그 타일 중심에 있음 (BUG-004)
+      } else if (goal && path && this.player.move(path)) {
         this.destination = goal;
         result = 'moving';
       } else result = 'unreachable';
@@ -119,11 +133,16 @@ export class FloorSim {
     return result;
   }
 
-  /** 실시간 경과를 고정 스텝으로 나눠 진행 */
+  /**
+   * 실시간 경과를 고정 스텝으로 나눠 진행.
+   * BUG-005: 0.1·1/90 같은 dt를 누적하면 잔여가 h보다 ~1e-13 작아져 경계 스텝이 다음 호출로 밀렸다.
+   * 누적 보정: 잔여가 h - STEP_EPS 이상이면 스텝을 진행하고, 그만큼 acc가 음수(최대 -STEP_EPS)가 되는 것을 허용해
+   * 총합을 보존한다. STEP_EPS(1e-9초)는 1스텝(16.7ms)에 비해 무시할 수준이고, 누적 오차(약 1e-12/분)보다는 훨씬 크다.
+   */
   advance(dtSec: number): void {
     this.acc += Math.min(Math.max(0, dtSec), this.rules.maxAdvanceSec);
     const h = this.rules.fixedStepSec;
-    while (this.acc >= h) {
+    while (this.acc >= h - STEP_EPS) {
       this.acc -= h;
       this.step();
     }
@@ -136,32 +155,40 @@ export class FloorSim {
     this.time = this.steps * dt;
     const p = this.player;
     p.step(dt, this.rules.playerSpeedTilesPerSec);
-    if (p.mode !== 'moving') this.destination = null;
+    // 말걸기 중에는 목적지를 지우지 않는다(D-039: 종료 후 같은 목적지로 자동 재개)
+    if (p.mode !== 'moving' && p.mode !== 'talked') this.destination = null;
 
+    const ctx: StepContext = {
+      shouldTellTurn: (npc, facing) => this.turnNeedsTell(npc, facing),
+      player: p.pos,
+      playerTalkable: p.mode !== 'talked',
+    };
     for (const npc of this.npcs) {
       const before = npc.mode;
-      npc.step(dt, this.rng);
+      npc.step(dt, this.rng, ctx);
       if (npc.mode === 'tell' && before !== 'tell') this.events.push({ t: this.time, type: 'tell', npc: npc.def.id });
+      // 말걸기 전조가 끝나 성립(D-043) → 플레이어 강제 정지
+      if (npc.mode === 'talk' && before !== 'talk' && npc.def.talk && p.forceTalk(npc.def.talk.durationSec)) {
+        this.events.push({ t: this.time, type: 'talk', npc: npc.def.id });
+      }
     }
 
-    // 말걸기(강제 정지)
+    // 말걸기 전조 시작(반경 진입). 플레이어는 아직 조작 가능 — 전조 동안 반경(catchRadius) 밖으로 피하면 취소된다
     for (const npc of this.npcs) {
       const talk = npc.def.talk;
       if (!talk || !npc.canTalk() || p.mode === 'talked') continue;
       const dx = p.x - npc.x, dy = p.y - npc.y;
       if (Math.hypot(dx, dy) <= talk.radius) {
-        p.forceTalk(talk.durationSec);
         npc.startTalk(Math.atan2(dy, dx));
-        this.destination = null;
-        this.events.push({ t: this.time, type: 'talk', npc: npc.def.id });
+        this.events.push({ t: this.time, type: 'talkWarn', npc: npc.def.id });
       }
     }
 
-    // 시선 판정: 동시 시선은 배율 최댓값 하나만
+    // 시선 판정: 동시 시선은 배율 최댓값 하나만. 말걸기 중·보내 준 직후 NPC의 시선은 제외(D-043)
     let mult = 0;
     for (let i = 0; i < this.npcs.length; i++) {
       const npc = this.npcs[i]!;
-      const sees = canSee(this.map, npc.pos, npc.facing, npc.def.cone, p.pos);
+      const sees = !npc.ignoresPlayer && canSee(this.map, npc.pos, npc.facing, npc.def.cone, p.pos);
       if (sees && !this.seeing[i]) this.events.push({ t: this.time, type: 'spotted', npc: npc.def.id });
       this.seeing[i] = sees;
       if (sees) mult = Math.max(mult, npc.def.gazeMultiplier);
@@ -180,18 +207,33 @@ export class FloorSim {
     }
   }
 
+  /** 경고용 '넓은 콘'(가림 무시): 실제 콘 + rules.threat 여유. 실제 콘을 항상 포함한다 */
+  private wideCone(npc: PatrolNpc): { range: number; halfAngleDeg: number } {
+    const t = this.rules.threat;
+    return {
+      range: npc.def.cone.range + t.approachExtraRange,
+      halfAngleDeg: npc.def.cone.halfAngleDeg + t.approachExtraAngleDeg,
+    };
+  }
+
+  /**
+   * D-044 방향 전환 전조 판정 (BUG-001): "새 시선이 플레이어 쪽을 향할 수 있는가"
+   * = 새 방향의 경고 콘(wideCone, 가림 무시) 안에 플레이어가 있으면 true → 전조(tellSec) 후 회전.
+   * 경고 콘 ⊇ 실제 콘이므로 전조 없이 회전한 직후 실제 시선에 플레이어가 들어오는 경우는 생기지 않는다.
+   * 이 기준은 화면 밖 경고의 'turning'(빨강 화살표)과 같은 콘이라 표시와 판정이 일치한다.
+   */
+  private turnNeedsTell(npc: PatrolNpc, facing: number): boolean {
+    return inCone(npc.pos, facing, this.wideCone(npc), this.player.pos);
+  }
+
   /** NPC가 플레이어에게 주는 위협 수준 (화면 밖 경고 표시용) */
   threatOf(index: number): Threat {
     const npc = this.npcs[index];
     if (!npc) return 'none';
     if (this.seeing[index]) return 'seeing';
     const pp = this.player.pos;
-    // 경고용 '넓은 콘'(가림 무시): 화면 밖 NPC는 보통 실제 시야보다 멀리 있으므로 실제 콘으로는 경고가 거의 뜨지 않는다
-    const t = this.rules.threat;
-    const wide = {
-      range: npc.def.cone.range + t.approachExtraRange,
-      halfAngleDeg: npc.def.cone.halfAngleDeg + t.approachExtraAngleDeg,
-    };
+    // 화면 밖 NPC는 보통 실제 시야보다 멀리 있으므로 실제 콘으로는 경고가 거의 뜨지 않아 넓은 콘을 쓴다
+    const wide = this.wideCone(npc);
     if (npc.mode === 'tell' && npc.pendingFacing !== null && inCone(npc.pos, npc.pendingFacing, wide, pp)) return 'turning';
     if (npc.mode !== 'talk' && inCone(npc.pos, npc.facing, wide, pp)) return 'approaching';
     return 'none';

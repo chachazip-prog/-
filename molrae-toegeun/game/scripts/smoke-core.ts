@@ -112,9 +112,17 @@ function runBot(seed: string, maxSec: number): { fp: string; trace: string[]; si
   const s1 = new FloorSim(PROTO_FLOOR, 'day-1');
   const s2 = new FloorSim(PROTO_FLOOR, 'day-1');
   s1.tap(5, 1); s2.tap(5, 1);
-  for (let i = 0; i < 300; i++) s1.advance(1 / 60 + 1e-7);
-  for (let i = 0; i < 100; i++) s2.advance(3 / 60 + 1e-7);
-  check('가변 프레임 dt → 같은 결과(고정 스텝)', s1.fingerprint() === s2.fingerprint(), s1.fingerprint().slice(0, 40));
+  for (let i = 0; i < 300; i++) s1.advance(1 / 60);
+  for (let i = 0; i < 100; i++) s2.advance(3 / 60);
+  check('가변 프레임 dt → 같은 결과(고정 스텝)', s1.fingerprint() === s2.fingerprint() && s1.steps === 300, s1.fingerprint().slice(0, 40));
+  // BUG-005: 경계 누적 오차로 스텝이 밀리지 않음
+  for (const [dt, n] of [[0.1, 600], [1 / 90, 5400], [0.033, 1818]] as const) {
+    const s = new FloorSim(PROTO_FLOOR, 'day-1');
+    let total = 0;
+    for (let i = 0; i < n; i++) { s.advance(dt); total += dt; }
+    if (60 - total > 1e-12) s.advance(60 - total);
+    check(`advance dt=${dt.toFixed(4)} 총 60초 → 3600스텝`, s.steps === 3600, `${s.steps}`);
+  }
 
   for (const seed of ['day-1', 'day-2', 'day-3', 'day-4', 'day-5']) {
     const r = runBot(seed, 180);
@@ -131,6 +139,68 @@ function runBot(seed: string, maxSec: number): { fp: string; trace: string[]; si
     naive.step();
   }
   console.log(`  직진 봇[day-1] 결과=${naive.outcome} 시간=${naive.time.toFixed(1)}s 최고의심=${(naive.suspicion.peak * 100).toFixed(0)}%`);
+}
+
+// ── 3b. 버그 수정 회귀(T-127)
+{
+  // BUG-004: 자기 타일 / 보정 결과가 자기 타일 → 'here', 상태 변화 없음
+  const st = PROTO_FLOOR.level.playerStart;
+  const a = new FloorSim(PROTO_FLOOR, 'day-1');
+  check('BUG-004 자기 타일 탭 → here', a.tap(st.x, st.y) === 'here' && a.player.mode === 'idle');
+  check('BUG-004 보정 결과가 자기 타일(2,58) → here', a.tap(2, 58) === 'here' && a.player.mode === 'idle');
+
+  // BUG-002/003: 말걸기 전조 → talk(의심 0) → 원래 목적지 자동 재개
+  const talkLevel = {
+    id: 'talk', rows: ['.........', '#########'], legend, playerStart: { x: 0, y: 0 }, exitZone: 'none',
+    npcs: [{
+      id: 'g', name: 'g', role: 'guard', cone: { range: 3, halfAngleDeg: 40 }, speedTilesPerSec: 1, gazeMultiplier: 1,
+      tellSec: 0.5, lookSec: 1, lookChance: 0, glanceBackChancePerTile: 0, waypoints: [{ x: 4, y: 0, waitSec: 999 }],
+      talk: { radius: 1.1, durationSec: 1.5, cooldownSec: 6, warnSec: 0.5, catchRadius: 2, releaseSec: 1 },
+    }],
+  };
+  const t = new FloorSim({ level: talkLevel, rules: PROTO_FLOOR.rules }, 's');
+  t.npcs[0]!.facing = Math.PI / 2; // 아래(벽)를 봄: 플레이어를 보지 않는 상태에서 시작
+  t.tap(8, 0);
+  let warnStep = -1, talkStep = -1, rise = 0;
+  for (let i = 0; i < 400; i++) {
+    const before = t.suspicion.value;
+    t.step();
+    for (const e of t.drainEvents()) {
+      if (e.type === 'talkWarn' && warnStep < 0) warnStep = t.steps;
+      if (e.type === 'talk' && talkStep < 0) talkStep = t.steps;
+    }
+    if (t.player.mode === 'talked') rise += Math.max(0, t.suspicion.value - before);
+    if (talkStep > 0 && t.steps > talkStep + 100) break;
+  }
+  check('BUG-002 말걸기 전에 전조 ≥ 0.5초', warnStep > 0 && talkStep > 0 && (talkStep - warnStep) * PROTO_FLOOR.rules.fixedStepSec >= 0.5 - 1e-9,
+    `warn=${warnStep} talk=${talkStep}`);
+  check('BUG-002 말걸기 중 의심 상승 0', rise === 0, `${rise}`);
+  check('BUG-003 말걸기 종료 후 목적지 자동 재개', t.player.mode === 'moving' && t.destination?.x === 8, `mode=${t.player.mode}`);
+
+  // BUG-001: 모퉁이 전환에서 새 방향 경고 콘에 플레이어가 있으면 전조 후 회전
+  const corner = new FloorSim({
+    level: {
+      id: 'c', rows: ['.....', '.....', '.....', '.....', '.....'], legend, playerStart: { x: 4, y: 4 }, exitZone: 'none',
+      npcs: [{
+        id: 'n', name: 'n', role: 'boss', cone: { range: 3, halfAngleDeg: 30 }, speedTilesPerSec: 2, gazeMultiplier: 1,
+        tellSec: 0.6, lookSec: 1, lookChance: 0, glanceBackChancePerTile: 0,
+        waypoints: [{ x: 0, y: 4, waitSec: 0 }, { x: 0, y: 0, waitSec: 0 }, { x: 4, y: 0, waitSec: 0 }],
+      }],
+    },
+    rules: PROTO_FLOOR.rules,
+  }, 's');
+  let untold = 0, tells = 0;
+  let prevF = corner.npcs[0]!.facing, prevMode = corner.npcs[0]!.mode;
+  for (let i = 0; i < 1200; i++) {
+    const was = corner.seeing[0];
+    corner.step();
+    const n = corner.npcs[0]!;
+    const turned = Math.abs(n.facing - prevF) > 1e-6;
+    if (turned && corner.seeing[0] && !was && !(prevMode === 'tell' && n.mode === 'look')) untold++;
+    if (n.mode === 'tell' && prevMode !== 'tell') tells++;
+    prevF = n.facing; prevMode = n.mode;
+  }
+  check('BUG-001 회전 직후 전조 없는 시선 시작 0건', untold === 0, `전조 ${tells}회`);
 }
 
 // ── 4. 의심 규칙: 이동 중 노출 > 위장 중 노출
