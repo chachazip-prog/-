@@ -17,9 +17,7 @@
       "base": 11,
       "pngSha256": "69c15127bfebb7fb2c9c3111e34603b2970c31434dc38ca3785940d1a63acb33",
       "jsonSha256": "ab106ef3d3fe7eea1d4cce90a4373de7a63064ed0390739cf5a3347d711e7c11",
-      "allowedMissing": [
-        "U+1F4E2"
-      ]
+      "allowedMissing": []
     },
     {
       "name": "mt-pixel-10",
@@ -33,9 +31,7 @@
       "base": 9,
       "pngSha256": "4ffcd2387d07e8ca62654bb616157ece5e041829da9ffd2077539b63f7bc7fba",
       "jsonSha256": "a14c8f002fd1e97c4bba0314cdb76bc676c214c8238da65ec57922bd73aa309b",
-      "allowedMissing": [
-        "U+1F4E2"
-      ]
+      "allowedMissing": []
     },
     {
       "name": "mt-pixel-8",

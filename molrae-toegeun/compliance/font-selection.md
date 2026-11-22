@@ -7,18 +7,20 @@
 - 이 문서는 라이선스 조사 결과일 뿐 법률 자문이 아닙니다. 법적 판단이 필요한 부분은 "전문가 확인 필요"로 표시했습니다.
 - 파일 다운로드는 하지 않았습니다. 라이선스 원문(OFL.txt 등)은 채택 시 원 저장소에서 받아 사본을 보관합니다(§5 절차).
 
+> **정정 (2026-11-22, T-128)**: 초판은 Galmuri의 예약 폰트명(RFN) "Galmuri"를 미러 고지문만 보고 **[확인]**으로 적었습니다. 개발이 받은 공식 원본(npm `galmuri@2.40.3`)의 `ofl.md`·`LICENSE.txt`를 직접 읽은 결과, 저작권 줄 뒤에 RFN 지정 문구가 **없습니다**. 따라서 "Galmuri는 RFN이 선언되어 있다"는 표기는 오류이며 **"RFN 선언 없음 [확인]"**으로 고칩니다. 2차 출처(미러)만으로 [확인]을 붙인 것이 원인이었습니다. 변환물 이름은 D-046에 따라 계속 `mt-pixel-*`를 씁니다(의무는 아니지만 보수적 처리, 원작자 이름과 혼동 방지). 아래 본문에서 해당 부분을 고쳤습니다.
+
 ---
 
 ## 1. 결론 요약
 
 | 순위 | 폰트 | 이유 | 남은 확인 |
 |---|---|---|---|
-| **1순위** | **Galmuri (갈무리)**: Galmuri11(12px) 대사, Galmuri9(10px) 라벨, Galmuri7(8px) 숫자 | 요구 범위인 8·10·12px가 **한 패밀리에 모두 있음**. OFL 1.1이라 상업 이용, 게임 번들, 수정(서브셋·BMFont 변환)이 허용됨. npm·GitHub로 유지보수 중 | RFN(예약 폰트명) "Galmuri" 때문에 **변환·서브셋 결과물은 이름을 바꿔야 함**. 한글 음절 수록 범위(특히 Galmuri7) 확인 |
+| **1순위** | **Galmuri (갈무리)**: Galmuri11(12px) 대사, Galmuri9(10px) 라벨, Galmuri7(8px) 숫자 | 요구 범위인 8·10·12px가 **한 패밀리에 모두 있음**. OFL 1.1이라 상업 이용, 게임 번들, 수정(서브셋·BMFont 변환)이 허용됨. npm·GitHub로 유지보수 중 | ~~RFN "Galmuri" 때문에 변환물 이름을 바꿔야 함~~ → **정정: 공식 ofl.md에 RFN 선언 없음 [확인]**. 이름 변경은 의무가 아니지만 `mt-pixel-*`로 유지(D-046). 한글 수록 범위는 빌드 누락 글자 검사로 해결(2026-11-22 채택·승인 완료, 대장 FNT-001) |
 | **2순위** | **Fusion Pixel Font KR (TakWolf)**: 8/10/12px | OFL-1.1, 8·10·12px, 고정폭과 비례폭 둘 다 있음 | 여러 오픈소스 픽셀 폰트를 합친 폰트라서 **글리프별 원저작 라이선스와 RFN 확인 필요**. 한글 글리프가 Galmuri에서 왔다면 1순위의 대체재 역할을 못 함 |
 | 보조(타이틀·큰 글자) | Neo둥근모 (16px) | OFL 1.1. 레트로 느낌이 강함 | 16px이라 180px 폭에서는 한 줄에 약 11자. 본문용으로는 큼 |
 | 부적합 | 던파 비트비트체 | **수정 후 재배포 금지**라서 서브셋·BMFont 변환을 할 수 없음 | - |
 
-**라이선스 측면에서 서브셋 + 비트맵 폰트 변환이 되나요?** OFL 폰트(Galmuri, Fusion Pixel, Neo둥근모, 물마루)라면 **됩니다 [확인]**. 다만 결과물은 OFL의 "수정 버전(Modified Version)"으로 다룹니다. 따라서 ① 원 폰트에 예약 폰트명(RFN)이 있으면 그 이름을 쓰지 않고, ② 저작권 고지와 OFL 전문을 함께 배포하고, ③ 결과물도 OFL로 둡니다(§3).
+**라이선스 측면에서 서브셋 + 비트맵 폰트 변환이 되나요?** OFL 폰트(Galmuri, Fusion Pixel, Neo둥근모, 물마루)라면 **됩니다 [확인]**. 다만 결과물은 OFL의 "수정 버전(Modified Version)"으로 다룹니다. 따라서 ① 원 폰트에 예약 폰트명(RFN)이 있으면 그 이름을 쓰지 않고(Galmuri는 RFN 선언이 없음 [확인], 그래도 이름은 바꿔 씀), ② 저작권 고지와 OFL 전문을 함께 배포하고, ③ 결과물도 OFL로 둡니다(§3).
 
 ---
 
@@ -32,7 +34,7 @@
 |---|---|---|
 | 제작자 | 이민서 (Lee Minseo, GitHub quiple) | [확인] |
 | 라이선스 | SIL Open Font License 1.1 (원문: 저장소의 `ofl.md`, 한국어 번역 `ofl-ko.md`) | [확인] |
-| 예약 폰트명(RFN) | "Galmuri". 파생 폰트는 이름에 'Galmuri'를 쓸 수 없고 다른 라이선스로 배포할 수 없음 | [확인] (fonts-archive 미러의 고지문). 원 저장소 `ofl.md`에서 직접 재확인 필요 |
+| 예약 폰트명(RFN) | ~~"Galmuri". 파생 폰트는 이름에 'Galmuri'를 쓸 수 없음~~ → **정정: RFN 선언 없음.** 공식 패키지 `galmuri@2.40.3`의 `ofl.md`·`dist/LICENSE.txt` 저작권 줄("Copyright © 2019–2025 Lee Minseo (quiple@quiple.dev)") 뒤에 "with Reserved Font Name" 문구가 없고, `ofl-ko.md`·README·BDF `COPYRIGHT` 속성에도 없음. 다른 라이선스로 배포할 수 없다는 조건(OFL 조건 5)은 그대로 적용 | **[확인]** (원본 파일 직접 확인, 2026-11-22). 초판의 [확인]은 미러(fonts-archive) 고지문 기준이라 근거가 부족했음. 미러가 다른 버전·재배포본의 문구였을 가능성 [추정] |
 | 상업적 이용 | 가능 (OFL은 사용 목적을 제한하지 않음. 폰트 파일 단독 판매만 금지) | [확인] |
 | 웹 임베딩 / 게임 번들 | 가능. OFL FAQ가 게임·엔터테인먼트 소프트웨어 번들을 허용 사례로 듦 | [확인] |
 | 수정 허용 | 가능. 단 수정본은 RFN을 쓰지 않고 OFL로 배포해야 함 | [확인] |
@@ -134,6 +136,8 @@
 ### 3.2 우리 프로젝트 적용 규칙 (Galmuri 채택 시)
 
 1. **파생 폰트 이름을 바꿉니다.** BMFont의 `info face=` 값, 파일명, Phaser 로드 키에 "Galmuri"를 쓰지 않습니다. 예: `mt-pixel-12`, `mt-pixel-10`, `mt-pixel-8`. (이름은 PM 결정)
+   - (2026-11-22 정정) Galmuri는 RFN 선언이 없어 이 규칙은 **OFL 의무가 아니라 내부 보수 규칙**입니다(D-046). 다만 OFL 조건 4(저작자 이름을 수정본 홍보에 쓰지 않음)는 그대로 적용되므로, 홍보 문구에 "Galmuri 사용" 식 표현을 쓰지 않는 것이 안전합니다 [추정]. 고지 파일의 출처 표기는 허용 [확인](조건 4 단서).
+   - 구현 확인: 변환물 `info.face` = `mt-pixel-12/10/8` [확인].
    - 코드 주석이나 라이선스 고지에 "Galmuri에서 파생됨"이라고 **출처를 밝히는 것은 RFN 위반이 아닙니다** [추정]. RFN은 파생 폰트의 *이름*으로 쓰는 것을 막는 조항입니다.
 2. **고지를 함께 배포합니다.** 빌드 산출물(`dist/`)에 `licenses/OFL-galmuri.txt`(원 저작권 줄 + OFL 1.1 전문)를 넣습니다. 게임 안 '정보 → 오픈소스 라이선스' 화면에도 같은 내용을 보여 줍니다.
    - OFL은 고지를 "독립 텍스트 파일, 사람이 읽을 수 있는 헤더, 또는 기계가 읽는 메타데이터 필드" 중 하나로 동봉하도록 요구합니다 [확인]. BMFont .fnt에는 메타데이터 필드가 없으므로 텍스트 파일로 동봉합니다.
@@ -197,7 +201,7 @@
 
 - Galmuri GitHub: https://github.com/quiple/galmuri
 - Galmuri README (npm 2.40.3 사본): https://cdn.jsdelivr.net/npm/galmuri@2.40.3/README.md
-- Galmuri RFN 고지 (미러): https://github.com/fonts-archive/Galmuri11
+- Galmuri RFN 고지 (미러): https://github.com/fonts-archive/Galmuri11 — **근거로 쓰지 않음(정정)**. 공식 원본 확인: npm `galmuri@2.40.3` https://registry.npmjs.org/galmuri/-/galmuri-2.40.3.tgz (사본 `game/vendor/fonts/galmuri/ofl.md`, `LICENSE.txt`, 2026-11-22 확인)
 - 산돌구름 Galmuri11 / Galmuri9 / Galmuri7: https://www.sandollcloud.com/free-font/17347/Galmuri11 , https://www.sandollcloud.com/free-font/17349/Galmuri9 , https://www.sandollcloud.com/free-font/17348/Galmuri7
 - Fusion Pixel KR (Fontsource): https://fontsource.org/fonts/fusion-pixel-12px-proportional-kr/about , https://fontsource.org/fonts/fusion-pixel-10px-proportional-kr/about , https://fontsource.org/fonts/fusion-pixel-8px-proportional-kr/about
 - Neo둥근모: https://github.com/neodgm/neodgm/blob/main/README.en.md , https://github.com/neodgm/neodgm-webfont , https://www.sandollcloud.com/free-font/15873/NeoDunggeunmo
