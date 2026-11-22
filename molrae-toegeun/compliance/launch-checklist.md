@@ -16,6 +16,8 @@
 | ALERT-1 | **공유 리워드 서비스가 2026-10-23에 종료**되었습니다. 이후 공유 리워드로 포인트 지급 요청이 처리되지 않으며, 남은 진입 버튼과 연동 코드는 제거하고 배포하라고 안내합니다. 새 공유 기능은 준비 중. | [확인] https://toss.im/apps-in-toss/blog/update-26-10-21 , https://toss.im/apps-in-toss/blog/update-26-10-07 | **차단**(코드가 남아 있으면 검수 반려 가능 [추정]). CLAUDE.md §5·D-003의 "공유 리워드 사용" 전제를 PM이 갱신해야 함 |
 | ALERT-2 | 2026-11-21부터 **유저 피해 대응 정책**이 모든 미니앱에 적용 | [확인] https://toss.im/apps-in-toss/blog/update-26-11-04 . 세부 내용 [확인 필요] | 권장(원문 확인) |
 | ALERT-3 | 2026-10-22부터 노출 단계가 **출시 / 추천 / 부스팅**으로 나뉨. 추천은 UX·실사용 지표·리뷰·성능 4개 기준을 모두 통과해야 함 | [확인] https://toss.im/apps-in-toss/blog/update-26-09-23 , https://toss.im/apps-in-toss/blog/recommended-mini-app-metrics-guide | 참고(노출 전략) |
+| ALERT-5 | (2026-11-22 추가) **2026-11-02부터 모바일 게임 등급분류·내용수정신고가 GCRB로 일원화**(아케이드·사행성 우려 게임 제외). R-01~R-04의 'GRAC' 신청 경로는 GCRB 기준으로 다시 확인해야 함 | [확인](보도 복수) https://news.bizwatch.co.kr/article/mobile/2026/11/03/0019 , https://inews24.com/view/2020277 . 기관 공지 원문 [확인 필요] | **차단**(확인 전까지). `admin-procedures.md` 3단계 정정, `policy-review.md` §3-5 |
+| ALERT-6 | (2026-11-22 추가) 빌드에 포함된 Phaser(MIT)·앱인토스 SDK(Apache-2.0) 고지 파일 미동봉 | [확인](저장소 점검) | **차단**. 대장 LIB-001·002, `policy-review.md` LC-2 |
 | ALERT-4 | 앱 정보 검수와 번들 검수를 **한 번에 요청·결과 수령** | [확인] https://toss.im/apps-in-toss/blog/update-26-10-07 | 참고(일정 단축) |
 
 ---

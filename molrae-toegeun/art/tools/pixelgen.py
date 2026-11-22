@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""몰래퇴근 픽셀 생성기 (pixelgen) v2.1 (T-125: 걷기 들썩임 bob, clear 스탬프, 상사 줄 색 검사).
+"""몰래퇴근 픽셀 생성기 (pixelgen) v2.2 (T-130: from 프레임 복사, flat 키, 배경 동료 그룹).
+(v2.1 T-125: 걷기 들썩임 bob, clear 스탬프, 상사 줄 색 검사)
 
 원본(문자 격자 JSON)과 팔레트(art/palette.json)를 읽어 다음을 만든다.
   - 스프라이트 시트 sheet.png + 아틀라스 sheet.json (Phaser JSON Hash 호환)
@@ -26,6 +27,8 @@ PNG 인코더를 직접 구현했으므로 같은 입력이면 항상 같은 바
     base: "<template>"  → 템플릿 프레임을 복사. swap(역할 치환), stamps(소품 덧그림),
                           frames(추가 프레임), anims 를 덧붙인다
     anims[{key, frames[...], frameRate, repeat}] → "<name>/<key>" 애니메이션
+    {"name": "...", "from": "<frame>"} → 다른 프레임의 원본 격자(스탬프 전)를 복사(v2.2)
+    flat: true          → 아틀라스 키를 "<name>/<frame>" 대신 "<frame>" 으로(데이터가 참조하는 아이콘 키, v2.2)
   scenes/*.json
     size, tile, offset, bg, tiles, map, cones, objects(depth_sort), ui
 """
@@ -192,7 +195,7 @@ def load_sprites(src, legend):
             out += raw_frames(base)
         for fr in d.get("frames", []):
             out = [o for o in out if o[0] != fr["name"]]
-            out.append((fr["name"], fr.get("rows"), fr.get("flip"), fr.get("bob")))
+            out.append((fr["name"], fr.get("rows"), fr.get("flip"), fr.get("bob"), fr.get("from")))
         return out
 
     frames, anims = [], []
@@ -206,7 +209,13 @@ def load_sprites(src, legend):
         origin = d.get("origin") or (base or {}).get("origin")
         raws = raw_frames(d)
         names = [r[0] for r in raws]
-        grid = {n: rows for n, rows, _, _ in raws if rows is not None}
+        grid = {n: rows for n, rows, _, _, _ in raws if rows is not None}
+        for n, rows, fl, bob, src_name in raws:
+            if src_name is not None:
+                if src_name not in grid:
+                    errors.append("%s/%s: from 원본 '%s' 없음" % (name, n, src_name))
+                    continue
+                grid[n] = list(grid[src_name])
         for st in d.get("stamps", []):
             tg = stamp_targets(st, [n for n in names if n in grid])
             if not tg:
@@ -219,11 +228,11 @@ def load_sprites(src, legend):
                     errors.append("%s: stamp 가 프레임 밖으로 나감 (x=%s y=%s %d행)"
                                   % (d["_file"], st.get("x", 0), st.get("y", 0), i))
                     break
-        for n, rows, fl, bob in raws:
+        for n, rows, fl, bob, _ in raws:
             if bob and n in grid:
                 grid[n] = apply_bob(grid[n], bob)
-        for n, rows, fl, bob in raws:
-            if rows is None:
+        for n, rows, fl, bob, src_name in raws:
+            if rows is None and src_name is None:
                 if fl not in grid:
                     errors.append("%s/%s: flip 원본 '%s' 없음" % (name, n, fl))
                     continue
@@ -233,7 +242,7 @@ def load_sprites(src, legend):
         for n in names:
             if n not in grid:
                 continue
-            key = "%s/%s" % (name, n)
+            key = n if d.get("flat") else "%s/%s" % (name, n)
             rows = grid[n]
             if len(rows) != h:
                 errors.append("%s: 행 수 %d != %d" % (key, len(rows), h))
@@ -252,8 +261,9 @@ def load_sprites(src, legend):
             seen[a["key"]] = a
         for k in [a["key"] for a in adefs if seen.get(a["key"]) is a]:
             a = seen[k]
-            anims.append({"key": "%s/%s" % (name, k), "sprite": name,
-                          "frames": ["%s/%s" % (name, f) for f in a["frames"]],
+            pre = "" if d.get("flat") else name + "/"
+            anims.append({"key": pre + k, "sprite": name,
+                          "frames": [pre + f for f in a["frames"]],
                           "frameRate": a.get("frameRate", 8), "repeat": a.get("repeat", -1)})
     return frames, anims, errors
 
@@ -393,7 +403,7 @@ def build_sheet(frames, legend, colors, out_dir, png_dir=None):
     sheet = Canvas(sw, sh)
     atlas = {"frames": {}, "meta": {"image": "sheet.png", "size": {"w": sw, "h": sh},
                                     "format": "RGBA8888", "scale": "1",
-                                    "app": "molrae-toegeun art/tools/pixelgen.py v2.1"}}
+                                    "app": "molrae-toegeun art/tools/pixelgen.py v2.2"}}
     for f, x, y in placed:
         img = render(f, legend, colors)
         sheet.blit(img, x, y)
@@ -536,7 +546,7 @@ DIR_ORDER = ["down", "up", "left", "right"]
 
 def build_char_preview(frames, legend, colors, pal):
     """캐릭터 시트 미리보기: 캐릭터별 1행, 방향별 정지+걷기 프레임 + 특수 프레임."""
-    groups = ("character", "boss", "npc")
+    groups = ("character", "boss", "npc", "background")
     chars = []
     for g in groups:  # 플레이어 → 상사 → NPC 순
         for f in frames:
@@ -636,7 +646,7 @@ def main():
     tag = args.preview_tag or os.path.basename(os.path.normpath(out))
     sheet.scaled(PREVIEW_SCALE).save(os.path.join(args.preview_dir, "%s-sheet.png" % tag))
     print("sheet %dx%d -> %s" % (sheet.w, sheet.h, out))
-    if any(f["group"] in ("character", "boss", "npc") and f["frame"].startswith("idle_") for f in frames):
+    if any(f["group"] in ("character", "boss", "npc", "background") and f["frame"].startswith("idle_") for f in frames):
         cp = build_char_preview(frames, legend, colors, pal)
         cp.scaled(PREVIEW_SCALE).save(os.path.join(args.preview_dir, "%s-characters.png" % tag))
         print("characters preview %dx%d" % (cp.w, cp.h))

@@ -1,0 +1,287 @@
+{
+  "_doc": "몰래퇴근 효과음 원본 파라미터 (T-113). build.py가 이 파일만 읽어 WAV -> OGG/MP3를 생성. 시드 고정 -> 재생성 결정적. '@이름'은 shared 항목 참조. peakDb = 정규화 목표 피크(dBFS), hp = 폰 스피커용 하이패스(Hz, 0=없음).",
+  "sampleRate": 22050,
+  "defaults": { "peakDb": -1.0, "hp": 150, "loop": false },
+  "shared": {
+    "footstepStep": {
+      "heelSec": 0.035, "heelHz": 2100, "heelQ": 1.3,
+      "knockSec": 0.06, "knockHz": [420, 160], "knockGain": 0.55,
+      "toeDelay": 0.045, "toeGain": 0.45
+    },
+    "officeDoor": {
+      "hits": [
+        { "start": 0.0, "dur": 0.012, "hz": 3000, "q": 2.0, "tau": 0.004, "gain": 0.6 },
+        { "start": 0.04, "dur": 0.05, "hz": 900, "q": 3.0, "tau": 0.015, "toneHz": 520, "toneGain": 0.6, "gain": 0.8 }
+      ]
+    }
+  },
+  "sounds": [
+    {
+      "key": "sfx_chair_creak", "category": "tell", "seed": 101,
+      "desc": "팀장 의자 '삐-걱'. 높게 올라가는 끽 + 낮은 걱",
+      "recipe": "creak",
+      "params": {
+        "jitter": 0.12,
+        "resonators": [[950, 6.0, 1.0], [1900, 7.0, 0.7], [3100, 8.0, 0.35]],
+        "segments": [
+          { "dur": 0.30, "f0": 170, "f1": 330, "attack": 0.03, "release": 0.06, "gain": 1.0 },
+          { "dur": 0.16, "f0": 95, "f1": 70, "attack": 0.01, "release": 0.07, "gain": 0.85, "gap": 0.03 }
+        ]
+      },
+      "play": "팀장(앉은 상사) tell 시작 순간 1회. INT-08 회의 출발(stand_up_notebook)에도 사용",
+      "dataRefs": ["bosses.team_lead.tell", "interrupts.INT-08.tell"],
+      "visual": "back_twitch(등 움찔) / stand_up_notebook"
+    },
+    {
+      "key": "sfx_footsteps_1", "category": "tell", "seed": 111, "loop": true, "peakDb": -12.0,
+      "desc": "구두 발소리 1단계(멀리). 어둡고 작음. 0.8초 루프(2보)",
+      "recipe": "footsteps",
+      "params": { "step": "@footstepStep", "count": 2, "interval": 0.4, "startSec": 0.0, "lengthSec": 0.8, "gains": [1.0], "lowpass": [1300] },
+      "play": "본부장/대표님이 approaching 단계(경로 7~12타일 또는 넓은 콘)일 때 루프",
+      "dataRefs": ["(신규) rules.threat.stages.approaching 거리 3단계"],
+      "visual": "가장자리 빨강 화살표 '소' 크기"
+    },
+    {
+      "key": "sfx_footsteps_2", "category": "tell", "seed": 112, "loop": true, "peakDb": -6.5,
+      "desc": "구두 발소리 2단계(중간). 0.8초 루프(2보)",
+      "recipe": "footsteps",
+      "params": { "step": "@footstepStep", "count": 2, "interval": 0.4, "startSec": 0.0, "lengthSec": 0.8, "gains": [1.0], "lowpass": [2600] },
+      "play": "approaching 단계 중간 거리(경로 4~6타일)일 때 루프. 1단계와 교차 전환",
+      "dataRefs": ["(신규) 거리 3단계"],
+      "visual": "가장자리 빨강 화살표 '중' 크기"
+    },
+    {
+      "key": "sfx_footsteps_3", "category": "tell", "seed": 113, "loop": true, "peakDb": -1.0,
+      "desc": "구두 발소리 3단계(가까움). 밝고 또렷함. 0.8초 루프(2보)",
+      "recipe": "footsteps",
+      "params": { "step": "@footstepStep", "count": 2, "interval": 0.4, "startSec": 0.0, "lengthSec": 0.8, "gains": [1.0], "lowpass": [0] },
+      "play": "경로 3타일 이하 또는 화면 안 진입 직전. 화면 안에서 걷는 동안은 루프 유지 가능",
+      "dataRefs": ["(신규) 거리 3단계"],
+      "visual": "가장자리 빨강 화살표 '대' 크기 / 화면 안 캐릭터"
+    },
+    {
+      "key": "sfx_footsteps_crescendo", "category": "tell", "seed": 114,
+      "desc": "본부장 등장 전조 1.5초: 문 딸깍 + 구두 4보가 점점 커짐",
+      "recipe": "composite",
+      "params": {
+        "dur": 1.5,
+        "parts": [
+          { "recipe": "clicks", "params": "@officeDoor", "at": 0.0, "gain": 0.55 },
+          { "recipe": "footsteps", "at": 0.22, "params": { "step": "@footstepStep", "count": 4, "interval": 0.34, "startSec": 0.0, "gains": [0.25, 0.45, 0.7, 1.0], "lowpass": [1300, 2000, 3200, 0] } }
+        ]
+      },
+      "play": "본부장 순찰(INT-10) 등장 tell 1.5초 시작에 1회",
+      "dataRefs": ["bosses.director.tell", "interrupts.INT-10.tell"],
+      "visual": "door_open_shadow + 가장자리 빨강 화살표"
+    },
+    {
+      "key": "sfx_footstep_stop", "category": "tell", "seed": 121,
+      "desc": "또각또각-끽: 걷다 멈추는 구두 + 신발 끽 (대표님 재확인 페이크 전조 0.5초)",
+      "recipe": "footstep_stop",
+      "params": {
+        "step": "@footstepStep", "interval": 0.17, "gains": [0.6, 0.75, 1.0], "lowpass": [2600, 3200, 0],
+        "squeak": { "delay": 0.02, "dur": 0.09, "f0": 2300, "f1": 2900, "vibHz": 35, "vibDepth": 120, "bodyHz": 2600, "gain": 0.7 }
+      },
+      "play": "대표님 재확인(stop_and_shoulder) 전조 시작에 1회. 본부장 웨이포인트 정지 후 둘러보기 전조에도 사용 권장",
+      "dataRefs": ["bosses.ceo.sim.fake"],
+      "visual": "stop_and_shoulder(어깨 들썩) + 점선 콘"
+    },
+    {
+      "key": "sfx_elevator_ding", "category": "tell", "seed": 131,
+      "desc": "화물 엘리베이터 '띵'. 맑은 종소리 1회, 긴 여운",
+      "recipe": "bell",
+      "params": {
+        "dur": 1.3, "f0": 1046.5, "strikeHz": 3500, "strikeGain": 0.25,
+        "partials": [[1.0, 1.0, 0.55], [2.0, 0.3, 0.35], [2.76, 0.22, 0.22], [5.4, 0.1, 0.1], [0.5, 0.35, 0.45]]
+      },
+      "play": "대표님 순시(INT-09) 전조 시작 + BGM 정지(동시). INT-11 엘리베이터 대표님에도 사용(BGM 정지 없음)",
+      "dataRefs": ["bosses.ceo.tell (bgm: stop)", "interrupts.INT-09.tell (bgm: stop)", "interrupts.INT-11.tell"],
+      "visual": "all_heads_up_vignette / elevator_door_open_red_glow"
+    },
+    {
+      "key": "sfx_gate_beep", "category": "tell", "seed": 141,
+      "desc": "게이트 '삐빅'(태그 실패). 높은 전자 사각파 2연타",
+      "recipe": "beeps",
+      "params": { "wave": "square", "lowpass": 7000, "tones": [ { "hz": 1960, "dur": 0.075, "gap": 0.03 }, { "hz": 1960, "dur": 0.12 } ] },
+      "play": "게이트 태그 실패마다 1회(+0.10 의심, 경비가 돌아봄)",
+      "dataRefs": ["npcs.security_guard.gate.beepSuspicion", "(키 없음: 데이터에 sfx 필드 추가 요청)"],
+      "visual": "게이트 빨강 깜빡임 등 (GDD에 명시 없음 - 누락)"
+    },
+    {
+      "key": "sfx_gate_ok", "category": "feedback", "seed": 142, "peakDb": -3.0,
+      "desc": "게이트 통과 '삑' 1회(밝고 짧음)",
+      "recipe": "beeps",
+      "params": { "wave": "pulse", "duty": 0.25, "lowpass": 7000, "tones": [ { "hz": 2637, "dur": 0.09 } ] },
+      "play": "게이트 태그 성공 시 1회",
+      "dataRefs": ["(키 없음)"],
+      "visual": "게이트 초록 표시 (GDD에 명시 없음 - 누락)"
+    },
+    {
+      "key": "sfx_hey", "category": "tell", "seed": 151,
+      "desc": "말걸기 전조 '어, 저기?' 올라가는 두 음절 음성",
+      "recipe": "syllables",
+      "params": {
+        "syllables": [
+          { "start": 0.0, "dur": 0.13, "f0": [[0, 210], [0.13, 235]], "vowels": [[0, "eo"], [0.13, "eo"]], "amp": [[0, 0], [0.015, 1], [0.1, 0.8], [0.13, 0]], "gain": 0.9 },
+          { "start": 0.17, "dur": 0.2, "f0": [[0, 240], [0.2, 330]], "vowels": [[0, "eo"], [0.06, "i"], [0.2, "i"]], "amp": [[0, 0], [0.02, 1], [0.15, 0.85], [0.2, 0]], "gain": 1.0, "breath": 0.12 }
+        ]
+      },
+      "play": "말걸기형 tell(말풍선 '!') 시작 1회: 팀장 INT-01, 경비 INT-07",
+      "dataRefs": ["interrupts.INT-01.tell", "interrupts.INT-07.tell"],
+      "visual": "exclaim_raise_hand / exclaim_cap_tip (말풍선 '!')"
+    },
+    {
+      "key": "sfx_chatter", "category": "tell", "seed": 161, "peakDb": -2.0,
+      "desc": "복도 수다 '웅성웅성' 두 사람 번갈아 1.0초",
+      "recipe": "babble",
+      "params": {
+        "dur": 1.0, "vowelPool": ["a", "e", "i", "o", "u", "eo"], "contours": [1.15, 0.9, 1.25, 1.0],
+        "sylDur": [0.07, 0.14], "sylGap": [0.02, 0.08],
+        "voices": [ { "f0": 190, "offset": 0.0, "gain": 0.8 }, { "f0": 255, "offset": 0.06, "gain": 0.7 } ]
+      },
+      "play": "INT-04 복도 수다 tell 시작 1회(막고 있는 동안 반복 원하면 1.0초 간격 재생)",
+      "dataRefs": ["interrupts.INT-04.tell"],
+      "visual": "chat_bubbles"
+    },
+    {
+      "key": "sfx_meeting_end", "category": "tell", "seed": 171,
+      "desc": "회의 끝: 문 딸깍 + '수고하셨습니다~' 웅성이 잦아듦 1.0초",
+      "recipe": "composite",
+      "params": {
+        "dur": 1.0,
+        "parts": [
+          { "recipe": "clicks", "params": "@officeDoor", "at": 0.0, "gain": 1.0 },
+          { "recipe": "babble", "at": 0.12, "gain": 0.5, "params": {
+            "dur": 0.85, "vowelPool": ["a", "o", "u", "eu"], "contours": [0.85, 0.9, 0.8],
+            "sylDur": [0.09, 0.16], "sylGap": [0.01, 0.05], "fadeOut": [0.2, 0.6],
+            "voices": [ { "f0": 170, "offset": 0.0, "gain": 0.8 }, { "f0": 215, "offset": 0.03, "gain": 0.6 }, { "f0": 260, "offset": 0.08, "gain": 0.5 } ] } }
+        ]
+      },
+      "play": "INT-08 팀장 회의 끝(회의실 문 열림) tell 1.0초 시작에 1회",
+      "dataRefs": ["interrupts.INT-08 (sfx_meeting_end)"],
+      "visual": "회의실 문 열림 + '수고하셨습니다~' 말풍선"
+    },
+    {
+      "key": "sfx_senior_hmm", "category": "tell", "seed": 181,
+      "desc": "선배 '흐음' 콧소리 1회",
+      "recipe": "syllables",
+      "params": {
+        "syllables": [
+          { "start": 0.0, "dur": 0.42, "f0": [[0, 205], [0.2, 185], [0.42, 200]], "vowels": [[0, "eu"], [0.08, "m"], [0.42, "m"]], "amp": [[0, 0], [0.03, 0.8], [0.3, 1.0], [0.42, 0]], "breath": 0.25 }
+        ]
+      },
+      "play": "선배 tell('…') 시작, INT-02 스몰토크 tell 시작에 1회",
+      "dataRefs": ["bosses.senior.tell", "interrupts.INT-02.tell"],
+      "visual": "speech_dots('…') / exclaim_wave"
+    },
+    {
+      "key": "sfx_cough", "category": "tell", "seed": 191,
+      "desc": "팀장 페이크 헛기침 '큼큼'",
+      "recipe": "noise_burst",
+      "params": { "bursts": [
+        { "start": 0.0, "dur": 0.1, "vowel": "eo", "tau": 0.03, "gain": 1.0, "voicedHz": 150, "voicedGain": 0.4 },
+        { "start": 0.15, "dur": 0.12, "vowel": "eo", "tau": 0.035, "gain": 0.85, "voicedHz": 140, "voicedGain": 0.4 } ] },
+      "play": "팀장 tell 뒤 페이크로 판정된 순간 1회(시선 없음)",
+      "dataRefs": ["bosses.team_lead.sim.fake"],
+      "visual": "cough"
+    },
+    {
+      "key": "sfx_gasp", "category": "tell", "seed": 201,
+      "desc": "정의로운 동료 '헉!' 들이쉬는 숨",
+      "recipe": "noise_burst",
+      "params": { "bursts": [ { "start": 0.0, "dur": 0.22, "vowel": "eo", "shape": "rise", "gain": 1.0, "voicedHz": 0 } ] },
+      "play": "INT-03 정의로운 동료가 나를 발견한 tell 시작 1회",
+      "dataRefs": ["interrupts.INT-03.tell"],
+      "visual": "exclaim_stand_up"
+    },
+    {
+      "key": "sfx_door_clipboard", "category": "tell", "seed": 211,
+      "desc": "인사팀: 문 딸깍 + 클립보드 '탁탁'",
+      "recipe": "clicks",
+      "params": { "hits": [
+        { "start": 0.0, "dur": 0.012, "hz": 3000, "q": 2.0, "tau": 0.004, "gain": 0.5 },
+        { "start": 0.04, "dur": 0.05, "hz": 900, "q": 3.0, "tau": 0.015, "toneHz": 520, "toneGain": 0.6, "gain": 0.7 },
+        { "start": 0.3, "dur": 0.05, "hz": 1700, "q": 2.5, "tau": 0.012, "toneHz": 1150, "toneGain": 0.5, "gain": 1.0 },
+        { "start": 0.38, "dur": 0.05, "hz": 1600, "q": 2.5, "tau": 0.01, "toneHz": 1100, "toneGain": 0.5, "gain": 0.7 } ] },
+      "play": "INT-05 근태 점검 방송, INT-06 인사팀 등장 tell 시작에 1회",
+      "dataRefs": ["interrupts.INT-05.tell", "interrupts.INT-06.tell"],
+      "visual": "pa_speaker_clipboard / elevator_open_purple"
+    },
+    {
+      "key": "sfx_tap", "category": "feedback", "seed": 301, "peakDb": -9.0,
+      "desc": "탭 이동 확정 '톡'(작고 짧음)",
+      "recipe": "chip_seq",
+      "params": { "notes": [[0.0, 0.04, [[0, 1800], [0.04, 1250]], "sine", 1.0]], "noiseHits": [[0.0, 0.004, 3500, 0.2]] },
+      "play": "바닥/미션 칩을 탭해 목적지가 확정될 때 1회. 연타 시 60ms 이내 중복 재생 생략",
+      "dataRefs": [],
+      "visual": "목적지 마커(탭 지점 표시)"
+    },
+    {
+      "key": "sfx_pop", "category": "feedback", "seed": 311, "peakDb": -3.0,
+      "desc": "위장 전환 '뽁'(위로 튀는 음)",
+      "recipe": "chip_seq",
+      "params": { "notes": [[0.0, 0.08, [[0, 380], [0.08, 1300]], "sine", 1.0], [0.0, 0.06, [[0, 760], [0.06, 2600]], "triangle", 0.25]], "noiseHits": [[0.0, 0.006, 3000, 0.3]] },
+      "play": "이동 중 탭 -> 정지·위장 전환 순간 1회, 위장 해제(재이동)도 동일. INT-12 공범 제안 말풍선에도 사용",
+      "dataRefs": ["interrupts.INT-12.tell"],
+      "visual": "위장 포즈 전환 + 말풍선(speech_bubble_offer)"
+    },
+    {
+      "key": "sfx_suspicion_loop", "category": "feedback", "seed": 321, "loop": true, "peakDb": -2.0, "hp": 60,
+      "desc": "의심 상승 경고: 심장 '두근' 0.6초 루프(100bpm)",
+      "recipe": "heartbeat",
+      "params": { "loopSec": 0.6, "beatSec": 0.13, "beats": [[0.0, 1.0], [0.17, 0.7]], "bodyHz": [110, 55], "overHz": [260, 150], "overGain": 0.7, "tickHz": 1100, "tickGain": 0.45 },
+      "play": "의심이 오르는 동안 루프. 의심 0.5 이상부터 재생, rate = 1.0 + (의심-0.5)*0.8 (최대 1.4), 오름이 멈추면 0.3초 페이드아웃",
+      "dataRefs": [],
+      "visual": "의심 게이지 흔들림(GDD §5 rules.threat seeing) + 콘 진하게"
+    },
+    {
+      "key": "sfx_caught", "category": "feedback", "seed": 331, "peakDb": -1.0,
+      "desc": "들킴 '딴! 뚜루루' 불협 스탭 + 하강",
+      "recipe": "chip_seq",
+      "params": {
+        "notes": [
+          [0.0, 0.26, "E5", "pulse", 0.45, 0.25], [0.0, 0.26, "G5", "pulse", 0.4, 0.25], [0.0, 0.26, "A#5", "pulse", 0.4, 0.25],
+          [0.0, 0.26, "E3", "triangle", 0.7],
+          [0.3, 0.6, [[0, 880], [0.6, 196]], "square", 0.55],
+          [0.3, 0.6, [[0, 220], [0.6, 55]], "triangle", 0.6]
+        ],
+        "noiseHits": [[0.0, 0.25, 3000, 0.55]]
+      },
+      "play": "의심 100% 적발 컷인 시작에 1회(BGM 즉시 정지)",
+      "dataRefs": [],
+      "visual": "적발 리액션 컷인 2초(GDD §6-1)"
+    },
+    {
+      "key": "sfx_clockout_fanfare", "category": "feedback", "seed": 341, "peakDb": -1.0,
+      "desc": "퇴근 성공 팡파르(상승 아르페지오 + 화음)",
+      "recipe": "chip_seq",
+      "params": {
+        "vibrato": [6.0, 0.25, 0.25], "vibratoMinDur": 0.5, "sustain": 0.7,
+        "notes": [
+          [0.0, 0.1, "G4", "pulse", 0.55, 0.25], [0.1, 0.1, "C5", "pulse", 0.55, 0.25], [0.2, 0.1, "E5", "pulse", 0.55, 0.25], [0.3, 0.1, "G5", "pulse", 0.55, 0.25],
+          [0.0, 0.4, "G2", "triangle", 0.6],
+          [0.42, 0.95, "C6", "pulse", 0.5, 0.5], [0.42, 0.95, "E5", "pulse", 0.3, 0.125], [0.42, 0.95, "G5", "pulse", 0.3, 0.125],
+          [0.42, 0.95, "C3", "triangle", 0.7]
+        ],
+        "noiseHits": [[0.42, 0.2, 4500, 0.35]]
+      },
+      "play": "퇴근 성공(엘리베이터 탑승 확정) 시 1회. 재생 전에 BGM 0.2초 페이드아웃",
+      "dataRefs": [],
+      "visual": "결과 화면 연출(별·칼퇴 글자)"
+    },
+    {
+      "key": "sfx_mission_complete", "category": "feedback", "seed": 351, "peakDb": -2.0,
+      "desc": "미션 완료 '띠링'(2음 상승 + 반짝)",
+      "recipe": "chip_seq",
+      "params": {
+        "notes": [
+          [0.0, 0.08, "B5", "pulse", 0.6, 0.25], [0.08, 0.28, "E6", "pulse", 0.6, 0.25],
+          [0.1, 0.15, "B6", "sine", 0.25], [0.18, 0.2, "E7", "sine", 0.18]
+        ]
+      },
+      "play": "미션 완료 판정(자리 복귀 후 완료 포함) 시 1회",
+      "dataRefs": [],
+      "visual": "미션 칩 체크 표시"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{{SFX_TABLE}}
+
+{{BGM_TABLE}}
+
+{{STAGE_TABLE}}
+
+{{ANALYSIS}}
