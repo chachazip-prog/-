@@ -9,6 +9,7 @@
       "seed": "day-1",
       "titleKey": "day.1.title",
       "tutorialIds": ["tut_hold", "tut_tell", "tut_work", "tut_coffee", "tut_leave"],
+      "workQuotaOverride": 0.35,
       "bosses": { "senior": 1 },
       "slots": [
         { "type": "work", "sec": 12.0 },
@@ -42,7 +43,7 @@
       "scripted": [],
       "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
       "ceo": "none",
-      "expectedDurationSec": 62
+      "expectedDurationSec": 64
     },
     {
       "day": 3,
