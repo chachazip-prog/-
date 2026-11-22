@@ -7,7 +7,8 @@
       사원증 줄 색(D-037·D-052), 하루 예상 길이 범위,
       T-132: 말걸기 warnSec·catchRadius·releaseSec(D-043·D-054), 결과 화면 입력 보호,
       유리벽(D-053), 배경 동료(D-049), 광고 첫 5판 면제 삭제(D-048), 이어하기 수용 기준(D-050·D-056),
-      문자열 이모지(D-047)·내부 ID 노출, 수작업 날 공범 제안 고정.
+      문자열 이모지(D-047)·내부 ID 노출, 수작업 날 공범 제안 고정,
+      sfx 키 ⊂ 오디오 매니페스트(T-113), 무음 대응 시각 신호.
 """
 import itertools
 import json
@@ -435,6 +436,38 @@ for p, k, v in walk_json(T["strings.ko"]["strings"]):
             err(f"strings{p}: 내부 ID 노출 '{INTERNAL.search(txt).group(0)}'")
         if re.search(r"\{n\}원", txt):
             err(f"strings{p}: 실제 화폐 단위 '원' 사용(컴플라이언스 T-132)")
+
+# 11) 사운드 키(T-113 매니페스트, 읽기 전용)·무음 대응 시각 신호
+AUDIO = os.path.join(ROOT, "..", "assets", "audio", "audio-manifest.json")
+if os.path.exists(AUDIO):
+    with open(AUDIO, encoding="utf-8") as fa:
+        am = json.load(fa)
+    akeys = {x["key"] for x in am["sfx"]} | set(am["bgm"])
+    for name, t in T.items():
+        for p, k, v in walk_json(t):
+            if isinstance(v, str) and (k == "sfx" or k.endswith("Sfx") or (".walkTellSfx." in p + "." and k != "onScreenOnly")):
+                if v.startswith("sfx_") and v not in akeys:
+                    err(f"{name}{p}: 오디오 키 없음 '{v}'")
+else:
+    warns.append("audio-manifest.json 없음: sfx 키 검사 생략")
+for name, key, ids in (("bosses", "bosses", ("director", "team_lead")), ("npcs", "npcs", ("security_guard", "hr_inspector"))):
+    for a in T[name][key]:
+        if a["id"] in ids and "walkTellSfx" not in a["sim"]:
+            err(f"{name}.{a['id']}.sim.walkTellSfx 없음(걷는 NPC 전조 소리, tell.mustHaveAudio)")
+gate = next(n for n in T["npcs"]["npcs"] if n["id"] == "security_guard")["gate"]
+for fld in ("failSfx", "okSfx", "failVisual", "okVisual"):
+    if fld not in gate:
+        err(f"npcs.security_guard.gate.{fld} 없음")
+VC = rules.get("visualCues", {})
+for fld in ("gateFail", "gateOk", "tapDestination", "missionChipDone", "suspicionHigh", "dangerBorder"):
+    if fld not in VC:
+        err(f"rules.visualCues.{fld} 없음(무음 대응)")
+if VC:
+    for p, k, v in walk_json(VC):
+        if k == "pulseHz" and v > 3:
+            err(f"rules.visualCues{p}: 깜빡임 {v}Hz > 3 (광과민)")
+    if os.path.exists(AUDIO) and set(am["bgm"]["bgm_office"]["stages"]) - {"_doc"} - set(VC["dangerBorder"]["byStage"]):
+        err("rules.visualCues.dangerBorder.byStage: BGM 단계 누락")
 
 print(f"tables: {', '.join(T)}")
 print("화면 안 최악 인원(직급별, 플레이어 포함): " + ", ".join(f"{k} {v[0]}" for k, v in RANK_SCREEN.items()))
