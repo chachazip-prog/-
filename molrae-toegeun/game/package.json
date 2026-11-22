@@ -1,0 +1,23 @@
+{
+  "name": "molrae-toegeun",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:host": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "build:ait": "npm run build && ait build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "test": "node -e \"console.log('test runner 미구성: QA(game/tests/) 합의 후 연결 예정')\""
+  },
+  "dependencies": {
+    "@apps-in-toss/web-framework": "3.10.0",
+    "phaser": "3.90.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vite": "7.3.7"
+  }
+}

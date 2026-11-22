@@ -15,6 +15,7 @@
 | T-103 | mt-pixel-artist | 스타일 가이드, 팔레트(Q-002 결정 전에는 시안 3종), 픽셀 생성 파이프라인 | `art/style-guide.md`, `art/palette*.json`, 생성 스크립트, 미리보기 | - | 진행 |
 | T-104 | mt-compliance | 행정 절차 안내서(사업자 → 게임제작업 → 등급분류), 출시 체크리스트 v1 | `compliance/admin-procedures.md`, `compliance/launch-checklist.md` | - | 진행 |
 | T-105 | mt-marketer | 게임명 후보 검토(중복 1차 확인), 톤앤매너 가이드 | `marketing/naming.md`, `marketing/tone-guide.md` | - | 진행 |
+| T-106 | mt-marketer | 수익화 방안 종합 검토(광고 Only 포함, 시나리오 S1~S6), 단계 로드맵 (오너 요청) | `marketing/monetization-options.md` | - | 진행 |
 
 ### 2차 배분 (1차 결과 필요)
 | ID | 담당 | 작업 | 의존 | 상태 |
