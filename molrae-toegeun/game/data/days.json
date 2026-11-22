@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 1,
+  "_comment": "1~15일은 수작업(authored). 16일 이후는 generator 규칙으로 생성. 시간 단위 초. weekday: 0=월 ~ 4=금.",
+  "authoredDays": [
+    {
+      "day": 1,
+      "rankId": "intern",
+      "weekday": 0,
+      "seed": "day-1",
+      "titleKey": "day.1.title",
+      "tutorialIds": ["tut_hold", "tut_tell", "tut_work", "tut_coffee", "tut_leave"],
+      "bosses": { "senior": 1 },
+      "slots": [
+        { "type": "work", "sec": 12.0 },
+        { "type": "event", "eventId": "coffee" },
+        { "type": "work", "sec": 10.0 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [
+        { "type": "boss_look", "bossId": "senior", "slot": 0, "atSec": 5.0, "tellSec": 1.2, "suspicionGainMultiplier": 0.5 }
+      ],
+      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
+      "ceo": "none",
+      "expectedDurationSec": 54
+    },
+    {
+      "day": 2,
+      "rankId": "intern",
+      "weekday": 1,
+      "seed": "day-2",
+      "titleKey": "day.2.title",
+      "tutorialIds": ["tut_restroom"],
+      "bosses": { "senior": 1 },
+      "slots": [
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "coffee" },
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "restroom" },
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [],
+      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
+      "ceo": "none",
+      "expectedDurationSec": 62
+    },
+    {
+      "day": 3,
+      "rankId": "intern",
+      "weekday": 2,
+      "seed": "day-3",
+      "titleKey": "day.3.title",
+      "tutorialIds": ["tut_snack"],
+      "bosses": { "senior": 1 },
+      "slots": [
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "snack" },
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "coffee" },
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [],
+      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
+      "ceo": "none",
+      "expectedDurationSec": 61
+    },
+    {
+      "day": 4,
+      "rankId": "intern",
+      "weekday": 3,
+      "seed": "day-4",
+      "titleKey": "day.4.title",
+      "tutorialIds": ["tut_nap"],
+      "bosses": { "senior": 1 },
+      "slots": [
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "nap" },
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "restroom" },
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [],
+      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
+      "ceo": "none",
+      "expectedDurationSec": 65
+    },
+    {
+      "day": 5,
+      "rankId": "intern",
+      "weekday": 4,
+      "seed": "day-5",
+      "titleKey": "day.5.title",
+      "tutorialIds": ["tut_shopping"],
+      "bosses": { "senior": 1 },
+      "slots": [
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "shopping" },
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "snack" },
+        { "type": "work", "sec": 9.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [],
+      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
+      "ceo": "none",
+      "expectedDurationSec": 61
+    },
+    {
+      "day": 6,
+      "rankId": "staff",
+      "weekday": 0,
+      "seed": "day-6",
+      "titleKey": "day.6.title",
+      "tutorialIds": ["tut_team_lead", "tut_phone"],
+      "bosses": { "team_lead": 1 },
+      "slots": [
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "coffee" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "nap" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "shopping" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [
+        { "type": "boss_look", "bossId": "team_lead", "slot": 0, "atSec": 2.5, "tellSec": 0.8, "suspicionGainMultiplier": 0.5 },
+        { "type": "boss_opportunity", "bossId": "team_lead", "opportunity": "phone_call", "slot": 2, "atSec": 1.0, "durationSec": 4.0 }
+      ],
+      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
+      "ceo": "none",
+      "expectedDurationSec": 69
+    },
+    {
+      "day": 7,
+      "rankId": "staff",
+      "weekday": 1,
+      "seed": "day-7",
+      "titleKey": "day.7.title",
+      "tutorialIds": ["tut_accomplice"],
+      "bosses": { "team_lead": 1 },
+      "slots": [
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "coffee" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "restroom" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "snack" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [
+        { "type": "accomplice_offer", "eventId": "coffee", "forced": true }
+      ],
+      "npc": { "accompliceOffer": true, "snitch": false, "hrInspector": false },
+      "ceo": "none",
+      "expectedDurationSec": 73
+    },
+    {
+      "day": 8,
+      "rankId": "staff",
+      "weekday": 2,
+      "seed": "day-8",
+      "titleKey": "day.8.title",
+      "tutorialIds": ["tut_snitch"],
+      "bosses": { "team_lead": 1 },
+      "slots": [
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "shopping" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "coffee" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "nap" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [
+        { "type": "snitch_spawn", "slot": 2, "atSec": 2.0, "requiresHolding": true, "fallbackAtSec": 5.0 }
+      ],
+      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": false },
+      "ceo": "none",
+      "expectedDurationSec": 69
+    },
+    {
+      "day": 9,
+      "rankId": "staff",
+      "weekday": 3,
+      "seed": "day-9",
+      "titleKey": "day.9.title",
+      "tutorialIds": [],
+      "bosses": { "team_lead": 1 },
+      "slots": [
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "snack" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "restroom" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "coffee" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [],
+      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": false },
+      "ceo": "none",
+      "expectedDurationSec": 73
+    },
+    {
+      "day": 10,
+      "rankId": "staff",
+      "weekday": 4,
+      "seed": "day-10",
+      "titleKey": "day.10.title",
+      "tutorialIds": ["tut_hr"],
+      "bosses": { "team_lead": 1 },
+      "slots": [
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "restroom" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "shopping" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "snack" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [
+        { "type": "hr_inspection", "slot": 1, "trigger": "restroom_inside_rest_start" }
+      ],
+      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
+      "ceo": "none",
+      "expectedDurationSec": 73
+    },
+    {
+      "day": 11,
+      "rankId": "staff",
+      "weekday": 0,
+      "seed": "day-11",
+      "titleKey": "day.11.title",
+      "tutorialIds": [],
+      "bosses": { "team_lead": 1 },
+      "slots": [
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "nap" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "coffee" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "restroom" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [],
+      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
+      "ceo": "none",
+      "expectedDurationSec": 73
+    },
+    {
+      "day": 12,
+      "rankId": "staff",
+      "weekday": 1,
+      "seed": "day-12",
+      "titleKey": "day.12.title",
+      "tutorialIds": [],
+      "bosses": { "team_lead": 1 },
+      "slots": [
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "snack" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "shopping" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "nap" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [],
+      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
+      "ceo": "none",
+      "expectedDurationSec": 70
+    },
+    {
+      "day": 13,
+      "rankId": "staff",
+      "weekday": 2,
+      "seed": "day-13",
+      "titleKey": "day.13.title",
+      "tutorialIds": [],
+      "bosses": { "team_lead": 1 },
+      "slots": [
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "coffee" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "restroom" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "shopping" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [],
+      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
+      "ceo": "none",
+      "expectedDurationSec": 72
+    },
+    {
+      "day": 14,
+      "rankId": "staff",
+      "weekday": 3,
+      "seed": "day-14",
+      "titleKey": "day.14.title",
+      "tutorialIds": [],
+      "bosses": { "team_lead": 1 },
+      "slots": [
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "nap" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "snack" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "coffee" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [],
+      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
+      "ceo": "none",
+      "expectedDurationSec": 70
+    },
+    {
+      "day": 15,
+      "rankId": "staff",
+      "weekday": 4,
+      "seed": "day-15",
+      "titleKey": "day.15.title",
+      "tutorialIds": [],
+      "bosses": { "team_lead": 1 },
+      "slots": [
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "restroom" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "coffee" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "snack" },
+        { "type": "work", "sec": 7.5 },
+        { "type": "event", "eventId": "leave" }
+      ],
+      "scripted": [],
+      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
+      "ceo": "none",
+      "expectedDurationSec": 73
+    }
+  ],
+  "generator": {
+    "appliesFromDay": 16,
+    "seedFormat": "day-{day}",
+    "rngStreams": ["plan", "boss", "npc", "event"],
+    "rngStreamSeedFormat": "day-{day}-{stream}",
+    "weekdayFormula": "(day - 1) % 5",
+    "rankFormula": "ranks[].dayRange에 day가 포함되는 직급. dayRange[1]이 null이면 엔드리스",
+    "difficultyT": "rank 내 진행도 t = (day - dayRange[0]) / (dayRange[1] - dayRange[0]); 엔드리스는 t = 0",
+    "regularEventCount": {
+      "rule": "t < 0.5 이면 regularEventsPerDay[0], 아니면 regularEventsPerDay[1]",
+      "ceoDayReduction": 1,
+      "min": 3
+    },
+    "eventSelection": {
+      "method": "weighted_without_replacement",
+      "stream": "plan",
+      "forceIncludeIfAbsentDays": 2,
+      "noSameFirstEventAsPreviousDay": true
+    },
+    "slotLayout": "work(rank.workSegmentSec) → event → work → event … → work → leave(피날레)",
+    "directorPatrol": {
+      "stream": "boss",
+      "countFrom": "bosses.director.timing.patrolsPerDay (t 보간 후 반올림, 범위에서 정수 추첨)",
+      "placement": "work 슬롯 중 index ≥ 1을 무작위 선택(중복 없음), 슬롯 시작 후 1.0초 ~ (sec - 1.0)초",
+      "mayOverlapNextEvent": true,
+      "mustEndBeforeFinale": true,
+      "minGapBetweenPatrolsSec": 12
+    },
+    "ceo": {
+      "stream": "boss",
+      "scheduled": "rank에 ceo가 있고 weekday == bosses.ceo.occurrence.scheduledWeekday(수요일)",
+      "random": "그 외 날은 occurrence.randomChancePerDay 확률",
+      "placement": "work 슬롯 index ≥ 1 중 director 순찰이 없는 슬롯, 슬롯 시작 후 1.5초. 세그먼트 타이머는 CEO 이벤트 동안 정지",
+      "debutDay": 28
+    },
+    "hrInspector": {
+      "stream": "npc",
+      "rule": "npcs.hr_inspector.spawn.dayChance 확률로 하루 1회. 허용 슬롯(work 또는 hrInspectionAllowed 이벤트) 중 무작위, minDayTimeSec 이후"
+    },
+    "accompliceOffer": {
+      "stream": "npc",
+      "rule": "coffee·snack 이벤트마다 offerProb 확률, 하루 maxPerDay회"
+    },
+    "snitch": {
+      "stream": "npc",
+      "rule": "사전 배치 없음. 런타임에 홀드 1초마다 probPerHoldSec 판정(스트림 'npc' 사용)"
+    },
+    "debuts": [
+      { "day": 16, "type": "boss_debut", "bossId": "director", "tutorialId": "tut_director", "forcePatrol": { "slot": 2, "atSec": 1.5, "stop": true } },
+      { "day": 28, "type": "boss_debut", "bossId": "ceo", "tutorialId": "tut_ceo", "forceCeo": true },
+      { "day": 41, "type": "boss_debut", "bossId": "team_lead", "tutorialId": "tut_second_team_lead", "note": "차장부터 옆 팀 팀장(2번째 인스턴스) 등장" }
+    ],
+    "promotion": {
+      "rule": "직급의 마지막 날을 ★1 이상으로 클리어하고, 직급 내 날짜별 최고 별 합계 ≥ rank.starsToPromote이면 승진",
+      "ifShort": "승진 보류. 해당 직급의 지난 날을 다시 플레이해 최고 별을 갱신(최고 기록만 반영)",
+      "dayUnlock": "전날을 ★1 이상(적발 아님)으로 마치면 다음 날 해금"
+    }
+  }
+}

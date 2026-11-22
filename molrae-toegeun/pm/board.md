@@ -12,7 +12,7 @@
 |---|---|---|---|---|---|
 | T-101 | mt-game-designer | GDD v1, 데이터 스키마, `events`·`bosses`·`npcs`·`ranks` 테이블 v1(MVP 범위) | `design/gdd.md`, `design/data-schema.md`, `game/data/*.json` | - | 진행 |
 | T-102 | mt-client-dev | Phaser + TS + Vite 프로젝트 골격, SDK 3.x 어댑터 계층과 목(mock), 빌드 파이프라인 | `game/` 골격, 빌드 성공 | - | 완료 |
-| T-103 | mt-pixel-artist | 스타일 가이드, 팔레트(Q-002 결정 전에는 시안 3종), 픽셀 생성 파이프라인 | `art/style-guide.md`, `art/palette*.json`, 생성 스크립트, 미리보기 | - | 진행 |
+| T-103 | mt-pixel-artist | 스타일 가이드, 팔레트(Q-002 결정 전에는 시안 3종), 픽셀 생성 파이프라인 | `art/style-guide.md`, `art/palette*.json`, 생성 스크립트, 미리보기 | - | 완료 (톤 선택 대기) |
 | T-104 | mt-compliance | 행정 절차 안내서(사업자 → 게임제작업 → 등급분류), 출시 체크리스트 v1 | `compliance/admin-procedures.md`, `compliance/launch-checklist.md` | - | 완료 |
 | T-105 | mt-marketer | 게임명 후보 검토(중복 1차 확인), 톤앤매너 가이드 | `marketing/naming.md`, `marketing/tone-guide.md` | - | 완료 |
 | T-106 | mt-marketer | 수익화 방안 종합 검토(광고 Only 포함, 시나리오 S1~S6), 단계 로드맵 (오너 요청) | `marketing/monetization-options.md` | - | 진행 |
