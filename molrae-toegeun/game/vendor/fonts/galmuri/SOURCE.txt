@@ -1,0 +1,16 @@
+Galmuri 원본 보관 (변환 원본. 이 폴더는 빌드 번들에 들어가지 않음)
+
+- 저작권자: Lee Minseo (quiple@quiple.dev)
+- 라이선스: SIL Open Font License 1.1 (ofl.md / LICENSE.txt / ofl-ko.md 원본 그대로)
+- 버전: 2.40.3 (BDF FONT_VERSION "2.403")
+- 출처: npm 레지스트리 공식 패키지 galmuri@2.40.3 (게시자 npm 계정 quiple, repository quiple/galmuri)
+  https://registry.npmjs.org/galmuri/-/galmuri-2.40.3.tgz
+  tarball sha1   8eaa5ee9761d19030807254c5cf357a08958c05e
+  tarball sha512 eXflXih1AWy2J+jWeT5sGVj4PUCb1bMK7lnwKDKMzEd3lx+F6myuxqp6c0eZlD7EMXOicUYaM+FH7DAoQ7mWbw==
+  (레지스트리 dist.integrity 값과 일치 확인)
+  github.com/quiple/galmuri 릴리스 페이지는 이 작업 환경의 네트워크 정책(403)으로 접근하지 못함.
+- 받은 날짜: 2026-11-22
+- 보관 파일: Galmuri11.bdf, Galmuri9.bdf, Galmuri7.bdf (패키지 dist/), LICENSE.txt (dist/),
+  ofl.md, ofl-ko.md, README.md, package.json (패키지 루트). 수정하지 않음.
+- 변환: game/scripts/build-fonts.ts → game/public/fonts/mt-pixel-{12,10,8}.{fnt,png}
+  변환 결과물은 OFL의 Modified Version이며 예약 폰트명 회피를 위해 이름을 mt-pixel-*로 바꿈(D-042).

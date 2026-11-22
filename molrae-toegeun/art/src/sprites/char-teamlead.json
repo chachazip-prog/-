@@ -2,66 +2,76 @@
  "name": "teamlead",
  "group": "boss",
  "base": "body-b",
- "note": "팀장(상사). 바디 B + 보라 정장 + 흰 셔츠 깃 + 빨간 사원증 줄(D-037) + 결재판(소품). 상사 4종 공통: 사원증 줄 point",
+ "note": "팀장(상사). 바디 B(평평한 윗머리) + 보라 정장 + 흰 셔츠 깃 + 빨간 사원증 줄(D-037) + 결재판(갈색). T-125: 왼쪽 가르마(밝은 가르마선 M) + 굵은 눈썹 2px(플레이어는 눈썹 없음, 삐침머리 없음)",
  "swap": {
   "shirt": "suit",
   "shirt_sh": "suit_sh",
   "$lanyard": "point"
  },
  "stamps": [
-  {
-   "dir": "down",
-   "x": 7,
-   "y": 11,
-   "rows": [
-    "WW"
-   ]
-  },
-  {
-   "dir": "down",
-   "x": 12,
-   "y": 12,
-   "rows": [
-    ".OOO",
-    ".OtO",
-    "SOtO",
-    "OOtO",
-    ".OtO",
-    ".OOO"
-   ]
-  },
-  {
-   "dir": "up",
-   "x": 0,
-   "y": 12,
-   "rows": [
-    "OOO",
-    "OtO",
-    "OtO",
-    "OtO",
-    "OtO",
-    "OOO"
-   ]
-  },
-  {
-   "dir": "right",
-   "x": 10,
-   "y": 11,
-   "rows": [
-    "W"
-   ]
-  },
-  {
-   "dir": "right",
-   "x": 3,
-   "y": 12,
-   "rows": [
-    "OOOO",
-    "OWtO",
-    "OWtO",
-    "OWtO",
-    "OOOO"
-   ]
-  }
+  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   "..OOOOOOOOOOOO..",
+   "..OHHHMHHHHHHO..",
+   ".OHHHHMHHDDHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHSSSSSSSSHHO.",
+   ".OHSHHSSSSHHSHO.",
+   ".OSSSOSSSSOSSSO.",
+   ".OSSSOSSSSOSSSO.",
+   ".OSSSSSssSSSSSO.",
+   "..OOOOssssOOOO.."
+  ]},
+  {"dir": "up", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   "..OOOOOOOOOOOO..",
+   "..OHHHHHHMHHHO..",
+   ".OHHHDDHHMHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OSHHHHHHHHHHSO.",
+   ".OHHHHHHHHHHHHO.",
+   "..OOOOssssOOOO.."
+  ]},
+  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
+   "................",
+   "..OOOOOOOOOO....",
+   "..OHHHHHMHHO....",
+   ".OHHHHHHMDDHO...",
+   ".OHHHHHHHHHHHO..",
+   ".OHHHHHHHHHHHO..",
+   ".OHHHHHHHSHHHO..",
+   ".OHHHHHSSSSOSO..",
+   ".OHHHHHsSSSOSO..",
+   ".OHHHHHSSSSSSO..",
+   "..OOOOOsssOOO..."
+  ]},
+  {"dir": "down", "x": 7, "y": 11, "rows": ["WW"]},
+  {"dir": "down", "x": 12, "y": 12, "rows": [
+   ".OOO",
+   ".OtO",
+   "SOtO",
+   "OOtO",
+   ".OtO",
+   ".OOO"
+  ]},
+  {"dir": "up", "x": 0, "y": 12, "rows": [
+   "OOO",
+   "OtO",
+   "OtO",
+   "OtO",
+   "OtO",
+   "OOO"
+  ]},
+  {"dir": "right", "x": 10, "y": 11, "rows": ["W"]},
+  {"dir": "right", "x": 3, "y": 12, "rows": [
+   "OOOO",
+   "OWtO",
+   "OWtO",
+   "OWtO",
+   "OOOO"
+  ]}
  ]
 }

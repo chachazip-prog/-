@@ -5,7 +5,7 @@
  */
 import {
   FloorSim, buildGridMap, canSee, inCone, hasLineOfSight, rayDistance, conePolygon, findPath, isWalkable,
-  nearestWalkable, createRng, updateSuspicion, createSuspicion, angleDiff, tileOf,
+  createRng, updateSuspicion, createSuspicion, angleDiff, tileOf,
   type LevelDef, type NpcDef, type FloorContent, type GridMap, type Tile,
 } from '../src/core';
 import { PROTO_FLOOR } from '../src/dev/protoFloor';
@@ -92,7 +92,6 @@ section('1. 결정성');
     for (let i = 0; i < s.steps; i++) s2.step();
     const stateOk = s2.fingerprint() === s.fingerprint();
     check(`advance dt=${name}: 총 60초 → 스텝 ${N}개`, stepsOk, `실제 ${s.steps}스텝 (${calls}회 호출)`);
-    const caught = new FloorSim(PROTO_FLOOR, 'day-1'); void caught;
     if (!stepsOk) { s.advance(1e-9); info(`  dt=${name}: 부동소수 잔여로 1스텝 지연, +1e-9초 advance 후 ${s.steps}스텝(누락 아님, 지연)`); }
     check(`advance dt=${name}: 같은 스텝 수에서 상태 동일`, stateOk && (!stepsOk || s.fingerprint() === refFp));
   }
@@ -356,7 +355,7 @@ section('5. 의심');
   let caughtStep = -1, valueAtCaught = 0;
   for (let i = 0; i < 2000 && cs.outcome === 'playing'; i++) {
     cs.step();
-    if (cs.outcome === 'caught') { caughtStep = cs.steps; valueAtCaught = cs.suspicion.value; }
+    if ((cs.outcome as string) === 'caught') { caughtStep = cs.steps; valueAtCaught = cs.suspicion.value; }
     if (cs.player.mode === 'idle') cs.tap(cs.player.tile.x === 14 ? 1 : 14, 0);
   }
   const ev = cs.drainEvents();

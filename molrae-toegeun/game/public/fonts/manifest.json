@@ -1,0 +1,55 @@
+{
+  "generatedBy": "game/scripts/build-fonts.ts",
+  "license": "OFL-1.1",
+  "licenseFile": "public/licenses/OFL-galmuri.txt",
+  "sourceUrl": "https://registry.npmjs.org/galmuri/-/galmuri-2.40.3.tgz",
+  "licenseSha256": "ec7ee1b7642dfc1b029631862265997af65ad508ca4a45804a7715b48df97d38",
+  "fonts": [
+    {
+      "name": "mt-pixel-12",
+      "role": "대사·UI 본문",
+      "derivedFrom": "Galmuri11 2.40.3",
+      "source": "vendor/fonts/galmuri/Galmuri11.bdf",
+      "sourceSha256": "f72dba056f163f250b4af62ac08736391f82c8f680abb554e5fc0997f29e9936",
+      "glyphs": 2534,
+      "atlas": "1024x512",
+      "lineHeight": 13,
+      "base": 11,
+      "pngSha256": "69c15127bfebb7fb2c9c3111e34603b2970c31434dc38ca3785940d1a63acb33",
+      "jsonSha256": "ab106ef3d3fe7eea1d4cce90a4373de7a63064ed0390739cf5a3347d711e7c11",
+      "allowedMissing": [
+        "U+1F4E2"
+      ]
+    },
+    {
+      "name": "mt-pixel-10",
+      "role": "라벨",
+      "derivedFrom": "Galmuri9 2.40.3",
+      "source": "vendor/fonts/galmuri/Galmuri9.bdf",
+      "sourceSha256": "e87a1a4f7c5ce72b72802959fce27a3221d05e1f60f4610092d6922ad0456733",
+      "glyphs": 2534,
+      "atlas": "512x512",
+      "lineHeight": 10,
+      "base": 9,
+      "pngSha256": "4ffcd2387d07e8ca62654bb616157ece5e041829da9ffd2077539b63f7bc7fba",
+      "jsonSha256": "a14c8f002fd1e97c4bba0314cdb76bc676c214c8238da65ec57922bd73aa309b",
+      "allowedMissing": [
+        "U+1F4E2"
+      ]
+    },
+    {
+      "name": "mt-pixel-8",
+      "role": "숫자·영문 전용",
+      "derivedFrom": "Galmuri7 2.40.3",
+      "source": "vendor/fonts/galmuri/Galmuri7.bdf",
+      "sourceSha256": "2a6fd090ac6d24f7392d6cc49db02ce54b9d1c01048bf8c97cbcdbc5a885cb15",
+      "glyphs": 100,
+      "atlas": "256x256",
+      "lineHeight": 8,
+      "base": 7,
+      "pngSha256": "f9b51b86b40e8dd368d21c3ae8225adc36f343d7f8bbcd88bf1ee9544115ece8",
+      "jsonSha256": "723ad8b3cdd585050998a414bffbe4cb9183b3b24f49e8231c1b4c325f493ce9",
+      "allowedMissing": []
+    }
+  ]
+}

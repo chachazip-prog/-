@@ -6,18 +6,20 @@
   "scripts": {
     "dev": "vite",
     "dev:host": "vite --host",
-    "build": "tsc --noEmit && vite build",
+    "build": "npm run fonts && tsc --noEmit && vite build",
     "build:ait": "npm run build && ait build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test": "node -e \"console.log('test runner 미구성: QA(game/tests/) 합의 후 연결 예정')\"",
-    "smoke": "esbuild scripts/smoke-core.ts --bundle --platform=node --format=esm --log-level=warning --outfile=node_modules/.cache/smoke-core.mjs && node node_modules/.cache/smoke-core.mjs"
+    "smoke": "esbuild scripts/smoke-core.ts --bundle --platform=node --format=esm --log-level=warning --outfile=node_modules/.cache/smoke-core.mjs && node node_modules/.cache/smoke-core.mjs",
+    "fonts": "esbuild scripts/build-fonts.ts --bundle --platform=node --format=esm --packages=external --log-level=warning --outfile=node_modules/.cache/build-fonts.mjs && node node_modules/.cache/build-fonts.mjs"
   },
   "dependencies": {
     "@apps-in-toss/web-framework": "3.10.0",
     "phaser": "3.90.0"
   },
   "devDependencies": {
+    "@types/node": "26.6.6",
     "typescript": "5.9.3",
     "vite": "7.3.7"
   }

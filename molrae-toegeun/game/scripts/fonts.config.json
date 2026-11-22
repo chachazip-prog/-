@@ -1,0 +1,18 @@
+{
+  "_comment": "build-fonts.ts 설정 (T-126, D-042). 변환 폰트 이름에 원 폰트 예약명 사용 금지 → mt-pixel-*. allowMissing은 원 폰트에 없는 글자를 '알고서' 넘기는 목록이며 빌드 때마다 경고로 출력된다. 항목을 늘리지 말고 데이터 쪽을 고치는 것이 원칙",
+  "vendorDir": "vendor/fonts/galmuri",
+  "outDir": "public/fonts",
+  "licenseOut": "public/licenses/OFL-galmuri.txt",
+  "sourceVersion": "2.40.3",
+  "sourceUrl": "https://registry.npmjs.org/galmuri/-/galmuri-2.40.3.tgz",
+  "fonts": [
+    { "name": "mt-pixel-12", "source": "Galmuri11.bdf", "sourceFamily": "Galmuri11", "role": "대사·UI 본문", "charsets": ["ascii", "ksx1001Hangul", "compatJamo", "symbols", "used"] },
+    { "name": "mt-pixel-10", "source": "Galmuri9.bdf", "sourceFamily": "Galmuri9", "role": "라벨", "charsets": ["ascii", "ksx1001Hangul", "compatJamo", "symbols", "used"] },
+    { "name": "mt-pixel-8", "source": "Galmuri7.bdf", "sourceFamily": "Galmuri7", "role": "숫자·영문 전용", "charsets": ["ascii", "numSymbols"] }
+  ],
+  "symbols": "·…—–‘’“”→←↑↓↔★☆♥♡○●×÷°※~ㆍ「」『』♪▶◀▲▼■□◆◇",
+  "numSymbols": "·…×°★",
+  "allowMissing": [
+    { "char": "📢", "where": "data/strings.ko.json prep.ceo_forecast", "reason": "이모지. 픽셀 폰트에 없음. 아이콘 스프라이트로 대체하거나 문구에서 제거하도록 기획에 요청(T-126 보고)" }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 2,
+  "_comment": "광고 규칙 테이블. 근거: D-023(플레이 중 광고 금지), D-027(CEO 패스는 출근 준비 화면), D-028(보상형 + 예고형 전면, 배너 없음), D-030(광고 제거 = 전면만 제거), D-031(전면 빈도), D-021(공유 리워드 없음), D-022(버전별 폴백은 개발 담당). 빈도 수치 변경은 오너 승인 사항.",
+  "global": {
+    "neverDuringPlay": true,
+    "playStates": ["intro", "day_phase", "leave_phase", "caught_cutin"],
+    "bannerEnabled": false,
+    "shareReward": false,
+    "_designNote": "플레이 상태(인트로~적발 컷인 2초)에는 어떤 광고도 띄우지 않음. 광고는 출근 준비·결과·적발 후 이어하기 제안 화면에서만."
+  },
+  "interstitial": {
+    "enabled": true,
+    "placement": "result_to_next_day",
+    "noticeKey": "ad.interstitial_notice",
+    "noticeSec": 1.0,
+    "installDayMaxShows": 0,
+    "exemptFirstGamesLifetime": 5,
+    "everyNGames": 3,
+    "maxPerDay": 5,
+    "minIntervalSec": 180,
+    "skipIfRewardedWatchedThisGame": true,
+    "removedByIap": "remove_ads",
+    "dayBoundary": "local_midnight",
+    "_designNote": "D-031: 설치 첫날 0회, 3판에 1회, 하루 최대 5회, 간격 최소 3분, 그 판에 보상형을 봤으면 건너뜀. exemptFirstGamesLifetime 5는 REQ-006 '첫 5판 면제'와 D-031을 함께 적용(더 보수적인 쪽). 오너 확인 요청 중."
+  },
+  "rewarded": {
+    "enabled": true,
+    "maxPerDay": 12,
+    "placements": [
+      {
+        "id": "ceo_pass",
+        "screen": "prep",
+        "labelKey": "ad.ceo_pass",
+        "descKey": "ad.ceo_pass_desc",
+        "condition": "today_has_ceo_visit",
+        "maxPerDay": 3,
+        "effect": "skip_ceo_visit_no_eye_contact",
+        "_comment": "D-027. 출근 준비 화면에서만. 판 시작 전에 고름"
+      },
+      {
+        "id": "continue",
+        "screen": "caught_offer",
+        "labelKey": "ad.continue",
+        "descKey": "ad.continue_desc",
+        "condition": "caught_and_continue_unused_today",
+        "maxPerDay": 1,
+        "effect": "resume_suspicion_0_6_at_checkpoint",
+        "_comment": "적발 컷인이 끝나 플레이가 멈춘 뒤 제안. rules.continueAd"
+      },
+      {
+        "id": "salary_double",
+        "screen": "result",
+        "labelKey": "ad.salary_double",
+        "condition": "once_per_game",
+        "maxPerDay": 12,
+        "effect": "double_soft_currency_this_game",
+        "_comment": "게임 내 월급(소프트 재화)만 2배. 토스포인트·현금성 없음(D-004)"
+      }
+    ]
+  },
+  "iap": {
+    "remove_ads": { "priceKrw": 2900, "removes": ["interstitial"], "keepsRewarded": true, "featureFlag": "iap_remove_ads", "enabledUntilBusinessApproved": false }
+  },
+  "counters": {
+    "persist": ["installDate", "gamesPlayedLifetime", "gamesSinceLastInterstitial", "interstitialShownToday", "lastInterstitialAt", "rewardedShownToday", "rewardedByPlacementToday"],
+    "storage": "apps_in_toss_storage"
+  }
+}

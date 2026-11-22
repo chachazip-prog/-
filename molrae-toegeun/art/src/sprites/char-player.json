@@ -2,17 +2,17 @@
  "name": "player",
  "group": "character",
  "base": "body-a",
- "note": "플레이어. 바디 A + 파랑 셔츠 + 초록 사원증 줄 + 정수리 삐침머리(실루엣 표식). disguise = 이동 중 탭해서 멈춘 '서류 보는 척' 위장 포즈(눈만 빼꼼)",
- "swap": {"$lanyard": "green"},
+ "note": "플레이어. 바디 A + 파랑 셔츠 + 하늘색(cool) 사원증 줄(T-125: 공범 동료 초록과 겹쳐 변경) + 정수리 삐침머리(오른쪽 위로 튀는 갈고리 + 왼쪽 옆머리 1px 삐침 + 가운데 앞머리 한 가닥). 눈은 세로 2px 동그란 눈(팀장은 눈썹 있음, 플레이어는 없음). disguise = 서류 보는 척 위장, caught = 들킴(놀람) 1프레임: 머리카락 곤두섬·흰자 눈·벌린 입·두 손 번쩍",
+ "swap": {"$lanyard": "cool"},
  "frames": [
   {"name": "disguise", "rows": [
-   "................",
-   ".....OOOOOO.....",
+   "......O..OOO....",
+   ".....OOOOHHO....",
    "...OOHHHHHHOO...",
    "..OHHHDDHHHHHO..",
-   ".OHHHDHHHHHHHHO.",
+   "OHHHHDHHHHHHHHO.",
    ".OHHHHHHHHHHHHO.",
-   ".OHHSSSSSSSSHHO.",
+   ".OHHSSSHSSSSHHO.",
    ".OHSSSOSSSSOSHO.",
    ".OOOOOOOOOOOOOO.",
    "OSOWWWWWWWWWWOSO",
@@ -26,15 +26,73 @@
    "....ODDOODDO....",
    "....ODDOODDO....",
    "....OOOOOOOO...."
+  ]},
+  {"name": "caught", "rows": [
+   "...O..O..OOO.O..",
+   "....OOOOOHHOO...",
+   "...OOHHHHHHOO...",
+   "..OHHHDDHHHHHO..",
+   "OHHHHDHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHSSSHSSSSHHO.",
+   ".OHSWWSSSSWWSHO.",
+   ".OSSWOSSSSOWSSO.",
+   "..OSSSSOOSSSSO..",
+   ".O.OOOssssOOO.O.",
+   "OSO.OPNPPNPO.OSO",
+   "OSOOPPPNNPPPOOSO",
+   ".OpOPPPWWPPPOpO.",
+   "..OOpPPWWPPpOO..",
+   "....OppppppO....",
+   "....ODDDDDDO....",
+   "....ODDOODDO....",
+   "....ODDOODDO....",
+   "....OOOOOOOO...."
   ]}
  ],
  "stamps": [
-  {"dir": "down", "x": 8, "y": 0, "rows": ["OO", "HH"]},
-  {"dir": "up", "x": 6, "y": 0, "rows": ["OO", "HH"]},
-  {"dir": "right", "x": 5, "y": 0, "rows": ["OO", "HH"]},
-  {"frames": ["disguise"], "x": 8, "y": 0, "rows": ["OO", "HH"]}
+  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
+   "......O..OOO....",
+   ".....OOOOHHO....",
+   "...OOHHHHHHOO...",
+   "..OHHHDDHHHHHO..",
+   "OHHHHDHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHSSSHSSSSHHO.",
+   ".OHSSOSSSSOSSHO.",
+   ".OSSSOSSSSOSSSO.",
+   "..OSSSSssSSSSO..",
+   "...OOOssssOOO..."
+  ]},
+  {"dir": "up", "clear": true, "x": 0, "y": 0, "rows": [
+   "....OOO..O......",
+   "....OHHOOOO.....",
+   "...OOHHHHHHOO...",
+   "..OHHHHHHDDHHO..",
+   ".OHHHHHHHHHDHHHO",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OHHHHHHHHHHHHO.",
+   ".OSHHHHHHHHHHSO.",
+   "..OHHOHHHHOHHO..",
+   "...OOOssssOOO..."
+  ]},
+  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
+   "......OOO.......",
+   "....OOHHOO......",
+   "...OHHHHHHOO....",
+   "..OHHHHHDDHHO...",
+   "OHHHHHHHHHHDHO..",
+   ".OHHHHHHHHHHHO..",
+   ".OHHHHHHHSHSSO..",
+   ".OHHHHHSSSSOSO..",
+   ".OHHHHHsSSSOSO..",
+   "..OHHHHSSSSSSO..",
+   "...OOOOsssOOO..."
+  ]}
  ],
  "anims": [
-  {"key": "disguise", "frames": ["disguise"], "frameRate": 1, "repeat": -1}
+  {"key": "disguise", "frames": ["disguise"], "frameRate": 1, "repeat": -1},
+  {"key": "caught", "frames": ["caught"], "frameRate": 1, "repeat": 0}
  ]
 }

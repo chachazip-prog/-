@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""몰래퇴근 픽셀 생성기 (pixelgen) v2.
+"""몰래퇴근 픽셀 생성기 (pixelgen) v2.1 (T-125: 걷기 들썩임 bob, clear 스탬프, 상사 줄 색 검사).
 
 원본(문자 격자 JSON)과 팔레트(art/palette.json)를 읽어 다음을 만든다.
   - 스프라이트 시트 sheet.png + 아틀라스 sheet.json (Phaser JSON Hash 호환)
@@ -141,15 +141,27 @@ def flip_rows(rows):
 
 
 def apply_stamp(rows, st):
-    """소품 덧그림. '.'은 건너뛰고 '_'는 투명으로 지운다."""
+    """소품 덧그림. '.'은 건너뛰고 '_'는 투명으로 지운다.
+    clear: true 이면 '.'도 투명으로 덮어쓴다(머리 전체 교체 등 영역 통째 바꾸기)."""
     out = [list(r) for r in rows]
+    clear = st.get("clear", False)
     for dy, line in enumerate(st["rows"]):
         for dx, ch in enumerate(line):
             x, y = st.get("x", 0) + dx, st.get("y", 0) + dy
-            if ch == "." or not (0 <= y < len(out) and 0 <= x < len(out[y])):
+            if not (0 <= y < len(out) and 0 <= x < len(out[y])):
                 continue
-            out[y][x] = "." if ch == "_" else ch
+            if ch == "." and not clear:
+                continue
+            out[y][x] = "." if ch in "._" else ch
     return ["".join(r) for r in out]
+
+
+def apply_bob(rows, bob):
+    """걷기 들썩임. bob = [dy, split]: split 행 위(머리+몸통)를 dy 만큼 내리고,
+    다리 첫 dy 행을 없애 발밑(맨 아래 행)은 그대로 둔다. 스탬프를 찍은 뒤 적용."""
+    dy, split = bob
+    w = len(rows[0])
+    return ["." * w] * dy + rows[:split] + rows[split + dy:]
 
 
 def stamp_targets(st, names):
@@ -180,7 +192,7 @@ def load_sprites(src, legend):
             out += raw_frames(base)
         for fr in d.get("frames", []):
             out = [o for o in out if o[0] != fr["name"]]
-            out.append((fr["name"], fr.get("rows"), fr.get("flip")))
+            out.append((fr["name"], fr.get("rows"), fr.get("flip"), fr.get("bob")))
         return out
 
     frames, anims = [], []
@@ -194,14 +206,23 @@ def load_sprites(src, legend):
         origin = d.get("origin") or (base or {}).get("origin")
         raws = raw_frames(d)
         names = [r[0] for r in raws]
-        grid = {n: rows for n, rows, _ in raws if rows is not None}
+        grid = {n: rows for n, rows, _, _ in raws if rows is not None}
         for st in d.get("stamps", []):
             tg = stamp_targets(st, [n for n in names if n in grid])
             if not tg:
                 errors.append("%s: stamp 대상 프레임 없음 (%s)" % (d["_file"], st.get("dir") or st.get("frames")))
             for n in tg:
                 grid[n] = apply_stamp(grid[n], st)
-        for n, rows, fl in raws:
+        for st in d.get("stamps", []):
+            for i, line in enumerate(st["rows"]):
+                if st.get("x", 0) + len(line) > w or st.get("y", 0) + i >= h:
+                    errors.append("%s: stamp 가 프레임 밖으로 나감 (x=%s y=%s %d행)"
+                                  % (d["_file"], st.get("x", 0), st.get("y", 0), i))
+                    break
+        for n, rows, fl, bob in raws:
+            if bob and n in grid:
+                grid[n] = apply_bob(grid[n], bob)
+        for n, rows, fl, bob in raws:
             if rows is None:
                 if fl not in grid:
                     errors.append("%s/%s: flip 원본 '%s' 없음" % (name, n, fl))
@@ -323,6 +344,9 @@ def check_frames(frames, anims, legend, colors):
                 errs.append("%s: 슬롯 역할 '%s' 미지정(swap 필요)" % (f["key"], r))
             elif r not in colors:
                 errs.append("%s: 팔레트에 없는 역할 '%s'" % (f["key"], r))
+        lan = f["swap"].get("$lanyard")
+        if f["group"] == "boss" and lan is not None and lan != POINT_ROLE:
+            errs.append("%s: 상사(boss)의 사원증 줄은 point(빨강)여야 함 (D-037, 현재 %s)" % (f["key"], lan))
         if pts and f["group"] not in POINT_GROUPS:
             errs.append("%s: point 색은 상사·경고 UI 스프라이트에서만 사용 (group=%s, %dpx, %s)"
                         % (f["key"], f["group"], pts, f["file"]))
@@ -369,7 +393,7 @@ def build_sheet(frames, legend, colors, out_dir, png_dir=None):
     sheet = Canvas(sw, sh)
     atlas = {"frames": {}, "meta": {"image": "sheet.png", "size": {"w": sw, "h": sh},
                                     "format": "RGBA8888", "scale": "1",
-                                    "app": "molrae-toegeun art/tools/pixelgen.py v2"}}
+                                    "app": "molrae-toegeun art/tools/pixelgen.py v2.1"}}
     for f, x, y in placed:
         img = render(f, legend, colors)
         sheet.blit(img, x, y)
@@ -571,6 +595,7 @@ def main():
     ap.add_argument("--out", help="게임 출력 폴더. sheet.png·sheet.json·anims.json 만 쓴다")
     ap.add_argument("--texture-key", default="sprites", help="anims.json 이 참조할 Phaser 텍스처 키")
     ap.add_argument("--check", action="store_true", help="검사만")
+    ap.add_argument("--preview-tag", help="미리보기 파일 접두어(기본: 빌드 폴더 이름)")
     args = ap.parse_args()
 
     legend = load_json(os.path.join(args.src, "legend.json"))["keys"]
@@ -608,7 +633,7 @@ def main():
     out = args.build
     sheet = build_sheet(frames, legend, colors, out, png_dir=os.path.join(out, "png"))
     build_anims(anims, args.texture_key, out)
-    tag = os.path.basename(os.path.normpath(out))
+    tag = args.preview_tag or os.path.basename(os.path.normpath(out))
     sheet.scaled(PREVIEW_SCALE).save(os.path.join(args.preview_dir, "%s-sheet.png" % tag))
     print("sheet %dx%d -> %s" % (sheet.w, sheet.h, out))
     if any(f["group"] in ("character", "boss", "npc") and f["frame"].startswith("idle_") for f in frames):

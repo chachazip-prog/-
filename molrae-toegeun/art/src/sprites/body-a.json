@@ -4,7 +4,7 @@
  "group": "template",
  "size": [16, 20],
  "origin": [0.5, 1],
- "note": "베이스 바디 A '콩'(둥근 윗머리, 좁은 어깨 8px). 탑다운 3/4 시점, 16x20, 발밑 = 맨 아래 행. N = 사원증 줄 슬롯($lanyard, 캐릭터가 swap 으로 색 지정). 왼쪽은 오른쪽 프레임 좌우 반전",
+ "note": "걷기 정면·뒷모습 프레임은 bob [1,16]: 스탬프 후 머리+몸통을 1px 내리고 다리 첫 행을 줄여 들썩임을 만든다(발밑 고정). 베이스 바디 A '콩'(둥근 윗머리, 좁은 어깨 8px). 탑다운 3/4 시점, 16x20, 발밑 = 맨 아래 행. N = 사원증 줄 슬롯($lanyard, 캐릭터가 swap 으로 색 지정). 왼쪽은 오른쪽 프레임 좌우 반전",
  "anims": [
   {"key": "idle_down", "frames": ["idle_down"], "frameRate": 1, "repeat": -1},
   {"key": "idle_up", "frames": ["idle_up"], "frameRate": 1, "repeat": -1},
@@ -38,7 +38,7 @@
    "....ODDOODDO....",
    "....OOOOOOOO...."
   ]},
-  {"name": "walk_down_0", "rows": [
+  {"name": "walk_down_0", "bob": [1, 16], "rows": [
    "................",
    ".....OOOOOO.....",
    "...OOHHHHHHOO...",
@@ -60,7 +60,7 @@
    "....ODDOOOOO....",
    "....OOOO........"
   ]},
-  {"name": "walk_down_1", "rows": [
+  {"name": "walk_down_1", "bob": [1, 16], "rows": [
    "................",
    ".....OOOOOO.....",
    "...OOHHHHHHOO...",
@@ -104,7 +104,7 @@
    "....ODDOODDO....",
    "....OOOOOOOO...."
   ]},
-  {"name": "walk_up_0", "rows": [
+  {"name": "walk_up_0", "bob": [1, 16], "rows": [
    "................",
    ".....OOOOOO.....",
    "...OOHHHHHHOO...",
@@ -126,7 +126,7 @@
    "....ODDOOOOO....",
    "....OOOO........"
   ]},
-  {"name": "walk_up_1", "rows": [
+  {"name": "walk_up_1", "bob": [1, 16], "rows": [
    "................",
    ".....OOOOOO.....",
    "...OOHHHHHHOO...",

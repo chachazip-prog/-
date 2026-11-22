@@ -449,6 +449,25 @@
    "frames": [
     {
      "duration": 0,
+     "frame": "player/caught",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/caught",
+   "repeat": 0,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
      "frame": "teamlead/idle_down",
      "key": "sprites"
     }

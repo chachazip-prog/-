@@ -35,12 +35,10 @@ export class Observer {
   /** npc 인덱스별 현재 노출 에피소드의 시작 원인 */
   readonly episodeCause: (OnsetCause | null)[];
   private snaps: NpcSnap[];
-  private px: number; private py: number;
 
   constructor(readonly sim: FloorSim) {
     this.snaps = sim.npcs.map((n) => ({ x: n.x, y: n.y, facing: n.facing, mode: n.mode, walkFrom: 'init', walkSteps: 0, tellStart: n.mode === 'tell' ? 0 : -1 }));
     this.episodeCause = sim.npcs.map(() => null);
-    this.px = sim.player.x; this.py = sim.player.y;
   }
 
   /** sim.step() 한 번 + 관찰 */
@@ -100,7 +98,6 @@ export class Observer {
 
       s.x = n.x; s.y = n.y; s.facing = n.facing; s.mode = n.mode;
     });
-    this.px = p.x; this.py = p.y;
   }
 
   /** caught 순간 원인: 지금 보고 있는 NPC 중 배율이 가장 큰 NPC의 에피소드 원인 */
