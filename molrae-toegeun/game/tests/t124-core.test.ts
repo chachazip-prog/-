@@ -92,6 +92,8 @@ section('1. 결정성');
     for (let i = 0; i < s.steps; i++) s2.step();
     const stateOk = s2.fingerprint() === s.fingerprint();
     check(`advance dt=${name}: 총 60초 → 스텝 ${N}개`, stepsOk, `실제 ${s.steps}스텝 (${calls}회 호출)`);
+    const caught = new FloorSim(PROTO_FLOOR, 'day-1'); void caught;
+    if (!stepsOk) { s.advance(1e-9); info(`  dt=${name}: 부동소수 잔여로 1스텝 지연, +1e-9초 advance 후 ${s.steps}스텝(누락 아님, 지연)`); }
     check(`advance dt=${name}: 같은 스텝 수에서 상태 동일`, stateOk && (!stepsOk || s.fingerprint() === refFp));
   }
   // 큰 dt 한 번: maxAdvanceSec 클램프 확인(의도된 동작인지 기록)
@@ -379,6 +381,7 @@ section('6. 전조');
   let looks = 0, short = 0;
   const causeCount: Record<string, number> = {};
   let onsets = 0, turnTotal = 0, turnSee = 0, simSec = 0;
+  const kindSee: Record<string, number> = {}, kindAll: Record<string, number> = {};
   for (let s = 0; s < 300; s++) {
     const sim = new FloorSim(PROTO_FLOOR, `tell-${s}`);
     const ob = new Observer(sim);
@@ -391,12 +394,16 @@ section('6. 전조');
     simSec += sim.time;
     for (const l of ob.looks) { looks++; if (l.tellSec < l.required - 1e-9 || l.tellSec < 0.4 - 1e-9) short++; }
     for (const o of ob.onsets) { onsets++; causeCount[o.cause] = (causeCount[o.cause] ?? 0) + 1; }
-    for (const t of ob.turns) { turnTotal++; if (t.seesPlayer) turnSee++; }
+    for (const t of ob.turns) {
+      turnTotal++; kindAll[t.kind] = (kindAll[t.kind] ?? 0) + 1;
+      if (t.seesPlayer) { turnSee++; kindSee[t.kind] = (kindSee[t.kind] ?? 0) + 1; }
+    }
   }
   check('모든 look 직전 tell ≥ tellSec(≥0.4초)', short === 0, `look ${looks}회 중 부족 ${short}`);
   const unfair = UNFAIR_CAUSES.reduce((a, c) => a + (causeCount[c] ?? 0), 0);
   info(`무작위 탭 300판(${(simSec / 60).toFixed(0)}분): 시선 시작 ${onsets}회, 원인 ${JSON.stringify(causeCount)}`);
   info(`전조 없는 NPC 방향 전환 ${turnTotal}회(분당 ${(turnTotal / (simSec / 60)).toFixed(1)}), 그 순간 플레이어가 새 시선에 보임 ${turnSee}회`);
+  info(`전환 종류별 전체 ${JSON.stringify(kindAll)} / 그중 플레이어 보임 ${JSON.stringify(kindSee)}`);
   check('전조 없이 시작된 시선(모퉁이·재출발·말걸기) 0건 (D-038, GDD §11)', unfair === 0,
     `${unfair}/${onsets} (${((100 * unfair) / Math.max(1, onsets)).toFixed(1)}%)`);
 }

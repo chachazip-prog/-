@@ -68,7 +68,7 @@ export class Observer {
         if (n.mode === 'look' && s.mode === 'tell') turnKind = null; // 정상(전조 후)
         else if (n.mode === 'talk' && s.mode !== 'talk') turnKind = 'talkStart';
         else if (s.mode === 'talk' && n.mode !== 'talk') turnKind = 'talkEnd';
-        else if (n.mode === 'walk' && s.walkSteps <= 1 && s.walkFrom !== 'walk') turnKind = 'resume';
+        else if (n.mode === 'walk' && s.walkSteps <= 2 && s.walkFrom !== 'walk') turnKind = 'resume';
         else if (n.mode === 'walk') turnKind = 'corner';
         else turnKind = 'corner';
         if (turnKind) {

@@ -1,150 +1,193 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "_comment": "NPC 4종(탑다운 v2). sim 블록은 개발 NpcDef 필드명. 경로는 patrols.json, 방해 행동 규칙은 interrupts.json. D-037 사원증 줄: 경비 검정, 정의로운 동료 파랑, 공범 초록, 인사팀 보라(빨강·주황 금지). 근거: design/gdd.md §8.",
   "npcs": [
     {
       "id": "security_guard",
       "nameKey": "npc.security_guard.name",
       "codexKey": "codex.npc.security_guard",
       "role": "gate",
+      "renderRole": "guard",
       "mvp": true,
       "unlockRank": "intern",
       "firstDay": 1,
-      "props": ["cap", "radio", "lanyard_black"],
-      "spawn": { "type": "event_phase", "eventId": "leave", "phaseId": "gate" },
-      "tell": null,
-      "gaze": null,
-      "params": {
-        "beepAttractsTeamLeadLook": false,
-        "earlyQuestion": true
+      "props": ["lanyard_black", "cap", "radio"],
+      "defaultPatrol": "p_guard_gatehall",
+      "sim": {
+        "cone": { "range": 4, "halfAngleDeg": 35 },
+        "speedTilesPerSec": 1.2,
+        "gazeMultiplier": 0.6,
+        "tellSec": 0.5,
+        "tellSecRange": [0.5, 0.5],
+        "lookSec": 1.2,
+        "lookSecRange": [1.2, 1.2],
+        "lookChance": 0.5,
+        "glanceBackChancePerTile": 0.04,
+        "coneActiveIn": ["walk", "wait", "tell", "look"],
+        "talk": {
+          "radius": 1.1,
+          "noticeRadius": 2.0,
+          "tellSec": 0.5,
+          "durationSec": 1.5,
+          "cooldownSec": 6,
+          "cancelIfDisguisedAtTellEnd": false,
+          "nodShortenSec": 0.0,
+          "minDurationSec": 1.5,
+          "onlyWhen": "leave_phase_before_1800",
+          "enabledBy": "INT-07"
+        }
       },
-      "counters": [],
+      "gate": {
+        "useSpot": "gate_use",
+        "markerCycleSec": 1.2,
+        "windowRatio": 0.22,
+        "maxAttempts": 3,
+        "beepSuspicion": 0.1,
+        "beepAttractsGuardLook": true,
+        "firstTryWindowMultiplierOnDay1": 2.0
+      },
       "frozenByCeo": true,
       "reactionKeys": ["react.security_guard.gate_fail", "react.security_guard.early"],
-      "rankScaling": {},
-      "_toneNote": "경비팀은 유능하고 친절한 프로로만 묘사. 놀림·무시 연출 금지."
+      "rankScaling": {
+        "manager": { "start": { "gate.windowRatio": 0.18 }, "end": { "gate.windowRatio": 0.16 } },
+        "deputy_general_manager": { "start": { "gate.windowRatio": 0.16 }, "end": { "gate.windowRatio": 0.15 } },
+        "general_manager": { "start": { "gate.windowRatio": 0.15 }, "end": { "gate.windowRatio": 0.14 } },
+        "executive": { "start": { "gate.windowRatio": 0.14 }, "end": { "gate.windowRatio": 0.14 } }
+      },
+      "_toneNote": "유능하고 친절한 프로. 놀림·무시 연출 금지. 시선 배율 0.6: '퇴근하시나 보다' 정도로 덜 무서움.",
+      "_designNote": "PM 공지 4) 출구 앞을 순찰하며 게이트 사용 칸을 콘으로 덮음 → 게이트 태그 직전에 멈춤·위장 타이밍을 요구. 18시 전에 다가가면 '벌써 퇴근하세요?'(INT-07)."
     },
     {
       "id": "snitch",
       "nameKey": "npc.snitch.name",
       "codexKey": "codex.npc.snitch",
       "role": "obstruct",
+      "renderRole": "snitch",
       "mvp": true,
       "unlockRank": "staff",
       "firstDay": 8,
-      "props": ["clipboard_small", "glasses_round_or_none", "lanyard_blue"],
-      "spawn": {
-        "type": "while_holding",
-        "segments": ["work"],
-        "probPerHoldSec": 0.04,
-        "maxPerDay": 1,
-        "minDayTimeSec": 10,
-        "requiresBoss": "team_lead",
-        "cooldownSec": 15
-      },
-      "tell": { "durationSec": [0.6, 0.6], "visual": "exclaim_stand_up", "sfx": "sfx_gasp" },
-      "gaze": null,
-      "params": {
-        "walkToBossSec": 4.0,
-        "waitIfBossSuppressedMaxSec": 8.0,
-        "reportSuspicion": 0.15
-      },
-      "counters": [
-        { "id": "stop_slacking", "input": "release_continuous", "durationSec": 1.5, "result": "snitch_doubts_and_returns" },
-        { "id": "share_snack", "input": "tap", "cost": { "snackStock": 1 }, "result": "snitch_cancels" }
-      ],
-      "frozenByCeo": true,
-      "reactionKeys": ["react.snitch.reported", "react.snitch.snack"],
-      "rankScaling": {
-        "staff": {
-          "start": { "spawn.probPerHoldSec": 0.04, "spawn.maxPerDay": 1, "params.walkToBossSec": 4.0 },
-          "end": { "spawn.probPerHoldSec": 0.045, "spawn.maxPerDay": 1, "params.walkToBossSec": 3.8 }
-        },
-        "assistant_manager": {
-          "start": { "spawn.probPerHoldSec": 0.05, "spawn.maxPerDay": 1, "params.walkToBossSec": 3.6 },
-          "end": { "spawn.probPerHoldSec": 0.05, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.5 }
-        },
-        "manager": {
-          "start": { "spawn.probPerHoldSec": 0.06, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.4 },
-          "end": { "spawn.probPerHoldSec": 0.06, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.2 }
-        },
-        "deputy_general_manager": {
-          "start": { "spawn.probPerHoldSec": 0.06, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.2 },
-          "end": { "spawn.probPerHoldSec": 0.065, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.0 }
-        },
-        "general_manager": {
-          "start": { "spawn.probPerHoldSec": 0.065, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.0 },
-          "end": { "spawn.probPerHoldSec": 0.07, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.0 }
-        },
-        "executive": {
-          "start": { "spawn.probPerHoldSec": 0.07, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.0 },
-          "end": { "spawn.probPerHoldSec": 0.07, "spawn.maxPerDay": 2, "params.walkToBossSec": 3.0 }
+      "ambientFromDay": 1,
+      "props": ["lanyard_blue", "clipboard_small", "glasses_round"],
+      "defaultPatrol": "p_snitch_seat",
+      "sim": {
+        "cone": { "range": 3, "halfAngleDeg": 45 },
+        "speedTilesPerSec": 1.5,
+        "gazeMultiplier": 0.0,
+        "tellSec": 0.5,
+        "tellSecRange": [0.5, 0.5],
+        "lookSec": 1.5,
+        "lookSecRange": [1.5, 1.5],
+        "lookChance": 1.0,
+        "glanceBackChancePerTile": 0.0,
+        "idleSecRange": [5.0, 8.0],
+        "coneActiveIn": ["look"],
+        "spot": {
+          "dwellSec": 0.4,
+          "triggerStates": ["activity", "leaving_with_bag"],
+          "startsInterrupt": "INT-03"
         }
       },
-      "_toneNote": "악역이 아니라 '눈치 없는 정의파'. 간식을 받으면 금방 풀리는 허당. 따돌림·괴롭힘 연출 금지."
+      "frozenByCeo": true,
+      "reactionKeys": ["react.snitch.reported", "react.snitch.snack", "react.snitch.doubt"],
+      "rankScaling": {
+        "staff": { "start": { "sim.idleSecRange": [6.0, 9.0] }, "end": { "sim.idleSecRange": [5.5, 8.5] } },
+        "assistant_manager": { "start": { "sim.idleSecRange": [5.0, 8.0] }, "end": { "sim.idleSecRange": [5.0, 8.0] } },
+        "manager": { "start": { "sim.idleSecRange": [4.5, 7.5], "sim.speedTilesPerSec": 1.6 }, "end": { "sim.idleSecRange": [4.5, 7.0], "sim.speedTilesPerSec": 1.7 } },
+        "deputy_general_manager": { "start": { "sim.idleSecRange": [4.5, 7.0], "sim.speedTilesPerSec": 1.7 }, "end": { "sim.idleSecRange": [4.0, 7.0], "sim.speedTilesPerSec": 1.7 } },
+        "general_manager": { "start": { "sim.idleSecRange": [4.0, 7.0], "sim.speedTilesPerSec": 1.7 }, "end": { "sim.idleSecRange": [4.0, 6.5], "sim.speedTilesPerSec": 1.7 } },
+        "executive": { "start": { "sim.idleSecRange": [4.0, 6.5], "sim.speedTilesPerSec": 1.7 }, "end": { "sim.idleSecRange": [4.0, 6.5], "sim.speedTilesPerSec": 1.7 } }
+      },
+      "_toneNote": "악역이 아니라 '눈치 없는 정의파'. 간식을 받으면 금방 풀리는 허당. 따돌림·괴롭힘 연출 금지. 화면 표시명은 '정의로운 동료', snitch는 내부 ID만.",
+      "_designNote": "1~7일차는 자리에 앉아만 있는 배경 동료(ambient, 상호작용 없음) → 처음부터 사무실이 붐벼 보이게. 콘은 의심을 올리지 않고 '보고 달리기' 트리거만."
     },
     {
       "id": "accomplice",
       "nameKey": "npc.accomplice.name",
       "codexKey": "codex.npc.accomplice",
       "role": "assist",
+      "renderRole": "accomplice",
       "mvp": true,
       "unlockRank": "staff",
       "firstDay": 7,
-      "props": ["tumbler", "headphones_neck", "lanyard_orange"],
-      "spawn": {
-        "type": "event_offer",
+      "ambientFromDay": 1,
+      "props": ["lanyard_green", "tumbler", "headphones_neck"],
+      "defaultPatrol": "p_accomplice_seat",
+      "sim": {
+        "cone": { "range": 0, "halfAngleDeg": 0 },
+        "speedTilesPerSec": 3.0,
+        "gazeMultiplier": 0.0,
+        "tellSec": 0.5,
+        "lookSec": 0.0,
+        "lookChance": 0.0,
+        "glanceBackChancePerTile": 0.0,
+        "coneActiveIn": []
+      },
+      "offer": {
         "eventIds": ["coffee", "snack"],
         "offerProb": 0.6,
         "offerSec": 2.5,
-        "maxPerDay": 1
+        "maxPerDay": 1,
+        "acceptInput": "tap_bubble",
+        "startsInterrupt": "INT-12"
       },
-      "tell": null,
-      "gaze": null,
-      "params": {
-        "acceptInput": "tap",
+      "effects": {
         "rewardMultiplier": 2.0,
         "suspicionGainMultiplier": 1.25,
-        "lookoutCoughLeadSec": 0.3
+        "hitboxIncludesAccomplice": true,
+        "lookoutCoughLeadSec": 0.3,
+        "lookoutRadiusTiles": 6
       },
-      "counters": [],
       "frozenByCeo": true,
       "reactionKeys": ["react.accomplice.caught_together"],
       "rankScaling": {},
-      "_designNote": "진행 요구량 증가는 이벤트별 accompliceEffect에 정의(커피 2잔, 간식 ×1.5)."
+      "_designNote": "합류하면 1타일 뒤를 따라와 '맞는 면적'이 2배(공범이 콘에 걸려도 내가 걸린 것으로 계산, ×1.25). 대신 반경 6타일 안 상사 전조 0.3초 전에 헛기침으로 미리 알려 줌. 확률은 제안 여부(연출)일 뿐 보상은 결정적."
     },
     {
       "id": "hr_inspector",
       "nameKey": "npc.hr_inspector.name",
       "codexKey": "codex.npc.hr_inspector",
       "role": "inspect",
+      "renderRole": "hr",
       "mvp": true,
       "unlockRank": "staff",
       "firstDay": 10,
-      "props": ["clipboard_large", "lanyard_purple", "badge_reader"],
-      "spawn": {
-        "type": "day_chance",
-        "dayChance": 0.4,
-        "maxPerDay": 1,
-        "allowedSegments": ["work", "event"],
-        "allowedEventFlag": "hrInspectionAllowed",
-        "notDuringCeo": true,
-        "notInFinale": true,
-        "minDayTimeSec": 12
+      "props": ["lanyard_purple", "clipboard_large", "badge_reader"],
+      "defaultPatrol": null,
+      "sim": {
+        "cone": { "range": 3, "halfAngleDeg": 35 },
+        "speedTilesPerSec": 2.6,
+        "gazeMultiplier": 1.1,
+        "tellSec": 0.6,
+        "tellSecRange": [0.6, 0.6],
+        "lookSec": 2.5,
+        "lookSecRange": [2.5, 2.5],
+        "lookChance": 1.0,
+        "glanceBackChancePerTile": 0.03,
+        "coneActiveIn": ["walk", "wait", "tell", "look"],
+        "talk": {
+          "radius": 1.1,
+          "noticeRadius": 2.0,
+          "tellSec": 0.6,
+          "durationSec": 1.5,
+          "cooldownSec": 10,
+          "cancelIfDisguisedAtTellEnd": true,
+          "nodShortenSec": 0.0,
+          "minDurationSec": 1.5,
+          "onlyWhilePlayerAway": true,
+          "enabledBy": "INT-06"
+        }
       },
-      "tell": { "durationSec": [1.0, 1.0], "visual": "door_open_clipboard", "sfx": "sfx_door_clipboard" },
-      "gaze": { "type": "global", "suspicionPerSec": 0.5 },
-      "params": {
-        "arriveSec": 2.0,
+      "inspection": {
+        "patrolId": "p_hr_attendance",
+        "countdownSec": "eta_to_stop_inspect",
+        "countdownMinSec": 6.0,
         "inspectSec": 5.0,
-        "mustBeAtDesk": true,
-        "urgentReturnCountdownSec": 4.0,
-        "absentSuspicion": 0.25
+        "mustBeSeated": true,
+        "absentSuspicion": 0.25,
+        "activitySeenUsesCone": true
       },
-      "counters": [
-        { "id": "return_to_desk", "input": "hold", "durationSec": null, "result": "present_at_desk" }
-      ],
       "frozenByCeo": true,
-      "reactionKeys": ["react.hr_inspector.absent", "react.hr_inspector.caught"],
+      "reactionKeys": ["react.hr_inspector.absent", "react.hr_inspector.caught", "react.hr_inspector.badge"],
       "rankScaling": {
         "staff": { "start": { "spawn.dayChance": 0.4 }, "end": { "spawn.dayChance": 0.45 } },
         "assistant_manager": { "start": { "spawn.dayChance": 0.6 }, "end": { "spawn.dayChance": 0.6 } },
@@ -153,7 +196,9 @@
         "general_manager": { "start": { "spawn.dayChance": 0.7 }, "end": { "spawn.dayChance": 0.7 } },
         "executive": { "start": { "spawn.dayChance": 0.7 }, "end": { "spawn.dayChance": 0.7 } }
       },
-      "_toneNote": "인사팀은 규칙을 지키는 깔끔한 프로. 위협·징계 묘사 금지('기록만 남길게요' 수준)."
+      "spawn": { "dayChance": 0.4, "maxPerDay": 1, "notDuringCeo": true, "minDayTimeSec": 12 },
+      "_toneNote": "규칙을 지키는 깔끔한 프로. 위협·징계 묘사 금지('기록만 남길게요' 수준).",
+      "_designNote": "엘리베이터에서 내려 팀까지 걸어오는 실제 시간(36타일 ÷ 2.6 ≈ 13.8초)이 곧 '자리 복귀 카운트다운' → 숫자와 화면 속 이동이 일치. 화장실(17타일, 5.7초)에서도 넉넉히 돌아올 수 있음."
     }
   ]
 }

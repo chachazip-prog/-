@@ -1,408 +1,983 @@
 {
-  "schemaVersion": 1,
-  "_comment": "1~15일은 수작업(authored). 16일 이후는 generator 규칙으로 생성. 시간 단위 초. weekday: 0=월 ~ 4=금.",
+  "schemaVersion": 2,
+  "_comment": "하루 구성(탑다운 v2). 1~15일 수작업, 16일 이후 generator. 시간=초(근무 구간 시작 기준). weekday 0=월~4=금. atSec 0 = 하루 종일 활성(근접형). expectedDurationSec = 2 + dayPhaseSec + 퇴근(16.3 + 방해 수×2.0 + 우회 1.0) + 튜토리얼 여유.",
   "authoredDays": [
     {
       "day": 1,
       "rankId": "intern",
       "weekday": 0,
       "seed": "day-1",
+      "mapId": "office_floor_1",
       "titleKey": "day.1.title",
-      "tutorialIds": ["tut_hold", "tut_tell", "tut_work", "tut_coffee", "tut_leave"],
-      "workQuotaOverride": 0.35,
-      "bosses": { "senior": 1 },
-      "slots": [
-        { "type": "work", "sec": 12.0 },
-        { "type": "event", "eventId": "coffee" },
-        { "type": "work", "sec": 10.0 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_tap_move",
+        "tut_stop_disguise",
+        "tut_tell",
+        "tut_work",
+        "tut_coffee",
+        "tut_leave",
+        "tut_gate"
+      ],
+      "dayPhaseSec": 34,
+      "missions": [
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 8
+        }
+      ],
+      "missionsRequired": 1,
+      "castPatrols": [
+        "p_senior_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [],
+      "leaveInterrupts": [
+        {
+          "id": "INT-07"
+        }
       ],
       "scripted": [
-        { "type": "boss_look", "bossId": "senior", "slot": 0, "atSec": 5.0, "tellSec": 1.2, "suspicionGainMultiplier": 0.5 }
+        {
+          "type": "boss_look",
+          "actor": "senior",
+          "atSec": 4.0,
+          "tellSec": 1.2,
+          "gazeMultiplierScale": 0.5,
+          "slowMo": 0.5,
+          "hintKey": "tutorial.tut_tell"
+        },
+        {
+          "type": "boss_look_when",
+          "actor": "senior",
+          "condition": "player_moving_in_cone_path",
+          "tellSec": 1.2,
+          "gazeMultiplierScale": 0.5,
+          "slowMo": 0.5,
+          "hintKey": "tutorial.tut_stop_disguise",
+          "maxTimes": 1
+        },
+        {
+          "type": "gate_window_scale",
+          "scale": 2.0,
+          "attempts": 1
+        }
       ],
-      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
       "ceo": "none",
-      "expectedDurationSec": 54
+      "expectedDurationSec": 59.3,
+      "workQuotaOverride": 0.35,
+      "ambientOnly": [
+        "snitch",
+        "accomplice"
+      ],
+      "_designNote": "1일차: 탭 이동 → 첫 전조에서 탭 정지·위장(슬로모) → 자리 업무 → 커피 → 퇴근·게이트. 미션 1개, 할당량 0.35(자리 8.75초)."
     },
     {
       "day": 2,
       "rankId": "intern",
       "weekday": 1,
       "seed": "day-2",
+      "mapId": "office_floor_1",
       "titleKey": "day.2.title",
-      "tutorialIds": ["tut_restroom"],
-      "bosses": { "senior": 1 },
-      "slots": [
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "coffee" },
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "restroom" },
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_restroom",
+        "tut_route",
+        "tut_offscreen"
       ],
-      "scripted": [],
-      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
+      "dayPhaseSec": 40,
+      "missions": [
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "restroom",
+          "unlockAtSec": 16
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_senior_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [],
+      "leaveInterrupts": [
+        {
+          "id": "INT-07"
+        }
+      ],
+      "scripted": [
+        {
+          "type": "route_hint",
+          "missionId": "restroom",
+          "showRoutes": [
+            "route_shortcut",
+            "route_left"
+          ],
+          "hintKey": "tutorial.tut_route"
+        },
+        {
+          "type": "offscreen_demo",
+          "actor": "senior",
+          "when": "player_in_zone",
+          "zone": "restroom",
+          "hintKey": "tutorial.tut_offscreen"
+        }
+      ],
       "ceo": "none",
-      "expectedDurationSec": 64
+      "expectedDurationSec": 63.3,
+      "ambientOnly": [
+        "snitch",
+        "accomplice"
+      ],
+      "_designNote": "경로 선택 첫 학습: 화장실 최단 경로는 선배 시선 콘을 지나고 왼쪽 우회는 +6타일. 화장실에 있을 때 화면 밖 선배 화살표 시연."
     },
     {
       "day": 3,
       "rankId": "intern",
       "weekday": 2,
       "seed": "day-3",
+      "mapId": "office_floor_1",
       "titleKey": "day.3.title",
-      "tutorialIds": ["tut_snack"],
-      "bosses": { "senior": 1 },
-      "slots": [
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "snack" },
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "coffee" },
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_snack",
+        "tut_cover"
       ],
-      "scripted": [],
-      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
+      "dayPhaseSec": 40,
+      "missions": [
+        {
+          "eventId": "snack",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 16
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_senior_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [],
+      "leaveInterrupts": [
+        {
+          "id": "INT-07"
+        }
+      ],
+      "scripted": [
+        {
+          "type": "cover_hint",
+          "when": "tell_starts_near_cover",
+          "radiusTiles": 3,
+          "hintKey": "tutorial.tut_cover",
+          "maxTimes": 1
+        }
+      ],
       "ceo": "none",
-      "expectedDurationSec": 61
+      "expectedDurationSec": 63.3,
+      "ambientOnly": [
+        "snitch",
+        "accomplice"
+      ],
+      "_designNote": "간식 리듬 + 엄폐물(칸막이 뒤 반짝이는 칸) 학습."
     },
     {
       "day": 4,
       "rankId": "intern",
       "weekday": 3,
       "seed": "day-4",
+      "mapId": "office_floor_1",
       "titleKey": "day.4.title",
-      "tutorialIds": ["tut_nap"],
-      "bosses": { "senior": 1 },
-      "slots": [
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "nap" },
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "restroom" },
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_nap",
+        "tut_smalltalk"
       ],
-      "scripted": [],
-      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
+      "dayPhaseSec": 40,
+      "missions": [
+        {
+          "eventId": "nap",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "restroom",
+          "unlockAtSec": 18
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_senior_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [
+        {
+          "id": "INT-02",
+          "atSec": 0.0,
+          "_comment": "하루 종일 활성(근접 시 발동)"
+        }
+      ],
+      "leaveInterrupts": [
+        {
+          "id": "INT-02"
+        }
+      ],
+      "scripted": [
+        {
+          "type": "talk_hint",
+          "interruptId": "INT-02",
+          "hintKey": "tutorial.tut_smalltalk",
+          "maxTimes": 1
+        }
+      ],
       "ceo": "none",
-      "expectedDurationSec": 65
+      "expectedDurationSec": 63.3,
+      "ambientOnly": [
+        "snitch",
+        "accomplice"
+      ],
+      "_designNote": "회의실 낮잠 + 말걸기 회피(‘!’에 탭해서 멈추면 말 안 검) 연습. 퇴근 때 선배가 한 번 더 말 검."
     },
     {
       "day": 5,
       "rankId": "intern",
       "weekday": 4,
       "seed": "day-5",
+      "mapId": "office_floor_1",
       "titleKey": "day.5.title",
-      "tutorialIds": ["tut_shopping"],
-      "bosses": { "senior": 1 },
-      "slots": [
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "shopping" },
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "snack" },
-        { "type": "work", "sec": 9.5 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_shopping"
+      ],
+      "dayPhaseSec": 40,
+      "missions": [
+        {
+          "eventId": "shopping",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "snack",
+          "unlockAtSec": 16
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_senior_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [],
+      "leaveInterrupts": [
+        {
+          "id": "INT-07"
+        }
       ],
       "scripted": [],
-      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
       "ceo": "none",
-      "expectedDurationSec": 61
+      "expectedDurationSec": 62.3,
+      "ambientOnly": [
+        "snitch",
+        "accomplice"
+      ],
+      "_designNote": "인턴 수료일. 자리 미션 두 개로 숨 고르기."
     },
     {
       "day": 6,
       "rankId": "staff",
       "weekday": 0,
       "seed": "day-6",
+      "mapId": "office_floor_1",
       "titleKey": "day.6.title",
-      "tutorialIds": ["tut_team_lead", "tut_phone"],
-      "bosses": { "team_lead": 1 },
-      "slots": [
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "coffee" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "nap" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "shopping" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_team_lead",
+        "tut_phone",
+        "tut_callout"
+      ],
+      "dayPhaseSec": 50,
+      "missions": [
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "nap",
+          "unlockAtSec": 14
+        },
+        {
+          "eventId": "shopping",
+          "unlockAtSec": 28
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_tl_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [
+        {
+          "id": "INT-01",
+          "atSec": 0.0
+        }
+      ],
+      "leaveInterrupts": [
+        {
+          "id": "INT-01"
+        }
       ],
       "scripted": [
-        { "type": "boss_look", "bossId": "team_lead", "slot": 0, "atSec": 2.5, "tellSec": 0.8, "suspicionGainMultiplier": 0.5 },
-        { "type": "boss_opportunity", "bossId": "team_lead", "opportunity": "phone_call", "slot": 2, "atSec": 1.0, "durationSec": 4.0 }
+        {
+          "type": "boss_look",
+          "actor": "team_lead",
+          "atSec": 2.5,
+          "tellSec": 0.8,
+          "gazeMultiplierScale": 0.5
+        },
+        {
+          "type": "boss_opportunity",
+          "actor": "team_lead",
+          "opportunity": "phone_call",
+          "atSec": 20.0,
+          "durationSec": 4.0
+        },
+        {
+          "type": "talk_hint",
+          "interruptId": "INT-01",
+          "hintKey": "tutorial.tut_callout",
+          "maxTimes": 1
+        }
       ],
-      "npc": { "accompliceOffer": false, "snitch": false, "hrInspector": false },
       "ceo": "none",
-      "expectedDurationSec": 69
+      "expectedDurationSec": 73.3,
+      "ambientOnly": [
+        "snitch",
+        "accomplice"
+      ],
+      "_designNote": "팀장 데뷔: 삐걱 전조, 헛기침 페이크, 통화 기회, 팀장 옆을 지나면 말걸기."
     },
     {
       "day": 7,
       "rankId": "staff",
       "weekday": 1,
       "seed": "day-7",
+      "mapId": "office_floor_1",
       "titleKey": "day.7.title",
-      "tutorialIds": ["tut_accomplice"],
-      "bosses": { "team_lead": 1 },
-      "slots": [
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "coffee" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "restroom" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "snack" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_accomplice"
+      ],
+      "dayPhaseSec": 50,
+      "missions": [
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "restroom",
+          "unlockAtSec": 15
+        },
+        {
+          "eventId": "snack",
+          "unlockAtSec": 30
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_tl_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [
+        {
+          "id": "INT-01",
+          "atSec": 0.0
+        }
+      ],
+      "leaveInterrupts": [
+        {
+          "id": "INT-07"
+        }
       ],
       "scripted": [
-        { "type": "accomplice_offer", "eventId": "coffee", "forced": true }
+        {
+          "type": "accomplice_offer",
+          "eventId": "coffee",
+          "forced": true
+        }
       ],
-      "npc": { "accompliceOffer": true, "snitch": false, "hrInspector": false },
       "ceo": "none",
-      "expectedDurationSec": 73
+      "expectedDurationSec": 72.3,
+      "ambientOnly": [
+        "snitch"
+      ]
     },
     {
       "day": 8,
       "rankId": "staff",
       "weekday": 2,
       "seed": "day-8",
+      "mapId": "office_floor_1",
       "titleKey": "day.8.title",
-      "tutorialIds": ["tut_snitch"],
-      "bosses": { "team_lead": 1 },
-      "slots": [
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "shopping" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "coffee" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "nap" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_snitch"
+      ],
+      "dayPhaseSec": 50,
+      "missions": [
+        {
+          "eventId": "shopping",
+          "unlockAtSec": 4
+        },
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 16
+        },
+        {
+          "eventId": "nap",
+          "unlockAtSec": 30
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_tl_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [
+        {
+          "id": "INT-01",
+          "atSec": 0.0
+        },
+        {
+          "id": "INT-03",
+          "atSec": 0.0
+        }
+      ],
+      "leaveInterrupts": [
+        {
+          "id": "INT-01"
+        }
       ],
       "scripted": [
-        { "type": "snitch_spawn", "slot": 2, "atSec": 2.0, "requiresHolding": true, "fallbackAtSec": 5.0 }
+        {
+          "type": "snitch_spot",
+          "when": "first_activity_in_cone",
+          "fallbackAtSec": 12.0,
+          "hintKey": "tutorial.tut_snitch"
+        }
       ],
-      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": false },
       "ceo": "none",
-      "expectedDurationSec": 69
+      "expectedDurationSec": 72.8,
+      "_designNote": "정의로운 동료 데뷔. 첫 쇼핑 중 반드시 발견 → 간식 재고 1개로 가로막기 또는 자리에서 열일하기."
     },
     {
       "day": 9,
       "rankId": "staff",
       "weekday": 3,
       "seed": "day-9",
+      "mapId": "office_floor_1",
       "titleKey": "day.9.title",
-      "tutorialIds": [],
-      "bosses": { "team_lead": 1 },
-      "slots": [
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "snack" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "restroom" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "coffee" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_meeting"
       ],
-      "scripted": [],
-      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": false },
+      "dayPhaseSec": 50,
+      "missions": [
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "shopping",
+          "unlockAtSec": 12
+        },
+        {
+          "eventId": "restroom",
+          "unlockAtSec": 30
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_tl_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [
+        {
+          "id": "INT-08",
+          "atSec": 10.0
+        },
+        {
+          "id": "INT-01",
+          "atSec": 0.0
+        }
+      ],
+      "leaveInterrupts": [
+        {
+          "id": "INT-07"
+        },
+        {
+          "id": "INT-01"
+        }
+      ],
+      "scripted": [
+        {
+          "type": "interrupt_hint",
+          "interruptId": "INT-08",
+          "hintKey": "tutorial.tut_meeting",
+          "maxTimes": 1
+        }
+      ],
       "ceo": "none",
-      "expectedDurationSec": 73
+      "expectedDurationSec": 74.3,
+      "_designNote": "팀장 회의 10초 = 자리 미션 기회. 회의 끝나고 걸어 돌아오는 팀장 콘 주의."
     },
     {
       "day": 10,
       "rankId": "staff",
       "weekday": 4,
       "seed": "day-10",
+      "mapId": "office_floor_1",
       "titleKey": "day.10.title",
-      "tutorialIds": ["tut_hr"],
-      "bosses": { "team_lead": 1 },
-      "slots": [
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "restroom" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "shopping" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "snack" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_hr"
       ],
-      "scripted": [
-        { "type": "hr_inspection", "slot": 1, "trigger": "restroom_inside_rest_start" }
+      "dayPhaseSec": 50,
+      "missions": [
+        {
+          "eventId": "restroom",
+          "unlockAtSec": 4
+        },
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 18
+        },
+        {
+          "eventId": "snack",
+          "unlockAtSec": 32
+        }
       ],
-      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_tl_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [
+        {
+          "id": "INT-05",
+          "atSec": -1,
+          "trigger": "restroom_inside_rest_start"
+        },
+        {
+          "id": "INT-01",
+          "atSec": 0.0
+        }
+      ],
+      "leaveInterrupts": [
+        {
+          "id": "INT-01"
+        }
+      ],
+      "scripted": [],
       "ceo": "none",
-      "expectedDurationSec": 73
+      "expectedDurationSec": 72.3,
+      "_designNote": "인사팀 데뷔: 화장실 칸에 들어가 쉬기 시작하는 순간 근태 점검 방송(카운트다운 약 13.8초)."
     },
     {
       "day": 11,
       "rankId": "staff",
       "weekday": 0,
       "seed": "day-11",
+      "mapId": "office_floor_1",
       "titleKey": "day.11.title",
-      "tutorialIds": [],
-      "bosses": { "team_lead": 1 },
-      "slots": [
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "nap" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "coffee" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "restroom" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_gossip"
       ],
-      "scripted": [],
-      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
+      "dayPhaseSec": 50,
+      "missions": [
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "restroom",
+          "unlockAtSec": 14
+        },
+        {
+          "eventId": "shopping",
+          "unlockAtSec": 30
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_tl_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [
+        {
+          "id": "INT-04",
+          "atSec": 16.0
+        },
+        {
+          "id": "INT-01",
+          "atSec": 0.0
+        }
+      ],
+      "leaveInterrupts": [
+        {
+          "id": "INT-04"
+        },
+        {
+          "id": "INT-07"
+        }
+      ],
+      "scripted": [
+        {
+          "type": "interrupt_hint",
+          "interruptId": "INT-04",
+          "hintKey": "tutorial.tut_gossip",
+          "maxTimes": 1
+        }
+      ],
       "ceo": "none",
-      "expectedDurationSec": 73
+      "expectedDurationSec": 74.3,
+      "_designNote": "길막 첫 등장: 중앙 병목 수다 → 회의실로 자동 우회. 퇴근 때는 미리 서 있음."
     },
     {
       "day": 12,
       "rankId": "staff",
       "weekday": 1,
       "seed": "day-12",
+      "mapId": "office_floor_1",
       "titleKey": "day.12.title",
-      "tutorialIds": [],
-      "bosses": { "team_lead": 1 },
-      "slots": [
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "snack" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "shopping" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "nap" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "leave" }
+      "tutorialIds": [
+        "tut_badge"
+      ],
+      "dayPhaseSec": 50,
+      "missions": [
+        {
+          "eventId": "nap",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "snack",
+          "unlockAtSec": 16
+        },
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 30
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_tl_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [
+        {
+          "id": "INT-06",
+          "atSec": 6.0
+        },
+        {
+          "id": "INT-01",
+          "atSec": 0.0
+        },
+        {
+          "id": "INT-03",
+          "atSec": 0.0
+        }
+      ],
+      "leaveInterrupts": [
+        {
+          "id": "INT-06"
+        },
+        {
+          "id": "INT-01"
+        }
       ],
       "scripted": [],
-      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
       "ceo": "none",
-      "expectedDurationSec": 70
+      "expectedDurationSec": 73.8,
+      "_designNote": "인사팀 복도 사원증 확인. 낮잠 가는 길과 겹치게 6초에 등장."
     },
     {
       "day": 13,
       "rankId": "staff",
       "weekday": 2,
       "seed": "day-13",
+      "mapId": "office_floor_1",
       "titleKey": "day.13.title",
       "tutorialIds": [],
-      "bosses": { "team_lead": 1 },
-      "slots": [
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "coffee" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "restroom" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "shopping" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "leave" }
+      "dayPhaseSec": 50,
+      "missions": [
+        {
+          "eventId": "restroom",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "shopping",
+          "unlockAtSec": 16
+        },
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 30
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_tl_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [
+        {
+          "id": "INT-01",
+          "atSec": 0.0
+        },
+        {
+          "id": "INT-03",
+          "atSec": 0.0
+        },
+        {
+          "id": "INT-05",
+          "atSec": 24.0
+        }
+      ],
+      "leaveInterrupts": [
+        {
+          "id": "INT-08"
+        },
+        {
+          "id": "INT-07"
+        }
       ],
       "scripted": [],
-      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
       "ceo": "none",
-      "expectedDurationSec": 72
+      "expectedDurationSec": 73.3,
+      "_designNote": "수요일. '18시 회의 끝' 퇴근 방해 첫 등장."
     },
     {
       "day": 14,
       "rankId": "staff",
       "weekday": 3,
       "seed": "day-14",
+      "mapId": "office_floor_1",
       "titleKey": "day.14.title",
       "tutorialIds": [],
-      "bosses": { "team_lead": 1 },
-      "slots": [
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "nap" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "snack" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "coffee" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "leave" }
+      "dayPhaseSec": 50,
+      "missions": [
+        {
+          "eventId": "snack",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 15
+        },
+        {
+          "eventId": "nap",
+          "unlockAtSec": 32
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_tl_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [
+        {
+          "id": "INT-01",
+          "atSec": 0.0
+        },
+        {
+          "id": "INT-08",
+          "atSec": 8.0
+        }
+      ],
+      "leaveInterrupts": [
+        {
+          "id": "INT-04"
+        },
+        {
+          "id": "INT-06"
+        }
       ],
       "scripted": [],
-      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
       "ceo": "none",
-      "expectedDurationSec": 70
+      "expectedDurationSec": 73.3,
+      "_designNote": "퇴근 방해 2개(길막 + 사원증 확인) 첫 조합."
     },
     {
       "day": 15,
       "rankId": "staff",
       "weekday": 4,
       "seed": "day-15",
+      "mapId": "office_floor_1",
       "titleKey": "day.15.title",
       "tutorialIds": [],
-      "bosses": { "team_lead": 1 },
-      "slots": [
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "restroom" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "coffee" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "snack" },
-        { "type": "work", "sec": 7.5 },
-        { "type": "event", "eventId": "leave" }
+      "dayPhaseSec": 50,
+      "missions": [
+        {
+          "eventId": "coffee",
+          "unlockAtSec": 3
+        },
+        {
+          "eventId": "restroom",
+          "unlockAtSec": 14
+        },
+        {
+          "eventId": "shopping",
+          "unlockAtSec": 30
+        }
+      ],
+      "missionsRequired": 2,
+      "castPatrols": [
+        "p_tl_seat",
+        "p_guard_gatehall",
+        "p_snitch_seat",
+        "p_accomplice_seat"
+      ],
+      "dayInterrupts": [
+        {
+          "id": "INT-01",
+          "atSec": 0.0
+        },
+        {
+          "id": "INT-03",
+          "atSec": 0.0
+        },
+        {
+          "id": "INT-06",
+          "atSec": 20.0
+        }
+      ],
+      "leaveInterrupts": [
+        {
+          "id": "INT-01"
+        },
+        {
+          "id": "INT-03"
+        }
       ],
       "scripted": [],
-      "npc": { "accompliceOffer": true, "snitch": true, "hrInspector": true },
       "ceo": "none",
-      "expectedDurationSec": 73
+      "expectedDurationSec": 73.3,
+      "_designNote": "승진 심사 주간. 퇴근 중 정의로운 동료가 가방을 보고 팀장에게 달려감."
     }
   ],
   "generator": {
     "appliesFromDay": 16,
     "seedFormat": "day-{day}",
-    "rngStreams": ["plan", "boss", "npc", "event"],
+    "rngStreams": [
+      "plan",
+      "boss",
+      "npc",
+      "event",
+      "leave"
+    ],
     "rngStreamSeedFormat": "day-{day}-{stream}",
     "weekdayFormula": "(day - 1) % 5",
     "rankFormula": "ranks[].dayRange에 day가 포함되는 직급. dayRange[1]이 null이면 엔드리스",
-    "difficultyT": "rank 내 진행도 t = (day - dayRange[0]) / (dayRange[1] - dayRange[0]); 엔드리스는 t = 0",
-    "regularEventCount": {
-      "rule": "t < 0.5 이면 regularEventsPerDay[0], 아니면 regularEventsPerDay[1]",
-      "ceoDayReduction": 1,
-      "min": 3
-    },
-    "eventSelection": {
-      "method": "weighted_without_replacement",
+    "difficultyT": "t = (day - dayRange[0]) / (dayRange[1] - dayRange[0]); 엔드리스는 t = 0",
+    "castPatrols": "p_tl_seat, p_guard_gatehall, p_snitch_seat, p_accomplice_seat (+ 차장부터 p_tl2_seat). 본부장·인사팀·대표님은 방해 이벤트가 등장시킴",
+    "missions": {
       "stream": "plan",
-      "forceIncludeIfAbsentDays": 2,
-      "noSameFirstEventAsPreviousDay": true
+      "count": "t < 0.5 이면 missionsPerDay[0], 아니면 [1]. CEO 날은 -1(최소 2)",
+      "required": "t < 0.5 이면 missionsRequired[0], 아니면 [1]. CEO 날은 -1(최소 2)",
+      "selection": "eventPool 가중치 비복원 추첨. 최근 2일간 안 나온 이벤트 강제 포함, 전날 첫 미션과 다르게",
+      "unlockAtSec": "i번째(0부터) = 3 + i × floor((dayPhaseSec - 22) / count)",
+      "_comment": "마지막 미션도 퇴근 22초 전에는 열려서 끝낼 시간이 있음"
     },
-    "slotLayout": "work(rank.workSegmentSec) → event → work → event … → work → leave(피날레)",
-    "directorPatrol": {
-      "stream": "boss",
-      "countFrom": "bosses.director.timing.patrolsPerDay (t 보간 후 반올림, 범위에서 정수 추첨)",
-      "placement": "work 슬롯 중 index ≥ 1을 무작위 선택(중복 없음), 슬롯 시작 후 1.0초 ~ (sec - 1.0)초",
-      "mayOverlapNextEvent": true,
-      "mustEndBeforeFinale": true,
-      "minGapBetweenPatrolsSec": 12
+    "dayInterrupts": {
+      "stream": "plan",
+      "count": "rank.dayInterrupts.countRange에서 정수 추첨",
+      "selection": "pool 가중치 비복원, unlockDay ≤ day 인 것만. INT-10(본부장)은 director.patrols.perDayRange만큼 별도 배치(카운트에 포함)",
+      "placement": "atSec ∈ [8, dayPhaseSec - 10], 서로 10초 이상 간격. 근접형(INT-01·INT-02·INT-03)은 atSec 0으로 하루 종일 활성(카운트 미포함)",
+      "hrAttendance": "INT-05는 npcs.hr_inspector.spawn.dayChance로 별도 판정(stream npc), minDayTimeSec 이후",
+      "constraints": [
+        "본부장 순찰과 대표님 순시는 겹치지 않음(H7): 대표님 순시 시작 ±25초 안에 INT-10 배치 금지",
+        "인사팀(INT-05·06)은 대표님 순시 중 없음",
+        "INT-08(회의) 중엔 nap 미션 잠김 → nap unlockAt을 회의 종료 이후로 밀거나 INT-08을 다른 시각으로",
+        "층 전체 동시 인원 ≤ 8(rules.characters.maxOnFloor)"
+      ]
+    },
+    "leaveInterrupts": {
+      "stream": "leave",
+      "count": "rank.leaveInterrupts.countRange에서 추첨. CEO 날은 최대 2",
+      "selection": "pool 가중치 비복원, phases에 leave 포함 + unlockDay(·leaveUnlockDay) ≤ day",
+      "alwaysOn": "INT-01(팀장 말걸기)은 카운트와 별개로 퇴근 중 항상 활성(근접형)",
+      "exitHook": "INT-11은 과장부터 엘리베이터 대기 때 chance 판정(CEO 순시 날 제외)"
     },
     "ceo": {
       "stream": "boss",
       "scheduled": "rank에 ceo가 있고 weekday == bosses.ceo.occurrence.scheduledWeekday(수요일)",
-      "random": "그 외 날은 occurrence.randomChancePerDay 확률",
-      "placement": "work 슬롯 index ≥ 1 중 director 순찰이 없는 슬롯, 슬롯 시작 후 1.5초. 세그먼트 타이머는 CEO 이벤트 동안 정지",
+      "random": "그 외 날은 occurrence.randomChancePerDay(시드로 미리 결정 → 출근 준비 화면에 예보, D-027)",
+      "placement": "예정 시각 = dayPhaseSec × [0.4, 0.7] 균등 추첨. 그 이후 플레이어가 자리에 앉아 있는 첫 순간 시작. 끝까지 앉지 않으면 퇴근 직전 자리 복귀 시 시작하지 않고 취소(눈도장 기회 없음, 벌점 없음)",
       "debutDay": 28
     },
-    "hrInspector": {
-      "stream": "npc",
-      "rule": "npcs.hr_inspector.spawn.dayChance 확률로 하루 1회. 허용 슬롯(work 또는 hrInspectionAllowed 이벤트) 중 무작위, minDayTimeSec 이후"
-    },
-    "accompliceOffer": {
-      "stream": "npc",
-      "rule": "coffee·snack 이벤트마다 offerProb 확률, 하루 maxPerDay회"
-    },
-    "snitch": {
-      "stream": "npc",
-      "rule": "사전 배치 없음. 런타임에 홀드 1초마다 probPerHoldSec 판정(스트림 'npc' 사용)"
-    },
     "debuts": [
-      { "day": 16, "type": "boss_debut", "bossId": "director", "tutorialId": "tut_director", "forcePatrol": { "slot": 2, "atSec": 1.5, "stop": true } },
-      { "day": 28, "type": "boss_debut", "bossId": "ceo", "tutorialId": "tut_ceo", "forceCeo": true },
-      { "day": 41, "type": "boss_debut", "bossId": "team_lead", "tutorialId": "tut_second_team_lead", "note": "차장부터 옆 팀 팀장(2번째 인스턴스) 등장" }
+      {
+        "day": 16,
+        "type": "boss_debut",
+        "bossId": "director",
+        "tutorialId": "tut_director",
+        "force": {
+          "interrupt": "INT-10",
+          "variant": "p_director_walkdown",
+          "atSec": 14.0,
+          "stopChance": 1.0
+        }
+      },
+      {
+        "day": 28,
+        "type": "boss_debut",
+        "bossId": "ceo",
+        "tutorialId": "tut_ceo",
+        "force": {
+          "interrupt": "INT-09",
+          "qteWindowScale": 2.0,
+          "slowMoTell": 0.5
+        }
+      },
+      {
+        "day": 30,
+        "type": "interrupt_debut",
+        "interruptId": "INT-11",
+        "tutorialId": "tut_ceo_elevator",
+        "force": {
+          "chance": 1.0
+        }
+      },
+      {
+        "day": 41,
+        "type": "boss_debut",
+        "bossId": "team_lead",
+        "instance": 2,
+        "tutorialId": "tut_second_team_lead",
+        "force": {
+          "patrol": "p_tl2_seat"
+        }
+      }
     ],
     "promotion": {
-      "rule": "직급의 마지막 날을 ★1 이상으로 클리어하고, 직급 내 날짜별 최고 별 합계 ≥ rank.starsToPromote이면 승진",
-      "ifShort": "승진 보류. 해당 직급의 지난 날을 다시 플레이해 최고 별을 갱신(최고 기록만 반영)",
+      "rule": "직급의 마지막 날을 ★1 이상으로 마치고, 직급 내 날짜별 최고 별 합계 ≥ rank.starsToPromote 이면 승진",
+      "ifShort": "승진 보류. 지난 날을 다시 해서 최고 별 갱신(최고 기록만 반영)",
       "dayUnlock": "전날을 ★1 이상(적발 아님)으로 마치면 다음 날 해금"
     }
   }

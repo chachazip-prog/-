@@ -1,172 +1,891 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
+  "_comment": "직급(탑다운 v2). dayPhaseSec = 09:00→17:48 근무 구간 실시간 길이. missionsRequired = ★2에 필요한 완료 미션 수. 퇴근 방해는 leaveInterrupts(phases에 leave가 있는 것만). CEO 순시가 있는 날은 미션 1개·근무 구간 ceoDayPhaseReductionSec초를 줄이고 퇴근 방해 최대 2개. 시간 예산 검증: design/gdd.md §12-2.",
+  "budgetModel": {
+    "introSec": 2.0,
+    "leaveBaseSec": 16.3,
+    "perLeaveInterruptSec": 2.0,
+    "detourSec": 1.0,
+    "ceoVisitPausedSec": 12.5,
+    "missionExpectedSec": {
+      "coffee": 13,
+      "restroom": 16,
+      "nap": 15,
+      "shopping": 9,
+      "snack": 7
+    },
+    "_comment": "QA가 실측으로 교체할 추정 모델"
+  },
   "ranks": [
     {
       "id": "intern",
       "order": 1,
       "nameKey": "rank.intern.name",
-      "dayRange": [1, 5],
+      "dayRange": [
+        1,
+        5
+      ],
       "contentTier": "authored",
       "mvp": true,
       "starsToPromote": 8,
       "maxStars": 15,
-      "regularEventsPerDay": [1, 2],
-      "workSegmentSec": 9.0,
-      "workQuota": 0.45,
-      "salaryBase": 100,
-      "bosses": { "senior": 1 },
-      "npcs": ["security_guard"],
-      "eventPool": [
-        { "eventId": "coffee", "weight": 1.0 },
-        { "eventId": "restroom", "weight": 1.0 },
-        { "eventId": "nap", "weight": 1.0 },
-        { "eventId": "shopping", "weight": 1.0 },
-        { "eventId": "snack", "weight": 1.0 }
+      "dayPhaseSec": 40,
+      "ceoDayPhaseReductionSec": 0,
+      "missionsPerDay": [
+        2,
+        2
       ],
+      "missionsRequired": [
+        2,
+        2
+      ],
+      "workQuota": 0.4,
+      "salaryBase": 100,
+      "cast": {
+        "bosses": {
+          "senior": 1
+        },
+        "npcs": [
+          "security_guard"
+        ]
+      },
+      "eventPool": [
+        {
+          "eventId": "coffee",
+          "weight": 1.2
+        },
+        {
+          "eventId": "restroom",
+          "weight": 1.0
+        },
+        {
+          "eventId": "nap",
+          "weight": 0.9
+        },
+        {
+          "eventId": "shopping",
+          "weight": 1.0
+        },
+        {
+          "eventId": "snack",
+          "weight": 1.0
+        }
+      ],
+      "dayInterrupts": {
+        "countRange": [
+          0,
+          1
+        ],
+        "pool": [
+          {
+            "id": "INT-02",
+            "weight": 1.0
+          }
+        ]
+      },
+      "leaveInterrupts": {
+        "countRange": [
+          1,
+          1
+        ],
+        "pool": [
+          {
+            "id": "INT-07",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-02",
+            "weight": 1.0
+          }
+        ]
+      },
       "promotionTitleKey": "rank.intern.promotion"
     },
     {
       "id": "staff",
       "order": 2,
       "nameKey": "rank.staff.name",
-      "dayRange": [6, 15],
+      "dayRange": [
+        6,
+        15
+      ],
       "contentTier": "authored",
       "mvp": true,
       "starsToPromote": 17,
       "maxStars": 30,
-      "regularEventsPerDay": [3, 3],
-      "workSegmentSec": 7.5,
-      "workQuota": 0.5,
-      "salaryBase": 150,
-      "bosses": { "team_lead": 1 },
-      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
-      "eventPool": [
-        { "eventId": "coffee", "weight": 1.2 },
-        { "eventId": "restroom", "weight": 1.0 },
-        { "eventId": "nap", "weight": 0.9 },
-        { "eventId": "shopping", "weight": 1.0 },
-        { "eventId": "snack", "weight": 1.0 }
+      "dayPhaseSec": 50,
+      "ceoDayPhaseReductionSec": 6,
+      "missionsPerDay": [
+        3,
+        3
       ],
+      "missionsRequired": [
+        2,
+        2
+      ],
+      "workQuota": 0.4,
+      "salaryBase": 150,
+      "cast": {
+        "bosses": {
+          "team_lead": 1
+        },
+        "npcs": [
+          "security_guard",
+          "accomplice",
+          "snitch",
+          "hr_inspector"
+        ]
+      },
+      "eventPool": [
+        {
+          "eventId": "coffee",
+          "weight": 1.2
+        },
+        {
+          "eventId": "restroom",
+          "weight": 1.0
+        },
+        {
+          "eventId": "nap",
+          "weight": 0.9
+        },
+        {
+          "eventId": "shopping",
+          "weight": 1.0
+        },
+        {
+          "eventId": "snack",
+          "weight": 1.0
+        }
+      ],
+      "dayInterrupts": {
+        "countRange": [
+          1,
+          2
+        ],
+        "pool": [
+          {
+            "id": "INT-01",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-03",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-05",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          }
+        ]
+      },
+      "leaveInterrupts": {
+        "countRange": [
+          1,
+          2
+        ],
+        "pool": [
+          {
+            "id": "INT-01",
+            "weight": 1.2
+          },
+          {
+            "id": "INT-07",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-03",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.6
+          }
+        ]
+      },
       "promotionTitleKey": "rank.staff.promotion"
     },
     {
       "id": "assistant_manager",
       "order": 3,
       "nameKey": "rank.assistant_manager.name",
-      "dayRange": [16, 27],
+      "dayRange": [
+        16,
+        27
+      ],
       "contentTier": "generated",
       "mvp": true,
       "starsToPromote": 20,
       "maxStars": 36,
-      "regularEventsPerDay": [3, 4],
-      "workSegmentSec": 7.0,
-      "workQuota": 0.55,
-      "salaryBase": 200,
-      "bosses": { "team_lead": 1, "director": 1 },
-      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
-      "eventPool": [
-        { "eventId": "coffee", "weight": 1.2 },
-        { "eventId": "restroom", "weight": 1.0 },
-        { "eventId": "nap", "weight": 0.9 },
-        { "eventId": "shopping", "weight": 1.0 },
-        { "eventId": "snack", "weight": 1.0 }
+      "dayPhaseSec": 54,
+      "ceoDayPhaseReductionSec": 6,
+      "missionsPerDay": [
+        3,
+        4
       ],
+      "missionsRequired": [
+        2,
+        3
+      ],
+      "workQuota": 0.42,
+      "salaryBase": 200,
+      "cast": {
+        "bosses": {
+          "team_lead": 1,
+          "director": 1
+        },
+        "npcs": [
+          "security_guard",
+          "accomplice",
+          "snitch",
+          "hr_inspector"
+        ]
+      },
+      "eventPool": [
+        {
+          "eventId": "coffee",
+          "weight": 1.2
+        },
+        {
+          "eventId": "restroom",
+          "weight": 1.0
+        },
+        {
+          "eventId": "nap",
+          "weight": 0.9
+        },
+        {
+          "eventId": "shopping",
+          "weight": 1.0
+        },
+        {
+          "eventId": "snack",
+          "weight": 1.0
+        }
+      ],
+      "dayInterrupts": {
+        "countRange": [
+          2,
+          2
+        ],
+        "pool": [
+          {
+            "id": "INT-10",
+            "weight": 1.5
+          },
+          {
+            "id": "INT-01",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-03",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-05",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          }
+        ]
+      },
+      "leaveInterrupts": {
+        "countRange": [
+          2,
+          2
+        ],
+        "pool": [
+          {
+            "id": "INT-10",
+            "weight": 1.2
+          },
+          {
+            "id": "INT-01",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-07",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-03",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.6
+          }
+        ]
+      },
       "promotionTitleKey": "rank.assistant_manager.promotion"
     },
     {
       "id": "manager",
       "order": 4,
       "nameKey": "rank.manager.name",
-      "dayRange": [28, 40],
+      "dayRange": [
+        28,
+        40
+      ],
       "contentTier": "generated",
       "mvp": true,
       "starsToPromote": 22,
       "maxStars": 39,
-      "regularEventsPerDay": [4, 4],
-      "workSegmentSec": 6.5,
-      "workQuota": 0.6,
-      "salaryBase": 260,
-      "bosses": { "team_lead": 1, "director": 1, "ceo": 1 },
-      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
-      "eventPool": [
-        { "eventId": "coffee", "weight": 1.2 },
-        { "eventId": "restroom", "weight": 1.0 },
-        { "eventId": "nap", "weight": 0.9 },
-        { "eventId": "shopping", "weight": 1.0 },
-        { "eventId": "snack", "weight": 1.0 }
+      "dayPhaseSec": 56,
+      "ceoDayPhaseReductionSec": 6,
+      "missionsPerDay": [
+        4,
+        4
       ],
+      "missionsRequired": [
+        3,
+        3
+      ],
+      "workQuota": 0.45,
+      "salaryBase": 260,
+      "cast": {
+        "bosses": {
+          "team_lead": 1,
+          "director": 1,
+          "ceo": 1
+        },
+        "npcs": [
+          "security_guard",
+          "accomplice",
+          "snitch",
+          "hr_inspector"
+        ]
+      },
+      "eventPool": [
+        {
+          "eventId": "coffee",
+          "weight": 1.2
+        },
+        {
+          "eventId": "restroom",
+          "weight": 1.0
+        },
+        {
+          "eventId": "nap",
+          "weight": 0.9
+        },
+        {
+          "eventId": "shopping",
+          "weight": 1.0
+        },
+        {
+          "eventId": "snack",
+          "weight": 1.0
+        }
+      ],
+      "dayInterrupts": {
+        "countRange": [
+          2,
+          3
+        ],
+        "pool": [
+          {
+            "id": "INT-10",
+            "weight": 1.5
+          },
+          {
+            "id": "INT-01",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-03",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-05",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          }
+        ]
+      },
+      "leaveInterrupts": {
+        "countRange": [
+          2,
+          3
+        ],
+        "pool": [
+          {
+            "id": "INT-10",
+            "weight": 1.2
+          },
+          {
+            "id": "INT-01",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-07",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-03",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.6
+          }
+        ]
+      },
       "promotionTitleKey": "rank.manager.promotion"
     },
     {
       "id": "deputy_general_manager",
       "order": 5,
       "nameKey": "rank.deputy_general_manager.name",
-      "dayRange": [41, 52],
+      "dayRange": [
+        41,
+        52
+      ],
       "contentTier": "generated",
       "mvp": true,
       "starsToPromote": 21,
       "maxStars": 36,
-      "regularEventsPerDay": [4, 4],
-      "workSegmentSec": 6.5,
-      "workQuota": 0.62,
-      "salaryBase": 320,
-      "bosses": { "team_lead": 2, "director": 1, "ceo": 1 },
-      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
-      "eventPool": [
-        { "eventId": "coffee", "weight": 1.2 },
-        { "eventId": "restroom", "weight": 1.0 },
-        { "eventId": "nap", "weight": 0.9 },
-        { "eventId": "shopping", "weight": 1.0 },
-        { "eventId": "snack", "weight": 1.0 }
+      "dayPhaseSec": 56,
+      "ceoDayPhaseReductionSec": 6,
+      "missionsPerDay": [
+        4,
+        4
       ],
+      "missionsRequired": [
+        3,
+        3
+      ],
+      "workQuota": 0.48,
+      "salaryBase": 320,
+      "cast": {
+        "bosses": {
+          "team_lead": 2,
+          "director": 1,
+          "ceo": 1
+        },
+        "npcs": [
+          "security_guard",
+          "accomplice",
+          "snitch",
+          "hr_inspector"
+        ]
+      },
+      "eventPool": [
+        {
+          "eventId": "coffee",
+          "weight": 1.2
+        },
+        {
+          "eventId": "restroom",
+          "weight": 1.0
+        },
+        {
+          "eventId": "nap",
+          "weight": 0.9
+        },
+        {
+          "eventId": "shopping",
+          "weight": 1.0
+        },
+        {
+          "eventId": "snack",
+          "weight": 1.0
+        }
+      ],
+      "dayInterrupts": {
+        "countRange": [
+          2,
+          3
+        ],
+        "pool": [
+          {
+            "id": "INT-10",
+            "weight": 1.5
+          },
+          {
+            "id": "INT-01",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-03",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-05",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          }
+        ]
+      },
+      "leaveInterrupts": {
+        "countRange": [
+          2,
+          3
+        ],
+        "pool": [
+          {
+            "id": "INT-10",
+            "weight": 1.2
+          },
+          {
+            "id": "INT-01",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-07",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-03",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.6
+          }
+        ]
+      },
       "promotionTitleKey": "rank.deputy_general_manager.promotion"
     },
     {
       "id": "general_manager",
       "order": 6,
       "nameKey": "rank.general_manager.name",
-      "dayRange": [53, 64],
+      "dayRange": [
+        53,
+        64
+      ],
       "contentTier": "generated",
       "mvp": true,
       "starsToPromote": 21,
       "maxStars": 36,
-      "regularEventsPerDay": [4, 4],
-      "workSegmentSec": 6.0,
-      "workQuota": 0.64,
-      "salaryBase": 380,
-      "bosses": { "team_lead": 2, "director": 1, "ceo": 1 },
-      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
-      "eventPool": [
-        { "eventId": "coffee", "weight": 1.2 },
-        { "eventId": "restroom", "weight": 1.0 },
-        { "eventId": "nap", "weight": 0.9 },
-        { "eventId": "shopping", "weight": 1.0 },
-        { "eventId": "snack", "weight": 1.0 }
+      "dayPhaseSec": 57,
+      "ceoDayPhaseReductionSec": 7,
+      "missionsPerDay": [
+        4,
+        4
       ],
+      "missionsRequired": [
+        3,
+        3
+      ],
+      "workQuota": 0.5,
+      "salaryBase": 380,
+      "cast": {
+        "bosses": {
+          "team_lead": 2,
+          "director": 1,
+          "ceo": 1
+        },
+        "npcs": [
+          "security_guard",
+          "accomplice",
+          "snitch",
+          "hr_inspector"
+        ]
+      },
+      "eventPool": [
+        {
+          "eventId": "coffee",
+          "weight": 1.2
+        },
+        {
+          "eventId": "restroom",
+          "weight": 1.0
+        },
+        {
+          "eventId": "nap",
+          "weight": 0.9
+        },
+        {
+          "eventId": "shopping",
+          "weight": 1.0
+        },
+        {
+          "eventId": "snack",
+          "weight": 1.0
+        }
+      ],
+      "dayInterrupts": {
+        "countRange": [
+          3,
+          3
+        ],
+        "pool": [
+          {
+            "id": "INT-10",
+            "weight": 1.5
+          },
+          {
+            "id": "INT-01",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-03",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-05",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          }
+        ]
+      },
+      "leaveInterrupts": {
+        "countRange": [
+          2,
+          3
+        ],
+        "pool": [
+          {
+            "id": "INT-10",
+            "weight": 1.2
+          },
+          {
+            "id": "INT-01",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-07",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-03",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.6
+          }
+        ]
+      },
       "promotionTitleKey": "rank.general_manager.promotion"
     },
     {
       "id": "executive",
       "order": 7,
       "nameKey": "rank.executive.name",
-      "dayRange": [65, null],
+      "dayRange": [
+        65,
+        null
+      ],
       "contentTier": "endless",
       "mvp": true,
       "starsToPromote": null,
       "maxStars": null,
-      "regularEventsPerDay": [4, 4],
-      "workSegmentSec": 6.0,
-      "workQuota": 0.65,
-      "salaryBase": 450,
-      "bosses": { "team_lead": 2, "director": 1, "ceo": 1 },
-      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
-      "eventPool": [
-        { "eventId": "coffee", "weight": 1.2 },
-        { "eventId": "restroom", "weight": 1.0 },
-        { "eventId": "nap", "weight": 0.9 },
-        { "eventId": "shopping", "weight": 1.0 },
-        { "eventId": "snack", "weight": 1.0 }
+      "dayPhaseSec": 57,
+      "ceoDayPhaseReductionSec": 7,
+      "missionsPerDay": [
+        4,
+        4
       ],
+      "missionsRequired": [
+        3,
+        3
+      ],
+      "workQuota": 0.5,
+      "salaryBase": 450,
+      "cast": {
+        "bosses": {
+          "team_lead": 2,
+          "director": 1,
+          "ceo": 1
+        },
+        "npcs": [
+          "security_guard",
+          "accomplice",
+          "snitch",
+          "hr_inspector"
+        ]
+      },
+      "eventPool": [
+        {
+          "eventId": "coffee",
+          "weight": 1.2
+        },
+        {
+          "eventId": "restroom",
+          "weight": 1.0
+        },
+        {
+          "eventId": "nap",
+          "weight": 0.9
+        },
+        {
+          "eventId": "shopping",
+          "weight": 1.0
+        },
+        {
+          "eventId": "snack",
+          "weight": 1.0
+        }
+      ],
+      "dayInterrupts": {
+        "countRange": [
+          3,
+          3
+        ],
+        "pool": [
+          {
+            "id": "INT-10",
+            "weight": 1.5
+          },
+          {
+            "id": "INT-01",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-03",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-05",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          }
+        ]
+      },
+      "leaveInterrupts": {
+        "countRange": [
+          2,
+          3
+        ],
+        "pool": [
+          {
+            "id": "INT-10",
+            "weight": 1.2
+          },
+          {
+            "id": "INT-01",
+            "weight": 1.0
+          },
+          {
+            "id": "INT-07",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-03",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-04",
+            "weight": 0.8
+          },
+          {
+            "id": "INT-06",
+            "weight": 0.6
+          },
+          {
+            "id": "INT-08",
+            "weight": 0.6
+          }
+        ]
+      },
       "promotionTitleKey": null
     }
   ]

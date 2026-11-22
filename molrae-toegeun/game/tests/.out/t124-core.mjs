@@ -960,7 +960,7 @@ var Observer = class {
         if (n.mode === "look" && s.mode === "tell") turnKind = null;
         else if (n.mode === "talk" && s.mode !== "talk") turnKind = "talkStart";
         else if (s.mode === "talk" && n.mode !== "talk") turnKind = "talkEnd";
-        else if (n.mode === "walk" && s.walkSteps <= 1 && s.walkFrom !== "walk") turnKind = "resume";
+        else if (n.mode === "walk" && s.walkSteps <= 2 && s.walkFrom !== "walk") turnKind = "resume";
         else if (n.mode === "walk") turnKind = "corner";
         else turnKind = "corner";
         if (turnKind) {
@@ -1107,6 +1107,12 @@ section("1. \uACB0\uC815\uC131");
     for (let i = 0; i < s.steps; i++) s2.step();
     const stateOk = s2.fingerprint() === s.fingerprint();
     check(`advance dt=${name}: \uCD1D 60\uCD08 \u2192 \uC2A4\uD15D ${N}\uAC1C`, stepsOk, `\uC2E4\uC81C ${s.steps}\uC2A4\uD15D (${calls}\uD68C \uD638\uCD9C)`);
+    const caught = new FloorSim(PROTO_FLOOR, "day-1");
+    void caught;
+    if (!stepsOk) {
+      s.advance(1e-9);
+      info(`  dt=${name}: \uBD80\uB3D9\uC18C\uC218 \uC794\uC5EC\uB85C 1\uC2A4\uD15D \uC9C0\uC5F0, +1e-9\uCD08 advance \uD6C4 ${s.steps}\uC2A4\uD15D(\uB204\uB77D \uC544\uB2D8, \uC9C0\uC5F0)`);
+    }
     check(`advance dt=${name}: \uAC19\uC740 \uC2A4\uD15D \uC218\uC5D0\uC11C \uC0C1\uD0DC \uB3D9\uC77C`, stateOk && (!stepsOk || s.fingerprint() === refFp));
   }
   const big = new FloorSim(PROTO_FLOOR, "day-1");
@@ -1424,6 +1430,7 @@ section("6. \uC804\uC870");
   let looks = 0, short = 0;
   const causeCount = {};
   let onsets = 0, turnTotal = 0, turnSee = 0, simSec = 0;
+  const kindSee = {}, kindAll = {};
   for (let s = 0; s < 300; s++) {
     const sim = new FloorSim(PROTO_FLOOR, `tell-${s}`);
     const ob = new Observer(sim);
@@ -1444,13 +1451,18 @@ section("6. \uC804\uC870");
     }
     for (const t of ob.turns) {
       turnTotal++;
-      if (t.seesPlayer) turnSee++;
+      kindAll[t.kind] = (kindAll[t.kind] ?? 0) + 1;
+      if (t.seesPlayer) {
+        turnSee++;
+        kindSee[t.kind] = (kindSee[t.kind] ?? 0) + 1;
+      }
     }
   }
   check("\uBAA8\uB4E0 look \uC9C1\uC804 tell \u2265 tellSec(\u22650.4\uCD08)", short === 0, `look ${looks}\uD68C \uC911 \uBD80\uC871 ${short}`);
   const unfair = UNFAIR_CAUSES.reduce((a, c) => a + (causeCount[c] ?? 0), 0);
   info(`\uBB34\uC791\uC704 \uD0ED 300\uD310(${(simSec / 60).toFixed(0)}\uBD84): \uC2DC\uC120 \uC2DC\uC791 ${onsets}\uD68C, \uC6D0\uC778 ${JSON.stringify(causeCount)}`);
   info(`\uC804\uC870 \uC5C6\uB294 NPC \uBC29\uD5A5 \uC804\uD658 ${turnTotal}\uD68C(\uBD84\uB2F9 ${(turnTotal / (simSec / 60)).toFixed(1)}), \uADF8 \uC21C\uAC04 \uD50C\uB808\uC774\uC5B4\uAC00 \uC0C8 \uC2DC\uC120\uC5D0 \uBCF4\uC784 ${turnSee}\uD68C`);
+  info(`\uC804\uD658 \uC885\uB958\uBCC4 \uC804\uCCB4 ${JSON.stringify(kindAll)} / \uADF8\uC911 \uD50C\uB808\uC774\uC5B4 \uBCF4\uC784 ${JSON.stringify(kindSee)}`);
   check(
     "\uC804\uC870 \uC5C6\uC774 \uC2DC\uC791\uB41C \uC2DC\uC120(\uBAA8\uD241\uC774\xB7\uC7AC\uCD9C\uBC1C\xB7\uB9D0\uAC78\uAE30) 0\uAC74 (D-038, GDD \xA711)",
     unfair === 0,

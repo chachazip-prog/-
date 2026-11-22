@@ -30,17 +30,18 @@
 | 라이선스 사본 | 저장소 내 라이선스 파일 경로 | art/licenses/... |
 | 확인일 | 라이선스를 확인한 날짜(YYYY-MM-DD) | 2026-11-22 |
 | 기록자 | 추가한 에이전트/사람 | mt-sound-designer |
-| 상태 | 검토 중 / 승인 / 반려 / 교체 예정 | 검토 중 |
+| 상태 | 후보 / 검토 중 / 승인 / 반려 / 교체 예정 (`후보` = 조사만 끝났고 파일 미수령, 빌드 반입 금지) | 검토 중 |
 | 비고 | 특이사항(AI 생성 도구, 재배포 조건 등) | - |
 
 ## 대장
 
 | ID | 분류 | 이름 | 사용 위치 | 출처 | 원본 URL | 제작자 | 라이선스 | 라이선스 원문 URL | 상업적 이용 | 수정 허용 | 크레딧 의무 | 크레딧 반영 위치 | 수정 여부 | 라이선스 사본 | 확인일 | 기록자 | 상태 | 비고 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| | | | | | | | | | | | | | | | | | | |
+| FNT-001 | 폰트 | Galmuri (Galmuri11 / Galmuri9 / Galmuri7) | 미정(UI 대사 12px·라벨 10px·숫자 8px 예정, BMFont 또는 서브셋 WOFF2로 변환) | 외부(GitHub quiple/galmuri) | https://github.com/quiple/galmuri | 이민서 (Lee Minseo) | OFL-1.1 | https://github.com/quiple/galmuri (ofl.md, 원문 재확인 필요) / https://openfontlicense.org/ofl-faq/ | 가능 | 조건부(수정본에 RFN "Galmuri" 사용 금지, 수정본도 OFL) | 화면 크레딧 의무 없음. 저작권 고지 + OFL 전문 동봉 필수 | 빌드 `licenses/` 텍스트 파일 + 게임 내 오픈소스 고지 화면(예정) | 수정 예정(서브셋 + 비트맵 변환, 이름 변경) | 미수령 | 2026-11-22 | mt-compliance | 후보 (1순위) | T-119. 상세 `compliance/font-selection.md` §2.1·§3. 크기별 한글 음절 수록 범위 [확인 필요] → 빌드 시 누락 글자 검사로 대응 |
+| FNT-002 | 폰트 | Fusion Pixel Font KR (8px / 10px / 12px) | 미정(FNT-001 대체안) | 외부(TakWolf, Fontsource 등재) | https://fontsource.org/fonts/fusion-pixel-12px-proportional-kr/about | TakWolf (+ 합쳐진 원 폰트 저작자들) | OFL-1.1 (일부 KR 빌드 [확인], 나머지 [추정]) | https://fontsource.org/fonts/fusion-pixel-10px-proportional-kr/about | 가능 [추정] | 조건부(원 폰트별 RFN 확인 필요) | 화면 크레딧 의무 없음 [추정]. 고지 + OFL 전문 동봉 | 미정 | 미정 | 미수령 | 2026-11-22 | mt-compliance | 후보 (2순위) | 여러 오픈소스 픽셀 폰트를 합친 폰트라 한글 글리프 출처와 RFN을 원 저장소에서 확인해야 함. 한글이 Galmuri에서 왔다면 대체안 의미 없음 |
 
 ## 감사 기록
 
 | 날짜 | 감사자 | 범위 | 결과 | 조치 |
 |---|---|---|---|---|
-| | | | | |
+| 2026-11-22 | mt-compliance | 한글 도트 폰트 후보 조사(T-119): Galmuri, Fusion Pixel KR, Neo둥근모, 물마루, 도스고딕, 던파 비트비트체, GNU Unifont | FNT-001·002 후보 등록. 던파 비트비트체는 수정 후 재배포 금지라 부적합. 물마루는 원 배포처 미확인으로 보류 | PM 채택 결정 후 원본·ofl.md 수령 → RFN·수록 범위 재확인 → 승인 |
