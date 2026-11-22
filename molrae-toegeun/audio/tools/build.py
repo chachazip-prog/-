@@ -187,7 +187,7 @@ def have_ffmpeg():
 
 def encode(wav, dst, args):
     cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-fflags", "+bitexact", "-i", wav,
-           "-map_metadata", "-1", "-ac", "1", "-ar", str(SR)] + args + ["-flags", "+bitexact"]
+           "-map_metadata", "-1", "-ac", "1", "-ar", str(SR)] + args + ["-fflags", "+bitexact", "-flags", "+bitexact"]
     if dst.endswith(".mp3"):
         cmd += ["-id3v2_version", "0", "-write_id3v1", "0"]
     cmd.append(dst)
