@@ -118,24 +118,44 @@ export class FloorSim {
   readonly level: LevelDef;
   readonly rules: FloorRules;
   readonly player: PlayerMover;
+  /** 현재 층에 있는 NPC. 방해 이벤트로 런타임에 추가·제거된다(X7) — 인덱스가 바뀔 수 있으니 표시 쪽은 객체로 추적할 것 */
   readonly npcs: PatrolNpc[];
   readonly suspicion: SuspicionState = createSuspicion();
+  /** 화면 밖 판정용 카메라(옵션). 없으면 모두 화면 안으로 본다 */
+  readonly camera: CameraModel | null;
+  hooks: FloorHooks;
   outcome: Outcome = 'playing';
   /** 경과 시간(초, 고정 스텝 누적) */
   time = 0;
   steps = 0;
-  /** npc 인덱스별 이번 스텝 시선 여부 */
+  /** npc 인덱스별 이번 스텝 시선 여부(의심 판정에 들어간 시선) */
   seeing: boolean[];
   /** 마지막 이동 목적지 (경로 표시용) */
   destination: Tile | null = null;
-  private readonly rng: Rng;
+  /** 탭으로 멈췄을 때의 목적지 (내 캐릭터 탭 → 이어 가기, rules.input.tapOnSelfWhileStopped) */
+  resumeDestination: Tile | null = null;
+  /** 이번 판 아슬아슬 횟수 */
+  closeCalls = 0;
+  /** 지금 시선 배율(동시 시선 최댓값). HUD용 */
+  gazeNow = 0;
+  /** 지금 말을 걸고 있는 NPC */
+  talkingNpc: PatrolNpc | null = null;
+  readonly rng: Rng;
+  private readonly autoEscape: boolean;
   /** advance()에 받았지만 아직 스텝으로 소비하지 않은 시간(초). 부동소수 오차로 h보다 아주 약간 작을 수 있다 */
   private acc = 0;
   private events: SimEvent[] = [];
+  private lastStopAt = -Infinity;
+  private blockTimer = -1;
+  private pathDist = new Map<PatrolNpc, { cur: number; prev: number }>();
+  private distField: Int32Array | null = null;
+  private distFieldStep = -1;
 
-  constructor(content: FloorContent, seed: string | number) {
+  constructor(content: FloorContent, seed: string | number, opts: FloorOptions = {}) {
     this.level = content.level;
     this.rules = content.rules;
+    this.hooks = opts.hooks ?? {};
+    this.autoEscape = opts.autoEscape ?? true;
     this.map = buildGridMap(content.level.rows, content.level.legend);
     const s = content.level.playerStart;
     if (!isWalkable(this.map, s.x, s.y)) throw new Error('sim: 시작 타일 통행 불가');
@@ -143,6 +163,7 @@ export class FloorSim {
     this.player = new PlayerMover(s);
     this.npcs = content.level.npcs.map((d) => new PatrolNpc(d, this.map, this.rng));
     this.seeing = this.npcs.map(() => false);
+    this.camera = opts.camera ? new CameraModel(opts.camera.rules, opts.camera.view, this.map.height, this.player.y) : null;
   }
 
   /** 쌓인 이벤트를 꺼낸다 (QA 로그·사운드 트리거용) */
@@ -152,28 +173,120 @@ export class FloorSim {
     return out;
   }
 
+  /** 상위 규칙(DaySim)이 이벤트를 같은 스트림에 넣을 때 */
+  pushEvent(e: SimEvent): void { this.events.push(e); }
+
+  // ── NPC 런타임 추가·제거 (X7) ──
+
+  addNpc(def: NpcDef): PatrolNpc {
+    const n = new PatrolNpc(def, this.map, this.rng);
+    this.npcs.push(n);
+    this.seeing.push(false);
+    return n;
+  }
+
+  removeNpc(npc: PatrolNpc): void {
+    const i = this.npcs.indexOf(npc);
+    if (i < 0) return;
+    this.npcs.splice(i, 1);
+    this.seeing.splice(i, 1);
+    this.pathDist.delete(npc);
+    if (this.talkingNpc === npc) this.talkingNpc = null;
+  }
+
+  /** 같은 자리에서 순찰 교체(thenPatrol, 방해 이벤트가 앉은 사람을 일으킬 때) */
+  replaceNpc(old: PatrolNpc, def: NpcDef): PatrolNpc {
+    const i = this.npcs.indexOf(old);
+    const n = new PatrolNpc(def, this.map, this.rng);
+    if (i < 0) { this.npcs.push(n); this.seeing.push(false); return n; }
+    this.npcs[i] = n;
+    this.seeing[i] = false;
+    this.pathDist.delete(old);
+    if (this.talkingNpc === old) this.talkingNpc = null;
+    return n;
+  }
+
+  findNpc(pred: (n: PatrolNpc) => boolean): PatrolNpc | undefined { return this.npcs.find(pred); }
+
+  // ── 플레이어 통행 (X8) ──
+
+  /** 플레이어에게 지금 막힌 타일: 사람이 앉은 의자·서 있는 사람·게이트(훅) */
+  blockedForPlayer = (x: number, y: number): boolean => {
+    if (this.hooks.blockedForPlayer?.(x, y)) return true;
+    if (!this.rules.movement) return false; // T-123 호환: 동적 차단 없음
+    for (const n of this.npcs) {
+      if (n.mode === 'walk' || n.mode === 'spawn') continue;
+      const t = tileOf(n);
+      if (t.x === x && t.y === y) return true;
+    }
+    return false;
+  };
+
+  /** 플레이어 경로(동적 차단 반영). 출발 = 현재 타일 */
+  pathTo(goal: Tile): Tile[] | null {
+    return findPath(this.map, this.player.tile, goal, this.blockedForPlayer);
+  }
+
+  /** 지정 타일로 이동 명령(미션 칩·자동 이동). 탭 판정 없이 경로만 */
+  moveTo(goal: Tile): boolean {
+    if (this.outcome !== 'playing' || this.player.mode === 'talked') return false;
+    const path = this.pathTo(goal);
+    if (!path) return false;
+    if (path.length === 0 && this.player.centered) { this.destination = null; return true; }
+    if (!this.player.move(path)) return false;
+    this.destination = goal;
+    this.resumeDestination = null;
+    return true;
+  }
+
   /**
    * 화면 탭(타일 좌표). D-033: 이동 중이면 정지·위장, 아니면 그 타일로 경로 이동.
+   * 말걸기 중이면 맞장구(nodShortenSec가 있는 경우, 아니면 ignored).
    */
   tap(tx: number, ty: number): TapResult {
     let result: TapResult;
-    if (this.outcome !== 'playing' || this.player.mode === 'talked') result = 'ignored';
-    else if (this.player.mode === 'moving') {
-      this.player.stop();
+    const p = this.player;
+    if (this.outcome !== 'playing') result = 'ignored';
+    else if (p.mode === 'talked') result = this.nod() ? 'nod' : 'ignored';
+    else if (p.mode === 'moving' || p.paused) {
+      const dest = this.destination;
+      p.stop();
+      this.lastStopAt = this.time;
+      this.checkCloseCallOnStop();
+      this.resumeDestination = dest;
       this.destination = null;
+      this.blockTimer = -1;
       result = 'stopped';
     } else {
-      const goal = nearestWalkable(this.map, tx, ty, this.rules.tapSnapRadius);
-      const path = goal ? findPath(this.map, this.player.tile, goal) : null;
-      if (goal && path && path.length === 0 && this.player.centered) {
-        result = 'here'; // 이미 그 타일 중심에 있음 (BUG-004)
-      } else if (goal && path && this.player.move(path)) {
-        this.destination = goal;
-        result = 'moving';
-      } else result = 'unreachable';
+      const goal = nearestWalkable(this.map, tx, ty, this.rules.tapSnapRadius, this.blockedForPlayer);
+      const self = goal !== null && goal.x === p.tile.x && goal.y === p.tile.y;
+      if (self && this.resumeDestination && this.rules.input?.tapOnSelfWhileStopped === 'resume_previous_destination') {
+        const dest = this.resumeDestination;
+        result = this.moveTo(dest) ? 'moving' : 'unreachable';
+        if (result === 'moving') this.destination = dest;
+      } else {
+        const path = goal ? this.pathTo(goal) : null;
+        if (goal && path && path.length === 0 && p.centered) {
+          result = 'here'; // 이미 그 타일 중심에 있음 (BUG-004)
+        } else if (goal && path && p.move(path)) {
+          this.destination = goal;
+          this.resumeDestination = null;
+          result = 'moving';
+        } else result = 'unreachable';
+      }
     }
     this.events.push({ t: this.time, type: 'tap', x: tx, y: ty, result });
     return result;
+  }
+
+  /** 말걸기 중 맞장구 */
+  private nod(): boolean {
+    const npc = this.talkingNpc;
+    const t = npc?.def.talk;
+    if (!npc || !t || !t.nodShortenSec || t.nodShortenSec <= 0) return false;
+    const left = this.player.shortenTalk(t.nodShortenSec, t.minDurationSec ?? 0);
+    npc.syncTalkRemaining(left);
+    return true;
   }
 
   /**
@@ -191,94 +304,252 @@ export class FloorSim {
     }
   }
 
+  /** 지금 플레이어가 '멈춤 = 위장' 상태인가 (X5) */
+  get playerStill(): boolean {
+    const m = this.player.mode;
+    return m === 'disguised' || (m === 'idle' && this.rules.suspicion.anyStopIsDisguised === true);
+  }
+
   step(): void {
     if (this.outcome !== 'playing') return;
     const dt = this.rules.fixedStepSec;
     this.steps++;
     this.time = this.steps * dt;
     const p = this.player;
+    const wasTalked = p.mode === 'talked';
+    this.handleBlocking(dt);
     p.step(dt, this.rules.playerSpeedTilesPerSec);
     // 말걸기 중에는 목적지를 지우지 않는다(D-039: 종료 후 같은 목적지로 자동 재개)
-    if (p.mode !== 'moving' && p.mode !== 'talked') this.destination = null;
+    if (p.mode !== 'moving' && p.mode !== 'talked' && !p.paused) this.destination = null;
+    if (wasTalked && p.mode !== 'talked') {
+      if (this.talkingNpc) this.events.push({ t: this.time, type: 'talkEnd', npc: this.talkingNpc.def.id });
+      this.talkingNpc = null;
+      // D-039 + postTalkHoldSec: 재개 시점에 콘 안이면 잠깐 위장 상태로 기다렸다 출발
+      const hold = this.rules.movement?.postTalkHoldSec ?? 0;
+      if (p.mode === 'moving' && hold > 0 && this.anyConeCoversPlayer()) p.pauseFor(hold);
+    }
 
     const ctx: StepContext = {
       shouldTellTurn: (npc, facing) => this.turnNeedsTell(npc, facing),
       player: p.pos,
       playerTalkable: p.mode !== 'talked',
+      playerDisguised: this.playerStill,
     };
-    for (const npc of this.npcs) {
+    const ended: PatrolNpc[] = [];
+    for (const npc of this.npcs.slice()) {
       const before = npc.mode;
+      const beforeKind = npc.tellKind;
       npc.step(dt, this.rng, ctx);
       if (npc.mode === 'tell' && before !== 'tell') this.events.push({ t: this.time, type: 'tell', npc: npc.def.id });
       // 말걸기 전조가 끝나 성립(D-043) → 플레이어 강제 정지
       if (npc.mode === 'talk' && before !== 'talk' && npc.def.talk && p.forceTalk(npc.def.talk.durationSec)) {
+        this.talkingNpc = npc;
         this.events.push({ t: this.time, type: 'talk', npc: npc.def.id });
+      } else if (before === 'tell' && beforeKind === 'talk' && npc.mode !== 'tell' && npc.lastTalkCancel) {
+        this.events.push({ t: this.time, type: 'talkCancel', npc: npc.def.id, reason: npc.lastTalkCancel });
       }
+      if (npc.ended) ended.push(npc);
+    }
+    for (const npc of ended) {
+      this.events.push({ t: this.time, type: 'npcEnded', npc: npc.def.id, patrol: npc.def.patrolId ?? '' });
+      const next = this.hooks.onNpcEnded?.(npc) ?? null;
+      if (next) this.replaceNpc(npc, next);
+      else if (npc.def.despawnAtEnd) this.removeNpc(npc);
+      else npc.ended = false; // 끝 지점에 서 있음(done)
     }
 
-    // 말걸기 전조 시작(반경 진입). 플레이어는 아직 조작 가능 — 전조 동안 반경(catchRadius) 밖으로 피하면 취소된다
+    // 말걸기 전조 시작(반경 진입). 플레이어는 아직 조작 가능 — 전조 동안 피하거나 위장하면 취소된다
     for (const npc of this.npcs) {
       const talk = npc.def.talk;
       if (!talk || !npc.canTalk() || p.mode === 'talked') continue;
+      if (this.hooks.talkAllowed && !this.hooks.talkAllowed(npc)) continue;
+      if (talk.skipIfPlayerDisguised && this.playerStill) continue; // 위장 중인 플레이어에게는 말을 걸지 않음
       const dx = p.x - npc.x, dy = p.y - npc.y;
-      if (Math.hypot(dx, dy) <= talk.radius) {
+      if (Math.hypot(dx, dy) <= npc.talkNoticeRadius) {
         npc.startTalk(Math.atan2(dy, dx));
         this.events.push({ t: this.time, type: 'talkWarn', npc: npc.def.id });
       }
     }
 
-    // 시선 판정: 동시 시선은 배율 최댓값 하나만. 말걸기 중·보내 준 직후 NPC의 시선은 제외(D-043)
+    if (this.camera) this.camera.step(p.y, dt * 60);
+
+    // 시선 판정: 동시 시선은 배율 최댓값 하나만. 말걸기 중·보내 준 직후 NPC의 시선은 제외(D-043). 화면 밖 콘 주인 제외(X10)
     let mult = 0;
     for (let i = 0; i < this.npcs.length; i++) {
       const npc = this.npcs[i]!;
-      const sees = !npc.ignoresPlayer && canSee(this.map, npc.pos, npc.facing, npc.def.cone, p.pos);
+      const sees = this.npcSees(npc);
       if (sees && !this.seeing[i]) this.events.push({ t: this.time, type: 'spotted', npc: npc.def.id });
       this.seeing[i] = sees;
-      if (sees) mult = Math.max(mult, npc.def.gazeMultiplier);
+      if (sees) mult = Math.max(mult, npc.gazeMultiplier);
     }
-    updateSuspicion(this.suspicion, this.rules.suspicion, mult, p.mode, p.modeTime, dt);
+    const startedExposure = mult > 0 && this.gazeNow === 0;
+    this.gazeNow = mult;
+    if (startedExposure) this.checkCloseCallOnExposure();
+    const base = exposureRate(this.rules.suspicion, p.mode, p.modeTime);
+    const rate = this.hooks.playerRate ? this.hooks.playerRate(base) : base;
+    const t = p.tile;
+    const stale = this.playerStill && !(this.rules.suspicion.disguiseStaleExemptNearCover && nearCover(this.map, t.x, t.y));
+    updateSuspicionRate(this.suspicion, this.rules.suspicion, mult, rate, dt, { decay: p.mode !== 'moving', stale });
+
+    this.updatePathDistances();
 
     if (this.suspicion.value >= this.rules.suspicion.max) {
       this.outcome = 'caught';
       this.events.push({ t: this.time, type: 'caught' });
-    } else {
-      const t = p.tile;
-      if (zoneAt(this.map, t.x, t.y) === this.level.exitZone) {
-        this.outcome = 'escaped';
-        this.events.push({ t: this.time, type: 'escaped' });
-      }
+    } else if (this.autoEscape && zoneAt(this.map, t.x, t.y) === this.level.exitZone) {
+      this.outcome = 'escaped';
+      this.events.push({ t: this.time, type: 'escaped' });
     }
+  }
+
+  /** 판 종료(상위 규칙이 결정: 퇴근 성공·야근 등) */
+  finish(outcome: Exclude<Outcome, 'playing'>): void {
+    if (this.outcome !== 'playing') return;
+    this.outcome = outcome;
+    this.events.push({ t: this.time, type: outcome === 'caught' ? 'caught' : 'escaped' });
+  }
+
+  /** NPC가 지금 플레이어를 '의심 판정에 들어가게' 보고 있는가 */
+  npcSees(npc: PatrolNpc): boolean {
+    if (!npc.coneActive || npc.ignoresPlayer) return false;
+    if (this.hooks.gazeAllowed && !this.hooks.gazeAllowed(npc)) return false;
+    if (this.rules.offscreenSourceNoGain && this.camera && !this.camera.isOnScreen(npc.y)) return false;
+    return canSee(this.map, npc.pos, npc.facing, npc.cone, this.player.pos);
+  }
+
+  /** 화면 안 여부(카메라 없으면 항상 true) */
+  isOnScreen(npc: PatrolNpc): boolean { return !this.camera || this.camera.isOnScreen(npc.y); }
+
+  private anyConeCoversPlayer(): boolean {
+    return this.npcs.some((n) => n.coneActive && !n.ignoresPlayer && n.gazeMultiplier > 0
+      && canSee(this.map, n.pos, n.facing, n.cone, this.player.pos));
+  }
+
+  // ── 아슬아슬(D-035 ④, rules.disguise.closeCallWindowSec) ──
+
+  private closeCall(): void {
+    const d = this.rules.disguise;
+    if (!d || this.closeCalls >= d.closeCallMaxPerDay) return;
+    this.closeCalls++;
+    this.events.push({ t: this.time, type: 'closeCall' });
+  }
+
+  /** 위장 직후 콘이 덮음: 위장 시각이 덮기 |window[0]|초 전 이내 */
+  private checkCloseCallOnExposure(): void {
+    const d = this.rules.disguise;
+    if (!d || this.player.mode !== 'disguised') return;
+    if (this.time - this.lastStopAt <= -d.closeCallWindowSec[0] + 1e-9) this.closeCall();
+  }
+
+  /** 덮인 직후 위장: 노출 시작 뒤 window[1]초 이내 */
+  private checkCloseCallOnStop(): void {
+    const d = this.rules.disguise;
+    if (!d || this.gazeNow <= 0) return;
+    if (this.suspicion.exposedSec <= d.closeCallWindowSec[1] + 1e-9) this.closeCall();
+  }
+
+  // ── 길막 대기·우회 (X8, rules.movement) ──
+
+  private handleBlocking(dt: number): void {
+    const mv = this.rules.movement;
+    if (!mv || mv.blockedWaitSec === undefined) return;
+    const p = this.player;
+    const here = p.tile;
+    const nextOf = (): Tile | null => {
+      const n = p.paused ? (p.remainingPath()[0] ?? null) : p.nextNode();
+      if (!n) return null;
+      const t = tileOf(n);
+      return t.x === here.x && t.y === here.y ? null : t;
+    };
+    if (p.mode === 'moving') {
+      const nx = nextOf();
+      if (nx && this.blockedForPlayer(nx.x, nx.y)) {
+        p.pauseFor(Infinity);
+        this.blockTimer = mv.blockedWaitSec;
+        this.events.push({ t: this.time, type: 'blocked' });
+      }
+      return;
+    }
+    if (!p.paused || this.blockTimer < 0) return;
+    const nx = nextOf();
+    if (!nx || !this.blockedForPlayer(nx.x, nx.y)) { this.blockTimer = -1; p.resumePaused(); return; }
+    this.blockTimer -= dt;
+    if (this.blockTimer > 0) return;
+    const dest = this.destination;
+    const remaining = p.remainingPath().length;
+    const alt = dest ? this.pathTo(dest) : null;
+    if (alt && alt.length > 0 && alt.length <= remaining + (mv.rerouteMaxExtraTiles ?? 0)) {
+      p.replacePausedPath(alt);
+      this.blockTimer = -1;
+      p.resumePaused();
+    } else this.blockTimer = mv.rerouteRecheckSec ?? mv.blockedWaitSec;
   }
 
   /** 경고용 '넓은 콘'(가림 무시): 실제 콘 + rules.threat 여유. 실제 콘을 항상 포함한다 */
   private wideCone(npc: PatrolNpc): { range: number; halfAngleDeg: number } {
     const t = this.rules.threat;
     return {
-      range: npc.def.cone.range + t.approachExtraRange,
-      halfAngleDeg: npc.def.cone.halfAngleDeg + t.approachExtraAngleDeg,
+      range: npc.cone.range + t.approachExtraRange,
+      halfAngleDeg: npc.cone.halfAngleDeg + t.approachExtraAngleDeg,
     };
   }
 
   /**
    * D-044 방향 전환 전조 판정 (BUG-001): "새 시선이 플레이어 쪽을 향할 수 있는가"
-   * = 새 방향의 경고 콘(wideCone, 가림 무시) 안에 플레이어가 있으면 true → 전조(tellSec) 후 회전.
+   * = 새 방향의 경고 콘(wideCone, 가림 무시) 안에 플레이어가 있으면 true → 전조 후 회전.
    * 경고 콘 ⊇ 실제 콘이므로 전조 없이 회전한 직후 실제 시선에 플레이어가 들어오는 경우는 생기지 않는다.
-   * 이 기준은 화면 밖 경고의 'turning'(빨강 화살표)과 같은 콘이라 표시와 판정이 일치한다.
+   * (rules.sight.cornerTellCondition 'new_facing_real_cone_could_cover_player'보다 넓은 보수적 판정)
    */
   private turnNeedsTell(npc: PatrolNpc, facing: number): boolean {
     return inCone(npc.pos, facing, this.wideCone(npc), this.player.pos);
   }
 
-  /** NPC가 플레이어에게 주는 위협 수준 (화면 밖 경고 표시용) */
+  private updatePathDistances(): void {
+    const within = this.rules.threat.approachPathTilesWithin;
+    if (within === undefined) return;
+    if (this.distFieldStep !== this.steps) {
+      this.distField = distanceField(this.map, this.player.tile);
+      this.distFieldStep = this.steps;
+    }
+    const f = this.distField!;
+    for (const n of this.npcs) {
+      const t = tileOf(n);
+      const d = t.x >= 0 && t.y >= 0 && t.x < this.map.width && t.y < this.map.height ? f[t.y * this.map.width + t.x]! : -1;
+      const rec = this.pathDist.get(n);
+      if (!rec) this.pathDist.set(n, { cur: d, prev: d });
+      else if (rec.cur !== d) { rec.prev = rec.cur; rec.cur = d; }
+    }
+  }
+
+  /** NPC가 플레이어에게 주는 위협 수준 (화면 밖 경고 표시용, rules.threat.stages) */
   threatOf(index: number): Threat {
     const npc = this.npcs[index];
     if (!npc) return 'none';
     if (this.seeing[index]) return 'seeing';
+    return this.threatOfNpc(npc);
+  }
+
+  threatOfNpc(npc: PatrolNpc): Threat {
+    const i = this.npcs.indexOf(npc);
+    if (i >= 0 && this.seeing[i]) return 'seeing';
     const pp = this.player.pos;
-    // 화면 밖 NPC는 보통 실제 시야보다 멀리 있으므로 실제 콘으로는 경고가 거의 뜨지 않아 넓은 콘을 쓴다
+    const th = this.rules.threat;
     const wide = this.wideCone(npc);
-    if (npc.mode === 'tell' && npc.pendingFacing !== null && inCone(npc.pos, npc.pendingFacing, wide, pp)) return 'turning';
-    if (npc.mode !== 'talk' && inCone(npc.pos, npc.facing, wide, pp)) return 'approaching';
+    const los = th.approachRequiresLineOfSight === true;
+    if (npc.mode === 'tell' && npc.pendingFacing !== null) {
+      const turning = los
+        ? canSee(this.map, npc.pos, npc.pendingFacing, npc.cone, pp)
+        : inCone(npc.pos, npc.pendingFacing, wide, pp);
+      if (turning) return 'turning';
+    }
+    if (npc.mode === 'talk') return 'none';
+    if (los && !npc.coneActive && npc.mode !== 'tell') return 'none';
+    if (inCone(npc.pos, npc.facing, wide, pp) && (!los || hasLineOfSight(this.map, npc.pos, pp))) return 'approaching';
+    if (th.approachPathTilesWithin !== undefined && npc.mode === 'walk') {
+      const rec = this.pathDist.get(npc);
+      if (rec && rec.cur >= 0 && rec.cur <= th.approachPathTilesWithin
+        && (!th.approachPathMustBeDecreasing || rec.cur < rec.prev)) return 'approaching';
+    }
     return 'none';
   }
 
@@ -291,4 +562,7 @@ export class FloorSim {
     ];
     return parts.join('|');
   }
+
+  /** 디버그: 타일 종류 */
+  kindAt(x: number, y: number): string | null { return kindAt(this.map, x, y); }
 }
