@@ -70,7 +70,7 @@
         "ogg": "sfx/sfx_footsteps_crescendo.ogg",
         "mp3": "sfx/sfx_footsteps_crescendo.mp3"
       },
-      "durationSec": 1.34,
+      "durationSec": 1.43,
       "loop": false,
       "play": "본부장 순찰(INT-10) 등장 tell 1.5초 시작에 1회",
       "dataRefs": [
@@ -180,7 +180,7 @@
         "ogg": "sfx/sfx_meeting_end.ogg",
         "mp3": "sfx/sfx_meeting_end.mp3"
       },
-      "durationSec": 0.981,
+      "durationSec": 0.98,
       "loop": false,
       "play": "INT-08 팀장 회의 끝(회의실 문 열림) tell 1.0초 시작에 1회",
       "dataRefs": [
