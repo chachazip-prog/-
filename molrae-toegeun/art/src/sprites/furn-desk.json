@@ -1,0 +1,26 @@
+{
+ "name": "desk",
+ "group": "furniture",
+ "size": [32, 16],
+ "note": "책상 옆모습 32x16(타일 2칸). 왼쪽에 키보드, 오른쪽에 서랍장",
+ "frames": [
+  {"name": "basic", "rows": [
+   "................................",
+   "................................",
+   "................................",
+   "................................",
+   ".OMLMLMLMO......................",
+   "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+   "OTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTO",
+   "OttttttttttttttttttttttttttttttO",
+   "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+   ".OtO...............OTTTTTTTTTTO.",
+   ".OtO...............OTTTOOOOTTTO.",
+   ".OtO...............OttttttttttO.",
+   ".OtO...............OOOOOOOOOOOO.",
+   ".OtO...............OTTTOOOOTTTO.",
+   ".OtO...............OttttttttttO.",
+   ".OOO...............OOOOOOOOOOOO."
+  ]}
+ ]
+}

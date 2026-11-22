@@ -1,0 +1,173 @@
+{
+  "schemaVersion": 1,
+  "ranks": [
+    {
+      "id": "intern",
+      "order": 1,
+      "nameKey": "rank.intern.name",
+      "dayRange": [1, 5],
+      "contentTier": "authored",
+      "mvp": true,
+      "starsToPromote": 8,
+      "maxStars": 15,
+      "regularEventsPerDay": [1, 2],
+      "workSegmentSec": 9.0,
+      "workQuota": 0.45,
+      "salaryBase": 100,
+      "bosses": { "senior": 1 },
+      "npcs": ["security_guard"],
+      "eventPool": [
+        { "eventId": "coffee", "weight": 1.0 },
+        { "eventId": "restroom", "weight": 1.0 },
+        { "eventId": "nap", "weight": 1.0 },
+        { "eventId": "shopping", "weight": 1.0 },
+        { "eventId": "snack", "weight": 1.0 }
+      ],
+      "promotionTitleKey": "rank.intern.promotion"
+    },
+    {
+      "id": "staff",
+      "order": 2,
+      "nameKey": "rank.staff.name",
+      "dayRange": [6, 15],
+      "contentTier": "authored",
+      "mvp": true,
+      "starsToPromote": 17,
+      "maxStars": 30,
+      "regularEventsPerDay": [3, 3],
+      "workSegmentSec": 7.5,
+      "workQuota": 0.5,
+      "salaryBase": 150,
+      "bosses": { "team_lead": 1 },
+      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
+      "eventPool": [
+        { "eventId": "coffee", "weight": 1.2 },
+        { "eventId": "restroom", "weight": 1.0 },
+        { "eventId": "nap", "weight": 0.9 },
+        { "eventId": "shopping", "weight": 1.0 },
+        { "eventId": "snack", "weight": 1.0 }
+      ],
+      "promotionTitleKey": "rank.staff.promotion"
+    },
+    {
+      "id": "assistant_manager",
+      "order": 3,
+      "nameKey": "rank.assistant_manager.name",
+      "dayRange": [16, 27],
+      "contentTier": "generated",
+      "mvp": true,
+      "starsToPromote": 20,
+      "maxStars": 36,
+      "regularEventsPerDay": [3, 4],
+      "workSegmentSec": 7.0,
+      "workQuota": 0.55,
+      "salaryBase": 200,
+      "bosses": { "team_lead": 1, "director": 1 },
+      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
+      "eventPool": [
+        { "eventId": "coffee", "weight": 1.2 },
+        { "eventId": "restroom", "weight": 1.0 },
+        { "eventId": "nap", "weight": 0.9 },
+        { "eventId": "shopping", "weight": 1.0 },
+        { "eventId": "snack", "weight": 1.0 }
+      ],
+      "promotionTitleKey": "rank.assistant_manager.promotion"
+    },
+    {
+      "id": "manager",
+      "order": 4,
+      "nameKey": "rank.manager.name",
+      "dayRange": [28, 40],
+      "contentTier": "generated",
+      "mvp": true,
+      "starsToPromote": 22,
+      "maxStars": 39,
+      "regularEventsPerDay": [4, 4],
+      "workSegmentSec": 6.5,
+      "workQuota": 0.6,
+      "salaryBase": 260,
+      "bosses": { "team_lead": 1, "director": 1, "ceo": 1 },
+      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
+      "eventPool": [
+        { "eventId": "coffee", "weight": 1.2 },
+        { "eventId": "restroom", "weight": 1.0 },
+        { "eventId": "nap", "weight": 0.9 },
+        { "eventId": "shopping", "weight": 1.0 },
+        { "eventId": "snack", "weight": 1.0 }
+      ],
+      "promotionTitleKey": "rank.manager.promotion"
+    },
+    {
+      "id": "deputy_general_manager",
+      "order": 5,
+      "nameKey": "rank.deputy_general_manager.name",
+      "dayRange": [41, 52],
+      "contentTier": "generated",
+      "mvp": true,
+      "starsToPromote": 21,
+      "maxStars": 36,
+      "regularEventsPerDay": [4, 4],
+      "workSegmentSec": 6.5,
+      "workQuota": 0.62,
+      "salaryBase": 320,
+      "bosses": { "team_lead": 2, "director": 1, "ceo": 1 },
+      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
+      "eventPool": [
+        { "eventId": "coffee", "weight": 1.2 },
+        { "eventId": "restroom", "weight": 1.0 },
+        { "eventId": "nap", "weight": 0.9 },
+        { "eventId": "shopping", "weight": 1.0 },
+        { "eventId": "snack", "weight": 1.0 }
+      ],
+      "promotionTitleKey": "rank.deputy_general_manager.promotion"
+    },
+    {
+      "id": "general_manager",
+      "order": 6,
+      "nameKey": "rank.general_manager.name",
+      "dayRange": [53, 64],
+      "contentTier": "generated",
+      "mvp": true,
+      "starsToPromote": 21,
+      "maxStars": 36,
+      "regularEventsPerDay": [4, 4],
+      "workSegmentSec": 6.0,
+      "workQuota": 0.64,
+      "salaryBase": 380,
+      "bosses": { "team_lead": 2, "director": 1, "ceo": 1 },
+      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
+      "eventPool": [
+        { "eventId": "coffee", "weight": 1.2 },
+        { "eventId": "restroom", "weight": 1.0 },
+        { "eventId": "nap", "weight": 0.9 },
+        { "eventId": "shopping", "weight": 1.0 },
+        { "eventId": "snack", "weight": 1.0 }
+      ],
+      "promotionTitleKey": "rank.general_manager.promotion"
+    },
+    {
+      "id": "executive",
+      "order": 7,
+      "nameKey": "rank.executive.name",
+      "dayRange": [65, null],
+      "contentTier": "endless",
+      "mvp": true,
+      "starsToPromote": null,
+      "maxStars": null,
+      "regularEventsPerDay": [4, 4],
+      "workSegmentSec": 6.0,
+      "workQuota": 0.65,
+      "salaryBase": 450,
+      "bosses": { "team_lead": 2, "director": 1, "ceo": 1 },
+      "npcs": ["security_guard", "accomplice", "snitch", "hr_inspector"],
+      "eventPool": [
+        { "eventId": "coffee", "weight": 1.2 },
+        { "eventId": "restroom", "weight": 1.0 },
+        { "eventId": "nap", "weight": 0.9 },
+        { "eventId": "shopping", "weight": 1.0 },
+        { "eventId": "snack", "weight": 1.0 }
+      ],
+      "promotionTitleKey": null
+    }
+  ]
+}

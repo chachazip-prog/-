@@ -1,0 +1,44 @@
+{
+ "name": "monitor",
+ "group": "furniture",
+ "size": [16, 16],
+ "note": "모니터 정면. sheet = 일반 스프레드시트(D-007, 특정 제품 UI 아님). off = 꺼진 화면",
+ "frames": [
+  {"name": "sheet", "rows": [
+   "OOOOOOOOOOOOOOOO",
+   "ODDDDDDDDDDDDDDO",
+   "ODGGGGGGGGGGGGDO",
+   "ODLMMLMMMLMMMLDO",
+   "ODLWWLWWWLWWWLDO",
+   "ODLLLLLLLLLLLLDO",
+   "ODLWWLWGGLWWWLDO",
+   "ODLLLLLLLLLLLLDO",
+   "ODLWWLWWWLWWWLDO",
+   "ODLLLLLLLLLLLLDO",
+   "ODDDDDDDDDDDDDDO",
+   "OOOOOOOOOOOOOOOO",
+   "......OMDO......",
+   "......OMDO......",
+   "....OOOOOOOO....",
+   "....OMMMMMMO...."
+  ]},
+  {"name": "off", "rows": [
+   "OOOOOOOOOOOOOOOO",
+   "ODDDDDDDDDDDDDDO",
+   "ODOOOOOOOOOOMMDO",
+   "ODOOOOOOOOOMMODO",
+   "ODOOOOOOOOMMOODO",
+   "ODOOOOOOOMMOOODO",
+   "ODOOOOOOOOOOOODO",
+   "ODOOOOOOOOOOOODO",
+   "ODOOOOOOOOOOOODO",
+   "ODOOOOOOOOOOOODO",
+   "ODDDDDDDDDDDDDDO",
+   "OOOOOOOOOOOOOOOO",
+   "......OMDO......",
+   "......OMDO......",
+   "....OOOOOOOO....",
+   "....OMMMMMMO...."
+  ]}
+ ]
+}
