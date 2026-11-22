@@ -12,7 +12,8 @@
     "tapWhileMoving": "stop_and_disguise",
     "tapWhileStopped": "move_to_tile",
     "tapOnSelfWhileStopped": "resume_previous_destination",
-    "_designNote": "D-033: 이동 중 화면 탭 = 그 자리 정지·위장. HUD(미션 칩·말풍선 수락)는 화면 탭으로 치지 않음 → 이동 중에도 목적지를 바로 바꿀 수 있음. 멈춘 상태에서 내 캐릭터를 탭하면 원래 목적지로 이어 감(두 번 탭할 필요 없게)."
+    "resultInputGuardSec": 0.6,
+    "_designNote": "D-033: 이동 중 화면 탭 = 그 자리 정지·위장. resultInputGuardSec(BUG-006): 결과 화면이 뜬 뒤 0.6초 동안 탭 무시 → 퇴근 직전 연타가 '다음 날 출근'·광고 버튼을 잘못 누르지 않게(사람 연타 간격 0.15~0.3초의 2배 이상). HUD(미션 칩·말풍선 수락)는 화면 탭으로 치지 않음 → 이동 중에도 목적지를 바로 바꿀 수 있음. 멈춘 상태에서 내 캐릭터를 탭하면 원래 목적지로 이어 감(두 번 탭할 필요 없게)."
   },
   "movement": {
     "pathfinding": "astar_4dir",
@@ -46,7 +47,10 @@
     "disguiseStaleAfterSec": 3.0,
     "disguiseStalePerSec": 0.03,
     "disguiseStaleExemptNearCover": true,
-    "anyStopIsDisguised": true
+    "anyStopIsDisguised": true,
+    "_deprecated": {
+      "talkedPerSec": "T-132 폐지(D-043). 런타임은 talked 상태 상승률을 0으로 고정하고 이 값을 읽지 않음. 개발 SuspicionRules 타입 호환을 위해 값 0으로만 남김. 다음 schemaVersion에서 삭제"
+    }
   },
   "leavePhase": {
     "suspicionOverrides": {},
@@ -134,8 +138,14 @@
     "_designNote": "억울한 실패 0 보장 장치 두 겹: ① 콘의 주인이 화면 밖에 있으면 의심이 오르지 않음 ② 화면 안으로 들어와 나를 볼 수 있기 전까지 가장자리 화살표가 최소 0.4초 먼저 떠 있어야 함. 화살표 색은 사원증 줄 색(상사=빨강, 경비=검정, 정의로운 동료=파랑, 인사팀=보라, D-037)."
   },
   "characters": {
-    "maxOnFloor": 8,
-    "_comment": "D-036. 플레이어 포함 층 전체 동시 존재 8명 이하(화면 동시 8명 이하를 구조적으로 보장). 일정 생성기가 검사"
+    "maxOnFloor": 12,
+    "maxOnScreen": 8,
+    "screenRowsTiles": 20,
+    "backgroundCountsTowardLimits": true,
+    "playerProps": [
+      "lanyard_sky"
+    ],
+    "_comment": "D-049(D-036 수정). 플레이어·배경 동료 포함 층 전체 동시 12명 이하, 화면(세로 20타일 창) 안 동시 8명 이하. 화면 안 인원은 각 캐릭터가 있을 수 있는 y 범위(자리·순찰 경유점)로 보수적으로 셈(검사기 §4-1). playerProps: D-052 플레이어 사원증 줄 하늘색(아트 팔레트 cool) — 공범 초록과 겹치지 않게 '줄 색 = 역할' 유지"
   },
   "work": {
     "fillPerSec": 0.04,
@@ -200,6 +210,8 @@
       "player_seat",
       "gate_use"
     ],
+    "submitScoreToLeaderboard": false,
+    "_leaderboardNote": "D-056: 이어하기로 이어간 판은 별·월급·도감은 정상 반영하되 땡땡이 점수를 게임센터 리더보드에 제출하지 않음(경쟁 공정성). 결과 화면에 result.leaderboard_skipped_continue 안내",
     "_comment": "적발 컷인 뒤(플레이 정지 상태) 제안. 의심 0.6으로 자리(퇴근 중이면 게이트 앞)에서 재개. 광고 규칙은 ads.json"
   },
   "assist": {
@@ -216,6 +228,9 @@
     "skipIfPlayerDisguised": true,
     "suspicionDuringTalk": 0.0,
     "suspicionAfterTalk": 0.0,
-    "_designNote": "D-043: 모든 말걸기 전에 말풍선 0.5초 이상 + 다가오는 동작. 말걸기 중·후 의심 가산 없음(시간 손실만). T-124: 위장 중인 플레이어에게는 지나가는 NPC가 말을 걸지 않음 → 위장이 보상받음."
+    "warnSecDefault": 0.5,
+    "catchRadiusRule": "radius < catchRadius <= radius × 2. 목표: 반응 없이 지나치면 75% 이상 성립, 0.3초 안에 반대로 피하면 최소 35% 이상 취소(QA 검증)",
+    "releaseSecRule": "releaseSec ≥ 그 액터의 최대 실제 전조(max(warnSec, sim.tellSec 최댓값)) + movement.postTalkHoldSec(0.5)",
+    "_designNote": "D-043: 모든 말걸기 전에 말풍선 0.5초 이상 + 다가오는 동작. 말걸기 중·후 의심 가산 없음(시간 손실만). T-124: 위장 중인 플레이어에게는 지나가는 NPC가 말을 걸지 않음 → 위장이 보상받음. T-132(D-054): 액터별 talk.warnSec(말풍선 길이, 실제 = max(warnSec, sim.tellSec)), talk.catchRadius(전조 끝에 이 거리 안이면 성립, 밖이면 취소 후 그쪽을 돌아봄 — 돌아보는 콘은 정상 판정이므로 피한 뒤 멈춰 위장해야 안전), talk.releaseSec(말걸기 직후 그 NPC 시선 무시) 확정."
   }
 }

@@ -14,14 +14,13 @@
     "noticeKey": "ad.interstitial_notice",
     "noticeSec": 1.0,
     "installDayMaxShows": 0,
-    "exemptFirstGamesLifetime": 5,
     "everyNGames": 3,
     "maxPerDay": 5,
     "minIntervalSec": 180,
     "skipIfRewardedWatchedThisGame": true,
     "removedByIap": "remove_ads",
     "dayBoundary": "local_midnight",
-    "_designNote": "D-031: 설치 첫날 0회, 3판에 1회, 하루 최대 5회, 간격 최소 3분, 그 판에 보상형을 봤으면 건너뜀. exemptFirstGamesLifetime 5는 REQ-006 '첫 5판 면제'와 D-031을 함께 적용(더 보수적인 쪽). 오너 확인 요청 중."
+    "_designNote": "D-031: 설치 첫날 0회, 3판에 1회, 하루 최대 5회, 간격 최소 3분, 그 판에 보상형을 봤으면 건너뜀. D-048(T-132): 오너가 고르지 않은 '첫 5판 면제'(exemptFirstGamesLifetime)는 삭제. 카운터 gamesPlayedLifetime은 통계용으로만 유지."
   },
   "rewarded": {
     "enabled": true,
@@ -45,7 +44,15 @@
         "condition": "caught_and_continue_unused_today",
         "maxPerDay": 1,
         "effect": "resume_suspicion_0_6_at_checkpoint",
-        "_comment": "적발 컷인이 끝나 플레이가 멈춘 뒤 제안. rules.continueAd"
+        "declineLabelKey": "ad.continue_decline",
+        "notCompletedKey": "ad.continue_not_completed",
+        "unavailableKey": "ad.continue_unavailable",
+        "declineButtonSameSize": true,
+        "autoCountdown": false,
+        "onNotEarned": "go_to_result_no_retry",
+        "onAdUnavailable": "skip_offer_screen",
+        "submitScoreToLeaderboard": false,
+        "_comment": "적발 컷인이 끝나 플레이가 멈춘 뒤 제안. rules.continueAd. 수용 기준 D-050 ①~⑧은 design/gdd.md §6-5. D-056: 이어간 판은 리더보드 미제출"
       },
       {
         "id": "salary_double",
@@ -54,6 +61,7 @@
         "condition": "once_per_game",
         "maxPerDay": 12,
         "effect": "double_soft_currency_this_game",
+        "buttonOnlyNoPopup": true,
         "_comment": "게임 내 월급(소프트 재화)만 2배. 토스포인트·현금성 없음(D-004)"
       }
     ]

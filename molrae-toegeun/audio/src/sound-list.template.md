@@ -1,7 +1,134 @@
+# 몰래퇴근 사운드 목록 (T-113, 1차 효과음 세트)
+
+> 이 파일은 `audio/tools/build.py`가 자동 생성합니다. 직접 고치지 말고 `audio/src/sound-list.template.md` 또는 `audio/src/*.json`을 고친 뒤 다시 빌드하세요.
+
+- 작성: mt-sound-designer / 2026-11-22
+- 방식: 전부 코드로 합성한 오리지널 사운드입니다(오실레이터, 노이즈, 엔벨로프, 포먼트 가산 합성). **외부 에셋은 0건**이라 `compliance/asset-license-ledger.md`에 추가할 항목이 없습니다.
+- 재생성: `python3 -I molrae-toegeun/audio/tools/build.py` (약 6초). 시드를 고정하고 ffmpeg `-bitexact`로 인코딩하므로 WAV, OGG, MP3, 이 문서까지 바이트 단위로 같게 나옵니다(2회 빌드 해시 비교로 확인).
+- 의존성: Python 3 표준 라이브러리, ffmpeg(libvorbis, libmp3lame). ffmpeg가 없으면 WAV만 만들고 경고를 냅니다(`audio/build/wav/`).
+- 형식: 모노 22,050Hz. 효과음은 OGG Vorbis q2와 MP3 48kbps, BGM은 OGG q0와 MP3 32kbps입니다. 엔진은 `[ogg, mp3]` 순서로 로드합니다(iOS WebView는 MP3를 씀).
+- 엔진용 메타데이터: `game/assets/audio/audio-manifest.json` (키, 파일, 길이, 루프, 재생 조건, 시각 신호, BGM 단계)
+
+## 1. 효과음
+
 {{SFX_TABLE}}
+
+용량 목표는 개당 20KB 이하이며 전부 충족합니다(최대 약 10KB).
+
+### 발소리 3단계(본부장·대표님 접근)
+| 단계 | 키 | 피크 | 음색 | 권장 조건 (화살표 크기 3단계와 같게) |
+|---|---|---|---|---|
+| 1 멀리 | `sfx_footsteps_1` | -11dBFS | 로우패스 1.8kHz, 둔탁 | approaching, 경로 7타일 이상 |
+| 2 중간 | `sfx_footsteps_2` | -6.5dBFS | 로우패스 2.6kHz | approaching, 경로 4~6타일 |
+| 3 가까움 | `sfx_footsteps_3` | -1dBFS | 필터 없음, 또각 | 경로 3타일 이하, 화면 진입 직전 |
+
+- 세 파일 모두 0.8초(2보) 루프이고 같은 박자라서, 단계가 바뀌면 같은 재생 위치(`seek`)에서 0.15초 크로스페이드하면 자연스럽게 커집니다.
+- 볼륨 차이와 함께 밝기(고음 성분)도 달라집니다. 그래서 폰 볼륨을 크게 올려도 '멀다/가깝다'가 구분됩니다.
+
+## 2. BGM `bgm_office` (칩튠, {{BPM}}bpm, {{LOOP_SEC}}초 루프)
 
 {{BGM_TABLE}}
 
+- 구성: `main`(살금살금 스타카토 리드, 계단 삼각파 베이스, 엇박 화음 스탭, 가벼운 하이햇)과 `tension`(16분 하이햇, 16분 아르페지오, 백비트 스네어, 4박 킥)입니다. 둘은 샘플 단위로 길이가 같습니다.
+- 꼬리 음을 루프 앞쪽에 접어 넣어서(`fold_loop`) 이음새에 끊김이나 클릭이 없습니다(이음새 점프 0.015, 평균 샘플 변화량 0.007 수준).
+- 용량: OGG 두 스템 합계 약 165KB, MP3 합계 약 251KB로 목표 300KB 이하입니다. 실제로는 플랫폼별로 한 포맷만 받습니다.
+
+### 위험 단계 파라미터 (`audio/src/bgm.json` → manifest `bgm.bgm_office.stages`)
+
 {{STAGE_TABLE}}
 
+- 단계 우선순위: `stopped > freeze > danger > finale > alert > calm`. 올릴 때는 즉시, 내릴 때는 조건이 1.5초 이어서 풀린 뒤에 내립니다(`hysteresis.downgradeDelaySec`).
+- 템포는 두 스템 공통 `playbackRate`로 올립니다. 음높이도 같이 올라갑니다(1.06배 = 약 1반음, 1.12배 = 약 2반음). 칩튠의 '서둘러!' 연출로 의도한 것입니다. 피치를 유지한 템포 변경은 웹에서 실시간으로 처리하기 어려워 쓰지 않습니다.
+- 레이어는 `tension` 스템 볼륨으로 올립니다. 두 스템은 항상 같이 재생하고(`tension`은 볼륨 0으로 시작), 같은 rate를 적용해야 박자가 어긋나지 않습니다.
+- 단계 조건(`when`)은 사운드 쪽 제안입니다. 최종 조건은 기획(`rules.threat.stages`)과 개발이 정하면 됩니다.
+
+## 3. 전조 사운드 구분 근거
+
+전조는 리듬(어택 수와 간격), 음색(음정이 있는지, 잡음인지), 주 대역, 길이의 4축 가운데 **최소 2축이 서로 다르게** 설계했습니다.
+
+| 전조 | 리듬 | 음색 | 주 대역 | 길이 |
+|---|---|---|---|---|
+| 팀장 의자 `sfx_chair_creak` | 끌리는 1음 + 짧은 1음 ('삐-걱') | 나무 마찰. 음높이가 미끄러지는 거친 소리 | 1~2kHz | 0.49초 |
+| 본부장 구두 `sfx_footsteps_*` | 0.34~0.4초 간격 반복 타격 | 짧은 타격음(음정 없음) | 2kHz 클릭 + 낮은 노크 | 반복 |
+| 대표님 `sfx_elevator_ding` | 단 1타 + 긴 여운. **동시에 BGM 정지(무음)** | 맑은 종(순음, 비화성 배음) | 1kHz | 1.3초 |
+| 경비 게이트 `sfx_gate_beep` | 빠른 2연타 ('삐빅') | 전자 사각파(가장 인공적) | 2kHz | 0.22초 |
+| 말걸기 `sfx_hey` | 올라가는 2음절 | 사람 목소리(포먼트) | 0.5~2kHz | 0.37초 |
+| 수다 `sfx_chatter` | 불규칙한 다음절, 두 사람 겹침 | 목소리 여럿 | 0.5~1kHz | 1.0초 |
+| 회의 끝 `sfx_meeting_end` | 문 '딸깍' 1타 뒤 웅성거림이 잦아듦 | 타격 + 목소리 여럿 | 0.5~1kHz | 1.0초 |
+| 멈춤 `sfx_footstep_stop` | 빨라지는 3보 + '끽' | 타격 + 고음 마찰 | 2~4kHz | 0.45초 |
+| 고개 돌림 `sfx_look_swish` | 한 번 쓸고 지나감 + 짧은 '음?' | 바람 노이즈 스윕 | 0.7→3kHz | 0.32초 |
+
+폰 스피커 근사(500Hz 이하 급감 + 7kHz 로우패스)를 거친 뒤 측정한 값입니다(`build.py`의 `phone_sim`). 잔존(dB)은 원음 대비 남는 에너지입니다. -6dB 안쪽이면 폰에서도 대부분 들립니다.
+
 {{ANALYSIS}}
+
+- 가장 가까운 쌍도 리듬이 다릅니다. 예를 들어 `sfx_footstep_stop`(3보 + 끽)과 `sfx_gate_beep`(2연타 전자음)는 대역은 비슷하지만 타격음과 사각파로 음색이 다릅니다. `sfx_chair_creak`과 `sfx_hey`는 대역이 겹치지만 하나는 마찰음이고 하나는 목소리입니다.
+- 대표님 전조는 'BGM이 갑자기 끊기는 것' 자체가 가장 강한 신호입니다. 그래서 `띵`은 BGM과 같은 프레임에 재생하고, BGM은 0.08초 만에 끕니다.
+- 발소리 1단계는 일부러 작게(-11dBFS) 만들어 폰 잔존이 -8dB입니다. 멀리 있다는 뜻이므로 의도한 값이고, 화살표 '소'가 같이 뜹니다.
+- 한계: 위 측정은 수치 근사입니다. 실기기(소형 스피커, 볼륨 30%)에서 오너 청취 확인이 필요합니다(QA 항목).
+
+## 4. 무음 모드 점검 (GDD v2 대비 시각 신호)
+
+| 사운드 | 대응 시각 신호 | GDD·데이터 | 상태 |
+|---|---|---|---|
+| `sfx_chair_creak` | 등 움찔(`back_twitch`), 회의 출발(`stand_up_notebook`) | §8, bosses·interrupts | 있음 |
+| `sfx_footsteps_1~3` | 가장자리 화살표, 크기 3단계 = 거리 | §5-5 | 있음 |
+| `sfx_footsteps_crescendo` | 문 열림 그림자 + 빨강 화살표 1.5초 | §8 | 있음 |
+| `sfx_footstep_stop` | 어깨 들썩(`stop_and_shoulder`) + 점선 콘 | §8-3 ⑤ | 있음 |
+| `sfx_elevator_ding` + BGM 정지 | 비네트 + 모두 고개 듦 + '얼음!' / 엘리베이터 붉은 빛 | §5-5, §8-3, §15 | 있음 |
+| `sfx_gate_beep` | **게이트 실패 시각 신호가 정의되지 않음** (막대·초록 칸만 있음) | §9 | **누락** |
+| `sfx_gate_ok` | **게이트 통과 시각 신호가 정의되지 않음** | §9 | **누락**(경미) |
+| `sfx_hey` | 말풍선 '!' + 손 들기 / 모자 인사 | §5-4 5, interrupts | 있음 |
+| `sfx_chatter` | `chat_bubbles` | INT-04 | 있음 |
+| `sfx_meeting_end` | `meeting_door_open` + '수고하셨습니다~' | INT-08 | 있음 |
+| `sfx_senior_hmm` | '…' 말풍선 | §8 | 있음 |
+| `sfx_cough` | 헛기침 포즈(`cough`) | bosses | 있음(포즈 상세는 아트 확인) |
+| `sfx_gasp` | `exclaim_stand_up` | INT-03 | 있음 |
+| `sfx_door_clipboard` | 방송 스피커 아이콘 + 카운트다운 / 보라 엘리베이터 | INT-05·06 | 있음 |
+| `sfx_look_swish` | 고개 먼저 + 점선 콘 0.5초 | §5-4 2·3 | 시각은 있음, **데이터에 sfx 키가 없음**(아래 참고) |
+| `sfx_tap` | **탭 목적지 마커가 정의되지 않음** | §4 | **누락** |
+| `sfx_pop` | 위장 포즈 전환 | §4-1 | 있음(전환 순간의 짧은 이펙트 권장) |
+| `sfx_suspicion_loop` | 의심 게이지 흔들림 + 콘 진하게(`seeing`) | rules.threat | 부분. **의심이 높을 때(0.7 이상)의 게이지 경고 표시(빨강 맥동 등) 정의 없음** |
+| `sfx_caught` | 적발 리액션 컷인 2초 | §6-1 | 있음 |
+| `sfx_clockout_fanfare` | 결과 화면 | §6-4 | 있음 |
+| `sfx_mission_complete` | **미션 칩 완료 표시(체크 등) 정의 없음** | §2 HUD | **누락** |
+| BGM 단계(alert/danger 템포 상승) | 화살표·'!'로 일부 대체됨. **전역 위험도 시각 표시는 없음** | §5-5 | 부분(권장: 화면 테두리 맥동) |
+
+반대 방향 누락(시각은 있는데 소리 키가 없음)도 있습니다. `rules.tell.mustHaveAudio: true`인데 걷는 사람의 둘러보기(`stopLookTellSec`), 뒤돌아보기(`glanceBack`), 모퉁이 회전(`cornerTurnTellSec`), 경비·인사팀 순찰 tell에는 `sfx` 필드가 없습니다. 이번에 `sfx_look_swish`를 만들었으니 기획에서 데이터에 키를 넣어 주시면 됩니다. 게이트 실패(`npcs.security_guard.gate`)에도 `sfx_gate_beep` 필드가 필요합니다.
+
+## 5. 개발 전달 사항
+
+| 키 | 재생 조건 | 루프 | 비고 |
+|---|---|---|---|
+| `sfx_chair_creak` | 팀장 tell 시작, INT-08 회의 출발 tell 시작 | X | 페이크든 진짜든 tell에서는 항상 재생 |
+| `sfx_cough` | 팀장 tell 뒤 페이크가 확정된 순간 | X | |
+| `sfx_senior_hmm` | 선배 tell 시작, INT-02 tell 시작 | X | |
+| `sfx_footsteps_crescendo` | 본부장 등장 tell(1.5초) 시작 | X | 이어서 거리 단계 루프로 넘김 |
+| `sfx_footsteps_1/2/3` | 본부장·대표님이 걷는 동안, 거리 단계에 따라 하나만 | O (0.8초) | 단계 전환 시 같은 위치에서 0.15초 크로스페이드. 정지하면 멈춤 |
+| `sfx_footstep_stop` | 대표님 재확인 페이크 전조, 걷던 상사가 웨이포인트에 멈출 때 | X | |
+| `sfx_look_swish` | 걷는 NPC의 둘러보기, 뒤돌아보기, 모퉁이 회전 전조(D-044 조건 충족 시만) | X | 화면 안 NPC일 때만. 화면 밖은 화살표 깜빡임 + 진동 |
+| `sfx_elevator_ding` | INT-09 tell 시작(**같은 프레임에 BGM `freeze`**), INT-11 tell | X | INT-11에서는 BGM을 유지 |
+| `sfx_gate_beep` | 게이트 태그 실패마다 | X | 경비 돌아보기 tell과 겹쳐도 됨 |
+| `sfx_gate_ok` | 게이트 태그 성공 | X | |
+| `sfx_hey` | 말걸기 tell('!') 시작: INT-01, INT-07 | X | 위장해서 취소되면 추가 소리 없음 |
+| `sfx_chatter` | INT-04 tell 시작 | X | 막고 있는 동안 원하면 1.2초 간격으로 반복 |
+| `sfx_meeting_end` | INT-08 `letoutSfx` | X | |
+| `sfx_gasp` | INT-03 tell 시작 | X | |
+| `sfx_door_clipboard` | INT-05·06 tell 시작 | X | |
+| `sfx_pop` | 이동 중 탭 → 위장 전환, 위장 해제, INT-12 제안 말풍선 | X | |
+| `sfx_tap` | 목적지 확정(바닥·미션 칩 탭) | X | 60ms 안의 중복 재생은 생략 |
+| `sfx_suspicion_loop` | 의심이 오르는 동안, 의심 0.5 이상일 때 | O (0.6초) | `rate = min(1.4, 1 + (의심 - 0.5) × 0.8)`. 오름이 멈추면 0.3초 페이드아웃 |
+| `sfx_caught` | 적발 컷인 시작 | X | BGM `stopped`(즉시), 의심 루프 정지 |
+| `sfx_clockout_fanfare` | 퇴근 성공 확정 | X | BGM을 0.2초 페이드아웃한 뒤 재생 |
+| `sfx_mission_complete` | 미션 완료 판정 | X | |
+| `bgm_office_main` + `bgm_office_tension` | 근무 시작부터 동시 루프 | O (32초) | 단계 표는 2장 참고. CEO `freeze`는 일시정지 후 같은 위치에서 0.6초 페이드인으로 재개 |
+
+- 로드: `this.load.audio(key, ['audio/sfx/<key>.ogg', 'audio/sfx/<key>.mp3'])`. 경로와 루프 정보는 `audio-manifest.json`에서 읽으면 키를 하드코딩하지 않아도 됩니다.
+- 짧은 루프(발소리, 의심 루프)는 일부 디코더가 OGG 끝에 약 20ms 패딩을 붙입니다(ffmpeg로 측정). 끝부분이 원래 무음이라 들리지는 않습니다. 정확히 맞추려면 manifest의 `durationSec`로 marker 루프(`{start: 0, duration}`)를 쓰세요. BGM은 OGG와 MP3 모두 디코딩 길이가 원본과 샘플 단위로 같습니다(MP3는 LAME 헤더 기준이고, iOS 실기기 확인이 필요합니다).
+- 모바일 자동재생 정책 때문에 첫 터치 뒤에 오디오 컨텍스트를 깨워야 합니다(Phaser `sound.unlock`).
+- 볼륨: 효과음은 피크 -1dBFS 기준으로 정규화되어 있고, 탭은 -9dB, 위장 전환은 -3dB로 일부러 작게 만들었습니다. 마스터 기준으로 BGM 0.6, 효과음 1.0을 권장합니다.
+- 설정: 무음과 진동 토글은 개발 범위입니다(GDD §15).
+
+## 6. 변환 계획과 남은 일
+- 웹 압축 포맷 변환은 완료했습니다(ffmpeg를 쓸 수 있음). ffmpeg가 없는 환경에서는 WAV만 만들어지므로 ffmpeg가 있는 곳에서 같은 스크립트를 다시 돌리면 됩니다.
+- 2차 후보(데이터에 키가 없어 이번에는 만들지 않음): 간식 '바삭'과 '바스락!!', 커피 따르기, 낮잠 '쿵', 쇼핑 결제, 가방 챙기기, 인사 QTE '?'와 '!', 공범 경고 헛기침(지금은 `sfx_cough`를 재사용 가능), 출근 징글, 메뉴 BGM.

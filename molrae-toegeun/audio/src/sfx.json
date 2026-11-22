@@ -587,7 +587,7 @@
       "dataRefs": [
         "interrupts.INT-08 (sfx_meeting_end)"
       ],
-      "visual": "회의실 문 열림 + '수고하셨습니다~' 말풍선",
+      "visual": "meeting_door_open + int.tl_meeting.letout 말풍선('수고하셨습니다~')",
       "hp": 250
     },
     {
@@ -770,6 +770,59 @@
         "interrupts.INT-06.tell"
       ],
       "visual": "pa_speaker_clipboard / elevator_open_purple"
+    },
+    {
+      "key": "sfx_look_swish",
+      "category": "tell",
+      "seed": 221,
+      "peakDb": -2.0,
+      "desc": "걷는 사람 둘러보기·뒤돌아보기·모퉁이 회전 전조 '휙 + 음?'",
+      "recipe": "swish",
+      "params": {
+        "dur": 0.32,
+        "f0": 700,
+        "f1": 3200,
+        "q": 1.6,
+        "peakAt": 0.35,
+        "decay": 9.0,
+        "voice": {
+          "at": 0.12,
+          "dur": 0.16,
+          "vowel": "m",
+          "f0": [
+            [
+              0,
+              260
+            ],
+            [
+              0.16,
+              330
+            ]
+          ],
+          "amp": [
+            [
+              0,
+              0
+            ],
+            [
+              0.02,
+              1
+            ],
+            [
+              0.16,
+              0
+            ]
+          ],
+          "gain": 0.35
+        }
+      },
+      "play": "걷는 NPC(본부장·인사팀·경비·회의 복귀 팀장)의 stopLookTell / glanceBack / cornerTurnTell(조건부, D-044) 시작에 1회. 화면 안일 때만(화면 밖은 화살표 깜빡임 + 진동)",
+      "dataRefs": [
+        "rules.sight.cornerTurnTellSec",
+        "npcs.*.patrol tell(sfx 필드 없음)",
+        "(키 없음: 데이터에 sfx 필드 추가 요청)"
+      ],
+      "visual": "고개 먼저 + 점선 콘 0.5초(GDD §5-4 2·3)"
     },
     {
       "key": "sfx_tap",

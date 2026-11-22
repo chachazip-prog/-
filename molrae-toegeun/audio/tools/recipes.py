@@ -233,7 +233,41 @@ def composite(p, rng, render):
     return out
 
 
+def swish(p, rng):
+    """옷깃·고개 돌림 '휙': 중심 주파수가 움직이는 밴드패스 노이즈(64샘플 블록 단위로 계수 갱신)."""
+    d = p["dur"]
+    n = ns(d)
+    nz = noise(d, rng)
+    out = [0.0] * n
+    blk = 64
+    state = None
+    for b0 in range(0, n, blk):
+        t = b0 / n
+        fc = p["f0"] * (p["f1"] / p["f0"]) ** t
+        seg = nz[b0:b0 + blk]
+        w0 = 2 * math.pi * fc / SR
+        al = math.sin(w0) / (2 * p["q"])
+        a0 = 1 + al
+        c = (al / a0, 0.0, -al / a0, -2 * math.cos(w0) / a0, (1 - al) / a0)
+        x1, x2, y1, y2 = state or (0.0, 0.0, 0.0, 0.0)
+        for i, v in enumerate(seg):
+            y = c[0] * v + c[1] * x1 + c[2] * x2 - c[3] * y1 - c[4] * y2
+            x2, x1, y2, y1 = x1, v, y1, y
+            out[b0 + i] = y
+        state = (x1, x2, y1, y2)
+    pk = p["peakAt"]
+    e = [((i / n) / pk) ** 2 if i / n < pk else math.exp(-((i / n) - pk) * p["decay"]) for i in range(n)]
+    out = [v * ev for v, ev in zip(out, e)]
+    if p.get("voice"):
+        v = p["voice"]
+        from synth import voice as _voice
+        vx = _voice(v["dur"], v["f0"], [(0, vowel(v["vowel"]))], v["amp"], breath=0.05, rng=rng)
+        mix_into(out, vx, v["at"], v["gain"])
+    return out
+
+
 RECIPES = {
+    "swish": swish,
     "creak": creak,
     "footsteps": footsteps,
     "footstep_stop": footstep_stop,

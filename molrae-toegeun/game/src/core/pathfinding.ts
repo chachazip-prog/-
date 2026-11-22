@@ -63,8 +63,14 @@ class MinHeap {
  * start → goal 경로. 반환 배열은 start를 제외하고 goal을 포함한다.
  * start === goal이면 빈 배열, 도달 불가(또는 goal 통행 불가)면 null.
  */
-export function findPath(map: GridMap, start: Tile, goal: Tile): Tile[] | null {
+export type BlockedFn = (x: number, y: number) => boolean;
+
+/**
+ * @param blocked 추가로 막힌 타일(동적: 점유된 의자·게이트·서 있는 사람). 출발 타일에는 적용하지 않는다
+ */
+export function findPath(map: GridMap, start: Tile, goal: Tile, blocked?: BlockedFn): Tile[] | null {
   if (!isWalkable(map, goal.x, goal.y)) return null;
+  if (blocked && blocked(goal.x, goal.y) && !(start.x === goal.x && start.y === goal.y)) return null;
   if (start.x === goal.x && start.y === goal.y) return [];
   const w = map.width;
   const n = w * map.height;
@@ -89,6 +95,7 @@ export function findPath(map: GridMap, start: Tile, goal: Tile): Tile[] | null {
     for (let d = 0; d < 4; d++) {
       const nx = cx + DX[d]!, ny = cy + DY[d]!;
       if (!isWalkable(map, nx, ny)) continue;
+      if (blocked && blocked(nx, ny)) continue;
       const ni = ny * w + nx;
       if (closed[ni]) continue;
       const ng = gc + 1;
@@ -109,4 +116,31 @@ export function findPath(map: GridMap, start: Tile, goal: Tile): Tile[] | null {
   }
   out.reverse();
   return out;
+}
+
+/**
+ * from 타일에서 모든 타일까지의 4방향 통행 거리(BFS). 도달 불가 = -1.
+ * 화면 밖 경고의 '경로 거리' 조건(rules.threat.approachPathTilesWithin, X6)용.
+ */
+export function distanceField(map: GridMap, from: Tile, blocked?: BlockedFn): Int32Array {
+  const w = map.width, n = w * map.height;
+  const dist = new Int32Array(n).fill(-1);
+  if (!isWalkable(map, from.x, from.y)) return dist;
+  const q = new Int32Array(n);
+  let head = 0, tail = 0;
+  const s = from.y * w + from.x;
+  dist[s] = 0; q[tail++] = s;
+  while (head < tail) {
+    const cur = q[head++]!;
+    const cx = cur % w, cy = (cur - cx) / w;
+    for (let d = 0; d < 4; d++) {
+      const nx = cx + DX[d]!, ny = cy + DY[d]!;
+      if (!isWalkable(map, nx, ny) || (blocked && blocked(nx, ny))) continue;
+      const ni = ny * w + nx;
+      if (dist[ni] !== -1) continue;
+      dist[ni] = dist[cur]! + 1;
+      q[tail++] = ni;
+    }
+  }
+  return dist;
 }

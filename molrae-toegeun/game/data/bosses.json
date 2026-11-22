@@ -63,7 +63,12 @@
           "minDurationSec": 1.0,
           "enabledBy": "INT-02",
           "skipIfPlayerDisguised": true,
-          "approachMotion": true
+          "approachMotion": true,
+          "warnSec": 1.0,
+          "catchRadius": 2.5,
+          "releaseSec": 1.5,
+          "warnLineKey": "int.senior_smalltalk.tell",
+          "dodgedLineKey": "int.senior_smalltalk.cancel"
         }
       },
       "opportunities": [],
@@ -151,7 +156,12 @@
           "onlyWhilePlayerAway": true,
           "enabledBy": "INT-01",
           "skipIfPlayerDisguised": true,
-          "approachMotion": true
+          "approachMotion": true,
+          "warnSec": 0.6,
+          "catchRadius": 1.8,
+          "releaseSec": 1.3,
+          "warnLineKey": "int.callout_team_lead.tell",
+          "dodgedLineKey": "int.callout_team_lead.cancel"
         }
       },
       "opportunities": [

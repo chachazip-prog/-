@@ -1,0 +1,3 @@
+# 중간 산출물(WAV). build.py로 언제든 재생성
+build/
+__pycache__/

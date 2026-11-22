@@ -1,0 +1,108 @@
+{
+ "name": "bg_b",
+ "group": "background",
+ "base": "body-b",
+ "note": "배경 동료(D-049, 메카닉 없음·상호작용 없음). 사원증 줄 = 회색(mid, 배경 동료 전용 중립색). 걷기 4방향 + 앉아서 타이핑 sit_type_0/1(뒷모습, 의자 등받이 쪽에서 본 모습, 2px 낮춤). 옷은 채도가 낮은 색으로 골라 역할 캐릭터보다 덜 튀게 함. bg_b: 바디 B + 연청색 셔츠 + 둥근 뒤통수 정수리 한 가닥",
+ "swap": {
+  "shirt": "wall",
+  "shirt_sh": "wall_sh",
+  "$lanyard": "mid"
+ },
+ "frames": [
+  {
+   "name": "sit_type_0",
+   "from": "idle_up",
+   "bob": [
+    2,
+    16
+   ]
+  },
+  {
+   "name": "sit_type_1",
+   "from": "idle_up",
+   "bob": [
+    2,
+    16
+   ]
+  }
+ ],
+ "stamps": [
+  {
+   "dir": "down",
+   "x": 7,
+   "y": 0,
+   "rows": [
+    "O",
+    "OH"
+   ]
+  },
+  {
+   "dir": "up",
+   "x": 7,
+   "y": 0,
+   "rows": [
+    "O",
+    "OH"
+   ]
+  },
+  {
+   "dir": "right",
+   "x": 7,
+   "y": 0,
+   "rows": [
+    "O",
+    "OH"
+   ]
+  },
+  {
+   "frames": [
+    "sit_type_0"
+   ],
+   "x": 1,
+   "y": 13,
+   "rows": [
+    "Op"
+   ]
+  },
+  {
+   "frames": [
+    "sit_type_1"
+   ],
+   "x": 13,
+   "y": 13,
+   "rows": [
+    "pO"
+   ]
+  },
+  {
+   "frames": [
+    "sit_type_0",
+    "sit_type_1"
+   ],
+   "x": 3,
+   "y": 14,
+   "rows": [
+    "p........p"
+   ]
+  }
+ ],
+ "anims": [
+  {
+   "key": "sit_type",
+   "frames": [
+    "sit_type_0",
+    "sit_type_1"
+   ],
+   "frameRate": 4,
+   "repeat": -1
+  },
+  {
+   "key": "sit_idle",
+   "frames": [
+    "sit_type_0"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  }
+ ]
+}

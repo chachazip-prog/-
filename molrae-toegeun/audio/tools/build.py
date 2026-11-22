@@ -19,6 +19,7 @@ import shutil
 import subprocess
 import sys
 
+sys.dont_write_bytecode = True  # __pycache__ 생성 방지(저장소 오염 방지)
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
@@ -397,7 +398,7 @@ def write_doc(rows, bgm_rows, bgm_spec, loop_sec):
     for c, item in tells:
         a = item["analysis"]
         lines.append("| `%s` | %.1f | %s | %d | %d | %.2f |" % (c["key"], a["phoneKeepDb"], " / ".join("%.2f" % b for b in a["bands"]), a["centroidHz"], a["onsets"], a["tonality"]))
-    core = ["sfx_chair_creak", "sfx_footsteps_crescendo", "sfx_footstep_stop", "sfx_elevator_ding", "sfx_gate_beep", "sfx_hey", "sfx_chatter", "sfx_meeting_end"]
+    core = ["sfx_chair_creak", "sfx_footsteps_crescendo", "sfx_footstep_stop", "sfx_elevator_ding", "sfx_gate_beep", "sfx_hey", "sfx_chatter", "sfx_meeting_end", "sfx_look_swish"]
     by = {c["key"]: (c, item) for c, item in tells}
     pairs = []
     for i, k1 in enumerate(core):
@@ -408,7 +409,7 @@ def write_doc(rows, bgm_rows, bgm_spec, loop_sec):
             pairs.append((d, k1, k2))
     pairs.sort()
     lines.append("")
-    lines.append("핵심 전조 8종 특징 거리(작을수록 비슷함, 대역 비율·길이·어택 수·음정성 기준). 가장 가까운 5쌍:")
+    lines.append("핵심 전조 9종 특징 거리(작을수록 비슷함, 대역 비율·길이·어택 수·음정성 기준). 가장 가까운 5쌍:")
     lines.append("")
     for d, k1, k2 in pairs[:5]:
         lines.append("- `%s` - `%s`: %.2f" % (k1, k2, d))

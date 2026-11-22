@@ -2,97 +2,808 @@
  "name": "player",
  "group": "character",
  "base": "body-a",
- "note": "플레이어. 바디 A + 파랑 셔츠 + 하늘색(cool) 사원증 줄(T-125: 공범 동료 초록과 겹쳐 변경) + 정수리 삐침머리(오른쪽 위로 튀는 갈고리 + 왼쪽 옆머리 1px 삐침 + 가운데 앞머리 한 가닥). 눈은 세로 2px 동그란 눈(팀장은 눈썹 있음, 플레이어는 없음). disguise = 서류 보는 척 위장, caught = 들킴(놀람) 1프레임: 머리카락 곤두섬·흰자 눈·벌린 입·두 손 번쩍",
- "swap": {"$lanyard": "cool"},
+ "note": "플레이어. 바디 A + 파랑 셔츠 + 하늘색(cool) 사원증 줄(T-125: 공범 동료 초록과 겹쳐 변경) + 정수리 삐침머리(오른쪽 위로 튀는 갈고리 + 왼쪽 옆머리 1px 삐침 + 가운데 앞머리 한 가닥). 눈은 세로 2px 동그란 눈(팀장은 눈썹 있음, 플레이어는 없음). disguise = 서류 보는 척 위장, caught = 들킴(놀람) 1프레임: 머리카락 곤두섬·흰자 눈·벌린 입·두 손 번쩍. T-130: 위장 포즈 5종(rules.disguise.poseByZone id와 같은 이름) pose_<id>_<down|right|left>[_0|_1]. read_document 정면은 disguise 프레임 재사용. 정면·옆 2방향(왼쪽은 반전), 뒷모습 위장은 없음(뒷모습이면 정면 포즈로 돌려 세움)",
+ "swap": {
+  "$lanyard": "cool"
+ },
  "frames": [
-  {"name": "disguise", "rows": [
-   "......O..OOO....",
-   ".....OOOOHHO....",
-   "...OOHHHHHHOO...",
-   "..OHHHDDHHHHHO..",
-   "OHHHHDHHHHHHHHO.",
-   ".OHHHHHHHHHHHHO.",
-   ".OHHSSSHSSSSHHO.",
-   ".OHSSSOSSSSOSHO.",
-   ".OOOOOOOOOOOOOO.",
-   "OSOWWWWWWWWWWOSO",
-   "OSOWGGGGWWWWWOSO",
-   ".OOWWWWWWWWWWOO.",
-   "..OWMMMMWMMMWO..",
-   "..OWWWWWWWWWWO..",
-   "..OWMMMWWMMWWO..",
-   "..OOOOOOOOOOOO..",
-   "....ODDDDDDO....",
-   "....ODDOODDO....",
-   "....ODDOODDO....",
-   "....OOOOOOOO...."
-  ]},
-  {"name": "caught", "rows": [
-   "...O..O..OOO.O..",
-   "....OOOOOHHOO...",
-   "...OOHHHHHHOO...",
-   "..OHHHDDHHHHHO..",
-   "OHHHHDHHHHHHHHO.",
-   ".OHHHHHHHHHHHHO.",
-   ".OHHSSSHSSSSHHO.",
-   ".OHSWWSSSSWWSHO.",
-   ".OSSWOSSSSOWSSO.",
-   "..OSSSSOOSSSSO..",
-   ".O.OOOssssOOO.O.",
-   "OSO.OPNPPNPO.OSO",
-   "OSOOPPPNNPPPOOSO",
-   ".OpOPPPWWPPPOpO.",
-   "..OOpPPWWPPpOO..",
-   "....OppppppO....",
-   "....ODDDDDDO....",
-   "....ODDOODDO....",
-   "....ODDOODDO....",
-   "....OOOOOOOO...."
-  ]}
+  {
+   "name": "disguise",
+   "rows": [
+    "......O..OOO....",
+    ".....OOOOHHO....",
+    "...OOHHHHHHOO...",
+    "..OHHHDDHHHHHO..",
+    "OHHHHDHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHSSSHSSSSHHO.",
+    ".OHSSSOSSSSOSHO.",
+    ".OOOOOOOOOOOOOO.",
+    "OSOWWWWWWWWWWOSO",
+    "OSOWGGGGWWWWWOSO",
+    ".OOWWWWWWWWWWOO.",
+    "..OWMMMMWMMMWO..",
+    "..OWWWWWWWWWWO..",
+    "..OWMMMWWMMWWO..",
+    "..OOOOOOOOOOOO..",
+    "....ODDDDDDO....",
+    "....ODDOODDO....",
+    "....ODDOODDO....",
+    "....OOOOOOOO...."
+   ]
+  },
+  {
+   "name": "caught",
+   "rows": [
+    "...O..O..OOO.O..",
+    "....OOOOOHHOO...",
+    "...OOHHHHHHOO...",
+    "..OHHHDDHHHHHO..",
+    "OHHHHDHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHSSSHSSSSHHO.",
+    ".OHSWWSSSSWWSHO.",
+    ".OSSWOSSSSOWSSO.",
+    "..OSSSSOOSSSSO..",
+    ".O.OOOssssOOO.O.",
+    "OSO.OPNPPNPO.OSO",
+    "OSOOPPPNNPPPOOSO",
+    ".OpOPPPWWPPPOpO.",
+    "..OOpPPWWPPpOO..",
+    "....OppppppO....",
+    "....ODDDDDDO....",
+    "....ODDOODDO....",
+    "....ODDOODDO....",
+    "....OOOOOOOO...."
+   ]
+  },
+  {
+   "name": "pose_read_document_right",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_read_document_left",
+   "flip": "pose_read_document_right"
+  },
+  {
+   "name": "pose_drink_water_down_0",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_drink_water_right_0",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_drink_water_left_0",
+   "flip": "pose_drink_water_right_0"
+  },
+  {
+   "name": "pose_drink_water_down_1",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_drink_water_right_1",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_drink_water_left_1",
+   "flip": "pose_drink_water_right_1"
+  },
+  {
+   "name": "pose_copying_down_0",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_copying_right_0",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_copying_left_0",
+   "flip": "pose_copying_right_0"
+  },
+  {
+   "name": "pose_copying_down_1",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_copying_right_1",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_copying_left_1",
+   "flip": "pose_copying_right_1"
+  },
+  {
+   "name": "pose_water_plant_down_0",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_water_plant_right_0",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_water_plant_left_0",
+   "flip": "pose_water_plant_right_0"
+  },
+  {
+   "name": "pose_water_plant_down_1",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_water_plant_right_1",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_water_plant_left_1",
+   "flip": "pose_water_plant_right_1"
+  },
+  {
+   "name": "pose_check_phone_down_0",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_check_phone_right_0",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_check_phone_left_0",
+   "flip": "pose_check_phone_right_0"
+  },
+  {
+   "name": "pose_check_phone_down_1",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_check_phone_right_1",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_check_phone_left_1",
+   "flip": "pose_check_phone_right_1"
+  }
  ],
  "stamps": [
-  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
-   "......O..OOO....",
-   ".....OOOOHHO....",
-   "...OOHHHHHHOO...",
-   "..OHHHDDHHHHHO..",
-   "OHHHHDHHHHHHHHO.",
-   ".OHHHHHHHHHHHHO.",
-   ".OHHSSSHSSSSHHO.",
-   ".OHSSOSSSSOSSHO.",
-   ".OSSSOSSSSOSSSO.",
-   "..OSSSSssSSSSO..",
-   "...OOOssssOOO..."
-  ]},
-  {"dir": "up", "clear": true, "x": 0, "y": 0, "rows": [
-   "....OOO..O......",
-   "....OHHOOOO.....",
-   "...OOHHHHHHOO...",
-   "..OHHHHHHDDHHO..",
-   ".OHHHHHHHHHDHHHO",
-   ".OHHHHHHHHHHHHO.",
-   ".OHHHHHHHHHHHHO.",
-   ".OHHHHHHHHHHHHO.",
-   ".OSHHHHHHHHHHSO.",
-   "..OHHOHHHHOHHO..",
-   "...OOOssssOOO..."
-  ]},
-  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
-   "......OOO.......",
-   "....OOHHOO......",
-   "...OHHHHHHOO....",
-   "..OHHHHHDDHHO...",
-   "OHHHHHHHHHHDHO..",
-   ".OHHHHHHHHHHHO..",
-   ".OHHHHHHHSHSSO..",
-   ".OHHHHHSSSSOSO..",
-   ".OHHHHHsSSSOSO..",
-   "..OHHHHSSSSSSO..",
-   "...OOOOsssOOO..."
-  ]}
+  {
+   "dir": "down",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "......O..OOO....",
+    ".....OOOOHHO....",
+    "...OOHHHHHHOO...",
+    "..OHHHDDHHHHHO..",
+    "OHHHHDHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHSSSHSSSSHHO.",
+    ".OHSSOSSSSOSSHO.",
+    ".OSSSOSSSSOSSSO.",
+    "..OSSSSssSSSSO..",
+    "...OOOssssOOO..."
+   ]
+  },
+  {
+   "dir": "up",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "....OOO..O......",
+    "....OHHOOOO.....",
+    "...OOHHHHHHOO...",
+    "..OHHHHHHDDHHO..",
+    ".OHHHHHHHHHDHHHO",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OSHHHHHHHHHHSO.",
+    "..OHHOHHHHOHHO..",
+    "...OOOssssOOO..."
+   ]
+  },
+  {
+   "dir": "right",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "......OOO.......",
+    "....OOHHOO......",
+    "...OHHHHHHOO....",
+    "..OHHHHHDDHHO...",
+    "OHHHHHHHHHHDHO..",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHSHSSO..",
+    ".OHHHHHSSSSOSO..",
+    ".OHHHHHsSSSOSO..",
+    "..OHHHHSSSSSSO..",
+    "...OOOOsssOOO..."
+   ]
+  },
+  {
+   "frames": [
+    "pose_read_document_right"
+   ],
+   "x": 7,
+   "y": 14,
+   "rows": [
+    "P"
+   ]
+  },
+  {
+   "frames": [
+    "pose_read_document_right"
+   ],
+   "x": 11,
+   "y": 4,
+   "rows": [
+    ".OOOO",
+    ".OWWO",
+    ".OWWO",
+    ".OWMO",
+    ".OWWO",
+    ".OWMO",
+    ".OWWO",
+    "PSWWO",
+    ".OOOO"
+   ]
+  },
+  {
+   "frames": [
+    "pose_drink_water_down_0",
+    "pose_drink_water_down_1"
+   ],
+   "x": 11,
+   "y": 14,
+   "rows": [
+    "p"
+   ]
+  },
+  {
+   "frames": [
+    "pose_drink_water_right_0",
+    "pose_drink_water_right_1"
+   ],
+   "x": 7,
+   "y": 14,
+   "rows": [
+    "P"
+   ]
+  },
+  {
+   "frames": [
+    "pose_drink_water_down_0"
+   ],
+   "x": 8,
+   "y": 9,
+   "rows": [
+    "OCCO",
+    "OWWO",
+    "OWWO",
+    "OSSO",
+    ".OpO"
+   ]
+  },
+  {
+   "frames": [
+    "pose_drink_water_down_1"
+   ],
+   "x": 8,
+   "y": 8,
+   "rows": [
+    "OCCO",
+    "OWWO",
+    "OWWO",
+    "OWWO",
+    "OSSO",
+    ".OpO"
+   ]
+  },
+  {
+   "frames": [
+    "pose_drink_water_down_1"
+   ],
+   "x": 5,
+   "y": 7,
+   "rows": [
+    "S....S"
+   ]
+  },
+  {
+   "frames": [
+    "pose_drink_water_right_0"
+   ],
+   "x": 10,
+   "y": 8,
+   "rows": [
+    "..OOOO",
+    "..OCCO",
+    "..OWWO",
+    "..OWWO",
+    ".PSOOO"
+   ]
+  },
+  {
+   "frames": [
+    "pose_drink_water_right_1"
+   ],
+   "x": 10,
+   "y": 7,
+   "rows": [
+    "...OOO",
+    "..OOCO",
+    "..OCWO",
+    "..OWWO",
+    "..OWWO",
+    ".PSOOO"
+   ]
+  },
+  {
+   "frames": [
+    "pose_drink_water_right_1"
+   ],
+   "x": 11,
+   "y": 7,
+   "rows": [
+    "S"
+   ]
+  },
+  {
+   "frames": [
+    "pose_copying_down_0",
+    "pose_copying_down_1"
+   ],
+   "x": 5,
+   "y": 7,
+   "rows": [
+    "S....S"
+   ]
+  },
+  {
+   "frames": [
+    "pose_copying_down_0"
+   ],
+   "x": 3,
+   "y": 12,
+   "rows": [
+    ".OOOOOOOO.",
+    "OSWWWWWWSO",
+    "OOLLLLLLOO",
+    "..OOOOOO.."
+   ]
+  },
+  {
+   "frames": [
+    "pose_copying_down_1"
+   ],
+   "x": 3,
+   "y": 11,
+   "rows": [
+    ".OOOOOOOO.",
+    "OSWWWWWWSO",
+    "OOLLLLLLOO",
+    ".pOOOOOOp."
+   ]
+  },
+  {
+   "frames": [
+    "pose_copying_right_0",
+    "pose_copying_right_1"
+   ],
+   "x": 7,
+   "y": 14,
+   "rows": [
+    "P"
+   ]
+  },
+  {
+   "frames": [
+    "pose_copying_right_0",
+    "pose_copying_right_1"
+   ],
+   "x": 9,
+   "y": 10,
+   "rows": [
+    "..WWW"
+   ]
+  },
+  {
+   "frames": [
+    "pose_copying_right_0",
+    "pose_copying_right_1"
+   ],
+   "x": 7,
+   "y": 11,
+   "rows": [
+    "OOWWWO",
+    "OWWWWO",
+    "OLLLLO",
+    "OOOOOO"
+   ]
+  },
+  {
+   "frames": [
+    "pose_copying_right_0"
+   ],
+   "x": 11,
+   "y": 12,
+   "rows": [
+    "OOO.",
+    "PPSO",
+    "OOO."
+   ]
+  },
+  {
+   "frames": [
+    "pose_copying_right_1"
+   ],
+   "x": 11,
+   "y": 12,
+   "rows": [
+    "OOOO",
+    "PPPS",
+    "OOOO"
+   ]
+  },
+  {
+   "frames": [
+    "pose_water_plant_down_0",
+    "pose_water_plant_down_1"
+   ],
+   "x": 10,
+   "y": 7,
+   "rows": [
+    "O"
+   ]
+  },
+  {
+   "frames": [
+    "pose_water_plant_down_0",
+    "pose_water_plant_down_1"
+   ],
+   "x": 9,
+   "y": 11,
+   "rows": [
+    "..OOO.O",
+    ".OSOOOC",
+    "OCCCOCO",
+    "OCCcOO.",
+    "OcccO..",
+    "OOOOO.."
+   ]
+  },
+  {
+   "frames": [
+    "pose_water_plant_down_0"
+   ],
+   "x": 15,
+   "y": 15,
+   "rows": [
+    "C",
+    ".",
+    "C"
+   ]
+  },
+  {
+   "frames": [
+    "pose_water_plant_down_1"
+   ],
+   "x": 15,
+   "y": 16,
+   "rows": [
+    "C",
+    ".",
+    "C"
+   ]
+  },
+  {
+   "frames": [
+    "pose_water_plant_right_0",
+    "pose_water_plant_right_1"
+   ],
+   "x": 7,
+   "y": 14,
+   "rows": [
+    "P"
+   ]
+  },
+  {
+   "frames": [
+    "pose_water_plant_right_0",
+    "pose_water_plant_right_1"
+   ],
+   "x": 9,
+   "y": 10,
+   "rows": [
+    "...OOO.",
+    "..OS.O.",
+    ".OCCCOO",
+    "PSCCcOC",
+    ".OcccOO",
+    ".OOOOO."
+   ]
+  },
+  {
+   "frames": [
+    "pose_water_plant_right_0"
+   ],
+   "x": 15,
+   "y": 15,
+   "rows": [
+    "C",
+    ".",
+    " "
+   ]
+  },
+  {
+   "frames": [
+    "pose_water_plant_right_0"
+   ],
+   "x": 15,
+   "y": 17,
+   "rows": [
+    "C"
+   ]
+  },
+  {
+   "frames": [
+    "pose_water_plant_right_1"
+   ],
+   "x": 15,
+   "y": 16,
+   "rows": [
+    "C",
+    ".",
+    "C"
+   ]
+  },
+  {
+   "frames": [
+    "pose_check_phone_down_0",
+    "pose_check_phone_down_1"
+   ],
+   "x": 5,
+   "y": 7,
+   "rows": [
+    "S....S"
+   ]
+  },
+  {
+   "frames": [
+    "pose_check_phone_down_0",
+    "pose_check_phone_down_1"
+   ],
+   "x": 4,
+   "y": 14,
+   "rows": [
+    "p......p"
+   ]
+  },
+  {
+   "frames": [
+    "pose_check_phone_down_0"
+   ],
+   "x": 5,
+   "y": 11,
+   "rows": [
+    ".OOOO.",
+    "SODCOS",
+    "SOCWOS",
+    ".OOOO."
+   ]
+  },
+  {
+   "frames": [
+    "pose_check_phone_down_1"
+   ],
+   "x": 5,
+   "y": 11,
+   "rows": [
+    ".OOOO.",
+    "SOWCOS",
+    "SOCCOS",
+    ".OOOO."
+   ]
+  },
+  {
+   "frames": [
+    "pose_check_phone_right_0",
+    "pose_check_phone_right_1"
+   ],
+   "x": 7,
+   "y": 14,
+   "rows": [
+    "P"
+   ]
+  },
+  {
+   "frames": [
+    "pose_check_phone_right_0",
+    "pose_check_phone_right_1"
+   ],
+   "x": 11,
+   "y": 7,
+   "rows": [
+    "S"
+   ]
+  },
+  {
+   "frames": [
+    "pose_check_phone_right_0"
+   ],
+   "x": 12,
+   "y": 8,
+   "rows": [
+    ".OO",
+    "OCO",
+    "OWO",
+    "SDO",
+    "POO"
+   ]
+  },
+  {
+   "frames": [
+    "pose_check_phone_right_1"
+   ],
+   "x": 12,
+   "y": 8,
+   "rows": [
+    ".OO",
+    "OWO",
+    "OCO",
+    "SDO",
+    "POO"
+   ]
+  }
  ],
  "anims": [
-  {"key": "disguise", "frames": ["disguise"], "frameRate": 1, "repeat": -1},
-  {"key": "caught", "frames": ["caught"], "frameRate": 1, "repeat": 0}
+  {
+   "key": "disguise",
+   "frames": [
+    "disguise"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "caught",
+   "frames": [
+    "caught"
+   ],
+   "frameRate": 1,
+   "repeat": 0
+  },
+  {
+   "key": "pose_read_document_down",
+   "frames": [
+    "disguise"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "pose_read_document_right",
+   "frames": [
+    "pose_read_document_right"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "pose_read_document_left",
+   "frames": [
+    "pose_read_document_left"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "pose_drink_water_down",
+   "frames": [
+    "pose_drink_water_down_0",
+    "pose_drink_water_down_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_drink_water_right",
+   "frames": [
+    "pose_drink_water_right_0",
+    "pose_drink_water_right_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_drink_water_left",
+   "frames": [
+    "pose_drink_water_left_0",
+    "pose_drink_water_left_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_copying_down",
+   "frames": [
+    "pose_copying_down_0",
+    "pose_copying_down_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_copying_right",
+   "frames": [
+    "pose_copying_right_0",
+    "pose_copying_right_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_copying_left",
+   "frames": [
+    "pose_copying_left_0",
+    "pose_copying_left_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_water_plant_down",
+   "frames": [
+    "pose_water_plant_down_0",
+    "pose_water_plant_down_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_water_plant_right",
+   "frames": [
+    "pose_water_plant_right_0",
+    "pose_water_plant_right_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_water_plant_left",
+   "frames": [
+    "pose_water_plant_left_0",
+    "pose_water_plant_left_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_check_phone_down",
+   "frames": [
+    "pose_check_phone_down_0",
+    "pose_check_phone_down_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_check_phone_right",
+   "frames": [
+    "pose_check_phone_right_0",
+    "pose_check_phone_right_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_check_phone_left",
+   "frames": [
+    "pose_check_phone_left_0",
+    "pose_check_phone_left_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  }
  ]
 }
