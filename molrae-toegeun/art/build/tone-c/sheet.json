@@ -1,0 +1,454 @@
+{
+ "frames": {
+  "chair/basic": {
+   "frame": {
+    "h": 24,
+    "w": 16,
+    "x": 68,
+    "y": 0
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 24,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 24,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "chair/high_back": {
+   "frame": {
+    "h": 24,
+    "w": 16,
+    "x": 85,
+    "y": 0
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 24,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 24,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "desk/basic": {
+   "frame": {
+    "h": 16,
+    "w": 32,
+    "x": 0,
+    "y": 25
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 32
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 32,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "monitor/off": {
+   "frame": {
+    "h": 16,
+    "w": 16,
+    "x": 50,
+    "y": 25
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "monitor/sheet": {
+   "frame": {
+    "h": 16,
+    "w": 16,
+    "x": 33,
+    "y": 25
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "office/cabinet": {
+   "frame": {
+    "h": 32,
+    "w": 16,
+    "x": 0,
+    "y": 58
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 32,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 32,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "office/partition": {
+   "frame": {
+    "h": 32,
+    "w": 16,
+    "x": 67,
+    "y": 25
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 32,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 32,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "office/partition_end": {
+   "frame": {
+    "h": 32,
+    "w": 16,
+    "x": 84,
+    "y": 25
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 32,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 32,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "office/plant": {
+   "frame": {
+    "h": 32,
+    "w": 16,
+    "x": 101,
+    "y": 25
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 32,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 32,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "player/work_0": {
+   "frame": {
+    "h": 24,
+    "w": 16,
+    "x": 34,
+    "y": 0
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 24,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 24,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "player/work_1": {
+   "frame": {
+    "h": 24,
+    "w": 16,
+    "x": 51,
+    "y": 0
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 24,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 24,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "prop/mug": {
+   "frame": {
+    "h": 16,
+    "w": 16,
+    "x": 34,
+    "y": 58
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "prop/nameplate_phone": {
+   "frame": {
+    "h": 16,
+    "w": 16,
+    "x": 17,
+    "y": 58
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "teamlead/back_0": {
+   "frame": {
+    "h": 24,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 24,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 24,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "teamlead/back_1": {
+   "frame": {
+    "h": 24,
+    "w": 16,
+    "x": 17,
+    "y": 0
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 24,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 24,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "tile/ceiling": {
+   "frame": {
+    "h": 16,
+    "w": 16,
+    "x": 51,
+    "y": 58
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "tile/clock": {
+   "frame": {
+    "h": 16,
+    "w": 16,
+    "x": 34,
+    "y": 91
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "tile/floor": {
+   "frame": {
+    "h": 16,
+    "w": 16,
+    "x": 17,
+    "y": 91
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "tile/wall": {
+   "frame": {
+    "h": 16,
+    "w": 16,
+    "x": 68,
+    "y": 58
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "tile/wall_base": {
+   "frame": {
+    "h": 16,
+    "w": 16,
+    "x": 85,
+    "y": 58
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "tile/window_bot": {
+   "frame": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 91
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  },
+  "tile/window_top": {
+   "frame": {
+    "h": 16,
+    "w": 16,
+    "x": 102,
+    "y": 58
+   },
+   "rotated": false,
+   "sourceSize": {
+    "h": 16,
+    "w": 16
+   },
+   "spriteSourceSize": {
+    "h": 16,
+    "w": 16,
+    "x": 0,
+    "y": 0
+   },
+   "trimmed": false
+  }
+ },
+ "meta": {
+  "app": "molrae-toegeun art/tools/pixelgen.py",
+  "format": "RGBA8888",
+  "image": "sheet.png",
+  "scale": "1",
+  "size": {
+   "h": 107,
+   "w": 128
+  }
+ }
+}

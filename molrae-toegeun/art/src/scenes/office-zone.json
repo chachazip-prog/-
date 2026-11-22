@@ -1,0 +1,135 @@
+{
+ "_doc": "톤 시안 비교용 장면: 사무실 한 구역(옆모습 단면). 플레이어 자리(파티션 안) + 팀장 자리(창가, 플레이어에게 등을 돌림). 바닥 접지선 y=87",
+ "tile": [
+  16,
+  16
+ ],
+ "grid": [
+  12,
+  6
+ ],
+ "bg": "wall",
+ "tiles": {
+  "c": "tile/ceiling",
+  "w": "tile/wall",
+  "T": "tile/window_top",
+  "U": "tile/window_bot",
+  "b": "tile/wall_base",
+  "f": "tile/floor"
+ },
+ "map": [
+  "cccccccccccc",
+  "wwwTTwwwwTTw",
+  "wwwUUwwwwUUw",
+  "wwwwwwwwwwww",
+  "bbbbbbbbbbbb",
+  "ffffffffffff"
+ ],
+ "objects": [
+  {
+   "sprite": "office/plant",
+   "x": 0,
+   "y": 60
+  },
+  {
+   "sprite": "office/partition",
+   "x": 16,
+   "y": 58
+  },
+  {
+   "sprite": "office/partition",
+   "x": 32,
+   "y": 58
+  },
+  {
+   "sprite": "office/partition",
+   "x": 48,
+   "y": 58
+  },
+  {
+   "sprite": "office/partition",
+   "x": 64,
+   "y": 58
+  },
+  {
+   "sprite": "office/partition",
+   "x": 80,
+   "y": 58
+  },
+  {
+   "sprite": "office/partition_end",
+   "x": 96,
+   "y": 58
+  },
+  {
+   "sprite": "office/cabinet",
+   "x": 104,
+   "y": 60
+  },
+  {
+   "sprite": "tile/clock",
+   "x": 104,
+   "y": 22
+  },
+  {
+   "sprite": "chair/basic",
+   "x": 26,
+   "y": 64
+  },
+  {
+   "sprite": "desk/basic",
+   "x": 42,
+   "y": 72
+  },
+  {
+   "sprite": "monitor/sheet",
+   "x": 46,
+   "y": 61
+  },
+  {
+   "sprite": "prop/mug",
+   "x": 60,
+   "y": 61
+  },
+  {
+   "sprite": "player/work_0",
+   "x": 28,
+   "y": 64
+  },
+  {
+   "sprite": "chair/basic",
+   "x": 128,
+   "y": 64
+  },
+  {
+   "sprite": "desk/basic",
+   "x": 144,
+   "y": 72
+  },
+  {
+   "sprite": "monitor/sheet",
+   "x": 144,
+   "y": 61
+  },
+  {
+   "sprite": "prop/nameplate_phone",
+   "x": 160,
+   "y": 61
+  },
+  {
+   "sprite": "teamlead/back_0",
+   "x": 130,
+   "y": 64
+  },
+  {
+   "sprite": "chair/high_back",
+   "x": 128,
+   "y": 64
+  },
+  {
+   "sprite": "office/plant",
+   "x": 177,
+   "y": 60
+  }
+ ]
+}
