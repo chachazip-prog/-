@@ -4,6 +4,10 @@
 - 대상 파일: `game/data/*.json` (클라이언트는 `src/data/loader.ts`로 읽기만 함)
 - 규칙(GDD)은 `design/gdd.md`. 이 문서는 **필드·타입·단위**만 정의합니다.
 
+> ⚠️ **상태: 초안, 구현 착수 보류 (2026-11-22)**. 탑다운 시점으로 바뀌고 D-001이 폐기될 예정이라 T-111에서 아직 타입으로 옮기지 마세요.
+> - **유지 예상**: §0 공통 규칙, §5 ranks, §6 days의 슬롯·생성·승진 구조, §7 strings, §0-1 스케일링 방식
+> - **재작성 예정**: §2 events `params`(메카닉별 타입 전체), §3 bosses `gaze`·`timing`(탑다운 이동·시야 모델로 교체), §4 npcs `spawn.while_holding`·`counters`, §1 rules `input`·`work`·`slack`
+
 ## 0. 공통 규칙
 
 | 항목 | 규칙 |
