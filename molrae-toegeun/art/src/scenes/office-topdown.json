@@ -1,0 +1,405 @@
+{
+ "_doc": "탑다운 시안 장면: 세로 화면 논리 해상도 180x320 의 사무실 한 구역. 지도는 12x20칸(192px)이고 offset -6 으로 좌우 6px 씩 잘라 카메라를 흉내 냄. 위쪽 출구(유리문+게이트) 쪽으로 걷는 플레이어, 통로를 순찰하는 팀장(빨간 시선 콘), 게이트 경비(노란 손전등 콘)",
+ "name": "topdown-office",
+ "preview": "topdown-scene",
+ "size": [
+  180,
+  320
+ ],
+ "tile": [
+  16,
+  16
+ ],
+ "offset": [
+  -6,
+  0
+ ],
+ "bg": "floor",
+ "depth_sort": true,
+ "tiles": {
+  "#": "tile/wall_cap",
+  "[": "tile/wall_cap_l",
+  "]": "tile/wall_cap_r",
+  "=": "tile/wall_face",
+  "w": "tile/wall_window",
+  "k": "tile/wall_clock",
+  "d": "tile/wall_door_l",
+  "e": "tile/wall_door_r",
+  ".": "tile/floor",
+  ",": "tile/floor_b",
+  "p": "tile/floor_pantry",
+  "x": "tile/floor_exit"
+ },
+ "map": [
+  "############",
+  "[=k==de=ww=]",
+  "[ppp.xx....]",
+  "[ppp.,.....]",
+  "[..........]",
+  "[.,........]",
+  "[..........]",
+  "[........,.]",
+  "[..........]",
+  "[..........]",
+  "[.....,....]",
+  "[..........]",
+  "[..,.......]",
+  "[..........]",
+  "[.........,]",
+  "[..........]",
+  "[....,.....]",
+  "[..........]",
+  "[........,.]",
+  "[..........]"
+ ],
+ "cones": [
+  {
+   "x": 129,
+   "y": 198,
+   "dir": 180,
+   "half": 24,
+   "len": 64,
+   "color": "cone_boss"
+  },
+  {
+   "x": 131.5,
+   "y": 63,
+   "dir": 105,
+   "half": 18,
+   "len": 50,
+   "color": "cone_guard"
+  }
+ ],
+ "objects": [
+  {
+   "sprite": "tall/coffee",
+   "tx": 1,
+   "ty": 2
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 4,
+   "ty": 2
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 7,
+   "ty": 2
+  },
+  {
+   "sprite": "tall/copier",
+   "tx": 10,
+   "ty": 2
+  },
+  {
+   "sprite": "furn/gate_l",
+   "tx": 5,
+   "ty": 3
+  },
+  {
+   "sprite": "furn/gate_r",
+   "tx": 6,
+   "ty": 3
+  },
+  {
+   "sprite": "furn/partition_l",
+   "tx": 1,
+   "ty": 5
+  },
+  {
+   "sprite": "furn/partition_h",
+   "tx": 2,
+   "ty": 5
+  },
+  {
+   "sprite": "furn/partition_h",
+   "tx": 3,
+   "ty": 5
+  },
+  {
+   "sprite": "furn/partition_r",
+   "tx": 4,
+   "ty": 5
+  },
+  {
+   "sprite": "furn/partition_l",
+   "tx": 7,
+   "ty": 5
+  },
+  {
+   "sprite": "furn/partition_h",
+   "tx": 8,
+   "ty": 5
+  },
+  {
+   "sprite": "furn/partition_h",
+   "tx": 9,
+   "ty": 5
+  },
+  {
+   "sprite": "furn/partition_r",
+   "tx": 10,
+   "ty": 5
+  },
+  {
+   "sprite": "furn/partition_l",
+   "tx": 1,
+   "ty": 9
+  },
+  {
+   "sprite": "furn/partition_h",
+   "tx": 2,
+   "ty": 9
+  },
+  {
+   "sprite": "furn/partition_h",
+   "tx": 3,
+   "ty": 9
+  },
+  {
+   "sprite": "furn/partition_r",
+   "tx": 4,
+   "ty": 9
+  },
+  {
+   "sprite": "furn/partition_l",
+   "tx": 7,
+   "ty": 9
+  },
+  {
+   "sprite": "furn/partition_h",
+   "tx": 8,
+   "ty": 9
+  },
+  {
+   "sprite": "furn/partition_h",
+   "tx": 9,
+   "ty": 9
+  },
+  {
+   "sprite": "furn/partition_r",
+   "tx": 10,
+   "ty": 9
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 1,
+   "ty": 6
+  },
+  {
+   "sprite": "furn/desk_papers",
+   "tx": 2,
+   "ty": 6
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 3,
+   "ty": 6
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 4,
+   "ty": 6
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 7,
+   "ty": 6
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 8,
+   "ty": 6
+  },
+  {
+   "sprite": "furn/desk_papers",
+   "tx": 9,
+   "ty": 6
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 10,
+   "ty": 6
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 1,
+   "ty": 10
+  },
+  {
+   "sprite": "furn/desk_papers",
+   "tx": 2,
+   "ty": 10
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 3,
+   "ty": 10
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 4,
+   "ty": 10
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 7,
+   "ty": 10
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 8,
+   "ty": 10
+  },
+  {
+   "sprite": "furn/desk_papers",
+   "tx": 9,
+   "ty": 10
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 10,
+   "ty": 10
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 1,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 3,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 4,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 7,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 8,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 9,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 10,
+   "ty": 7
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 1,
+   "ty": 11
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 2,
+   "ty": 11
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 3,
+   "ty": 11
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 4,
+   "ty": 11
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 7,
+   "ty": 11
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 9,
+   "ty": 11
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 10,
+   "ty": 11
+  },
+  {
+   "sprite": "furn/desk_papers",
+   "tx": 7,
+   "ty": 15
+  },
+  {
+   "sprite": "furn/desk_boss",
+   "tx": 8,
+   "ty": 15
+  },
+  {
+   "sprite": "furn/chair_high",
+   "tx": 8,
+   "ty": 16
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 1,
+   "ty": 14
+  },
+  {
+   "sprite": "tall/copier",
+   "tx": 2,
+   "ty": 14
+  },
+  {
+   "sprite": "furn/partition_v",
+   "tx": 5,
+   "ty": 15
+  },
+  {
+   "sprite": "furn/partition_v",
+   "tx": 5,
+   "ty": 16
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 10,
+   "ty": 17
+  },
+  {
+   "sprite": "player/walk_up_0",
+   "x": 88,
+   "y": 120,
+   "shadow": true
+  },
+  {
+   "sprite": "teamlead/walk_left_0",
+   "x": 126,
+   "y": 190,
+   "shadow": true
+  },
+  {
+   "sprite": "guard/idle_down",
+   "x": 118,
+   "y": 46,
+   "shadow": true
+  }
+ ],
+ "ui": [
+  {
+   "sprite": "ui/suspect",
+   "x": 114,
+   "y": 32
+  },
+  {
+   "sprite": "ui/edge_down",
+   "x": 40,
+   "y": 308
+  }
+ ]
+}

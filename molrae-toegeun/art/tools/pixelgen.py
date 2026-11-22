@@ -514,9 +514,10 @@ def build_char_preview(frames, legend, colors, pal):
     """캐릭터 시트 미리보기: 캐릭터별 1행, 방향별 정지+걷기 프레임 + 특수 프레임."""
     groups = ("character", "boss", "npc")
     chars = []
-    for f in frames:
-        if f["group"] in groups and f["sprite"] not in chars:
-            chars.append(f["sprite"])
+    for g in groups:  # 플레이어 → 상사 → NPC 순
+        for f in frames:
+            if f["group"] == g and f["sprite"] not in chars:
+                chars.append(f["sprite"])
     rows = []
     for ch in chars:
         fs = [f for f in frames if f["sprite"] == ch]

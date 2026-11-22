@@ -3,31 +3,65 @@
  "group": "boss",
  "base": "body-b",
  "note": "팀장(상사). 바디 B + 보라 정장 + 흰 셔츠 깃 + 빨간 사원증 줄(D-037) + 결재판(소품). 상사 4종 공통: 사원증 줄 point",
- "swap": {"shirt": "suit", "shirt_sh": "suit_sh", "$lanyard": "point"},
+ "swap": {
+  "shirt": "suit",
+  "shirt_sh": "suit_sh",
+  "$lanyard": "point"
+ },
  "stamps": [
-  {"dir": "down", "x": 7, "y": 11, "rows": ["WW"]},
-  {"dir": "down", "x": 12, "y": 12, "rows": [
-   ".OOO",
-   ".OtO",
-   "SOtO",
-   "OOtO",
-   ".OtO",
-   ".OOO"
-  ]},
-  {"dir": "up", "x": 0, "y": 12, "rows": [
-   "OOO",
-   "OtO",
-   "OtO",
-   "OtO",
-   "OtO",
-   "OOO"
-  ]},
-  {"dir": "right", "x": 10, "y": 11, "rows": ["W"]},
-  {"dir": "right", "x": 5, "y": 12, "rows": [
-   "OOOOO",
-   "OWttO",
-   "OWtSO",
-   "OOOOO"
-  ]}
+  {
+   "dir": "down",
+   "x": 7,
+   "y": 11,
+   "rows": [
+    "WW"
+   ]
+  },
+  {
+   "dir": "down",
+   "x": 12,
+   "y": 12,
+   "rows": [
+    ".OOO",
+    ".OtO",
+    "SOtO",
+    "OOtO",
+    ".OtO",
+    ".OOO"
+   ]
+  },
+  {
+   "dir": "up",
+   "x": 0,
+   "y": 12,
+   "rows": [
+    "OOO",
+    "OtO",
+    "OtO",
+    "OtO",
+    "OtO",
+    "OOO"
+   ]
+  },
+  {
+   "dir": "right",
+   "x": 10,
+   "y": 11,
+   "rows": [
+    "W"
+   ]
+  },
+  {
+   "dir": "right",
+   "x": 3,
+   "y": 12,
+   "rows": [
+    "OOOO",
+    "OWtO",
+    "OWtO",
+    "OWtO",
+    "OOOO"
+   ]
+  }
  ]
 }

@@ -1,0 +1,794 @@
+{
+  "schemaVersion": 2,
+  "_comment": "탑다운 층 맵. 좌표는 타일 (x, y), 원점은 왼쪽 위, y는 아래로 증가. 방향은 개발 core/vision.ts의 Dir('up'|'down'|'left'|'right')을 씀. 근거·의도는 design/gdd.md §6.",
+  "maps": [
+    {
+      "id": "office_floor_1",
+      "nameKey": "map.office_floor_1.name",
+      "mvp": true,
+      "tileSizePx": 16,
+      "widthTiles": 11,
+      "heightTiles": 47,
+      "pixelSize": [
+        176,
+        752
+      ],
+      "_designNote": "논리 해상도 180×320 기준 가로 11타일(176px, 좌우 2px 여백)로 고정하고 세로만 스크롤. 세로 47타일(752px) = 화면 약 2.35개 분량. 자리→게이트 최단 33타일(3.0타일/초 기준 11.0초).",
+      "playerStart": {
+        "x": 4,
+        "y": 33
+      },
+      "exitZone": "exit",
+      "camera": {
+        "viewportTiles": [
+          11.25,
+          20
+        ],
+        "visibleAboveTiles": 11,
+        "visibleBelowTiles": 8,
+        "followAxis": "y",
+        "deadZoneTiles": 2,
+        "lerpPerFrame": 0.15,
+        "clampToMap": true,
+        "_designNote": "T-123 실측: 플레이어 위 약 11타일, 아래 약 8타일 보임(출구가 위쪽이라 위를 더 보여 줌). 가로는 맵 전체가 보이므로 스크롤하지 않음."
+      },
+      "legend": {
+        "#": {
+          "kind": "wall",
+          "walkable": false,
+          "blocksSight": true
+        },
+        ".": {
+          "kind": "floor",
+          "walkable": true,
+          "blocksSight": false
+        },
+        "@": {
+          "kind": "seat",
+          "walkable": true,
+          "blocksSight": false,
+          "zone": "player_seat",
+          "_note": "내 자리(의자). 여기 앉아 있으면 '자리에서 일하는 중'"
+        },
+        "h": {
+          "kind": "seat",
+          "walkable": true,
+          "blocksSight": false,
+          "_note": "다른 사람 의자. 주인이 앉아 있으면 점유(통과 불가)"
+        },
+        "=": {
+          "kind": "door",
+          "walkable": true,
+          "blocksSight": false
+        },
+        "D": {
+          "kind": "desk",
+          "walkable": false,
+          "blocksSight": false,
+          "_note": "책상은 낮아서 시선이 통과"
+        },
+        "P": {
+          "kind": "partition",
+          "walkable": false,
+          "blocksSight": true,
+          "cover": true
+        },
+        "T": {
+          "kind": "plant",
+          "walkable": false,
+          "blocksSight": true,
+          "cover": true
+        },
+        "C": {
+          "kind": "copier",
+          "walkable": false,
+          "blocksSight": true,
+          "cover": true,
+          "disguiseSpot": true,
+          "_note": "옆 타일에서 멈추면 '복사하는 척' 위장(연출만 다름)"
+        },
+        "g": {
+          "kind": "glass",
+          "walkable": false,
+          "blocksSight": false,
+          "_note": "회의실 유리벽. 시선 통과, 이동 불가"
+        },
+        "G": {
+          "kind": "gate",
+          "walkable": true,
+          "blocksSight": false,
+          "zone": "gate",
+          "gateOnly": true,
+          "_note": "플레이어는 사원증 태그 성공 시에만 통과. NPC는 자유 통과"
+        },
+        "e": {
+          "kind": "floor",
+          "walkable": true,
+          "blocksSight": false,
+          "zone": "exit",
+          "_note": "엘리베이터 앞. 도착 후 엘리베이터 대기 단계를 마치면 퇴근 성공"
+        },
+        "E": {
+          "kind": "elevator",
+          "walkable": false,
+          "blocksSight": true
+        },
+        "B": {
+          "kind": "guard_booth",
+          "walkable": false,
+          "blocksSight": true
+        },
+        "K": {
+          "kind": "counter",
+          "walkable": false,
+          "blocksSight": false
+        },
+        "M": {
+          "kind": "meeting_table",
+          "walkable": false,
+          "blocksSight": false
+        },
+        "X": {
+          "kind": "exec_desk",
+          "walkable": false,
+          "blocksSight": false
+        },
+        "S": {
+          "kind": "restroom_stall",
+          "walkable": true,
+          "blocksSight": true,
+          "zone": "restroom_stall",
+          "safeZone": true,
+          "_note": "칸 안. blocksSight=true라 밖에서 안이 보이지 않음(안전 구역)"
+        },
+        "r": {
+          "kind": "restroom_floor",
+          "walkable": true,
+          "blocksSight": false,
+          "zone": "restroom"
+        }
+      },
+      "rows": [
+        "###########",
+        "#T..EEE..T#",
+        "#...eee...#",
+        "#.........#",
+        "####GGG####",
+        "#BB.......#",
+        "#T.......T#",
+        "####...####",
+        "#...#.....#",
+        "#.X.#..C..#",
+        "#.h.=.....#",
+        "#...#..T..#",
+        "#####D....#",
+        "#....h....#",
+        "#.DD...DD.#",
+        "#.hh.T.hh.#",
+        "#.........#",
+        "#.DD...DD.#",
+        "#.hh...hh.#",
+        "#.........#",
+        "#.T.....T.#",
+        "#.........#",
+        "#####.##=##",
+        "#SSr#.g...#",
+        "#rrr=.gMM.#",
+        "#SSr#.=MM.#",
+        "#rrr#.gh..#",
+        "#####.##=##",
+        "#.........#",
+        "#....D....#",
+        "#....h....#",
+        "#.........#",
+        "#.PDD.DDP.#",
+        "#.Ph@.hhP.#",
+        "#.........#",
+        "#.PDD.DDP.#",
+        "#.Phh.hhP.#",
+        "#.........#",
+        "#T..C.C..T#",
+        "#.........#",
+        "####...####",
+        "#.........#",
+        "#KK.....T.#",
+        "#.........#",
+        "#.KK...KK.#",
+        "#.........#",
+        "####EEE####"
+      ],
+      "zones": [
+        {
+          "id": "lobby",
+          "nameKey": "zone.lobby",
+          "rect": [
+            1,
+            1,
+            9,
+            3
+          ],
+          "outsideOffice": true,
+          "_note": "게이트 밖. 상사 시선 없음(예외: 엘리베이터 대표님 방해)"
+        },
+        {
+          "id": "gate_hall",
+          "nameKey": "zone.gate_hall",
+          "rect": [
+            1,
+            5,
+            9,
+            2
+          ]
+        },
+        {
+          "id": "exec_wing",
+          "nameKey": "zone.exec_wing",
+          "rect": [
+            1,
+            8,
+            9,
+            4
+          ]
+        },
+        {
+          "id": "exec_office",
+          "nameKey": "zone.exec_office",
+          "rect": [
+            1,
+            8,
+            3,
+            4
+          ],
+          "parent": "exec_wing"
+        },
+        {
+          "id": "next_team",
+          "nameKey": "zone.next_team",
+          "rect": [
+            1,
+            12,
+            9,
+            10
+          ]
+        },
+        {
+          "id": "corridor_mid",
+          "nameKey": "zone.corridor_mid",
+          "rect": [
+            5,
+            22,
+            1,
+            6
+          ],
+          "_note": "폭 1타일 병목. 길막 이벤트의 주 무대"
+        },
+        {
+          "id": "restroom",
+          "nameKey": "zone.restroom",
+          "rect": [
+            1,
+            23,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "meeting_room",
+          "nameKey": "zone.meeting_room",
+          "rect": [
+            7,
+            23,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "team",
+          "nameKey": "zone.team",
+          "rect": [
+            1,
+            28,
+            9,
+            12
+          ]
+        },
+        {
+          "id": "pantry",
+          "nameKey": "zone.pantry",
+          "rect": [
+            1,
+            41,
+            9,
+            5
+          ]
+        }
+      ],
+      "spots": {
+        "player_seat": {
+          "tile": [
+            4,
+            33
+          ],
+          "type": "seat",
+          "facing": "up"
+        },
+        "tl_seat": {
+          "tile": [
+            5,
+            30
+          ],
+          "type": "seat",
+          "facing": "up",
+          "_note": "팀장 자리. 인턴 주간(1~5일차)에는 팀장 출장으로 선배가 앉음"
+        },
+        "tl_greet_spot": {
+          "tile": [
+            4,
+            31
+          ],
+          "type": "stand",
+          "facing": "down",
+          "_note": "본부장 인사 시 팀장이 나와 서는 곳. 최단 경로 위라서 길막이 됨"
+        },
+        "tl2_seat": {
+          "tile": [
+            5,
+            13
+          ],
+          "type": "seat",
+          "facing": "up"
+        },
+        "snitch_seat": {
+          "tile": [
+            6,
+            33
+          ],
+          "type": "seat",
+          "facing": "up"
+        },
+        "accomplice_seat": {
+          "tile": [
+            7,
+            36
+          ],
+          "type": "seat",
+          "facing": "up"
+        },
+        "exec_seat": {
+          "tile": [
+            2,
+            10
+          ],
+          "type": "seat",
+          "facing": "up"
+        },
+        "exec_door": {
+          "tile": [
+            4,
+            10
+          ],
+          "type": "door"
+        },
+        "guard_post": {
+          "tile": [
+            3,
+            5
+          ],
+          "type": "stand",
+          "facing": "right"
+        },
+        "gate_use": {
+          "tile": [
+            5,
+            5
+          ],
+          "type": "use",
+          "facing": "up",
+          "target": "gate"
+        },
+        "elevator_main_use": {
+          "tile": [
+            5,
+            2
+          ],
+          "type": "use",
+          "facing": "up",
+          "target": "elevator_main"
+        },
+        "elevator_service_spawn": {
+          "tile": [
+            5,
+            45
+          ],
+          "type": "spawn",
+          "facing": "up",
+          "_note": "화물용 엘리베이터. 플레이어는 사용 불가(사원증 미등록), 대표님·본부장·인사팀 출입용"
+        },
+        "coffee_use": {
+          "tile": [
+            2,
+            43
+          ],
+          "type": "use",
+          "facing": "up",
+          "target": "coffee_machine"
+        },
+        "restroom_door": {
+          "tile": [
+            4,
+            24
+          ],
+          "type": "door"
+        },
+        "restroom_stall": {
+          "tile": [
+            1,
+            23
+          ],
+          "type": "use",
+          "facing": "up",
+          "target": "stall"
+        },
+        "nap_chair": {
+          "tile": [
+            7,
+            26
+          ],
+          "type": "use",
+          "facing": "up",
+          "target": "meeting_chair"
+        },
+        "meeting_door_w": {
+          "tile": [
+            6,
+            25
+          ],
+          "type": "door"
+        },
+        "meeting_door_n": {
+          "tile": [
+            8,
+            22
+          ],
+          "type": "door"
+        },
+        "meeting_door_s": {
+          "tile": [
+            8,
+            27
+          ],
+          "type": "door"
+        },
+        "meeting_inside": {
+          "tile": [
+            9,
+            23
+          ],
+          "type": "stand",
+          "facing": "left"
+        },
+        "hr_inspect_spot": {
+          "tile": [
+            5,
+            34
+          ],
+          "type": "stand",
+          "facing": "left"
+        },
+        "ceo_greet_spot": {
+          "tile": [
+            5,
+            34
+          ],
+          "type": "stand",
+          "facing": "left"
+        },
+        "ceo_talk_spot": {
+          "tile": [
+            5,
+            31
+          ],
+          "type": "stand",
+          "facing": "up"
+        },
+        "snitch_report_spot": {
+          "tile": [
+            6,
+            30
+          ],
+          "type": "stand",
+          "facing": "left"
+        },
+        "gossip_a": {
+          "tile": [
+            5,
+            23
+          ],
+          "type": "stand",
+          "facing": "down"
+        },
+        "gossip_b": {
+          "tile": [
+            5,
+            24
+          ],
+          "type": "stand",
+          "facing": "up"
+        }
+      },
+      "coverSpots": [
+        {
+          "tile": [
+            1,
+            33
+          ],
+          "by": "partition",
+          "hidesFrom": "aisle"
+        },
+        {
+          "tile": [
+            9,
+            33
+          ],
+          "by": "partition",
+          "hidesFrom": "aisle"
+        },
+        {
+          "tile": [
+            1,
+            36
+          ],
+          "by": "partition",
+          "hidesFrom": "aisle"
+        },
+        {
+          "tile": [
+            9,
+            36
+          ],
+          "by": "partition",
+          "hidesFrom": "aisle"
+        },
+        {
+          "tile": [
+            5,
+            16
+          ],
+          "by": "plant",
+          "hidesFrom": "tl2_seat"
+        },
+        {
+          "tile": [
+            5,
+            38
+          ],
+          "by": "copier",
+          "hidesFrom": "east_west"
+        },
+        {
+          "tile": [
+            6,
+            9
+          ],
+          "by": "copier",
+          "hidesFrom": "east"
+        }
+      ],
+      "routeNodes": {
+        "n_lobby": [
+          5,
+          6
+        ],
+        "n_b_hall": [
+          5,
+          10
+        ],
+        "n_c_top": [
+          6,
+          14
+        ],
+        "n_c_mid": [
+          5,
+          16
+        ],
+        "n_c_bot": [
+          5,
+          21
+        ],
+        "n_c_left": [
+          1,
+          16
+        ],
+        "n_c_right": [
+          9,
+          16
+        ],
+        "n_d_top": [
+          5,
+          22
+        ],
+        "n_d_mid": [
+          5,
+          25
+        ],
+        "n_d_bot": [
+          5,
+          27
+        ],
+        "n_e_head": [
+          5,
+          28
+        ],
+        "n_e_aisle1": [
+          5,
+          32
+        ],
+        "n_e_aisle2": [
+          5,
+          34
+        ],
+        "n_e_aisle3": [
+          5,
+          37
+        ],
+        "n_e_left_top": [
+          1,
+          28
+        ],
+        "n_e_left_bot": [
+          1,
+          37
+        ],
+        "n_e_win_top": [
+          9,
+          28
+        ],
+        "n_e_win_bot": [
+          9,
+          37
+        ],
+        "n_pantry": [
+          5,
+          41
+        ]
+      },
+      "playerRoutes": [
+        {
+          "id": "route_shortcut",
+          "labelKey": "route.shortcut",
+          "from": "player_seat",
+          "to": "gate_use",
+          "via": [],
+          "lengthTiles": 33,
+          "risk": "팀장 자리 바로 옆(말걸기 반경)과 팀장 시선 콘을 지남. 중앙 병목 통과"
+        },
+        {
+          "id": "route_left",
+          "labelKey": "route.left",
+          "from": "player_seat",
+          "to": "gate_use",
+          "via": [
+            [
+              1,
+              34
+            ],
+            [
+              1,
+              28
+            ]
+          ],
+          "lengthTiles": 39,
+          "risk": "팀장 반경 밖. 칸막이 뒤 엄폐 2곳. +6타일(+2.0초)"
+        },
+        {
+          "id": "route_window",
+          "labelKey": "route.window",
+          "from": "player_seat",
+          "to": "gate_use",
+          "via": [
+            [
+              9,
+              34
+            ],
+            [
+              8,
+              27
+            ],
+            [
+              8,
+              22
+            ],
+            [
+              9,
+              13
+            ]
+          ],
+          "lengthTiles": 43,
+          "risk": "회의실을 가로질러 중앙 병목을 피함. 유리벽이라 복도에서 보임. +10타일(+3.3초)"
+        }
+      ],
+      "chokepoints": [
+        {
+          "id": "choke_mid",
+          "tiles": [
+            [
+              5,
+              22
+            ],
+            [
+              5,
+              23
+            ],
+            [
+              5,
+              24
+            ],
+            [
+              5,
+              25
+            ],
+            [
+              5,
+              26
+            ],
+            [
+              5,
+              27
+            ]
+          ],
+          "bypass": "meeting_room (meeting_door_w ↔ meeting_door_n/s)"
+        },
+        {
+          "id": "choke_lobby",
+          "tiles": [
+            [
+              4,
+              7
+            ],
+            [
+              5,
+              7
+            ],
+            [
+              6,
+              7
+            ]
+          ],
+          "bypass": null
+        },
+        {
+          "id": "choke_pantry",
+          "tiles": [
+            [
+              4,
+              40
+            ],
+            [
+              5,
+              40
+            ],
+            [
+              6,
+              40
+            ]
+          ],
+          "bypass": null
+        }
+      ],
+      "measuredPathsTiles": {
+        "_comment": "설계 검증용 실측(4방향 A*, 다른 사람 의자는 점유로 간주). 3.0타일/초 기준 초는 ÷3. QA는 같은 값을 재현해야 함",
+        "player_seat→gate_use(최단)": 33,
+        "player_seat→gate_use(왼쪽 우회)": 39,
+        "player_seat→gate_use(창가·회의실 우회)": 43,
+        "player_seat→coffee_use": 14,
+        "player_seat→restroom_stall": 17,
+        "player_seat→nap_chair": 12,
+        "elevator_main_use→hr_inspect_spot": 36,
+        "elevator_service_spawn→ceo_greet_spot": 11,
+        "exec_seat→n_e_aisle3": 34,
+        "tl_seat→meeting_inside": 18,
+        "snitch_seat→snitch_report_spot": 5
+      }
+    }
+  ]
+}
