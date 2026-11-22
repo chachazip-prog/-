@@ -419,7 +419,7 @@ interface AdsTable {
 }
 ```
 - 전면광고 판정 순서(개발): `iap 구매` → `global.neverDuringPlay` → `설치 당일` → `평생 판수 < 5` → `오늘 횟수 ≥ 5` → `마지막 광고 후 < 180초` → `이번 판 보상형 봄` → `판수 % 3`. 하나라도 걸리면 건너뜀.
-- strings: v1과 같은 구조(`{ schemaVersion, locale, strings: Record<key, string | string[]> }`). 새 접두사 `prep.` `map.` `zone.` `route.` `int.`.
+- strings: `{ schemaVersion, locale, strings: Record<key, string | string[]>, uiIcons?: Record<key, spriteId> }`. 새 접두사 `prep.` `map.` `zone.` `route.` `int.`. `uiIcons`는 해당 문구 앞에 그릴 UI 스프라이트(이모지 대체, D-042). 이모지 금지, 특수문자 `… · — ★`만.
 
 ---
 

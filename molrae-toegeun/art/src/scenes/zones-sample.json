@@ -1,0 +1,440 @@
+{
+ "_doc": "T-125 구역 샘플(384x320, 24x20칸). 로비·출구 게이트(왼쪽 위), 임원실(오른쪽 위), 복도, 회의실(유리벽)·화장실·탕비실(아래). layers[0]=바닥, layers[1]=벽(투명 칸은 바닥이 보임). 레벨 배치 예시가 아니라 타일·소품 견본",
+ "name": "zones-sample",
+ "preview": "t125-zones",
+ "size": [
+  384,
+  320
+ ],
+ "tile": [
+  16,
+  16
+ ],
+ "offset": [
+  0,
+  0
+ ],
+ "bg": "floor",
+ "depth_sort": true,
+ "tiles": {
+  "#": "tile/wall_cap",
+  "[": "tile/wall_cap_l",
+  "]": "tile/wall_cap_r",
+  "=": "tile/wall_face",
+  "w": "tile/wall_window",
+  "k": "tile/wall_clock",
+  "d": "tile/wall_door_l",
+  "e": "tile/wall_door_r",
+  "v": "tile/wall_cap_v",
+  "a": "tile/wall_art",
+  "o": "tile/wall_door_wood",
+  "n": "tile/wall_nameplate",
+  "s": "tile/wall_rest_sign",
+  "M": "tile/wall_mirror",
+  "f": "tile/wall_shelf",
+  ".": "tile/floor",
+  ",": "tile/floor_b",
+  "l": "tile/floor_lobby",
+  "h": "tile/floor_wood",
+  "m": "tile/floor_meet",
+  "_": "tile/floor_rest",
+  "p": "tile/floor_pantry",
+  "x": "tile/floor_exit",
+  " ": null
+ },
+ "layers": [
+  [
+   "llllllllllllhhhhhhhhhhhh",
+   "llllllllllllhhhhhhhhhhhh",
+   "lllllxxlllllhhhhhhhhhhhh",
+   "llllllllllllhhhhhhhhhhhh",
+   "llllllllllllhhhhhhhhhhhh",
+   "llllllllllllhhhhhhhhhhhh",
+   "llllllllllllhhhhhhhhhhhh",
+   "llllllllllllhhhhhhhhhhhh",
+   "llllllllllllhhhhhhhhhhhh",
+   "llllllllllllhhhhhhhhhhhh",
+   "llllllllllllhhhhhhhhhhhh",
+   "..,......,.......,......",
+   "......,.......,.......,.",
+   "mmmmmmmmmmm______ppppppp",
+   "mmmmmmmmmmm______ppppppp",
+   "mmmmmmmmmmm______ppppppp",
+   "mmmmmmmmmmm______ppppppp",
+   "mmmmmmmmmmm______ppppppp",
+   "mmmmmmmmmmm______ppppppp",
+   "mmmmmmmmmmm______ppppppp"
+  ],
+  [
+   "########################",
+   "[=w==de==kw=v=ww=a=ww==]",
+   "[           v          ]",
+   "[           v          ]",
+   "[           v          ]",
+   "[           v          ]",
+   "[           v          ]",
+   "[           v          ]",
+   "[           v          ]",
+   "[           ###########]",
+   "[           =====on====]",
+   "[                      ]",
+   "[                      ]",
+   "[         v# ###v #####]",
+   "[         vs MMMv ff=k=]",
+   "[         v     v      ]",
+   "[         v     v      ]",
+   "[         v     v      ]",
+   "[         v     v      ]",
+   "########################"
+  ]
+ ],
+ "objects": [
+  {
+   "sprite": "big/rug_exec",
+   "tx": 17,
+   "ty": 7,
+   "depth_bias": -1000
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 1,
+   "ty": 2
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 11,
+   "ty": 2
+  },
+  {
+   "sprite": "furn/rail",
+   "tx": 1,
+   "ty": 4
+  },
+  {
+   "sprite": "furn/rail",
+   "tx": 2,
+   "ty": 4
+  },
+  {
+   "sprite": "furn/rail",
+   "tx": 3,
+   "ty": 4
+  },
+  {
+   "sprite": "furn/gate_l",
+   "tx": 4,
+   "ty": 4
+  },
+  {
+   "sprite": "furn/gate_r",
+   "tx": 5,
+   "ty": 4
+  },
+  {
+   "sprite": "furn/gate_l",
+   "tx": 6,
+   "ty": 4
+  },
+  {
+   "sprite": "furn/gate_r",
+   "tx": 7,
+   "ty": 4
+  },
+  {
+   "sprite": "furn/rail",
+   "tx": 8,
+   "ty": 4,
+   "flip": true
+  },
+  {
+   "sprite": "furn/rail",
+   "tx": 9,
+   "ty": 4,
+   "flip": true
+  },
+  {
+   "sprite": "furn/rail",
+   "tx": 10,
+   "ty": 4,
+   "flip": true
+  },
+  {
+   "sprite": "wide/guard_desk",
+   "tx": 9,
+   "ty": 6,
+   "dx": 8
+  },
+  {
+   "sprite": "wide/sofa",
+   "tx": 1,
+   "ty": 8,
+   "dx": 8
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 3,
+   "ty": 8
+  },
+  {
+   "sprite": "tall/bookshelf",
+   "tx": 13,
+   "ty": 2
+  },
+  {
+   "sprite": "tall/bookshelf",
+   "tx": 14,
+   "ty": 2
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 22,
+   "ty": 2
+  },
+  {
+   "sprite": "furn/chair_exec",
+   "tx": 16,
+   "ty": 4,
+   "dx": 8,
+   "dy": 6
+  },
+  {
+   "sprite": "wide/exec_desk",
+   "tx": 16,
+   "ty": 5,
+   "dx": 8
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 22,
+   "ty": 8
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 1,
+   "ty": 13
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 2,
+   "ty": 13
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 3,
+   "ty": 13
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 4,
+   "ty": 13
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 6,
+   "ty": 13
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 7,
+   "ty": 13
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 8,
+   "ty": 13
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 9,
+   "ty": 13
+  },
+  {
+   "sprite": "tall/glass_door",
+   "tx": 5,
+   "ty": 13
+  },
+  {
+   "sprite": "tall/whiteboard",
+   "tx": 1,
+   "ty": 15
+  },
+  {
+   "sprite": "furn/chair_s",
+   "tx": 4,
+   "ty": 14,
+   "dy": 5
+  },
+  {
+   "sprite": "furn/chair_s",
+   "tx": 5,
+   "ty": 14,
+   "dy": 5
+  },
+  {
+   "sprite": "furn/chair_s",
+   "tx": 6,
+   "ty": 14,
+   "dy": 5
+  },
+  {
+   "sprite": "big/meet_table",
+   "tx": 5,
+   "ty": 16
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 4,
+   "ty": 17,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 5,
+   "ty": 17,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 6,
+   "ty": 17,
+   "dy": -3
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 9,
+   "ty": 18
+  },
+  {
+   "sprite": "furn/sink",
+   "tx": 13,
+   "ty": 15,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/sink",
+   "tx": 14,
+   "ty": 15,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/sink",
+   "tx": 15,
+   "ty": 15,
+   "dy": -3
+  },
+  {
+   "sprite": "tall/stall",
+   "tx": 13,
+   "ty": 18
+  },
+  {
+   "sprite": "tall/stall",
+   "tx": 14,
+   "ty": 18
+  },
+  {
+   "sprite": "tall/stall",
+   "tx": 15,
+   "ty": 18
+  },
+  {
+   "sprite": "tall/coffee",
+   "tx": 18,
+   "ty": 15,
+   "dy": -2
+  },
+  {
+   "sprite": "tall/fridge",
+   "tx": 19,
+   "ty": 15,
+   "dy": -2
+  },
+  {
+   "sprite": "furn/counter_snack",
+   "tx": 20,
+   "ty": 15,
+   "dy": -2
+  },
+  {
+   "sprite": "furn/counter_micro",
+   "tx": 21,
+   "ty": 15,
+   "dy": -2
+  },
+  {
+   "sprite": "tall/water",
+   "tx": 22,
+   "ty": 15,
+   "dy": -2
+  },
+  {
+   "sprite": "furn/stool",
+   "tx": 19,
+   "ty": 17
+  },
+  {
+   "sprite": "furn/table_round",
+   "tx": 20,
+   "ty": 17
+  },
+  {
+   "sprite": "furn/stool",
+   "tx": 21,
+   "ty": 17
+  },
+  {
+   "sprite": "guard/idle_down",
+   "x": 152,
+   "y": 82,
+   "shadow": true
+  },
+  {
+   "sprite": "player/walk_up_0",
+   "x": 72,
+   "y": 78,
+   "shadow": true
+  },
+  {
+   "sprite": "exec/walk_left_0",
+   "x": 300,
+   "y": 104,
+   "shadow": true
+  },
+  {
+   "sprite": "ceo/walk_right_0",
+   "x": 196,
+   "y": 176,
+   "shadow": true
+  },
+  {
+   "sprite": "hr/walk_left_0",
+   "x": 120,
+   "y": 182,
+   "shadow": true
+  },
+  {
+   "sprite": "snitch/idle_down",
+   "x": 128,
+   "y": 232,
+   "shadow": true
+  },
+  {
+   "sprite": "senior/idle_left",
+   "x": 42,
+   "y": 240,
+   "shadow": true
+  },
+  {
+   "sprite": "accomplice/idle_down",
+   "x": 274,
+   "y": 262,
+   "shadow": true
+  },
+  {
+   "sprite": "teamlead/walk_down_0",
+   "x": 232,
+   "y": 168,
+   "shadow": true
+  }
+ ]
+}

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "locale": "ko-KR",
-  "_comment": "값이 배열이면 변형 대사(표시용 무작위, 보상과 무관). {name}=플레이어 호칭, {n}=숫자, {total}=전체 수, {time}=시각, {rank}=직급명, {weekday}=요일. 톤: 서로 눈치 보는 공감 코미디. 폭언·해고 협박·비하·외모/성별/나이 고정관념 금지.",
+  "_comment": "값이 배열이면 변형 대사(표시용 무작위, 보상과 무관). {name}=플레이어 호칭, {n}=숫자, {total}=전체 수, {time}=시각, {rank}=직급명, {weekday}=요일. 톤: 서로 눈치 보는 공감 코미디. 폭언·해고 협박·비하·외모/성별/나이 고정관념 금지. 글꼴(D-042): 이모지 금지(아이콘은 UI 스프라이트 키로), 한글은 10px 이상 전제. 사용 특수문자는 … · — ★ 4종뿐(서브셋 포함 확인 필요).",
   "strings": {
     "ui.title": "몰래퇴근",
     "ui.subtitle": "원터치 눈치 게임",
@@ -21,15 +21,13 @@
     "ui.back": "뒤로",
     "ui.player_default_name": "나몰래",
     "ui.skip_tutorial": "안내 건너뛰기",
-
     "prep.title": "출근 준비",
     "prep.today": "{n}일차 · {weekday}",
     "prep.missions": "오늘의 몰래 할 일 {n}개 (칼퇴하려면 {total}개)",
     "prep.quota": "오늘 업무 할당량 {n}%",
-    "prep.ceo_forecast": "📢 오늘 대표님 순시 예정",
+    "prep.ceo_forecast": "오늘 대표님 순시 예정",
     "prep.ceo_none": "오늘은 대표님 순시가 없어요",
     "prep.go": "출근!",
-
     "hud.clock": "{time}",
     "hud.suspicion": "의심",
     "hud.work": "업무",
@@ -47,7 +45,6 @@
     "hud.hidden": "숨는 중",
     "hud.ceo_freeze": "얼음!",
     "hud.seat_countdown": "자리로 복귀! {n}초",
-
     "map.office_floor_1.name": "본사 7층",
     "zone.lobby": "엘리베이터 홀",
     "zone.gate_hall": "출입 게이트",
@@ -61,8 +58,7 @@
     "zone.pantry": "탕비실",
     "route.shortcut": "지름길 (팀장님 옆)",
     "route.left": "벽 쪽으로 돌아가기",
-    "route.window": "창가 → 회의실 가로지르기",
-
+    "route.window": "창가로 가서 회의실 가로지르기",
     "result.title_leave": "칼퇴 성공!",
     "result.title_leave_short": "칼퇴는 했는데… 찝찝하다",
     "result.title_overtime": "야근 확정…",
@@ -78,7 +74,6 @@
     "result.new_codex": "도감에 새 기록!",
     "result.promotion_ready": "승진 심사 대상이에요!",
     "result.promotion_short": "승진까지 별 {n}개 더 필요해요. 지난 날을 다시 해도 돼요.",
-
     "ad.continue": "광고 보고 이어하기",
     "ad.continue_desc": "의심도를 60%로 낮추고 자리(퇴근 중이면 게이트 앞)에서 다시 해요. (하루 1번)",
     "ad.salary_double": "광고 보고 오늘 월급 2배",
@@ -86,7 +81,6 @@
     "ad.ceo_pass_desc": "오늘 순시를 건너뛰어요. 대표님 눈도장 보너스는 받을 수 없어요.",
     "ad.interstitial_notice": "잠시 후 광고가 나와요",
     "ad.remove_ads": "광고 제거",
-
     "rank.intern.name": "인턴",
     "rank.staff.name": "사원",
     "rank.assistant_manager.name": "대리",
@@ -100,7 +94,6 @@
     "rank.manager.promotion": "차장 승진! 옆 팀 팀장님까지 신경 쓰이기 시작합니다.",
     "rank.deputy_general_manager.promotion": "부장 승진! 눈치의 경지에 올랐어요.",
     "rank.general_manager.promotion": "임원 승진! 이제부터 끝없는 출근이 시작됩니다.",
-
     "day.weekday.0": "월요일",
     "day.weekday.1": "화요일",
     "day.weekday.2": "수요일",
@@ -129,7 +122,6 @@
       "평화로운 사무실(?)",
       "보고서는 저장했다"
     ],
-
     "event.coffee.name": "몰래 커피",
     "event.coffee.desc": "탕비실에서 커피를 따르다 선 안에서 톡! 들고 자리로 돌아오면 완료.",
     "event.restroom.name": "몰래 화장실",
@@ -137,15 +129,25 @@
     "event.nap.name": "몰래 낮잠",
     "event.nap.desc": "빈 회의실에서 꾸벅. 톡 하면 고개 번쩍! 유리벽 너머를 조심하세요.",
     "event.shopping.name": "몰래 쇼핑",
-    "event.shopping.desc": "톡 하면 쇼핑 ↔ 스프레드시트. 마지막 결제 중엔 톡 금지!",
+    "event.shopping.desc": "톡 하면 쇼핑 화면과 스프레드시트가 바뀌어요. 마지막 결제 중엔 톡 금지!",
     "event.snack.name": "몰래 간식",
     "event.snack.desc": "링에 맞춰 톡톡. 너무 빨리 먹으면 봉지가 바스락!",
     "event.leave.name": "몰래 퇴근",
     "event.leave.desc": "가방 챙기고, 사무실을 가로질러, 게이트 찍고, 엘리베이터까지!",
-    "event.result.success": ["성공!", "완벽해요!", "아무도 몰랐다"],
-    "event.result.fail": ["앗…", "아슬아슬 실패", "다음엔 될 거야"],
-    "event.result.timeout": ["시간이 없네…", "다음 기회에"],
-
+    "event.result.success": [
+      "성공!",
+      "완벽해요!",
+      "아무도 몰랐다"
+    ],
+    "event.result.fail": [
+      "앗…",
+      "아슬아슬 실패",
+      "다음엔 될 거야"
+    ],
+    "event.result.timeout": [
+      "시간이 없네…",
+      "다음 기회에"
+    ],
     "event.coffee.too_little": "조금만 더…",
     "event.coffee.perfect": "황금 비율!",
     "event.coffee.paused": "(물 마시는 척)",
@@ -163,7 +165,6 @@
     "event.leave.gate": "사원증을 타이밍에 맞춰 톡",
     "event.leave.elevator": "엘리베이터 오는 중…",
     "event.leave.early_bonus": "18시 전 탈출 보너스!",
-
     "boss.senior.name": "선배",
     "boss.team_lead.name": "팀장님",
     "boss.director.name": "본부장님",
@@ -178,7 +179,6 @@
     "boss.ceo.talk": "팀장, 요즘 분위기 어때요?",
     "boss.ceo.eye_contact": "대표님 눈도장 획득!",
     "boss.ceo.absent": "음, 다들 열심히네.",
-
     "npc.security_guard.name": "경비팀",
     "npc.snitch.name": "정의로운 동료",
     "npc.accomplice.name": "공범 동료",
@@ -195,15 +195,21 @@
     "npc.accomplice.cough": "(헛기침) 콜록!",
     "npc.hr_inspector.arrive": "근태 점검 나왔습니다~",
     "npc.hr_inspector.ok": "네, 확인했습니다!",
-
     "int.callout_team_lead.name": "팀장님의 \"아, 잠깐만\"",
     "int.callout_team_lead.tell": "아, {name} 씨!",
-    "int.callout_team_lead.talk": ["그거 내일 아침까지 되죠? 아니 뭐, 급한 건 아니고~", "아 맞다, 지난번 자료 파일명이 뭐였더라?", "요즘 커피 어디 거 마셔요? 그냥 궁금해서."],
+    "int.callout_team_lead.talk": [
+      "그거 내일 아침까지 되죠? 아니 뭐, 급한 건 아니고~",
+      "아 맞다, 지난번 자료 파일명이 뭐였더라?",
+      "요즘 커피 어디 거 마셔요? 그냥 궁금해서."
+    ],
     "int.callout_team_lead.cancel": "…아니다, 바빠 보이네. 나중에!",
     "int.callout_team_lead.leave_talk": "어? 가방은 왜… 아, 퇴근이구나. 내일 봐요~",
     "int.senior_smalltalk.name": "선배의 스몰토크",
     "int.senior_smalltalk.tell": "어, {name} 씨~",
-    "int.senior_smalltalk.talk": ["점심 뭐 먹었어? 나는 또 김밥.", "인턴 생활 할 만해? 힘들면 말하고~"],
+    "int.senior_smalltalk.talk": [
+      "점심 뭐 먹었어? 나는 또 김밥.",
+      "인턴 생활 할 만해? 힘들면 말하고~"
+    ],
     "int.senior_smalltalk.cancel": "아, 일하는구나. 파이팅!",
     "int.snitch_report.name": "정의로운 동료의 보고",
     "int.gossip_block.name": "복도 수다",
@@ -228,9 +234,8 @@
     "int.ceo_elevator_meet.success": "아, 퇴근하는구나. 수고했어요~",
     "int.ceo_elevator_meet.fail": "(어색한 정적이 3층 동안 이어졌다)",
     "int.accomplice_tagalong.name": "공범 합류",
-
     "tutorial.tut_tap_move": "가고 싶은 곳을 톡! 알아서 걸어가요.",
-    "tutorial.tut_stop_disguise": "걷는 중에 아무 데나 톡 → 그 자리에서 멈추고 서류 보는 척!",
+    "tutorial.tut_stop_disguise": "걷는 중에 아무 데나 톡! 그 자리에서 멈추고 서류 보는 척해요.",
     "tutorial.tut_tell": "선배 머리 위에 '…'이 뜨면 곧 뒤를 돌아봐요. 바닥에 보이는 시선 안에서는 멈춰 있기!",
     "tutorial.tut_work": "자리에 앉아 있으면 업무 게이지가 차요. 할당량을 채워야 칼퇴할 수 있어요.",
     "tutorial.tut_coffee": "커피가 차오르면 초록 선 안에서 톡! 들고 자리로 돌아오면 완료.",
@@ -243,7 +248,7 @@
     "tutorial.tut_cover": "칸막이·화분·복사기 뒤 반짝이는 칸에서 멈추면 시선이 닿지 않아요.",
     "tutorial.tut_nap": "회의실 의자에서 꾸벅. 고개가 너무 떨어지기 전에 톡 해서 들어 올리세요.",
     "tutorial.tut_smalltalk": "'!'가 뜨면 말을 걸려는 거예요. 그때 톡 해서 바쁜 척하면 그냥 지나가요.",
-    "tutorial.tut_shopping": "톡 하면 쇼핑 ↔ 스프레드시트. 마지막 결제 중엔 톡 하지 마세요!",
+    "tutorial.tut_shopping": "톡 하면 쇼핑 화면과 스프레드시트가 바뀌어요. 마지막 결제 중엔 톡 하지 마세요!",
     "tutorial.tut_team_lead": "팀장님은 의자가 '삐걱'하면 돌아봐요. 가끔은 헛기침만 하기도 해요.",
     "tutorial.tut_phone": "팀장님이 통화 중일 때는 안 봐요. 기회!",
     "tutorial.tut_callout": "팀장님 바로 옆을 지나가면 말을 걸어요. 급할 땐 돌아서 가세요.",
@@ -259,9 +264,14 @@
     "tutorial.tut_ceo_elevator": "엘리베이터 안에 누가…? '!'가 뜨면 짧게 톡!",
     "tutorial.tut_second_team_lead": "이제 옆 팀 팀장님도 돌아봐요. 화분 뒤가 안전 지대예요.",
     "tutorial.assist_hint": "팁: 점선으로 표시된 돌아가는 길을 써 보세요. 시선이 보이면 일단 멈추기!",
-
-    "react.senior.caught": ["어… 그거 나도 인턴 때 해 봤어. 근데 지금은 일하자?", "{name} 씨, 나 다 봤다~ 비밀로 해 줄게."],
-    "react.team_lead.caught": ["{name} 씨, 잠깐 나 좀 볼까?", "{name} 씨… 그거, 업무 관련이죠?"],
+    "react.senior.caught": [
+      "어… 그거 나도 인턴 때 해 봤어. 근데 지금은 일하자?",
+      "{name} 씨, 나 다 봤다~ 비밀로 해 줄게."
+    ],
+    "react.team_lead.caught": [
+      "{name} 씨, 잠깐 나 좀 볼까?",
+      "{name} 씨… 그거, 업무 관련이죠?"
+    ],
     "react.team_lead.snitched": "아, 그래요? {name} 씨, 잠깐 이리 와 볼래요?",
     "react.team_lead.bag_spotted": "{name} 씨, 가방… 벌써요? 아, 아직 17시 50분인데?",
     "react.director.caught": "자네 이름이… 아, 기억해 두지.",
@@ -286,7 +296,6 @@
     "react.snack.noise": "바스락!! (사무실이 일제히 조용해진다)",
     "react.leave.gate_fail": "게이트가 안 열린다… 오늘은 조금만 더 있다 가자.",
     "react.leave.overtime": "오늘도 야근 확정. 내일은 칼퇴한다…!",
-
     "codex.title_boss": "상사 도감",
     "codex.title_npc": "동료 도감",
     "codex.title_reaction": "리액션 도감",
@@ -300,5 +309,9 @@
     "codex.npc.accomplice": "공범 동료 · 커피·간식을 같이 하자고 해요. 보상 2배, 대신 둘이라 더 눈에 띄어요. 헛기침으로 망을 봐 줘요.",
     "codex.npc.hr_inspector": "인사팀 · 불시 근태 점검과 복도 사원증 확인. 도착하기 전에 자리에 앉아 있으면 OK.",
     "codex.achv.ceo_eye_contact": "대표님 눈도장 · 순시를 완벽하게 버텼다."
+  },
+  "uiIcons": {
+    "prep.ceo_forecast": "ui_icon_megaphone",
+    "_comment": "문구 앞에 붙일 아이콘 스프라이트(아트 UI). 런타임은 문자열 대신 스프라이트를 그림"
   }
 }
