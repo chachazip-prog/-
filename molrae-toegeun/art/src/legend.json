@@ -1,0 +1,30 @@
+{
+ "_doc": "문자 → 팔레트 역할. '.'은 투명. 모든 팔레트(palette-*.json)는 아래 24개 역할을 모두 정의해야 한다.",
+ "keys": {
+  ".": null,
+  "O": "outline",
+  "D": "dark",
+  "M": "mid",
+  "L": "light",
+  "W": "white",
+  "S": "skin",
+  "s": "skin_sh",
+  "H": "hair",
+  "P": "shirt",
+  "p": "shirt_sh",
+  "B": "suit",
+  "b": "suit_sh",
+  "Q": "wall",
+  "q": "wall_sh",
+  "F": "floor",
+  "f": "floor_sh",
+  "T": "wood",
+  "t": "wood_sh",
+  "C": "cool",
+  "c": "cool_sh",
+  "G": "green",
+  "g": "green_sh",
+  "R": "point",
+  "Y": "point2"
+ }
+}

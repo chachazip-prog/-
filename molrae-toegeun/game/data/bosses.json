@@ -1,0 +1,255 @@
+{
+  "schemaVersion": 1,
+  "bosses": [
+    {
+      "id": "senior",
+      "nameKey": "boss.senior.name",
+      "codexKey": "codex.boss.senior",
+      "tier": 1,
+      "unlockRank": "intern",
+      "behavior": "periodic",
+      "props": ["mug_with_sticker", "lanyard_green"],
+      "gaze": { "type": "facing", "suspicionPerSec": 0.3 },
+      "tell": {
+        "durationSec": [1.0, 1.0],
+        "visual": "speech_dots",
+        "sfx": "sfx_senior_hmm"
+      },
+      "timing": {
+        "idleSec": [3.0, 3.0],
+        "lookSec": [1.2, 1.2],
+        "returnSec": 0.3
+      },
+      "fake": { "prob": 0.0, "capProb": 0.0 },
+      "doubleLook": { "prob": 0.0, "capProb": 0.0 },
+      "opportunity": null,
+      "hierarchy": { "suppressedBy": [], "resumeDelaySec": 1.0 },
+      "reactionKeys": ["react.senior.caught"],
+      "rankScaling": {}
+    },
+    {
+      "id": "team_lead",
+      "nameKey": "boss.team_lead.name",
+      "codexKey": "codex.boss.team_lead",
+      "tier": 2,
+      "unlockRank": "staff",
+      "behavior": "seated_random",
+      "props": ["tie_navy", "name_plate", "lanyard_blue"],
+      "gaze": { "type": "facing", "suspicionPerSec": 0.45 },
+      "tell": {
+        "durationSec": [0.6, 0.8],
+        "visual": "back_twitch",
+        "sfx": "sfx_chair_creak"
+      },
+      "timing": {
+        "idleSec": [2.5, 4.5],
+        "lookSec": [1.0, 1.6],
+        "returnSec": 0.3
+      },
+      "fake": { "prob": 0.1, "capProb": 0.3, "afterFakeSec": 0.3, "visual": "cough", "sfx": "sfx_cough" },
+      "doubleLook": {
+        "prob": 0.0,
+        "capProb": 0.25,
+        "gapSec": 0.5,
+        "secondTellSec": 0.4,
+        "secondLookSec": [0.8, 1.2]
+      },
+      "opportunity": {
+        "type": "phone_call",
+        "probPerCycle": 0.2,
+        "durationSec": [3.0, 5.0],
+        "gazeOff": true,
+        "visual": "phone_icon",
+        "endTellSec": 0.5
+      },
+      "hierarchy": {
+        "suppressedBy": ["director", "ceo"],
+        "suppressedState": "greeting",
+        "resumeDelaySec": 1.0,
+        "receivesSnitchReport": true,
+        "snitchForcedLook": { "tellSec": 0.5, "lookSec": 2.5 }
+      },
+      "reactionKeys": ["react.team_lead.caught", "react.team_lead.snitched"],
+      "rankScaling": {
+        "staff": {
+          "start": { "tell.durationSec": [0.6, 0.8], "timing.idleSec": [2.5, 4.5], "timing.lookSec": [1.0, 1.6], "fake.prob": 0.1, "doubleLook.prob": 0.0, "opportunity.probPerCycle": 0.2 },
+          "end": { "tell.durationSec": [0.55, 0.8], "timing.idleSec": [2.2, 4.2], "timing.lookSec": [1.0, 1.8], "fake.prob": 0.15, "doubleLook.prob": 0.1, "opportunity.probPerCycle": 0.18 }
+        },
+        "assistant_manager": {
+          "start": { "tell.durationSec": [0.5, 0.75], "timing.idleSec": [2.0, 4.0], "timing.lookSec": [1.0, 2.0], "fake.prob": 0.15, "doubleLook.prob": 0.12, "opportunity.probPerCycle": 0.15 },
+          "end": { "tell.durationSec": [0.5, 0.75], "timing.idleSec": [2.0, 4.0], "timing.lookSec": [1.0, 2.0], "fake.prob": 0.22, "doubleLook.prob": 0.18, "opportunity.probPerCycle": 0.15 }
+        },
+        "manager": {
+          "start": { "tell.durationSec": [0.45, 0.7], "timing.idleSec": [1.8, 3.8], "timing.lookSec": [1.2, 2.0], "fake.prob": 0.22, "doubleLook.prob": 0.18, "opportunity.probPerCycle": 0.12 },
+          "end": { "tell.durationSec": [0.45, 0.7], "timing.idleSec": [1.8, 3.8], "timing.lookSec": [1.2, 2.0], "fake.prob": 0.28, "doubleLook.prob": 0.22, "opportunity.probPerCycle": 0.12 }
+        },
+        "deputy_general_manager": {
+          "start": { "tell.durationSec": [0.4, 0.65], "timing.idleSec": [1.8, 3.6], "timing.lookSec": [1.2, 2.0], "fake.prob": 0.28, "doubleLook.prob": 0.22, "opportunity.probPerCycle": 0.12 },
+          "end": { "tell.durationSec": [0.4, 0.65], "timing.idleSec": [1.8, 3.6], "timing.lookSec": [1.2, 2.0], "fake.prob": 0.3, "doubleLook.prob": 0.25, "opportunity.probPerCycle": 0.1 }
+        },
+        "general_manager": {
+          "start": { "tell.durationSec": [0.4, 0.65], "timing.idleSec": [1.8, 3.6], "timing.lookSec": [1.2, 2.0], "fake.prob": 0.3, "doubleLook.prob": 0.25, "opportunity.probPerCycle": 0.1 },
+          "end": { "tell.durationSec": [0.4, 0.6], "timing.idleSec": [1.8, 3.4], "timing.lookSec": [1.2, 2.0], "fake.prob": 0.3, "doubleLook.prob": 0.25, "opportunity.probPerCycle": 0.1 }
+        },
+        "executive": {
+          "start": { "tell.durationSec": [0.4, 0.6], "timing.idleSec": [1.6, 3.4], "timing.lookSec": [1.2, 2.0], "fake.prob": 0.3, "doubleLook.prob": 0.25, "opportunity.probPerCycle": 0.1 },
+          "end": { "tell.durationSec": [0.4, 0.6], "timing.idleSec": [1.6, 3.4], "timing.lookSec": [1.2, 2.0], "fake.prob": 0.3, "doubleLook.prob": 0.25, "opportunity.probPerCycle": 0.1 }
+        }
+      }
+    },
+    {
+      "id": "director",
+      "nameKey": "boss.director.name",
+      "codexKey": "codex.boss.director",
+      "tier": 3,
+      "unlockRank": "assistant_manager",
+      "behavior": "patrol",
+      "props": ["briefcase", "pocket_square", "lanyard_gold"],
+      "gaze": {
+        "type": "cone",
+        "suspicionPerSec": 0.6,
+        "coneLengthTiles": 4,
+        "coneAngleDeg": 50,
+        "deskWarnLeadSec": 0.5
+      },
+      "tell": {
+        "durationSec": [1.5, 1.5],
+        "visual": "shadow_at_edge",
+        "sfx": "sfx_footsteps_crescendo"
+      },
+      "timing": {
+        "walkSpeedTilesPerSec": 1.6,
+        "corridorLengthTiles": 14,
+        "stopProb": 0.5,
+        "stopSec": [1.5, 2.5],
+        "sweepTurnTellSec": 0.5,
+        "patrolsPerDay": [1, 1]
+      },
+      "fake": { "prob": 0.0, "capProb": 0.0 },
+      "doubleLook": { "prob": 0.0, "capProb": 0.0 },
+      "opportunity": {
+        "type": "coffee_spill",
+        "probPerPatrol": 0.1,
+        "durationSec": [2.0, 2.0],
+        "gazeOff": true,
+        "visual": "spill_puddle"
+      },
+      "hierarchy": {
+        "suppressedBy": ["ceo"],
+        "suppressedState": "frozen",
+        "suppresses": ["team_lead"],
+        "resumeDelaySec": 1.0
+      },
+      "reactionKeys": ["react.director.caught"],
+      "rankScaling": {
+        "assistant_manager": {
+          "start": { "timing.patrolsPerDay": [1, 1], "timing.stopProb": 0.4 },
+          "end": { "timing.patrolsPerDay": [1, 2], "timing.stopProb": 0.5 }
+        },
+        "manager": {
+          "start": { "timing.patrolsPerDay": [1, 2], "timing.stopProb": 0.5 },
+          "end": { "timing.patrolsPerDay": [1, 2], "timing.stopProb": 0.6, "timing.walkSpeedTilesPerSec": 1.8 }
+        },
+        "deputy_general_manager": {
+          "start": { "timing.patrolsPerDay": [1, 2], "timing.stopProb": 0.6, "timing.walkSpeedTilesPerSec": 1.8 },
+          "end": { "timing.patrolsPerDay": [2, 2], "timing.stopProb": 0.6, "timing.walkSpeedTilesPerSec": 1.8 }
+        },
+        "general_manager": {
+          "start": { "timing.patrolsPerDay": [2, 2], "timing.stopProb": 0.6, "timing.walkSpeedTilesPerSec": 1.8 },
+          "end": { "timing.patrolsPerDay": [2, 2], "timing.stopProb": 0.65, "timing.walkSpeedTilesPerSec": 1.9 }
+        },
+        "executive": {
+          "start": { "timing.patrolsPerDay": [2, 2], "timing.stopProb": 0.65, "timing.walkSpeedTilesPerSec": 1.9 },
+          "end": { "timing.patrolsPerDay": [2, 2], "timing.stopProb": 0.65, "timing.walkSpeedTilesPerSec": 1.9 }
+        }
+      }
+    },
+    {
+      "id": "ceo",
+      "nameKey": "boss.ceo.name",
+      "codexKey": "codex.boss.ceo",
+      "tier": 4,
+      "unlockRank": "manager",
+      "behavior": "freeze_event",
+      "props": ["gold_badge", "long_coat_silhouette", "entourage_folder"],
+      "gaze": {
+        "type": "global",
+        "suspicionPerSec": 0.9,
+        "holdStartInstantSuspicion": 0.2
+      },
+      "tell": {
+        "durationSec": [1.0, 1.0],
+        "visual": "all_heads_up",
+        "sfx": "sfx_elevator_ding",
+        "bgm": "stop"
+      },
+      "timing": {
+        "freezeSec": [3.0, 5.0],
+        "freezeMaxSec": 5.0,
+        "talkWindowSec": 4.0,
+        "talkSlackMultiplier": 2.0,
+        "exitSec": 1.5
+      },
+      "greetingQte": {
+        "preCueSec": [0.6, 1.2],
+        "windowSec": 0.6,
+        "maxPressSec": 0.4,
+        "earlyPenalty": 0.1,
+        "missPenalty": 0.15,
+        "longPressPenalty": 0.2
+      },
+      "fake": {
+        "type": "recheck",
+        "prob": 0.35,
+        "capProb": 0.35,
+        "tellSec": 0.5,
+        "lookSec": 1.0,
+        "visual": "stop_and_shoulder",
+        "sfx": "sfx_footstep_stop"
+      },
+      "doubleLook": { "prob": 0.0, "capProb": 0.0 },
+      "opportunity": {
+        "type": "talk_to_team_lead",
+        "gazeOff": true,
+        "affects": ["team_lead", "director"]
+      },
+      "occurrence": {
+        "scheduledWeekday": 2,
+        "randomChancePerDay": 0.08,
+        "maxPerDay": 1,
+        "skippableByAd": true
+      },
+      "survival": {
+        "maxSuspicionGain": 0.15,
+        "requireQteSuccess": true,
+        "rewardSlackPoints": 300,
+        "codexKey": "codex.achv.ceo_eye_contact"
+      },
+      "hierarchy": {
+        "suppressedBy": [],
+        "suppresses": ["team_lead", "director", "senior"],
+        "freezesNpcs": ["snitch", "accomplice", "hr_inspector"],
+        "resumeDelaySec": 1.0
+      },
+      "reactionKeys": ["react.ceo.caught", "react.ceo.early_bow", "react.ceo.long_bow"],
+      "rankScaling": {
+        "manager": {
+          "start": { "timing.freezeSec": [3.0, 4.0], "greetingQte.windowSec": 0.6, "fake.prob": 0.3 },
+          "end": { "timing.freezeSec": [3.0, 5.0], "greetingQte.windowSec": 0.6, "fake.prob": 0.35 }
+        },
+        "deputy_general_manager": {
+          "start": { "timing.freezeSec": [3.5, 5.0], "greetingQte.windowSec": 0.55, "fake.prob": 0.35 },
+          "end": { "timing.freezeSec": [3.5, 5.0], "greetingQte.windowSec": 0.5, "fake.prob": 0.35 }
+        },
+        "general_manager": {
+          "start": { "timing.freezeSec": [4.0, 5.0], "greetingQte.windowSec": 0.5, "fake.prob": 0.35 },
+          "end": { "timing.freezeSec": [4.0, 5.0], "greetingQte.windowSec": 0.5, "fake.prob": 0.35 }
+        },
+        "executive": {
+          "start": { "timing.freezeSec": [4.0, 5.0], "greetingQte.windowSec": 0.5, "fake.prob": 0.35, "occurrence.randomChancePerDay": 0.12 },
+          "end": { "timing.freezeSec": [4.0, 5.0], "greetingQte.windowSec": 0.5, "fake.prob": 0.35, "occurrence.randomChancePerDay": 0.12 }
+        }
+      }
+    }
+  ]
+}

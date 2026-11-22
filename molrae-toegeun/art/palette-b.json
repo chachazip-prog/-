@@ -1,0 +1,32 @@
+{
+ "id": "b",
+ "label": "B VIVID",
+ "name": "선명한 고대비",
+ "description": "높은 채도·강한 명암, 남색 외곽선. 작은 화면에서도 또렷하고 아케이드 느낌",
+ "colors": {
+  "outline": "#16152b",
+  "dark": "#3b3a5e",
+  "mid": "#7b809e",
+  "light": "#c8cde2",
+  "white": "#ffffff",
+  "skin": "#ffc993",
+  "skin_sh": "#e0875a",
+  "hair": "#2c2244",
+  "shirt": "#2f9bff",
+  "shirt_sh": "#1d5fd1",
+  "suit": "#7a4fe0",
+  "suit_sh": "#4b2ca3",
+  "wall": "#fff1c9",
+  "wall_sh": "#e6cf98",
+  "floor": "#a8683f",
+  "floor_sh": "#734328",
+  "wood": "#f0943a",
+  "wood_sh": "#b35a1c",
+  "cool": "#3dd3e6",
+  "cool_sh": "#1b8db3",
+  "green": "#3ee073",
+  "green_sh": "#169a4a",
+  "point": "#ff2e55",
+  "point2": "#ffd21f"
+ }
+}

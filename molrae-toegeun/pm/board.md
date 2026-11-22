@@ -11,7 +11,7 @@
 | ID | 담당 | 작업 | 산출물 | 의존 | 상태 |
 |---|---|---|---|---|---|
 | T-101 | mt-game-designer | GDD v1, 데이터 스키마, `events`·`bosses`·`npcs`·`ranks` 테이블 v1(MVP 범위) | `design/gdd.md`, `design/data-schema.md`, `game/data/*.json` | - | 진행 |
-| T-102 | mt-client-dev | Phaser + TS + Vite 프로젝트 골격, SDK 3.x 어댑터 계층과 목(mock), 빌드 파이프라인 | `game/` 골격, 빌드 성공 | - | 진행 |
+| T-102 | mt-client-dev | Phaser + TS + Vite 프로젝트 골격, SDK 3.x 어댑터 계층과 목(mock), 빌드 파이프라인 | `game/` 골격, 빌드 성공 | - | 완료 |
 | T-103 | mt-pixel-artist | 스타일 가이드, 팔레트(Q-002 결정 전에는 시안 3종), 픽셀 생성 파이프라인 | `art/style-guide.md`, `art/palette*.json`, 생성 스크립트, 미리보기 | - | 진행 |
 | T-104 | mt-compliance | 행정 절차 안내서(사업자 → 게임제작업 → 등급분류), 출시 체크리스트 v1 | `compliance/admin-procedures.md`, `compliance/launch-checklist.md` | - | 진행 |
 | T-105 | mt-marketer | 게임명 후보 검토(중복 1차 확인), 톤앤매너 가이드 | `marketing/naming.md`, `marketing/tone-guide.md` | - | 완료 |
@@ -26,6 +26,8 @@
 | T-114 | mt-qa-tester | 헤드리스 밸런스 시뮬레이터와 첫 측정, Playwright 스모크 테스트 | T-111 | 대기 |
 | T-115 | mt-compliance | GDD v1 정책 리뷰 + 공유 리워드 문구·배치 정책 확인 | T-101, T-105 | 대기 |
 | T-116 | mt-game-designer | 칭호용 성공률 정의 확정, 대사 테이블을 톤 가이드에 맞추기, 실패 결과 화면에도 공유 버튼 노출 | T-101, T-105 | 대기 |
+| T-118 | mt-client-dev | SDK 미연동 항목 처리: 세로 고정(setOrientation), 세이프 에어리어, 공유 링크·공유 리워드 어댑터 | T-102 | 대기 |
+| T-119 | mt-pixel-artist + mt-compliance | 상업적 이용이 가능한 한글 도트(비트맵) 폰트 선정, 라이선스 대장 등록 | T-103 | 대기 |
 | T-117 | 전원 (PM 주관) | 경쟁작 「퇴근 좀 합시다」 대비 차별화 점검 (기능·콘텐츠·톤 비교표) | T-101, T-105 | 대기 |
 
 ### 오너 작업

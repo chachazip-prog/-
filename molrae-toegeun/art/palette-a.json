@@ -1,0 +1,32 @@
+{
+ "id": "a",
+ "label": "A PASTEL",
+ "name": "따뜻한 파스텔",
+ "description": "낮은 채도·밝은 명도, 갈색 계열 외곽선. 아늑하고 귀여운 일상물 톤",
+ "colors": {
+  "outline": "#5b4150",
+  "dark": "#7d6a78",
+  "mid": "#a99aa3",
+  "light": "#dcd2d0",
+  "white": "#fff8ef",
+  "skin": "#ffdcc4",
+  "skin_sh": "#efb59c",
+  "hair": "#7a5248",
+  "shirt": "#a8d8c4",
+  "shirt_sh": "#7fb5a5",
+  "suit": "#a9b3e0",
+  "suit_sh": "#8089c0",
+  "wall": "#f7e8d4",
+  "wall_sh": "#ecd6bc",
+  "floor": "#dcb791",
+  "floor_sh": "#c49b78",
+  "wood": "#e8b88a",
+  "wood_sh": "#c08e67",
+  "cool": "#b9d2e3",
+  "cool_sh": "#93b0c8",
+  "green": "#a6d89f",
+  "green_sh": "#72b07e",
+  "point": "#f28b8b",
+  "point2": "#ffd77a"
+ }
+}

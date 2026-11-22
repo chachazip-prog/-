@@ -1,0 +1,32 @@
+{
+ "id": "c",
+ "label": "C MONO+POINT",
+ "name": "모노톤+포인트색",
+ "description": "청회색 단계로 전체를 깔고, 상사·경고 요소만 주황 포인트. 위험 요소 판독이 가장 빠름",
+ "colors": {
+  "outline": "#1e2027",
+  "dark": "#3a3d46",
+  "mid": "#6c707a",
+  "light": "#b3b6bd",
+  "white": "#f3f3ef",
+  "skin": "#e6e3dc",
+  "skin_sh": "#c4c0b8",
+  "hair": "#2c2e36",
+  "shirt": "#9da1ab",
+  "shirt_sh": "#7d818b",
+  "suit": "#52565f",
+  "suit_sh": "#40434c",
+  "wall": "#d8d8d3",
+  "wall_sh": "#c6c6c0",
+  "floor": "#a9aaa7",
+  "floor_sh": "#8f908d",
+  "wood": "#bbb6ac",
+  "wood_sh": "#9d988e",
+  "cool": "#8e98a5",
+  "cool_sh": "#737d8a",
+  "green": "#cdd1cc",
+  "green_sh": "#9ba19b",
+  "point": "#ff6a3d",
+  "point2": "#ffb340"
+ }
+}
