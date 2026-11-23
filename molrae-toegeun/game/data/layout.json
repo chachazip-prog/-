@@ -1,0 +1,2909 @@
+{
+  "schemaVersion": 3,
+  "_comment": "모듈 조립형 사무실 생성기 입력(D-074·D-076·D-080, REQ-013·014, T-142). 규칙서 design/gdd-v3-procedural.md, 스키마 design/data-schema-v3-draft.md. 개발 T-144(layoutGen·levelProvider·devTour)의 이름·형식에 맞춤. 프로토 검증: 3~200일 198일 중 197일 생성 통과(폴백 3일 원인은 missions.json 조합 규칙으로 차단), 시도 평균 1.5~4.8회",
+  "enabled": false,
+  "_enabledNote": "개발 연동 전까지 false. 지금 개발 levelProvider는 enabled=true를 보면 임시 모듈(DEV_LAYOUT_MODULES)로 생성을 켬 → 이 파일 모듈을 읽도록 연동(T-144 후속)한 뒤 PM이 true로 전환",
+  "authoredMapDays": 2,
+  "sourceMapId": "office_floor_1",
+  "generatorVersion": 1,
+  "_versionNote": "generatorVersion·모듈·규칙이 바뀌면 같은 일차의 맵이 바뀜(날짜별 리더보드 기록 단절). 출시 뒤 변경은 PM 결정 + 변경 이력 기록. QA는 3~200일 맵 해시 스냅샷으로 의도치 않은 변경을 잡음",
+  "seed": {
+    "format": "layout-day-{day}",
+    "attemptFormat": "{seed}#r{i}",
+    "rngPrefix": "layout:",
+    "integerOnly": true,
+    "_note": "개발 T-144와 같음(attemptSeed). 생성·검증은 정수 연산만(기기별 부동소수 차이로 맵이 달라지지 않게). 콘 각도 판정은 정수 내적·제곱 비교 권장"
+  },
+  "grid": {
+    "width": 11,
+    "maxHeight": 64,
+    "tileSizePx": 16,
+    "legendBase": "maps.office_floor_1.legend",
+    "_note": "maxHeight 64: 프로토 실측 최대 59 + 여유. 개발 임시 72보다 낮춤(카메라·화면 밖 경고 부하)"
+  },
+  "legendAdd": {
+    "P": {
+      "kind": "partition_full",
+      "walkable": false,
+      "blocksSight": true,
+      "cover": true,
+      "art": "pfull/<mask>",
+      "_note": "D-080: 전높이 칸막이(16×36). 기존 P와 같은 값, 그림만 pfull로 통일(튜토리얼 맵 포함)"
+    },
+    "i": {
+      "kind": "partition_half",
+      "walkable": false,
+      "blocksSight": false,
+      "art": "phalf/<mask>",
+      "_note": "D-080 신규: 반높이 칸막이(허리 높이). 길만 막고 시선은 통과, 엄폐 아님. 반높이·전높이는 서로 이웃으로 치지 않음(각자 끝 조각)"
+    },
+    "O": {
+      "kind": "pillar",
+      "walkable": false,
+      "blocksSight": true,
+      "cover": true,
+      "art": "tall2/pillar"
+    },
+    "H": {
+      "kind": "cabinet_tall",
+      "walkable": false,
+      "blocksSight": true,
+      "cover": true,
+      "art": "tall2/cabinet|tall2/cabinet_open",
+      "_note": "창고 4단 캐비닛 줄"
+    },
+    "L": {
+      "kind": "blocker_low",
+      "walkable": false,
+      "blocksSight": false,
+      "art": "furn2/box_low|furn2/sign_wet|furn2/sign_work|furn2/cone|furn2/barrier",
+      "_note": "낮은 막힘(박스·청소 중·공사 중 표지·고깔·차단봉, 그림은 시드로 고름). 길만 막고 시선 통과. 막힌 길 생성용"
+    },
+    "Z": {
+      "kind": "blocker_tall",
+      "walkable": false,
+      "blocksSight": true,
+      "cover": true,
+      "art": "tall2/box_stack",
+      "_note": "키보다 높은 상자 더미. 막힌 길 + 엄폐"
+    },
+    "R": {
+      "kind": "printer",
+      "walkable": false,
+      "blocksSight": true,
+      "cover": true,
+      "disguiseSpot": true,
+      "art": "wide24/mfp",
+      "footprint": [
+        2,
+        1
+      ],
+      "_note": "대형 복합기 2×1. 옆 칸에서 멈추면 copying 위장"
+    },
+    "Q": {
+      "kind": "parcel_locker",
+      "walkable": false,
+      "blocksSight": true,
+      "cover": true,
+      "art": "wide24/locker",
+      "footprint": [
+        2,
+        1
+      ]
+    },
+    "V": {
+      "kind": "vending",
+      "walkable": false,
+      "blocksSight": true,
+      "cover": true,
+      "art": "tall2/vending_drink|tall2/vending_snack"
+    },
+    "k": {
+      "kind": "cafe_counter",
+      "walkable": false,
+      "blocksSight": false,
+      "art": "wide24/cafe_counter",
+      "footprint": [
+        2,
+        1
+      ],
+      "_note": "무인 카페 카운터(직원 캐릭터 없음 → 인원 상한 영향 없음). 기존 K와 같은 낮은 카운터 규칙"
+    },
+    "F": {
+      "kind": "sofa",
+      "walkable": false,
+      "blocksSight": false,
+      "art": "wide2/sofa_lounge",
+      "footprint": [
+        2,
+        1
+      ]
+    },
+    "w": {
+      "kind": "floor",
+      "walkable": true,
+      "blocksSight": false,
+      "zone": "window",
+      "art": "tile2/floor_lounge + 오른쪽 벽 tile2/wall_blind_up",
+      "_note": "창가 바닥. 창가 바람 쐬기 장소"
+    },
+    "U": {
+      "kind": "cubicle_high",
+      "walkable": false,
+      "blocksSight": true,
+      "cover": true,
+      "art": "cube52/cubicle_high(위 2칸)",
+      "_note": "전높이 큐비클 위 2칸. 아래 2칸은 좌석 h"
+    },
+    "u": {
+      "kind": "cubicle_low",
+      "walkable": false,
+      "blocksSight": false,
+      "art": "isle32/cubicle_low(위 2칸)",
+      "_note": "반높이 큐비클 위 2칸(시선 통과)"
+    },
+    "Y": {
+      "kind": "door_busy",
+      "walkable": false,
+      "blocksSight": true,
+      "art": "tile2/wall_door_busy",
+      "_note": "사용 중인 회의실 문(노랑 등). 벽과 같음. 이음 행에서 열리지 않은 문 포트를 이것으로 그림('저 문은 오늘 못 써요'가 보임)"
+    },
+    "J": {
+      "kind": "stairs_deco",
+      "walkable": false,
+      "blocksSight": false,
+      "art": "tile2/floor_stairs_l|tile2/floor_stairs_r",
+      "_note": "계단 출입구. MVP는 장식(통행 불가). 출구 후보는 백로그 BL-20"
+    },
+    "=": {
+      "kind": "door",
+      "walkable": true,
+      "blocksSight": false,
+      "art": "tile2/wall_door_free(회의실) | 기존 문",
+      "_note": "기존 값 그대로. 회의실 포트의 열린 문은 wall_door_free로 그림"
+    }
+  },
+  "wildcards": {
+    "?": [
+      {
+        "ch": "P",
+        "weight": [
+          0.45,
+          0.2
+        ]
+      },
+      {
+        "ch": "T",
+        "weight": [
+          0.4,
+          0.15
+        ]
+      },
+      {
+        "ch": "i",
+        "weight": [
+          0.0,
+          0.25
+        ]
+      },
+      {
+        "ch": ".",
+        "weight": [
+          0.15,
+          0.4
+        ]
+      }
+    ],
+    "o": [
+      {
+        "ch": "O",
+        "weight": [
+          0.0,
+          0.65
+        ]
+      },
+      {
+        "ch": ".",
+        "weight": [
+          1.0,
+          0.35
+        ]
+      }
+    ],
+    "!": [
+      {
+        "ch": "L",
+        "weight": [
+          0.0,
+          0.45
+        ]
+      },
+      {
+        "ch": "Z",
+        "weight": [
+          0.0,
+          0.25
+        ]
+      },
+      {
+        "ch": ".",
+        "weight": [
+          1.0,
+          0.3
+        ]
+      }
+    ]
+  },
+  "_wildcardNotes": {
+    "?": "엄폐 후보 칸(개발 T-144와 같은 문자). 복잡도가 오를수록 진짜 엄폐(P 전높이·T 화분)는 줄고, 반높이 칸막이 i(엄폐처럼 보여도 시선 통과)와 빈칸이 늘어남",
+    "o": "기둥 후보 칸",
+    "!": "통로 막기 후보 칸(개발 T-144와 같은 문자, 막힌 길 생성). L = 낮은 막힘(시선 통과), Z = 높은 상자 더미(시선 차단·엄폐)"
+  },
+  "seam": {
+    "wallChar": "#",
+    "openChars": [
+      {
+        "ch": ".",
+        "weight": [
+          0.8,
+          0.6
+        ]
+      },
+      {
+        "ch": "=",
+        "weight": [
+          0.2,
+          0.4
+        ]
+      }
+    ],
+    "closedDoorPortChar": "Y",
+    "openings": [
+      1,
+      2
+    ],
+    "openingsAtMax": [
+      2,
+      3
+    ],
+    "minGapBetweenOpenings": 2,
+    "spineCols": [
+      5
+    ],
+    "spineBonus": [
+      6.0,
+      1.0
+    ],
+    "_spineNote": "개구부 열 추첨 가중치 = 1 + spineBonus(복잡도 보간) × (그 열이 spineCols 또는 바로 위 이음 행 개구부와 같은 열이면 1). 저직급은 수작업 맵처럼 가운데 줄이 곧게 이어지고, 고직급은 개구부가 엇갈려 지그재그·분기가 늘어남",
+    "wideOpening": {
+      "chance": [
+        0.5,
+        0.2
+      ],
+      "width": [
+        2,
+        3
+      ],
+      "_note": "한 개구부를 폭 2~3으로 넓힐 확률(로비 병목 같은 넓은 입구). 개구부 수에는 1로 셈"
+    },
+    "topSeamOverride": {
+      "openings": [
+        1,
+        1
+      ],
+      "openingsAtMax": [
+        1,
+        2
+      ],
+      "wideOpening": {
+        "chance": [
+          1.0,
+          0.6
+        ],
+        "width": [
+          3,
+          3
+        ]
+      },
+      "_note": "게이트 홀 바로 아래 이음 행. 수작업 맵 로비 병목(폭 3)을 기본으로, 고직급은 폭 1짜리 두 번째 입구가 생길 수 있음"
+    },
+    "_designNote": "모듈 사이 1행 벽. 위 모듈 bottom 포트와 아래 모듈 top 포트가 모두 통행 가능한 열에만 뚫음. 개구부 수는 복잡도 보간 후 시드 추첨. 회의실 포트(doorCols)는 '='로 고정"
+  },
+  "modules": [
+    {
+      "id": "top_gate_center",
+      "group": "lobby_exit",
+      "tags": [
+        "top"
+      ],
+      "rows": [
+        "###########",
+        "#T..EEE..T#",
+        "#...eee...#",
+        "#.........#",
+        "####GGG####",
+        "#BB.......#",
+        "#T.....QQT#"
+      ],
+      "ports": {
+        "bottom": [
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "mirrorable": true,
+      "provides": [
+        "exit",
+        "gate",
+        "parcel_locker"
+      ],
+      "spots": {
+        "elevator_main_use": {
+          "tile": [
+            5,
+            2
+          ],
+          "facing": "up"
+        },
+        "ceo_lift_stop": {
+          "tile": [
+            6,
+            2
+          ],
+          "facing": "down"
+        },
+        "gate_use": {
+          "tile": [
+            5,
+            5
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "gate"
+        },
+        "guard_post": {
+          "tile": [
+            3,
+            5
+          ],
+          "facing": "right"
+        },
+        "parcel_use": {
+          "tile": [
+            7,
+            5
+          ],
+          "facing": "down",
+          "type": "use",
+          "target": "parcel_locker"
+        }
+      },
+      "routeNodes": {
+        "n_lobby": [
+          5,
+          6
+        ],
+        "n_guard_a": [
+          3,
+          5
+        ],
+        "n_guard_b": [
+          8,
+          5
+        ],
+        "n_guard_c": [
+          2,
+          6
+        ]
+      },
+      "zones": [
+        {
+          "id": "lobby",
+          "nameKey": "zone.lobby",
+          "rect": [
+            1,
+            1,
+            9,
+            3
+          ],
+          "outsideOffice": true
+        },
+        {
+          "id": "gate_hall",
+          "nameKey": "zone.gate_hall",
+          "rect": [
+            1,
+            5,
+            9,
+            2
+          ]
+        }
+      ],
+      "_designNote": "수작업 맵 0~6행과 같음 + 택배 보관함(QQ = wide24/locker 2×1, 게이트 홀 오른쪽 아래). 엘리베이터 E는 항상 x4~6(아트 §12-3 규칙). 게이트 사용 칸 (5,5)는 경비 순찰 n_guard_a↔b 사이"
+    },
+    {
+      "id": "top_gate_side",
+      "group": "lobby_exit",
+      "tags": [
+        "top"
+      ],
+      "rows": [
+        "###########",
+        "#T..EEE..T#",
+        "#...eee...#",
+        "#.........#",
+        "##GGG######",
+        "#.......BB#",
+        "#QQ......T#"
+      ],
+      "ports": {
+        "bottom": [
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      "mirrorable": true,
+      "weightByComplexity": [
+        0.4,
+        1.0
+      ],
+      "provides": [
+        "exit",
+        "gate",
+        "parcel_locker"
+      ],
+      "spots": {
+        "elevator_main_use": {
+          "tile": [
+            5,
+            2
+          ],
+          "facing": "up"
+        },
+        "ceo_lift_stop": {
+          "tile": [
+            6,
+            2
+          ],
+          "facing": "down"
+        },
+        "gate_use": {
+          "tile": [
+            3,
+            5
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "gate"
+        },
+        "guard_post": {
+          "tile": [
+            7,
+            5
+          ],
+          "facing": "left"
+        },
+        "parcel_use": {
+          "tile": [
+            1,
+            5
+          ],
+          "facing": "down",
+          "type": "use",
+          "target": "parcel_locker"
+        }
+      },
+      "routeNodes": {
+        "n_lobby": [
+          4,
+          6
+        ],
+        "n_guard_a": [
+          7,
+          6
+        ],
+        "n_guard_b": [
+          2,
+          5
+        ],
+        "n_guard_c": [
+          6,
+          5
+        ]
+      },
+      "zones": [
+        {
+          "id": "lobby",
+          "nameKey": "zone.lobby",
+          "rect": [
+            1,
+            1,
+            9,
+            3
+          ],
+          "outsideOffice": true
+        },
+        {
+          "id": "gate_hall",
+          "nameKey": "zone.gate_hall",
+          "rect": [
+            1,
+            5,
+            9,
+            2
+          ]
+        }
+      ],
+      "_designNote": "게이트가 한쪽으로 치우친 변형(좌우 반전으로 오른쪽도 나옴). 엘리베이터는 가운데 고정이라 게이트→엘리베이터 대각 이동 2~3타일이 늘어남. 택배 보관함이 게이트 바로 옆이라 '경비 코앞에서 택배' 긴장"
+    },
+    {
+      "id": "mid_exec",
+      "group": "exec",
+      "tags": [
+        "exec"
+      ],
+      "rows": [
+        "#...#.....#",
+        "#.X.#..C..#",
+        "#.h.=.....#",
+        "#...#..o..#"
+      ],
+      "ports": {
+        "top": [
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "bottom": [
+          5,
+          6,
+          7,
+          8,
+          9
+        ]
+      },
+      "mirrorable": true,
+      "provides": [
+        "exec_office",
+        "copier"
+      ],
+      "spots": {
+        "exec_seat": {
+          "tile": [
+            2,
+            2
+          ],
+          "facing": "up"
+        },
+        "exec_door": {
+          "tile": [
+            4,
+            2
+          ],
+          "type": "door"
+        },
+        "tour_exec_report": {
+          "tile": [
+            5,
+            2
+          ],
+          "facing": "left",
+          "stopId": "stop_tl_report"
+        }
+      },
+      "routeNodes": {
+        "n_b_hall": [
+          6,
+          2
+        ]
+      },
+      "zones": [
+        {
+          "id": "exec_wing",
+          "nameKey": "zone.exec_wing",
+          "rect": [
+            1,
+            0,
+            9,
+            4
+          ]
+        },
+        {
+          "id": "exec_office",
+          "nameKey": "zone.exec_office",
+          "rect": [
+            1,
+            0,
+            3,
+            4
+          ],
+          "parent": "exec_wing"
+        }
+      ],
+      "_designNote": "수작업 맵 8~11행. 왼쪽 방 = 본부장실(문 '=' 하나). o = 기둥 후보(복잡도에 따라)"
+    },
+    {
+      "id": "mid_next_team_islands",
+      "group": "next_team",
+      "tags": [
+        "middle"
+      ],
+      "rows": [
+        "#....D....#",
+        "#....h....#",
+        "#.DD...DD.#",
+        "#.hh.?.hh.#",
+        "#.........#",
+        "#.DD.o.DD.#",
+        "#.hh...hh.#",
+        "#.........#",
+        "#?.......?#"
+      ],
+      "mirrorable": true,
+      "provides": [
+        "next_team",
+        "tl2_seat",
+        "buddy"
+      ],
+      "spots": {
+        "tl2_seat": {
+          "tile": [
+            5,
+            1
+          ],
+          "facing": "up",
+          "lookDirs": [
+            "down"
+          ]
+        },
+        "bg_next_team_seat": {
+          "tile": [
+            2,
+            3
+          ],
+          "facing": "up"
+        },
+        "buddy_seat": {
+          "tile": [
+            7,
+            3
+          ],
+          "facing": "up"
+        },
+        "chat_use": {
+          "tile": [
+            7,
+            4
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "buddy"
+        },
+        "tour_next_team": {
+          "tile": [
+            4,
+            1
+          ],
+          "facing": "right",
+          "stopId": "stop_tl_next_team"
+        }
+      },
+      "routeNodes": {
+        "n_c_top": [
+          5,
+          2
+        ],
+        "n_c_mid": [
+          5,
+          4
+        ],
+        "n_c_bot": [
+          5,
+          7
+        ],
+        "n_c_left": [
+          1,
+          4
+        ],
+        "n_c_right": [
+          9,
+          4
+        ]
+      },
+      "zones": [
+        {
+          "id": "next_team",
+          "nameKey": "zone.next_team",
+          "rect": [
+            1,
+            0,
+            9,
+            9
+          ]
+        }
+      ],
+      "_designNote": "수작업 맵 12~21행 정리판. 가운데 화분 p(엄폐 후보)·기둥 o"
+    },
+    {
+      "id": "mid_next_team_rows",
+      "group": "next_team",
+      "tags": [
+        "middle"
+      ],
+      "rows": [
+        "#.........#",
+        "#.DDD.DDD.#",
+        "#.hhh.hhh.#",
+        "#!.?...?.!#",
+        "#.DDD.DDD.#",
+        "#.hhh.hhh.#",
+        "#....D....#",
+        "#....h....#"
+      ],
+      "mirrorable": true,
+      "weightByComplexity": [
+        0.3,
+        1.0
+      ],
+      "minComplexity": 0.1,
+      "provides": [
+        "next_team",
+        "tl2_seat",
+        "buddy"
+      ],
+      "spots": {
+        "tl2_seat": {
+          "tile": [
+            5,
+            7
+          ],
+          "facing": "up",
+          "lookDirs": [
+            "down"
+          ]
+        },
+        "bg_next_team_seat": {
+          "tile": [
+            2,
+            2
+          ],
+          "facing": "up"
+        },
+        "buddy_seat": {
+          "tile": [
+            7,
+            5
+          ],
+          "facing": "up"
+        },
+        "chat_use": {
+          "tile": [
+            7,
+            6
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "buddy"
+        },
+        "tour_next_team": {
+          "tile": [
+            4,
+            7
+          ],
+          "facing": "right",
+          "stopId": "stop_tl_next_team"
+        }
+      },
+      "routeNodes": {
+        "n_c_top": [
+          5,
+          0
+        ],
+        "n_c_mid": [
+          5,
+          3
+        ],
+        "n_c_bot": [
+          6,
+          7
+        ],
+        "n_c_left": [
+          1,
+          3
+        ],
+        "n_c_right": [
+          9,
+          3
+        ]
+      },
+      "zones": [
+        {
+          "id": "next_team",
+          "nameKey": "zone.next_team",
+          "rect": [
+            1,
+            0,
+            9,
+            8
+          ]
+        }
+      ],
+      "_designNote": "긴 책상 줄형. 양옆 통로 x1·x9가 x(적재 박스 후보)로 막히면 막힌 길(주머니)이 생김. 옆 팀 팀장 자리가 아래쪽이라 돌아보기 콘이 아래 이음 행·다음 구역을 덮음"
+    },
+    {
+      "id": "mid_next_team_cubes",
+      "group": "next_team",
+      "tags": [
+        "middle"
+      ],
+      "rows": [
+        "#.........#",
+        "#.UU.?.UU.#",
+        "#.hh...hh.#",
+        "#.........#",
+        "#.uu.o.uu.#",
+        "#.hh...hh.#",
+        "#....D....#",
+        "#....h....#"
+      ],
+      "mirrorable": true,
+      "weightByComplexity": [
+        0.0,
+        1.0
+      ],
+      "minComplexity": 0.45,
+      "provides": [
+        "next_team",
+        "tl2_seat",
+        "buddy"
+      ],
+      "spots": {
+        "tl2_seat": {
+          "tile": [
+            5,
+            7
+          ],
+          "facing": "up",
+          "lookDirs": [
+            "down"
+          ]
+        },
+        "bg_next_team_seat": {
+          "tile": [
+            2,
+            2
+          ],
+          "facing": "up"
+        },
+        "buddy_seat": {
+          "tile": [
+            7,
+            5
+          ],
+          "facing": "up"
+        },
+        "chat_use": {
+          "tile": [
+            7,
+            6
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "buddy"
+        },
+        "tour_next_team": {
+          "tile": [
+            4,
+            7
+          ],
+          "facing": "right",
+          "stopId": "stop_tl_next_team"
+        }
+      },
+      "routeNodes": {
+        "n_c_top": [
+          5,
+          0
+        ],
+        "n_c_mid": [
+          5,
+          3
+        ],
+        "n_c_bot": [
+          6,
+          7
+        ],
+        "n_c_left": [
+          1,
+          3
+        ],
+        "n_c_right": [
+          9,
+          3
+        ]
+      },
+      "zones": [
+        {
+          "id": "next_team",
+          "nameKey": "zone.next_team",
+          "rect": [
+            1,
+            0,
+            9,
+            8
+          ]
+        }
+      ],
+      "_designNote": "큐비클형(아트 §13-4). 윗줄 UU = cube52/cubicle_high(위 2칸 시선 차단·엄폐), 아랫줄 uu = isle32/cubicle_low(시선 통과). 같은 모양의 큐비클인데 윗줄만 숨을 수 있음 → 그림 높이로 구분('보이는 것 = 판정')"
+    },
+    {
+      "id": "mid_rest_meet",
+      "group": "rest_meet",
+      "tags": [
+        "middle"
+      ],
+      "rows": [
+        "#SSr#.g...#",
+        "#rrr=.g.MM#",
+        "#SSr#.=.MM#",
+        "#rrr#.gh..#"
+      ],
+      "ports": {
+        "top": [
+          5,
+          8
+        ],
+        "bottom": [
+          5,
+          8
+        ],
+        "required": {
+          "top": [
+            5
+          ],
+          "bottom": [
+            5
+          ]
+        },
+        "doorCols": [
+          8
+        ],
+        "doorOpenChance": [
+          1.0,
+          0.6
+        ]
+      },
+      "mirrorable": true,
+      "provides": [
+        "restroom",
+        "meeting_room",
+        "choke_corridor"
+      ],
+      "spots": {
+        "restroom_stall": {
+          "tile": [
+            1,
+            0
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "stall"
+        },
+        "restroom_door": {
+          "tile": [
+            4,
+            1
+          ],
+          "type": "door"
+        },
+        "meeting_door_w": {
+          "tile": [
+            6,
+            2
+          ],
+          "type": "door"
+        },
+        "nap_chair": {
+          "tile": [
+            7,
+            3
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "meeting_chair"
+        },
+        "meeting_inside": {
+          "tile": [
+            9,
+            0
+          ],
+          "facing": "down",
+          "stopId": "stop_in_meeting"
+        },
+        "tour_meeting": {
+          "tile": [
+            9,
+            0
+          ],
+          "facing": "down",
+          "stopId": "stop_in_meeting"
+        },
+        "gossip_a": {
+          "tile": [
+            5,
+            0
+          ],
+          "facing": "down"
+        },
+        "gossip_b": {
+          "tile": [
+            5,
+            1
+          ],
+          "facing": "up"
+        }
+      },
+      "routeNodes": {
+        "n_d_top": [
+          5,
+          0
+        ],
+        "n_d_mid": [
+          5,
+          2
+        ],
+        "n_d_bot": [
+          5,
+          3
+        ]
+      },
+      "zones": [
+        {
+          "id": "restroom",
+          "nameKey": "zone.restroom",
+          "rect": [
+            1,
+            0,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "meeting_room",
+          "nameKey": "zone.meeting_room",
+          "rect": [
+            7,
+            0,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "corridor_mid",
+          "nameKey": "zone.corridor_mid",
+          "rect": [
+            5,
+            0,
+            1,
+            4
+          ]
+        }
+      ],
+      "chokepoints": [
+        {
+          "id": "choke_mid",
+          "tiles": [
+            [
+              5,
+              0
+            ],
+            [
+              5,
+              1
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              5,
+              3
+            ]
+          ],
+          "includeSeamAbove": true,
+          "includeSeamBelow": true,
+          "bypass": "meeting_room"
+        }
+      ],
+      "_designNote": "수작업 맵 22~27행. 회의 테이블 M을 오른쪽 벽으로 붙여 서문(6,2)→회의실 안 통로를 열었음(수작업 맵은 서문 바로 옆이 테이블이라 서문이 사실상 막다른 칸이었음 → 개발 확인 요청). 가운데 복도 폭 1 = INT-04 수다 길막 무대, 우회 = 회의실(유리벽 노출)"
+    },
+    {
+      "id": "team_front",
+      "group": "team",
+      "tags": [
+        "team"
+      ],
+      "rows": [
+        "#.........#",
+        "#....D....#",
+        "#....h....#",
+        "#.........#",
+        "#.PDD.DDP.#",
+        "#.Ph@.hhP.#",
+        "#.........#",
+        "#.PDD.DDP.#",
+        "#.Phh.hhP.#",
+        "#.........#",
+        "#?..C.C..?#",
+        "#.........#"
+      ],
+      "mirrorable": true,
+      "provides": [
+        "team",
+        "copier"
+      ],
+      "spots": {
+        "tl_seat": {
+          "tile": [
+            5,
+            2
+          ],
+          "facing": "up",
+          "lookDirs": [
+            "down"
+          ]
+        },
+        "tl_greet_spot": {
+          "tile": [
+            4,
+            3
+          ],
+          "facing": "down"
+        },
+        "ceo_talk_spot": {
+          "tile": [
+            5,
+            3
+          ],
+          "facing": "up"
+        },
+        "player_seat": {
+          "tile": [
+            4,
+            5
+          ],
+          "facing": "up"
+        },
+        "snitch_seat": {
+          "tile": [
+            6,
+            5
+          ],
+          "facing": "up",
+          "glanceDir": "left"
+        },
+        "accomplice_seat": {
+          "tile": [
+            7,
+            8
+          ],
+          "facing": "up"
+        },
+        "hr_inspect_spot": {
+          "tile": [
+            5,
+            6
+          ],
+          "facing": "left",
+          "stopId": "stop_inspect"
+        },
+        "ceo_greet_spot": {
+          "tile": [
+            5,
+            6
+          ],
+          "facing": "left",
+          "stopId": "stop_ceo_greet"
+        },
+        "snitch_report_spot": {
+          "tile": [
+            6,
+            3
+          ],
+          "facing": "left",
+          "stopId": "stop_report"
+        },
+        "copier_use": {
+          "tile": [
+            5,
+            10
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "copier"
+        },
+        "tour_copier": {
+          "tile": [
+            5,
+            11
+          ],
+          "facing": "up",
+          "stopId": "stop_tl_copier"
+        }
+      },
+      "routeNodes": {
+        "n_e_head": [
+          5,
+          0
+        ],
+        "n_e_aisle1": [
+          5,
+          4
+        ],
+        "n_e_aisle2": [
+          5,
+          6
+        ],
+        "n_e_aisle3": [
+          5,
+          9
+        ],
+        "n_e_left_top": [
+          1,
+          0
+        ],
+        "n_e_left_bot": [
+          1,
+          9
+        ],
+        "n_e_win_top": [
+          9,
+          0
+        ],
+        "n_e_win_bot": [
+          9,
+          9
+        ]
+      },
+      "zones": [
+        {
+          "id": "team",
+          "nameKey": "zone.team",
+          "rect": [
+            1,
+            0,
+            9,
+            12
+          ]
+        }
+      ],
+      "_designNote": "수작업 맵 28~39행(팀장이 위에서 팀을 내려다봄). 칸막이 P는 고정(내 자리 주변 엄폐는 매일 보장), 아래 화분만 p 후보"
+    },
+    {
+      "id": "team_back",
+      "group": "team",
+      "tags": [
+        "team"
+      ],
+      "rows": [
+        "#.........#",
+        "#.PDD.DDP.#",
+        "#.Phh.@hP.#",
+        "#.........#",
+        "#.PDD.DDP.#",
+        "#.Phh.hhP.#",
+        "#....h....#",
+        "#....D....#",
+        "#.........#",
+        "#?..C.C..?#",
+        "#.........#"
+      ],
+      "mirrorable": true,
+      "weightByComplexity": [
+        0.0,
+        1.0
+      ],
+      "minComplexity": 0.15,
+      "provides": [
+        "team",
+        "copier"
+      ],
+      "spots": {
+        "tl_seat": {
+          "tile": [
+            5,
+            6
+          ],
+          "facing": "down",
+          "lookDirs": [
+            "up"
+          ]
+        },
+        "tl_greet_spot": {
+          "tile": [
+            4,
+            6
+          ],
+          "facing": "up"
+        },
+        "ceo_talk_spot": {
+          "tile": [
+            5,
+            8
+          ],
+          "facing": "up"
+        },
+        "player_seat": {
+          "tile": [
+            6,
+            2
+          ],
+          "facing": "up"
+        },
+        "snitch_seat": {
+          "tile": [
+            7,
+            2
+          ],
+          "facing": "up",
+          "glanceDir": "left"
+        },
+        "accomplice_seat": {
+          "tile": [
+            3,
+            5
+          ],
+          "facing": "up"
+        },
+        "hr_inspect_spot": {
+          "tile": [
+            6,
+            3
+          ],
+          "facing": "up",
+          "stopId": "stop_inspect"
+        },
+        "ceo_greet_spot": {
+          "tile": [
+            6,
+            3
+          ],
+          "facing": "up",
+          "stopId": "stop_ceo_greet"
+        },
+        "snitch_report_spot": {
+          "tile": [
+            6,
+            6
+          ],
+          "facing": "left",
+          "stopId": "stop_report"
+        },
+        "copier_use": {
+          "tile": [
+            5,
+            9
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "copier"
+        },
+        "tour_copier": {
+          "tile": [
+            5,
+            10
+          ],
+          "facing": "up",
+          "stopId": "stop_tl_copier"
+        }
+      },
+      "routeNodes": {
+        "n_e_head": [
+          5,
+          0
+        ],
+        "n_e_aisle1": [
+          5,
+          3
+        ],
+        "n_e_aisle2": [
+          4,
+          6
+        ],
+        "n_e_aisle3": [
+          5,
+          8
+        ],
+        "n_e_left_top": [
+          1,
+          0
+        ],
+        "n_e_left_bot": [
+          1,
+          8
+        ],
+        "n_e_win_top": [
+          9,
+          0
+        ],
+        "n_e_win_bot": [
+          9,
+          8
+        ]
+      },
+      "zones": [
+        {
+          "id": "team",
+          "nameKey": "zone.team",
+          "rect": [
+            1,
+            0,
+            9,
+            11
+          ]
+        }
+      ],
+      "_designNote": "팀장 자리가 팀 아래쪽이고 모니터가 남쪽(앉은 정면 프레임 필요 → 아트 요청). 돌아보기 = 위쪽(내 자리·팀 머리) 콘. 퇴근 동선이 팀장 콘 '앞'이 아니라 '등 뒤 반대편'으로 나가는 구조라 수작업 맵과 위험 위치가 뒤집힘"
+    },
+    {
+      "id": "mid_lounge",
+      "group": "lounge",
+      "tags": [
+        "middle",
+        "lower"
+      ],
+      "rows": [
+        "#.kk....?.#",
+        "#....o...w#",
+        "#.FF...FF.#",
+        "#T..V....w#"
+      ],
+      "mirrorable": true,
+      "weightByComplexity": [
+        0.0,
+        1.0
+      ],
+      "minComplexity": 0.3,
+      "provides": [
+        "lounge",
+        "cafe_counter",
+        "window",
+        "sofa"
+      ],
+      "spots": {
+        "cafe_use": {
+          "tile": [
+            2,
+            1
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "cafe_counter"
+        },
+        "window_use": {
+          "tile": [
+            9,
+            1
+          ],
+          "facing": "right",
+          "type": "use",
+          "target": "window"
+        },
+        "window_use_alt": {
+          "tile": [
+            9,
+            3
+          ],
+          "facing": "right",
+          "type": "use",
+          "target": "window"
+        },
+        "lounge_nap": {
+          "tile": [
+            2,
+            1
+          ],
+          "facing": "down",
+          "type": "use",
+          "target": "sofa",
+          "pose": "nap_on_sofa"
+        }
+      },
+      "routeNodes": {
+        "n_l_mid": [
+          5,
+          1
+        ],
+        "n_l_bot": [
+          5,
+          3
+        ]
+      },
+      "zones": [
+        {
+          "id": "lounge",
+          "nameKey": "zone.lounge",
+          "rect": [
+            1,
+            0,
+            9,
+            4
+          ]
+        }
+      ],
+      "_designNote": "휴게 라운지: 무인 카페 카운터 k(낮음, 시선 통과), 소파 FF(wide2/sofa_lounge, 낮음·시선 통과, 낮잠 변형은 소파 북쪽 칸에서 소파에 기대는 포즈), 자판기 V(엄폐), 창가 w(오른쪽 벽). 시선을 거의 안 가리는 '넓고 밝은 위험 지대'"
+    },
+    {
+      "id": "mid_printer",
+      "group": "printer",
+      "tags": [
+        "middle",
+        "lower"
+      ],
+      "rows": [
+        "#HH.RR..HH#",
+        "#.........#",
+        "#.HH.o.HH.#",
+        "#.H!...!H.#"
+      ],
+      "ports": {
+        "top": [
+          3,
+          6,
+          7
+        ]
+      },
+      "mirrorable": true,
+      "weightByComplexity": [
+        0.2,
+        1.0
+      ],
+      "minComplexity": 0.1,
+      "provides": [
+        "printer",
+        "storage"
+      ],
+      "spots": {
+        "printer_use": {
+          "tile": [
+            4,
+            1
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "printer"
+        },
+        "tour_printer": {
+          "tile": [
+            6,
+            1
+          ],
+          "facing": "left",
+          "stopId": "stop_tl_printer",
+          "floorMark": true
+        }
+      },
+      "routeNodes": {
+        "n_p_mid": [
+          5,
+          1
+        ],
+        "n_p_bot": [
+          5,
+          3
+        ]
+      },
+      "zones": [
+        {
+          "id": "printer_room",
+          "nameKey": "zone.printer_room",
+          "rect": [
+            1,
+            0,
+            9,
+            4
+          ]
+        }
+      ],
+      "_designNote": "프린터·창고: 키 큰 선반 H(시선 차단·엄폐)가 좁은 통로와 막힌 길을 만듦. x(박스) 후보가 막히면 주머니가 생김"
+    },
+    {
+      "id": "mid_pantry",
+      "group": "pantry",
+      "tags": [
+        "middle",
+        "lower"
+      ],
+      "rows": [
+        "#.........#",
+        "#KK..o..T.#",
+        "#.........#",
+        "#.KK...KK.#"
+      ],
+      "mirrorable": true,
+      "weightByComplexity": [
+        0.0,
+        0.6
+      ],
+      "minComplexity": 0.3,
+      "provides": [
+        "pantry",
+        "coffee_machine"
+      ],
+      "spots": {
+        "coffee_use": {
+          "tile": [
+            2,
+            2
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "coffee_machine"
+        },
+        "tour_pantry": {
+          "tile": [
+            4,
+            2
+          ],
+          "facing": "left",
+          "stopId": "stop_tl_pantry"
+        },
+        "bg_pantry_phone_spot": {
+          "tile": [
+            9,
+            3
+          ],
+          "facing": "left"
+        }
+      },
+      "routeNodes": {
+        "n_pantry": [
+          5,
+          0
+        ]
+      },
+      "zones": [
+        {
+          "id": "pantry",
+          "nameKey": "zone.pantry",
+          "rect": [
+            1,
+            0,
+            9,
+            4
+          ]
+        }
+      ],
+      "_designNote": "층 중간 탕비실(맨 아래가 창고일 때 커피 장소)."
+    },
+    {
+      "id": "mid_junction_pillars",
+      "group": "junction",
+      "tags": [
+        "middle",
+        "lower"
+      ],
+      "rows": [
+        "#.o..?..o.#",
+        "#.........#"
+      ],
+      "mirrorable": true,
+      "weightByComplexity": [
+        0.3,
+        1.0
+      ],
+      "minComplexity": 0.1,
+      "repeatable": true,
+      "provides": [],
+      "spots": {},
+      "routeNodes": {
+        "n_j_mid": [
+          5,
+          1
+        ]
+      },
+      "_designNote": "복도 연결부(기둥 후보 2 + 엄폐 후보 1). 층 길이를 1~3행 늘리고 이음 행을 하나 더 만들어 분기를 늘림"
+    },
+    {
+      "id": "mid_junction_lanes",
+      "group": "junction",
+      "tags": [
+        "middle"
+      ],
+      "rows": [
+        "#...P.P...#",
+        "#.o.P.P.o.#",
+        "#...P.P...#"
+      ],
+      "mirrorable": true,
+      "weightByComplexity": [
+        0.0,
+        1.0
+      ],
+      "minComplexity": 0.4,
+      "repeatable": true,
+      "provides": [],
+      "spots": {},
+      "routeNodes": {
+        "n_j_mid": [
+          5,
+          1
+        ]
+      },
+      "_designNote": "칸막이 2줄로 통로 3개(왼쪽·가운데 폭 1·오른쪽). 가운데는 짧은 지름길이지만 양옆이 안 보임"
+    },
+    {
+      "id": "bottom_pantry",
+      "group": "service_end",
+      "tags": [
+        "bottom"
+      ],
+      "rows": [
+        "#.........#",
+        "#KK.....T.#",
+        "#.........#",
+        "#.KK...KK.#",
+        "#.........#",
+        "####EEE####"
+      ],
+      "mirrorable": true,
+      "weightByComplexity": [
+        1.0,
+        0.6
+      ],
+      "provides": [
+        "pantry",
+        "coffee_machine",
+        "freight_elevator"
+      ],
+      "spots": {
+        "coffee_use": {
+          "tile": [
+            2,
+            2
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "coffee_machine"
+        },
+        "tour_pantry": {
+          "tile": [
+            4,
+            2
+          ],
+          "facing": "left",
+          "stopId": "stop_tl_pantry"
+        },
+        "elevator_service_spawn": {
+          "tile": [
+            5,
+            4
+          ],
+          "facing": "up",
+          "type": "spawn"
+        },
+        "bg_pantry_phone_spot": {
+          "tile": [
+            9,
+            4
+          ],
+          "facing": "left"
+        }
+      },
+      "routeNodes": {
+        "n_pantry": [
+          5,
+          0
+        ],
+        "n_bg_walk_a": [
+          3,
+          0
+        ],
+        "n_bg_walk_b": [
+          7,
+          0
+        ],
+        "n_bg_walk_c": [
+          7,
+          2
+        ],
+        "n_bg_walk_d": [
+          3,
+          2
+        ]
+      },
+      "zones": [
+        {
+          "id": "pantry",
+          "nameKey": "zone.pantry",
+          "rect": [
+            1,
+            0,
+            9,
+            5
+          ]
+        }
+      ],
+      "_designNote": "수작업 맵 41~46행. 화물 엘리베이터 E는 항상 x4~6 맨 아래 행(아트 §12-3)"
+    },
+    {
+      "id": "bottom_storage",
+      "group": "service_end",
+      "tags": [
+        "bottom"
+      ],
+      "rows": [
+        "#H..RR...H#",
+        "#.........#",
+        "#.H.!.!.H.#",
+        "#.H.....H.#",
+        "#.........#",
+        "####EEE####"
+      ],
+      "ports": {
+        "top": [
+          2,
+          3,
+          6,
+          7,
+          8
+        ]
+      },
+      "mirrorable": true,
+      "weightByComplexity": [
+        0.0,
+        0.5
+      ],
+      "minComplexity": 0.3,
+      "provides": [
+        "printer",
+        "storage",
+        "freight_elevator"
+      ],
+      "spots": {
+        "printer_use": {
+          "tile": [
+            4,
+            1
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "printer"
+        },
+        "tour_printer": {
+          "tile": [
+            6,
+            1
+          ],
+          "facing": "left",
+          "stopId": "stop_tl_printer",
+          "floorMark": true
+        },
+        "elevator_service_spawn": {
+          "tile": [
+            5,
+            4
+          ],
+          "facing": "up",
+          "type": "spawn"
+        }
+      },
+      "routeNodes": {
+        "n_s_mid": [
+          5,
+          1
+        ],
+        "n_pantry": [
+          5,
+          3
+        ]
+      },
+      "zones": [
+        {
+          "id": "storage",
+          "nameKey": "zone.storage",
+          "rect": [
+            1,
+            0,
+            9,
+            5
+          ]
+        }
+      ],
+      "requiresGroup": "pantry",
+      "_designNote": "맨 아래가 창고·프린터인 변형. 이때 탕비실(mid_pantry)이 반드시 중간에 들어감(requiresGroup). n_pantry는 본부장 정지 이름 호환용"
+    }
+  ],
+  "assembly": {
+    "order": [
+      "top",
+      "exec",
+      "above_team",
+      "team",
+      "below_team",
+      "bottom"
+    ],
+    "requiredGroups": [
+      "lobby_exit",
+      "exec",
+      "next_team",
+      "rest_meet",
+      "team",
+      "service_end"
+    ],
+    "aboveTeamRequired": [
+      "next_team"
+    ],
+    "optionalPool": [
+      "junction",
+      "printer",
+      "lounge",
+      "pantry"
+    ],
+    "belowTeamAllowedGroups": [
+      "rest_meet",
+      "junction",
+      "pantry",
+      "printer",
+      "lounge"
+    ],
+    "restMeetBelowChance": [
+      0.0,
+      0.5
+    ],
+    "maxNonRequiredOptionalAboveTeam": 1,
+    "ceoDay": {
+      "optionalModules": 0,
+      "lowerModules": 0,
+      "_note": "미션이 요구한 모듈만 넣음. 대표님 입장 거리·퇴근 길이(시간 예산)를 지키기 위함"
+    },
+    "missionRequiresProvides": {
+      "coffee": "coffee_machine",
+      "restroom": "restroom",
+      "nap": "meeting_room",
+      "parcel": "parcel_locker",
+      "print": "printer|copier",
+      "chat": "buddy",
+      "cafe": "cafe_counter",
+      "window": "window"
+    },
+    "rules": [
+      "1) 위→아래: top 1 → exec 1 → 팀 위쪽(next_team 필수 + rest_meet(아래로 안 갔으면) + 선택 모듈) → team 1 → 팀 아래(lowerModules) → bottom 1",
+      "2) 개수: optionalModules·lowerModules 범위에서 시드 추첨. 대표님 날은 assembly.ceoDay 값",
+      "3) 그날 미션이 요구한 provides가 없으면 그 그룹을 선택 모듈로 강제 포함(선택 수와 별개)",
+      "4) bottom이 bottom_storage면 pantry 그룹 필수(requiresGroup)",
+      "5) rest_meet은 lowerModules가 1 이상이고 restMeetBelowChance(복잡도 보간)에 걸리면 팀 아래로",
+      "6) 선택 모듈 배치: 팀 위쪽 행 수(exec부터 team 위 이음 행까지, 이음 행 포함) + 모듈 높이 + 1 ≤ aboveTeamMaxRows이고 '미션이 요구하지 않은 선택 모듈'이 위쪽에 아직 maxNonRequiredOptionalAboveTeam개 미만이면 위쪽. 아니면 belowTeamAllowedGroups이고 팀 아래 행 합 + 높이 + 1 ≤ belowTeamMaxRows이면 아래쪽. 둘 다 아니면 뺌(미션이 요구한 모듈은 위쪽에 강제). 📐 수작업 맵 팀 위쪽 21행 = 자리→게이트 33타일. 1행 ≈ +1타일 ≈ +0.33초",
+      "7) 순서: orderPolicy가 authored_order(인턴)면 팀 위쪽 = next_team → rest_meet → 선택. 그 외는 팀 위쪽 목록을 시드로 섞음, 팀 아래 목록도 섞음",
+      "8) 변형: 그룹 안에서 weightByComplexity [c=0, c=1] 선형 보간 가중치로 추첨(minComplexity 미만 제외). mirrorable이면 50% 좌우 반전. 반전 후 위 모듈과 맞는 포트 열이 없으면 반전을 되돌림",
+      "9) 인접 포트 호환: 위 모듈 bottom 포트와 아래 모듈 top 포트(반전 고려)가 하나도 겹치지 않으면 사이에 mid_junction_pillars를 끼움(행 예산에 포함, 넘치면 그 시도 실패 row_budget)",
+      "10) 와일드카드: 모듈 맨 위·맨 아래 행의 와일드카드는 '.'(포트 보호, top·bottom 그룹 제외). 나머지는 wildcards 가중치 보간으로 채움",
+      "11) 모듈 내부 연결성 보호: 채운 뒤 모듈 안 통행 칸(앉은 사람 의자 제외)이 한 덩어리가 아니면 '!' → '?' → 'o' 순서로 원래 칸을 하나씩 '.'로 되돌리며 다시 확인(시드 소비 없음)",
+      "12) 이음 행 생성(seam) → 전역 좌표 변환(spots·routeNodes·zones·chokepoints) → 수리(repair) → 검증(validators)"
+    ],
+    "_designNote": "개발 T-144 generate.ts의 '태그 슬롯 + 이음 행' 엔진을 확장하는 규칙. 슬롯 태그만으로는 ① 미션이 요구한 모듈 강제 ② 팀 위·아래 행 예산 ③ 필수 포트 ④ 수리 단계를 표현할 수 없어 assembly로 따로 둠(data-schema-v3-draft §3 🔧)"
+  },
+  "repair": {
+    "enabled": true,
+    "maxOpenings": 3,
+    "targets": [
+      "seatToGate > hard.seatToGateTiles[1](대표님 날 40)",
+      "자리 밖 미션 편도 > 미션 거리 상한",
+      "대표님 날 화물 엘리베이터→ceo_greet_spot > 20"
+    ],
+    "rule": "초과량 합이 0이 될 때까지, 이음 행의 아직 막힌 열 중(양옆 통행 가능, 기존 개구부와 2칸 이상 떨어짐) 열었을 때 초과량 합을 가장 많이 줄이는 칸 하나를 '.'로 엶. 동률이면 가운데(x5)에 가까운 열 → 위쪽 이음 행. 최대 maxOpenings번. 시드 소비 없음(결정적)",
+    "_designNote": "거리 초과를 버리지 않고 고치면 시도당 통과율이 크게 오름(프로토: 사원 11% → 51%). 열린 개구부 = 분기 증가라 복잡도 의도와도 맞음"
+  },
+  "complexityByRank": [
+    {
+      "rankId": "intern",
+      "tier": 0,
+      "days": "3~5",
+      "complexity": [
+        0.0,
+        0.05
+      ],
+      "optionalModules": [
+        0,
+        0
+      ],
+      "lowerModules": [
+        0,
+        0
+      ],
+      "aboveTeamMaxRows": 22,
+      "belowTeamMaxRows": 0,
+      "hard": {
+        "seatToGateTiles": [
+          31,
+          37
+        ],
+        "maxUncoveredStraightTiles": 20
+      },
+      "target": {
+        "heightTiles": [
+          47,
+          47
+        ],
+        "seatToGateTiles": [
+          33,
+          37
+        ],
+        "branchPointsOnLeave": [
+          2,
+          3
+        ],
+        "deadEnds": [
+          0,
+          1
+        ],
+        "pillars": [
+          0,
+          0
+        ],
+        "uncoveredStraight": [
+          19,
+          20
+        ]
+      },
+      "orderPolicy": "authored_order",
+      "_designNote": "수작업 맵과 같은 5구역·같은 순서. 바뀌는 것은 모듈 변형·좌우 반전·이음 행 개구부뿐(3~5일차 T-139 보정 보호). 미션 편도 = 수작업 +4타일 이내"
+    },
+    {
+      "rankId": "staff",
+      "tier": 1,
+      "days": "6~15",
+      "complexity": [
+        0.1,
+        0.25
+      ],
+      "optionalModules": [
+        0,
+        1
+      ],
+      "lowerModules": [
+        0,
+        1
+      ],
+      "aboveTeamMaxRows": 24,
+      "belowTeamMaxRows": 5,
+      "hard": {
+        "seatToGateTiles": [
+          31,
+          39
+        ],
+        "maxUncoveredStraightTiles": 20
+      },
+      "target": {
+        "heightTiles": [
+          47,
+          51
+        ],
+        "seatToGateTiles": [
+          33,
+          39
+        ],
+        "branchPointsOnLeave": [
+          1,
+          4
+        ],
+        "deadEnds": [
+          0,
+          3
+        ],
+        "pillars": [
+          0,
+          1
+        ],
+        "uncoveredStraight": [
+          15,
+          20
+        ]
+      },
+      "_designNote": "연결부·프린터실이 가끔 끼고, 회의실·화장실이 팀 아래로 내려가는 날이 생김. 저작일 미션 목록(days.json)은 그대로"
+    },
+    {
+      "rankId": "assistant_manager",
+      "tier": 2,
+      "days": "16~27",
+      "complexity": [
+        0.3,
+        0.45
+      ],
+      "optionalModules": [
+        1,
+        1
+      ],
+      "lowerModules": [
+        0,
+        1
+      ],
+      "aboveTeamMaxRows": 25,
+      "belowTeamMaxRows": 5,
+      "hard": {
+        "seatToGateTiles": [
+          32,
+          42
+        ],
+        "maxUncoveredStraightTiles": 18
+      },
+      "target": {
+        "heightTiles": [
+          51,
+          56
+        ],
+        "seatToGateTiles": [
+          33,
+          42
+        ],
+        "branchPointsOnLeave": [
+          1,
+          4
+        ],
+        "deadEnds": [
+          1,
+          4
+        ],
+        "pillars": [
+          0,
+          1
+        ],
+        "uncoveredStraight": [
+          12,
+          18
+        ]
+      },
+      "_designNote": "라운지·중간 탕비실·창고 바닥·팀 배치 2종이 모두 등장. 본부장 순찰 시작과 겹쳐 '길이 여러 개'가 의미를 가짐"
+    },
+    {
+      "rankId": "manager",
+      "tier": 3,
+      "days": "28~40",
+      "complexity": [
+        0.5,
+        0.65
+      ],
+      "optionalModules": [
+        1,
+        2
+      ],
+      "lowerModules": [
+        1,
+        1
+      ],
+      "aboveTeamMaxRows": 26,
+      "belowTeamMaxRows": 5,
+      "hard": {
+        "seatToGateTiles": [
+          32,
+          43
+        ],
+        "maxUncoveredStraightTiles": 17
+      },
+      "target": {
+        "heightTiles": [
+          50,
+          57
+        ],
+        "seatToGateTiles": [
+          33,
+          43
+        ],
+        "branchPointsOnLeave": [
+          2,
+          4
+        ],
+        "deadEnds": [
+          1,
+          5
+        ],
+        "pillars": [
+          0,
+          2
+        ],
+        "uncoveredStraight": [
+          11,
+          17
+        ]
+      },
+      "_designNote": "대표님 날은 선택·아래 모듈 0개('대표님 오시는 날이라 사무실 정리')로 퇴근 길이를 줄임"
+    },
+    {
+      "rankId": "deputy_general_manager",
+      "tier": 4,
+      "days": "41~52",
+      "complexity": [
+        0.65,
+        0.8
+      ],
+      "optionalModules": [
+        2,
+        2
+      ],
+      "lowerModules": [
+        1,
+        1
+      ],
+      "aboveTeamMaxRows": 26,
+      "belowTeamMaxRows": 5,
+      "hard": {
+        "seatToGateTiles": [
+          32,
+          43
+        ],
+        "maxUncoveredStraightTiles": 17
+      },
+      "target": {
+        "heightTiles": [
+          46,
+          57
+        ],
+        "seatToGateTiles": [
+          34,
+          42
+        ],
+        "branchPointsOnLeave": [
+          2,
+          4
+        ],
+        "deadEnds": [
+          0,
+          4
+        ],
+        "pillars": [
+          0,
+          2
+        ],
+        "uncoveredStraight": [
+          12,
+          17
+        ]
+      },
+      "_designNote": "큐비클형 옆 팀 등장(0.45~). 높이 46은 대표님 날"
+    },
+    {
+      "rankId": "general_manager",
+      "tier": 5,
+      "days": "53~64",
+      "complexity": [
+        0.8,
+        0.95
+      ],
+      "optionalModules": [
+        2,
+        2
+      ],
+      "lowerModules": [
+        1,
+        2
+      ],
+      "aboveTeamMaxRows": 25,
+      "belowTeamMaxRows": 5,
+      "hard": {
+        "seatToGateTiles": [
+          32,
+          43
+        ],
+        "maxUncoveredStraightTiles": 16
+      },
+      "target": {
+        "heightTiles": [
+          46,
+          57
+        ],
+        "seatToGateTiles": [
+          32,
+          43
+        ],
+        "branchPointsOnLeave": [
+          2,
+          4
+        ],
+        "deadEnds": [
+          0,
+          5
+        ],
+        "pillars": [
+          0,
+          3
+        ],
+        "uncoveredStraight": [
+          10,
+          16
+        ]
+      }
+    },
+    {
+      "rankId": "executive",
+      "tier": 6,
+      "days": "65~",
+      "complexity": [
+        1.0,
+        1.0
+      ],
+      "optionalModules": [
+        2,
+        2
+      ],
+      "lowerModules": [
+        1,
+        2
+      ],
+      "aboveTeamMaxRows": 25,
+      "belowTeamMaxRows": 5,
+      "hard": {
+        "seatToGateTiles": [
+          32,
+          43
+        ],
+        "maxUncoveredStraightTiles": 16
+      },
+      "target": {
+        "heightTiles": [
+          45,
+          59
+        ],
+        "seatToGateTiles": [
+          32,
+          43
+        ],
+        "branchPointsOnLeave": [
+          1,
+          5
+        ],
+        "deadEnds": [
+          0,
+          6
+        ],
+        "pillars": [
+          0,
+          3
+        ],
+        "uncoveredStraight": [
+          9,
+          16
+        ]
+      },
+      "_designNote": "엔드리스. 난도는 고정, 구조만 매일 바뀜(BL-09 중첩 상승은 백로그)"
+    }
+  ],
+  "complexityFormula": "c = lerp(complexity[0], complexity[1], t). t = (day − dayRange[0]) / (dayRange[1] − dayRange[0]), 인턴은 (day − 3) / 2, 엔드리스 t = 0. 개발 임시 (직급 순서 + 진행도) / 직급 수를 대체",
+  "missionRefOneWayTiles": {
+    "coffee": 14,
+    "restroom": 17,
+    "nap": 12,
+    "parcel": 35,
+    "print": 16,
+    "chat": 14,
+    "cafe": 16,
+    "window": 16,
+    "_note": "budgetModel.missionExpectedSec가 가정한 편도(수작업 맵 §7-2 실측). 새 미션은 프로토 생성 맵 중앙값 근처. 생성 맵 예상 시간 = expectedSec + 2 × (실측 편도 − 기준) ÷ 3.0 → budgetCheck에 사용"
+  },
+  "validators": {
+    "_designNote": "하드 검증 = 공정성만. 복잡도 지표(층 길이·막힌 길 수·기둥 수 등)는 complexityByRank.target으로 QA가 분포를 확인(벗어나면 가중치 조정). 실패하면 다음 시드(layout-day-{n}#r{i})로 재생성. 모든 거리는 4방향 A*, 다른 사람이 앉은 의자는 통과 불가. 실패 코드는 개발 GenFailCode에 추가",
+    "maxAttempts": 24,
+    "onExhausted": "authored_map",
+    "list": [
+      {
+        "id": "V01_reach",
+        "code": "unreachable_spot",
+        "hard": true,
+        "rule": "player_seat에서 그날 미션 장소 스폿·gate_use·exit 구역·순찰 재매핑 웨이포인트·팀장 순회 목적지(tour_*) 전부 도달. elevator_main_use·elevator_service_spawn에서 hr_inspect_spot·ceo_greet_spot 도달",
+        "prototyped": true
+      },
+      {
+        "id": "V02_orphan",
+        "code": "orphan_floor",
+        "hard": false,
+        "rule": "player_seat에서 닿지 않는 통행 칸은 'L'(낮은 막힘)로 바꾸고 계속. 그 안에 스폿이 있으면 실패"
+      },
+      {
+        "id": "V03_distance",
+        "code": "distance_out_of_band",
+        "hard": true,
+        "prototyped": true,
+        "rule": "seatToGate ∈ complexityByRank.hard.seatToGateTiles(대표님 날 상한 40). 자리 밖 미션 편도: 인턴은 missionRefOneWayTiles + 4 이하, 그 외 ≤ 28(택배는 게이트 옆이라 제외). 대표님 날만 elevator_service_spawn → ceo_greet_spot ≤ 20",
+        "missionOneWayCap": 28,
+        "internSlackTiles": 4,
+        "ceoDaySeatToGateMax": 40,
+        "ceoWalkMaxTiles": 20
+      },
+      {
+        "id": "V04_shortcut_detour",
+        "code": "no_alternative_route",
+        "hard": true,
+        "prototyped": true,
+        "rule": "자리→게이트, 자리→자리 밖 미션 각각: 최단 S, S 칸(양끝 3칸 제외)에 sharePenalty를 준 대안 A. 게이트: len(A) ≤ len(S)×1.6 그리고 +16 이하, 공유 ≤ 0.75. 미션: ×2.0·+16·0.75(수작업 맵 화장실 우회가 +16). 그리고 게이트 경로는 '지름길이 위험': S가 위험 범주(tl_cone 팀장 돌아보기 콘 / tl_talk 팀장 자리 2.5타일 / choke 폭 1 통로) 중 하나 이상을 지나고, A가 그중 하나 이상을 피하거나 A가 엄폐 칸을 S보다 많이 지남",
+        "gate": {
+          "maxDetourRatio": 1.6,
+          "maxDetourExtraTiles": 16,
+          "maxSharedRatio": 0.75
+        },
+        "mission": {
+          "maxDetourRatio": 2.0,
+          "maxDetourExtraTiles": 16,
+          "maxSharedRatio": 0.75
+        },
+        "sharePenalty": 6,
+        "riskCategories": [
+          "tl_cone",
+          "tl_talk",
+          "choke"
+        ],
+        "exemptMissions": [
+          "shopping",
+          "snack",
+          "bank"
+        ]
+      },
+      {
+        "id": "V05_uncovered_straight",
+        "code": "clear_sight_too_long",
+        "hard": true,
+        "prototyped": true,
+        "rule": "가로·세로 직선 위에서, 시선 차단 칸이나 '엄폐 칸'(엄폐물에 4방향으로 닿는 통행 칸)을 만나기 전까지 이어지는 통행 칸 수(시선이 통과하는 낮은 가구는 끊지 않고 건너뜀)의 최댓값 ≤ complexityByRank.hard.maxUncoveredStraightTiles",
+        "_designNote": "개발 임시 '투명 직선 18칸'은 수작업 맵이 30칸이라 기준이 될 수 없음(PM 질문 ③). 문제는 '숨을 데 없이 길게 노출되는 줄'이라 엄폐 칸에서 끊어 셈. 수작업 맵 = 20(가운데 통로 17~37행) → 인턴·사원 상한 20, 고직급일수록 엄격(18→16). 단순 투명 직선은 metrics로만 기록"
+      },
+      {
+        "id": "V06_corridor_width",
+        "code": "choke_too_long",
+        "hard": true,
+        "rule": "폭 1 통로(좌우가 통행 불가인 통행 칸, 게이트 행 제외)의 세로 연속 ≤ 6. 자리→게이트·자리→미션 최단 경로 위 폭 1 구간마다 그 구간을 피하는 우회 ≤ 최단 + 16"
+      },
+      {
+        "id": "V07_placement",
+        "code": "pillar_misplaced",
+        "hard": false,
+        "rule": "기둥 O·막힘 L/Z가 문(=)·이음 행 개구부·스폿 칸의 8방향 이웃이면 '.'로 되돌림(실패 아님). 반높이 i와 전높이 P가 4방향으로 맞닿으면 i를 '.'로(아트 §13-1: 이음 조각 없음)"
+      },
+      {
+        "id": "V08_dead_end",
+        "code": "dead_end_trap",
+        "hard": true,
+        "prototyped": true,
+        "rule": "막힌 길 = 스폿이 아닌 통행 칸 중 이웃 1개인 칸에서 시작해 분기(이웃 3+)까지 이어진 칸 묶음. 길이 5 이상은 실패(함정). 개수는 target(소프트)"
+      },
+      {
+        "id": "V09_lead_watch",
+        "code": "lead_cannot_see_seat",
+        "hard": true,
+        "prototyped": true,
+        "rule": "tl_seat의 lookDirs 콘(5타일·30°, 가림 반영)이 player_seat를 덮음. 순회 목적지마다 tl_seat에서 편도 6~22타일, 그 경로가 player_seat 칸을 지나지 않음"
+      },
+      {
+        "id": "V10_gate",
+        "code": "gate_unfair",
+        "hard": true,
+        "prototyped": "partial",
+        "rule": "① 경비 순찰 노드(n_guard_*) 사이 경로가 gate_use 열 ±1을 지남 ② gate_use에서 맨해튼 2~5타일 안에 엄폐 칸 1개 이상(게이트 앞에서 숨어 타이밍을 볼 곳) ③ 게이트 홀 아래 이음 행 개구부 ≥ 1"
+      },
+      {
+        "id": "V11_crowd",
+        "code": "too_crowded",
+        "hard": true,
+        "rule": "세로 20행 창을 1행씩 밀며, 창과 '있을 수 있는 y 범위'가 겹치는 캐릭터 수 ≤ rules.characters.maxOnScreen(8). y 범위: 앉은 사람 = 자리 1행, 순찰·방해 = 재매핑된 웨이포인트를 잇는 실제 경로의 y 최소~최대, 팀장 = 자리 ∪ 그날 순회 경로(같은 사람이므로 1명), 배경 동료 = 자리·경로. 그날 계획(dayInterrupts·leaveInterrupts·대표님)에 실제로 있는 사람만. 같은 시각에 공존할 수 없는 쌍(H7: 대표님↔본부장·인사팀)은 둘 중 많은 쪽만 셈. 층 전체 ≤ maxOnFloor(12)",
+        "_designNote": "검사기 §4-1(수작업 맵)과 같은 보수적 계산. 생성 층은 그날 계획을 알므로 '직급별 최악 조합' 대신 그날 구성으로 셈"
+      },
+      {
+        "id": "V12_time_budget",
+        "code": "over_time_budget",
+        "hard": true,
+        "prototyped": true,
+        "rule": "T-139 예산 모델과 같은 식에 거리 보정만 더함. leaveSec = budgetModel.leaveBaseSec + (seatToGate − 33) ÷ 3.0 + 그날 퇴근 방해 수 × perLeaveInterruptSec + detourSec. 예측 = introSec + 그날 dayPhaseSec(대표님 날 감소 적용) (+ ceoVisitPausedSec) + leaveSec. 상한: 일반 84.0초, 대표님 날 80.5초. 초과분 ≤ trimMaxSec면 실패 대신 그날 근무 구간을 초과분만큼 줄임(0.1초 단위 올림) → 그 뒤 days.generator.missions.budgetCheck가 필수 수를 조정. 초과분 > trimMaxSec면 실패",
+        "normalDayMaxPredictedSec": 84.0,
+        "ceoDayMaxPredictedSec": 80.5,
+        "trimMaxSec": 3.0,
+        "refSeatToGateTiles": 33,
+        "playerSpeedTilesPerSec": 3.0,
+        "_designNote": "84.0 = 현재 일반 날 최대 예측 81.4초 + 2.6초(T-139 실측: 평균 82.6초 구간 최댓값 < 95). 80.5 = 대표님 날 예측 79.2초에서 실측 최댓값 93.3초 → 95초까지 1.7초 중 1.3초만 사용. 프로토 실측: 트림 발생 날은 과장 이상 일부, 최대 1.0초"
+      },
+      {
+        "id": "V13_variety",
+        "code": "same_as_yesterday",
+        "hard": true,
+        "prototyped": "partial",
+        "rule": "어제(day−1 생성 결과)와 ① 모듈 순서 ② 변형·반전 ③ 이음 행 개구부 열 중 2가지 이상 달라야 함. 3일차는 수작업 맵과 비교(변형 또는 반전 1개 이상 다름). 어제 결과는 같은 생성기로 다시 계산(캐시 권장)"
+      },
+      {
+        "id": "V14_patrol_remap",
+        "code": "patrol_unmappable",
+        "hard": true,
+        "rule": "그날 필요한 순찰(출연·방해)이 개발 재매핑(스팟 이름 → 길목 노드 이름 → 구역 상대 위치)으로 모두 옮겨지고 웨이포인트 사이 경로가 있음(개발 extraCheck와 같음). 재매핑이 안 되는 순찰만 patrolTemplates(노드 이름 목록)로 다시 시도"
+      }
+    ],
+    "metricsOnly": [
+      "rawClearSightTiles(개발 longestClearSight)",
+      "coverTiles",
+      "deadEnds",
+      "pillars",
+      "branchPointsOnLeave",
+      "heightTiles",
+      "repairsUsed",
+      "trimSec"
+    ]
+  },
+  "patrolTemplates": {
+    "_designNote": "보조 수단. 개발 T-144는 수작업 맵 순찰 웨이포인트를 '같은 이름 스팟 → 같은 이름 길목 노드 → 같은 구역 상대 위치'로 재매핑함(이 방식이 기본). 모듈의 스팟·노드 이름을 수작업 맵과 같게 맞췄으므로 대부분 그대로 옮겨짐. 재매핑이 실패한 순찰만 아래 '노드 이름 목록'으로 경로를 만듦(노드 사이는 4방향 A*, 꺾이는 칸만 웨이포인트로)",
+    "p_director_walkdown": {
+      "nodes": [
+        "exec_seat",
+        "exec_door",
+        "n_b_hall",
+        {
+          "node": "n_c_mid",
+          "stopId": "stop_next_team"
+        },
+        {
+          "node": "n_d_mid",
+          "stopId": "stop_meeting_glass"
+        },
+        {
+          "node": "n_e_aisle1",
+          "stopId": "stop_team_aisle"
+        },
+        {
+          "node": "n_pantry",
+          "stopId": "stop_pantry_coffee",
+          "optional": true
+        },
+        "elevator_service_spawn"
+      ],
+      "_note": "목록 순서대로 걸음. 회의실이 팀 아래로 가면 되돌아 걷는 구간이 생김(본부장이 층을 훑음) → 허용"
+    },
+    "p_director_walkup": {
+      "reverseOf": "p_director_walkdown"
+    },
+    "p_hr_attendance": {
+      "nodes": [
+        "elevator_main_use",
+        "n_lobby",
+        {
+          "node": "hr_inspect_spot",
+          "stopId": "stop_inspect"
+        },
+        "elevator_service_spawn"
+      ]
+    },
+    "p_hr_corridor": {
+      "nodes": [
+        "elevator_main_use",
+        "n_lobby",
+        {
+          "node": "n_c_mid",
+          "stopId": "stop_hr_next_team"
+        },
+        {
+          "node": "n_d_mid",
+          "stopId": "stop_hr_mid"
+        },
+        "n_lobby",
+        "elevator_main_use"
+      ]
+    },
+    "p_ceo_visit": {
+      "nodes": [
+        "elevator_service_spawn",
+        {
+          "node": "ceo_greet_spot",
+          "stopId": "stop_ceo_greet"
+        },
+        {
+          "node": "ceo_talk_spot",
+          "stopId": "stop_ceo_talk"
+        },
+        "elevator_service_spawn"
+      ],
+      "entranceSpeedFit": {
+        "targetSec": 4.6,
+        "minSpeed": 2.4,
+        "maxSpeed": 4.4,
+        "_note": "얼음 입장 시간을 수작업 맵(11타일 ÷ 2.4 = 4.6초)과 같게: 속도 = clamp(경로 ÷ 4.6, 2.4, 4.4). V03이 대표님 날 경로 ≤ 20 보장. 얼음 중엔 아무도 못 움직이므로 빨라도 불공정하지 않음(성큼성큼 연출)"
+      }
+    },
+    "p_guard_gatehall": {
+      "nodes": [
+        "n_guard_a",
+        "n_guard_b",
+        "n_guard_c"
+      ],
+      "loop": true
+    },
+    "p_gossip_snitch": {
+      "nodes": [
+        "snitch_seat",
+        {
+          "node": "gossip_a",
+          "stopId": "stop_gossip"
+        },
+        "snitch_seat"
+      ]
+    },
+    "p_gossip_accomplice": {
+      "nodes": [
+        "accomplice_seat",
+        {
+          "node": "gossip_b",
+          "stopId": "stop_gossip"
+        },
+        "accomplice_seat"
+      ]
+    },
+    "p_snitch_report": {
+      "nodes": [
+        "snitch_seat",
+        {
+          "node": "snitch_report_spot",
+          "stopId": "stop_report"
+        },
+        "snitch_seat"
+      ]
+    },
+    "seatedFromSpot": {
+      "p_tl_seat": "tl_seat",
+      "p_senior_seat": "tl_seat",
+      "p_tl2_seat": "tl2_seat",
+      "p_snitch_seat": "snitch_seat",
+      "p_accomplice_seat": "accomplice_seat",
+      "_note": "앉은 순찰은 웨이포인트 1개를 스팟 좌표로, facing·lookDirs도 스팟 값으로 덮어씀(team_back은 팀장이 남쪽을 보고 앉아 위쪽을 돌아봄)"
+    },
+    "background": {
+      "bg_next_team_a": "bg_next_team_seat",
+      "bg_pantry_phone": "bg_pantry_phone_spot",
+      "_note": "bg_pantry_walker는 n_pantry 기준 ±2칸 사각 순환(탕비실이 어디 있든)"
+    }
+  },
+  "leadRoaming": {
+    "_designNote": "D-075·REQ-014. 개발 BossTourDef(T-144 devTour.ts)에 맞춘 값. 팀장은 평소 자리(p_tl_seat), 하루 2~4회 순회 후 복귀. 자리 비움 = 기회, 순회 경로 = 움직이는 위험 지대. 근무 구간 INT-08(회의)은 목적지 meeting으로 흡수, 퇴근 구간 INT-08은 그대로",
+    "enabled": true,
+    "appliesFromDay": 6,
+    "actorId": "team_lead",
+    "seatPatrolId": "p_tl_seat",
+    "seed": "day-{day}-tour",
+    "schedule": {
+      "firstAtFrac": 0.15,
+      "lastAtFrac": 0.8,
+      "latestStartFrac": 0.85,
+      "minGapSec": 8,
+      "mustBeSeatedBeforeLeaveSec": 4,
+      "rule": "근무 구간 × [firstAtFrac, lastAtFrac]를 회차 수로 등분, 각 칸 안 10~60% 지점에서 출발(시드). 앞 회차 복귀 + minGapSec 전이면 뒤로 밀고, latestStartFrac를 넘기면 취소. 퇴근 시작 4초 전에 목적지에 있으면 체류를 줄이고 바로 복귀",
+      "_designNote": "개발 임시(10~80%, 88% 취소)에서 첫 출발을 15%로 늦춤: 하루 시작 직후 첫 미션 칩이 열리는 3초 근처에 자리를 비우면 '공짜 시간'이 됨. 85% 취소 = 50초 근무 기준 42.5초, 복귀까지 최소 6초 + 퇴근 전 4초 여유"
+    },
+    "standTell": {
+      "sec": 1.0,
+      "minSec": 0.8,
+      "visual": "teamlead/rise_up(아트 0.75초) + 0.25초 정지",
+      "sfxNew": "sfx_chair_push",
+      "sfxFallback": "sfx_look_swish",
+      "bubble": "destination_icon",
+      "_note": "일어나기 + 의자 미는 소리 + 머리 위 목적지 아이콘(프린터·컵·회의·대화·서류). 이 동안 시선 없음. 목적지를 미리 보여 줘서 동선을 짤 수 있음. 화면 밖이면 가장자리 빨강 화살표 깜빡임"
+    },
+    "coneActiveIn": [
+      "walk",
+      "look"
+    ],
+    "coneNote": "걷는 동안 진행 방향 콘(5타일·30°, 배율 1.0) 항상 켜짐. 모퉁이 회전은 D-044 조건부 전조. 목적지 대기(wait)는 콘 없음, 목적지에서 둘러보기(look)는 전조 0.5초 + 점선 콘 뒤에만. 전조(tell) 중 콘 없음",
+    "walk": {
+      "glanceBackChancePerTile": 0.03,
+      "talkEnabled": true,
+      "avoidTiles": [
+        "player_seat"
+      ],
+      "pathTieBreak": "같은 거리면 자리→게이트 최단 경로와 겹치는 칸이 많은 쪽",
+      "_note": "걷는 중에도 INT-01 말걸기(전조 말풍선 그대로). 목적지 대기 중엔 말걸기 OFF"
+    },
+    "destinations": [
+      {
+        "id": "printer",
+        "spots": [
+          "tour_printer",
+          "tour_copier"
+        ],
+        "waitSecRange": [
+          3.0,
+          4.0
+        ],
+        "lookChance": 0.0,
+        "weight": 1.2,
+        "minDay": 6,
+        "bubbleIcon": "icon_tour_printer",
+        "lineKey": "tour.tl.printer",
+        "pose": "teamlead/wait_up",
+        "floorMark": "tile2/floor_print_mark",
+        "_note": "출력물 가지러. 프린터실이 있으면 거기, 없으면 팀 복사기. 짧고 잦은 기회. 프린터 몰래 출력 미션과 충돌 가능(그날의 사건)"
+      },
+      {
+        "id": "pantry",
+        "spots": [
+          "tour_pantry"
+        ],
+        "waitSecRange": [
+          4.0,
+          5.0
+        ],
+        "lookChance": 0.5,
+        "weight": 1.0,
+        "minDay": 6,
+        "bubbleIcon": "icon_tour_cup",
+        "lineKey": "tour.tl.pantry",
+        "_note": "커피 타면서 한 번 둘러볼 수 있음(전조 0.5초 + 점선 콘). 커피 미션 장소와 겹침"
+      },
+      {
+        "id": "meeting",
+        "spots": [
+          "tour_meeting",
+          "meeting_inside"
+        ],
+        "waitSecRange": [
+          8.0,
+          10.0
+        ],
+        "lookChance": 0.0,
+        "weight": 0.9,
+        "minDay": 9,
+        "bubbleIcon": "icon_tour_meeting",
+        "lineKey": "tour.tl.meeting",
+        "locksMissions": [
+          "nap"
+        ],
+        "endTell": {
+          "sec": 1.0,
+          "sfx": "sfx_meeting_end",
+          "lineKey": "int.tl_meeting.letout"
+        },
+        "meetingRoomDoor": "busy_while_inside",
+        "_note": "기존 INT-08 근무판과 같음(9일차 데뷔 유지). 회의 중 낮잠 잠김, 회의실 문 표시 '사용 중'(tile2/wall_door_busy 그림, 통행은 유지)"
+      },
+      {
+        "id": "next_team",
+        "spots": [
+          "tour_next_team"
+        ],
+        "waitSecRange": [
+          4.0,
+          6.0
+        ],
+        "lookChance": 0.3,
+        "weight": 0.9,
+        "minDay": 11,
+        "bubbleIcon": "icon_tour_talk",
+        "lineKey": "tour.tl.next_team",
+        "_note": "옆 팀에 업무 협의. 차장~ 옆 팀 팀장은 이 대화 중 시선 OFF(두 팀장이 수다 = 옆 팀 통로가 잠깐 안전)"
+      },
+      {
+        "id": "exec_report",
+        "spots": [
+          "tour_exec_report"
+        ],
+        "waitSecRange": [
+          6.0,
+          8.0
+        ],
+        "lookChance": 0.0,
+        "weight": 0.7,
+        "minDay": 16,
+        "bubbleIcon": "icon_tour_report",
+        "lineKey": "tour.tl.exec_report",
+        "endTell": {
+          "sec": 1.0,
+          "sfxNew": "sfx_door_close",
+          "sfxFallback": "sfx_meeting_end",
+          "lineKey": "tour.tl.exec_report_end"
+        },
+        "_note": "본부장실 보고(대리~). 가장 길게 비지만 돌아오는 길이 퇴근 동선(위쪽)을 거꾸로 훑음. 본부장 순찰 ±10초엔 제외"
+      }
+    ],
+    "byRank": {
+      "staff": {
+        "countRange": [
+          2,
+          2
+        ],
+        "stopsPerTour": [
+          1,
+          1
+        ],
+        "speedTilesPerSec": 1.8,
+        "waitMul": 1.0
+      },
+      "assistant_manager": {
+        "countRange": [
+          2,
+          3
+        ],
+        "stopsPerTour": [
+          1,
+          1
+        ],
+        "speedTilesPerSec": 1.9,
+        "waitMul": 1.0
+      },
+      "manager": {
+        "countRange": [
+          3,
+          3
+        ],
+        "stopsPerTour": [
+          1,
+          2
+        ],
+        "speedTilesPerSec": 2.0,
+        "waitMul": 0.9
+      },
+      "deputy_general_manager": {
+        "countRange": [
+          3,
+          4
+        ],
+        "stopsPerTour": [
+          1,
+          2
+        ],
+        "speedTilesPerSec": 2.0,
+        "waitMul": 0.9
+      },
+      "general_manager": {
+        "countRange": [
+          3,
+          4
+        ],
+        "stopsPerTour": [
+          1,
+          2
+        ],
+        "speedTilesPerSec": 2.1,
+        "waitMul": 0.85
+      },
+      "executive": {
+        "countRange": [
+          4,
+          4
+        ],
+        "stopsPerTour": [
+          1,
+          2
+        ],
+        "speedTilesPerSec": 2.1,
+        "waitMul": 0.85
+      },
+      "_note": "속도는 항상 플레이어 3.0보다 느림(앞질러 피할 수 있음). 과장부터 한 번에 두 곳(예: 프린터 → 탕비실). 6일차 첫 순회는 printer 고정 + 튜토리얼 tut_tour"
+    },
+    "selection": "목적지 가중치 추첨, 같은 회차 안 중복 금지, 직전 회차 첫 목적지와 다르게, minDay 미만·스팟 없는 목적지 제외",
+    "awaySecRange": [
+      6,
+      22
+    ],
+    "awayRule": "자리 비움(왕복 + 대기) < 6초면 대기를 늘리고, > 22초면 가장 먼 목적지를 빼고 다시 고름",
+    "conflicts": [
+      "대표님 순시(INT-09): 대표님 예정 시각 ±20초에 출발 금지. 순시 시작 조건에 '팀장이 자리에 앉아 있음' 추가(순회 중이면 복귀까지 대기)",
+      "본부장 순찰(INT-10, H1): 순회 중 본부장이 우리 팀 구역에 들어오면 팀장은 그 자리에서 인사 포즈(시선·말걸기 OFF, 1.0초 뒤 하던 일 계속). 본부장 순찰 ±10초엔 exec_report 제외",
+      "정의로운 동료 보고(INT-03, H6): 팀장이 자리에 없으면 기존대로 최대 8초 기다리다 포기. 순회 중인 팀장을 쫓아가지 않음",
+      "인사팀 근태 점검(INT-05)·복도 확인(INT-06): 독립(겹쳐도 됨)",
+      "근무 구간 INT-08이 그날 계획에 있으면 그 시각을 meeting 순회 1회로 바꿈(횟수에 포함)"
+    ],
+    "budget": {
+      "dayInterruptReserveSec": 0.0,
+      "meetingUsesReserveOf": "INT-08",
+      "_note": "순회는 플레이어 시간을 빼앗지 않는 '기회'라 예약분 0. meeting은 낮잠 잠김 때문에 budgetModel.dayInterruptReserveSec.INT-08(2.0초)을 씀"
+    },
+    "emptySeatCheck": {
+      "enabled": false,
+      "suspicion": 0.08,
+      "radiusTiles": 2,
+      "_note": "PM 결정 대기: 팀장이 복귀하며 빈 내 자리 2타일 안을 지나면 +0.08('어디 갔지?'). 켜면 '팀장 복귀 전에 돌아와야 한다'는 마감이 생기지만 새 벌점 규칙이라 기본 OFF"
+    },
+    "seatEmptyCue": {
+      "visual": "의자에 걸친 재킷",
+      "hudBadgeKey": "hud.tl_away",
+      "_note": "남은 시간은 보여 주지 않음(읽는 재미)"
+    }
+  }
+}

@@ -1,0 +1,1747 @@
+{
+  "schemaVersion": 3,
+  "_comment": "데일리 미션 풀 × 변형(modifier) (REQ-015, D-076, T-142). 규칙서 design/gdd-v3-procedural.md §5, 스키마 design/data-schema-v3-draft.md §5. 개발 T-144 MissionModifier·parseModifiers 형식에 맞춤. 🔶 모든 보상 배수는 행동 결과에 대해 결정적. 변형 추첨은 날짜 시드 난도 연출 확률(보상 확률 아님)",
+  "enabled": false,
+  "_enabledNote": "개발 연동 전까지 false. true가 되면 poolByRank·combination·authoredOverlays가 days 계획에 반영됨",
+  "appliesFromDay": 6,
+  "missionPool": {
+    "existing": [
+      {
+        "id": "coffee",
+        "eventRef": "events.coffee",
+        "where": "away",
+        "zone": "pantry",
+        "tags": [
+          "away",
+          "pantry",
+          "noise",
+          "cup",
+          "accomplice"
+        ],
+        "difficulty": 2,
+        "unlockDay": 1,
+        "relocateSpots": [
+          "cafe_use"
+        ],
+        "_note": "기존 정의는 events.json 그대로. 이 표는 생성·변형용 태그만"
+      },
+      {
+        "id": "restroom",
+        "eventRef": "events.restroom",
+        "where": "away",
+        "zone": "restroom",
+        "tags": [
+          "away",
+          "safe_zone"
+        ],
+        "difficulty": 3,
+        "unlockDay": 1,
+        "relocateSpots": []
+      },
+      {
+        "id": "nap",
+        "eventRef": "events.nap",
+        "where": "away",
+        "zone": "meeting_room",
+        "tags": [
+          "away",
+          "meeting_room"
+        ],
+        "difficulty": 3,
+        "unlockDay": 1,
+        "relocateSpots": [
+          "lounge_nap"
+        ]
+      },
+      {
+        "id": "shopping",
+        "eventRef": "events.shopping",
+        "where": "seat",
+        "zone": "team",
+        "tags": [
+          "seat",
+          "screen"
+        ],
+        "difficulty": 2,
+        "unlockDay": 1,
+        "relocateSpots": []
+      },
+      {
+        "id": "snack",
+        "eventRef": "events.snack",
+        "where": "seat",
+        "zone": "team",
+        "tags": [
+          "seat",
+          "noise",
+          "accomplice"
+        ],
+        "difficulty": 1,
+        "unlockDay": 1,
+        "relocateSpots": [
+          "tour_pantry"
+        ]
+      }
+    ],
+    "new": [
+      {
+        "id": "parcel",
+        "nameKey": "event.parcel.name",
+        "descKey": "event.parcel.desc",
+        "iconSprite": "icon_parcel",
+        "mvp": false,
+        "mechanic": "fetch_carry",
+        "location": {
+          "spot": "parcel_use",
+          "zone": "gate_hall"
+        },
+        "startsAt": "arrive_spot",
+        "completeAt": "return_to_seat",
+        "awayFromDesk": true,
+        "isFinale": false,
+        "where": "away",
+        "tags": [
+          "away",
+          "far",
+          "carry",
+          "guard_zone"
+        ],
+        "difficulty": 4,
+        "unlockDay": 21,
+        "timeLimitSec": 32,
+        "expectedDurationSec": 26.5,
+        "accompliceAllowed": false,
+        "reward": {
+          "slackPoints": 260
+        },
+        "failPenalty": {
+          "suspicion": 0.1
+        },
+        "timeoutPenalty": {
+          "suspicion": 0.15
+        },
+        "params": {
+          "pickupSec": 1.5,
+          "tapPauses": true,
+          "pauseShowsPose": "check_phone",
+          "carryProp": "parcel_box",
+          "carryMovingMul": 1.15,
+          "carryDisguisePose": "hold_box",
+          "carryUntil": "seat",
+          "dropOnCaught": true
+        },
+        "failReactionKeys": [
+          "react.parcel.caught"
+        ],
+        "tutorialId": "tut_parcel",
+        "_designNote": "게이트 홀(경비 코앞) 보관함에서 상자를 꺼내 자리로 들고 옴. 편도가 퇴근 동선과 거의 같아 가장 멀고(편도 ≈ 35타일, 왕복 23초) 보상도 가장 큼. 꺼내는 1.5초 중 탭 = '폰 보는 척' 일시정지. 들고 오는 동안 이동 의심 ×1.15(상자가 눈에 띔), 멈추면 '상자 든 채 서 있기' 위장(의심 0). 📐 기대 = 왕복 23.3 + 꺼내기 1.5 + 위장 여유 ≈ 26.5초 → 하루에 이것 하나면 다른 필수는 1~2개로 낮아짐(budgetCheck)"
+      },
+      {
+        "id": "print",
+        "nameKey": "event.print.name",
+        "descKey": "event.print.desc",
+        "iconSprite": "icon_print",
+        "mvp": false,
+        "mechanic": "remote_start_fetch",
+        "location": {
+          "spot": "printer_use",
+          "zone": "printer_room"
+        },
+        "startsAt": "arrive_spot",
+        "completeAt": "return_to_seat",
+        "awayFromDesk": true,
+        "isFinale": false,
+        "where": "away",
+        "tags": [
+          "away",
+          "printer",
+          "seat_start",
+          "carry",
+          "noise"
+        ],
+        "difficulty": 3,
+        "unlockDay": 23,
+        "timeLimitSec": 28,
+        "expectedDurationSec": 16.0,
+        "accompliceAllowed": false,
+        "reward": {
+          "slackPoints": 200
+        },
+        "failPenalty": {
+          "suspicion": 0.1
+        },
+        "timeoutPenalty": {
+          "suspicion": 0.1
+        },
+        "params": {
+          "startAtSeatSec": 0.5,
+          "pagesRequired": 4,
+          "secPerPage": 0.7,
+          "trayExposeSec": 6.0,
+          "trayExposedPenalty": 0.1,
+          "trayExposedBy": [
+            "team_lead",
+            "snitch",
+            "hr_inspector",
+            "director"
+          ],
+          "trayExposedRadiusTiles": 2,
+          "tapAtPrinter": "grab_when_done",
+          "tapEarly": "pause",
+          "carryProp": "paper_stack",
+          "carryMovingMul": 1.0,
+          "fallbackSpot": "copier_use"
+        },
+        "failReactionKeys": [
+          "react.print.found"
+        ],
+        "tutorialId": "tut_print",
+        "_designNote": "자리에서 칩을 누르면 개인 서류(여행 일정표) 인쇄가 시작됨(0.5초). 프린터는 4장 × 0.7초 = 2.8초 동안 출력. 출력이 끝난 종이가 6초 넘게 쟁반에 있는데 상사·동료가 2타일 안에 오면 '이거 누구 거예요?' +0.10, 미션 실패. 팀장 순회 목적지가 프린터인 날은 출발 말풍선(프린터 아이콘, 1.0초)이 곧 경고. 프린터실이 없는 층은 팀 복사기(copier_use)라 짧음. 📐 기대 = 출발 0.5 + 왕복 10.7 + 대기·집기 2.8 + 여유 2 = 16초"
+      },
+      {
+        "id": "chat",
+        "nameKey": "event.chat.name",
+        "descKey": "event.chat.desc",
+        "iconSprite": "icon_chat",
+        "mvp": false,
+        "mechanic": "rhythm_tap",
+        "location": {
+          "spot": "chat_use",
+          "zone": "next_team"
+        },
+        "startsAt": "arrive_spot",
+        "completeAt": "return_to_seat",
+        "awayFromDesk": true,
+        "isFinale": false,
+        "where": "away",
+        "tags": [
+          "away",
+          "next_team",
+          "noise"
+        ],
+        "difficulty": 2,
+        "unlockDay": 19,
+        "timeLimitSec": 22,
+        "expectedDurationSec": 14.5,
+        "accompliceAllowed": false,
+        "reward": {
+          "slackPoints": 170
+        },
+        "failPenalty": {
+          "suspicion": 0.08
+        },
+        "timeoutPenalty": {
+          "suspicion": 0.1
+        },
+        "params": {
+          "bitesRequired": 5,
+          "minIntervalSec": 0.55,
+          "perfectWindowSec": [
+            0.55,
+            1.1
+          ],
+          "maxPressSec": 0.35,
+          "noiseSuspicion": 0.06,
+          "noiseAlertsRadiusTiles": 5,
+          "noiseShortensBossIdleTo": 0.0,
+          "biteUnderGazeSuspicion": 0.1,
+          "activityStateAfterBiteSec": 0.4,
+          "perfectBonusPoints": 10,
+          "noiseLabel": "laugh",
+          "biteLabel": "nod"
+        },
+        "failReactionKeys": [
+          "react.chat.caught"
+        ],
+        "tutorialId": "tut_chat",
+        "_designNote": "간식과 같은 리듬 탭(학습 재사용): '맞장구' 5번. 너무 빠르거나 길게 누르면 '빵 터짐' 웃음(소음) +0.06 + 반경 5타일 앉은 상사 돌아보기 앞당김(전조는 정상). 대화 주제는 '어제 본 예능' 같은 무해한 잡담(뒷담화 금지). 차장부터 옆 팀 팀장 바로 옆이라 위험. 📐 기대 = 왕복 9.3 + 맞장구 5 × 0.8 + 여유 1.2 = 14.5초"
+      },
+      {
+        "id": "bank",
+        "nameKey": "event.bank.name",
+        "descKey": "event.bank.desc",
+        "iconSprite": "icon_bank",
+        "mvp": false,
+        "mechanic": "screen_swap_tap",
+        "location": {
+          "spot": "player_seat",
+          "zone": "team"
+        },
+        "startsAt": "chip_tap_at_seat",
+        "completeAt": "on_success",
+        "awayFromDesk": false,
+        "isFinale": false,
+        "where": "seat",
+        "tags": [
+          "seat",
+          "screen",
+          "phone"
+        ],
+        "difficulty": 2,
+        "unlockDay": 17,
+        "timeLimitSec": 16,
+        "expectedDurationSec": 10.5,
+        "accompliceAllowed": false,
+        "reward": {
+          "slackPoints": 160
+        },
+        "failPenalty": {
+          "suspicion": 0.0
+        },
+        "timeoutPenalty": {
+          "suspicion": 0.1
+        },
+        "params": {
+          "cartFillPerSec": 0.35,
+          "itemsRequired": 3,
+          "checkoutHoldSec": 1.0,
+          "tapDuringCheckout": "reset_checkout",
+          "pausedShowsSpreadsheet": true,
+          "screenSkin": "phone_bill_app",
+          "stepLabels": [
+            "bank.step.login",
+            "bank.step.fill",
+            "bank.step.confirm"
+          ]
+        },
+        "failReactionKeys": [
+          "react.bank.caught"
+        ],
+        "tutorialId": "tut_bank",
+        "_designNote": "쇼핑과 같은 화면 전환 탭(학습 재사용): 폰을 책상 아래로 보며 '로그인 → 입력 → 확인' 3단계(각 0.35/초 ≈ 2.9초) + 마지막 확인 1.0초 연속. 탭 = 스프레드시트. 화면은 금액·실존 은행·앱 이름 없이 '가상 고지서 앱'만(정책). 📐 기대 = 3 × 2.9 + 1.0 + 위장 여유 ≈ 10.5초"
+      },
+      {
+        "id": "cafe",
+        "nameKey": "event.cafe.name",
+        "descKey": "event.cafe.desc",
+        "iconSprite": "icon_cafe",
+        "mvp": false,
+        "mechanic": "queue_wait_tap",
+        "location": {
+          "spot": "cafe_use",
+          "zone": "lounge"
+        },
+        "startsAt": "arrive_spot",
+        "completeAt": "return_to_seat",
+        "awayFromDesk": true,
+        "isFinale": false,
+        "where": "away",
+        "tags": [
+          "away",
+          "lounge",
+          "cup",
+          "carry",
+          "noise"
+        ],
+        "difficulty": 3,
+        "unlockDay": 29,
+        "timeLimitSec": 26,
+        "expectedDurationSec": 17.0,
+        "accompliceAllowed": false,
+        "reward": {
+          "slackPoints": 180,
+          "couponStamp": 1
+        },
+        "failPenalty": {
+          "suspicion": 0.08
+        },
+        "timeoutPenalty": {
+          "suspicion": 0.1
+        },
+        "params": {
+          "orderSec": 2.5,
+          "tapPauses": true,
+          "pauseShowsPose": "check_phone",
+          "pickupCue": "cup_ready",
+          "pickupWindowSec": 0.6,
+          "pickupTellSec": 0.6,
+          "maxMissedPickups": 2,
+          "missRetrySec": 1.0,
+          "missNoiseSuspicion": 0.04,
+          "carryProp": "cafe_cup",
+          "carryMovingMul": 1.0
+        },
+        "failReactionKeys": [
+          "react.cafe.caught"
+        ],
+        "tutorialId": "tut_cafe",
+        "_designNote": "라운지 무인 카페: 키오스크 주문 2.5초(탭 = 폰 보는 척 일시정지) → '컵 나왔어요' 표시(0.6초 전조) 뒤 0.6초 안에 톡 → 컵 들고 복귀. 놓치면 '딸깍' 소음 +0.04 후 1초 뒤 다시, 두 번 놓치면 실패. 성공하면 쿠폰 도장 1개(결정적, 10개마다 도감 칭호만 — 아이템·재화 없음). 📐 기대 = 왕복 10.7 + 주문 2.5 + 집기 1.0 + 여유 2.8 = 17초"
+      },
+      {
+        "id": "window",
+        "nameKey": "event.window.name",
+        "descKey": "event.window.desc",
+        "iconSprite": "icon_window",
+        "mvp": false,
+        "mechanic": "pour_tap_stop",
+        "location": {
+          "spot": "window_use",
+          "zone": "lounge"
+        },
+        "startsAt": "arrive_spot",
+        "completeAt": "return_to_seat",
+        "awayFromDesk": true,
+        "isFinale": false,
+        "where": "away",
+        "tags": [
+          "away",
+          "lounge",
+          "window",
+          "refresh"
+        ],
+        "difficulty": 2,
+        "unlockDay": 31,
+        "timeLimitSec": 24,
+        "expectedDurationSec": 15.5,
+        "accompliceAllowed": false,
+        "reward": {
+          "slackPoints": 150,
+          "suspicionRelief": 0.05
+        },
+        "failPenalty": {
+          "suspicion": 0.1
+        },
+        "timeoutPenalty": {
+          "suspicion": 0.1
+        },
+        "params": {
+          "pourRatePerSec": 0.5,
+          "targetBand": [
+            0.72,
+            0.9
+          ],
+          "overflowAt": 1.0,
+          "cupsRequired": 3,
+          "tapBelowBand": "pause",
+          "tapInBand": "success",
+          "tapAboveBand": "fail",
+          "carryCupWhileReturning": false,
+          "fillLabel": "breath_in",
+          "overflowLabel": "sneeze",
+          "skin": "breath_ring"
+        },
+        "failReactionKeys": [
+          "react.window.caught"
+        ],
+        "tutorialId": "tut_window",
+        "_designNote": "커피 따르기와 같은 띠 멈춤(학습 재사용): 숨 들이쉬기 링이 차면 띠 [0.72, 0.9] 안에서 톡 = 한 호흡, 세 번. 넘치면 '에취!' 실패 +0.10. 창가는 유리라 복도에서 다 보임. 성공 시 의심 −0.05(유일한 '숨 돌리기' 미션, 결정적). 흡연 연상 소품·연출 없음(D-008). 📐 기대 = 왕복 10.7 + 3호흡 × 1.6 = 15.5초"
+      }
+    ],
+    "poolByRank": {
+      "_note": "ranks.json eventPool을 대체(enabled일 때). 가중치는 '처음 나온 직급에서 자주, 이후 고르게'. unlockDay 미만은 제외",
+      "intern": {
+        "coffee": 1.2,
+        "restroom": 1.0,
+        "nap": 0.9,
+        "shopping": 1.0,
+        "snack": 1.0
+      },
+      "staff": {
+        "coffee": 1.2,
+        "restroom": 1.0,
+        "nap": 0.9,
+        "shopping": 1.0,
+        "snack": 1.0
+      },
+      "assistant_manager": {
+        "coffee": 1.0,
+        "restroom": 0.9,
+        "nap": 0.8,
+        "shopping": 0.8,
+        "snack": 0.8,
+        "bank": 1.0,
+        "chat": 1.0,
+        "parcel": 0.7,
+        "print": 0.9
+      },
+      "manager": {
+        "coffee": 0.9,
+        "restroom": 0.8,
+        "nap": 0.8,
+        "shopping": 0.7,
+        "snack": 0.7,
+        "bank": 0.8,
+        "chat": 0.9,
+        "parcel": 0.7,
+        "print": 0.9,
+        "cafe": 1.0,
+        "window": 1.0
+      },
+      "deputy_general_manager": {
+        "coffee": 0.9,
+        "restroom": 0.8,
+        "nap": 0.8,
+        "shopping": 0.7,
+        "snack": 0.7,
+        "bank": 0.8,
+        "chat": 0.9,
+        "parcel": 0.8,
+        "print": 0.9,
+        "cafe": 0.9,
+        "window": 0.9
+      },
+      "general_manager": {
+        "coffee": 0.9,
+        "restroom": 0.8,
+        "nap": 0.8,
+        "shopping": 0.7,
+        "snack": 0.7,
+        "bank": 0.8,
+        "chat": 0.9,
+        "parcel": 0.8,
+        "print": 0.9,
+        "cafe": 0.9,
+        "window": 0.9
+      },
+      "executive": {
+        "coffee": 0.9,
+        "restroom": 0.8,
+        "nap": 0.8,
+        "shopping": 0.7,
+        "snack": 0.7,
+        "bank": 0.8,
+        "chat": 0.9,
+        "parcel": 0.8,
+        "print": 0.9,
+        "cafe": 0.9,
+        "window": 0.9
+      }
+    },
+    "debuts": [
+      {
+        "day": 17,
+        "missionId": "bank",
+        "tutorialId": "tut_bank",
+        "force": true
+      },
+      {
+        "day": 19,
+        "missionId": "chat",
+        "tutorialId": "tut_chat",
+        "force": true
+      },
+      {
+        "day": 21,
+        "missionId": "parcel",
+        "tutorialId": "tut_parcel",
+        "force": true,
+        "noModifier": true
+      },
+      {
+        "day": 23,
+        "missionId": "print",
+        "tutorialId": "tut_print",
+        "force": true
+      },
+      {
+        "day": 29,
+        "missionId": "cafe",
+        "tutorialId": "tut_cafe",
+        "force": true
+      },
+      {
+        "day": 31,
+        "missionId": "window",
+        "tutorialId": "tut_window",
+        "force": true
+      },
+      {
+        "day": 18,
+        "modifierType": "relocate"
+      },
+      {
+        "day": 20,
+        "modifierType": "rush"
+      },
+      {
+        "day": 22,
+        "modifierType": "carry"
+      },
+      {
+        "day": 24,
+        "modifierType": "zone_only"
+      },
+      {
+        "day": 32,
+        "modifierType": "double"
+      }
+    ],
+    "_debutNote": "새 미션 데뷔일은 그 미션을 반드시 포함하고 '처음 하는 미션엔 하드 변형 없음'. 16일차(본부장 데뷔)·28일차(대표님 데뷔)·30일차는 피함. 변형 type 데뷔일도 그 type을 반드시 1개 포함(guard 통과 시)"
+  },
+  "modifierTemplates": [
+    {
+      "type": "rush",
+      "nameKey": "mod.rush",
+      "cost": 2,
+      "kind": "hard",
+      "minRank": "assistant_manager",
+      "effect": {
+        "timeLimit": {
+          "mul": 0.8
+        },
+        "rewardMul": 1.25
+      },
+      "budgetSecDelta": 0.0,
+      "appliesToTags": [
+        "any"
+      ],
+      "guard": "적용 후 timeLimitSec ≥ 생성 맵 예상 시간 + 4초가 아니면 그 미션엔 못 붙임",
+      "_note": "제한 시간 ×0.8, 보상 ×1.25(무조건)"
+    },
+    {
+      "type": "relocate",
+      "nameKey": "mod.relocate",
+      "cost": 1,
+      "kind": "hard",
+      "minRank": "staff",
+      "effect": {
+        "spot": "relocateSpots[미션별]",
+        "rewardMul": 1.1
+      },
+      "budgetSecDelta": "travel_diff",
+      "appliesTo": {
+        "coffee": "cafe_use",
+        "nap": "lounge_nap",
+        "snack": "tour_pantry",
+        "bank": "restroom_stall",
+        "print": "copier_use|printer_use"
+      },
+      "_note": "오늘은 다른 곳에서: 커피 → 라운지 카페 머신, 낮잠 → 라운지 소파, 간식 → 탕비실에서 먹기(자리 밖이 됨), 공과금 → 화장실 칸(안전하지만 멂), 출력 → 다른 프린터. 대상 스팟이 그날 층에 없으면 붙이지 않음. 예상 시간 = 이동 거리 차로 다시 계산"
+    },
+    {
+      "type": "double",
+      "nameKey": "mod.double",
+      "cost": 3,
+      "kind": "hard",
+      "minRank": "manager",
+      "effect": {
+        "paramsByMission": {
+          "coffee": {
+            "cupsRequired": 2
+          },
+          "window": {
+            "cupsRequired": 5
+          },
+          "bank": {
+            "itemsRequired": 5
+          },
+          "shopping": {
+            "itemsRequired": 3
+          },
+          "snack": {
+            "bitesRequired": 9
+          },
+          "chat": {
+            "bitesRequired": 8
+          }
+        },
+        "timeLimit": {
+          "add": 6
+        },
+        "rewardMul": 1.6
+      },
+      "budgetSecDelta": 4.0,
+      "_note": "두 배로: 같은 행동을 연달아(커피 2잔, 맞장구 8번…). 제한 +6초, 보상 ×1.6. 이동형은 장소 행동만 늘고 왕복은 1번"
+    },
+    {
+      "type": "carry",
+      "nameKey": "mod.carry",
+      "cost": 2,
+      "kind": "hard",
+      "minRank": "assistant_manager",
+      "effect": {
+        "params": {
+          "carryVisible": true,
+          "carryMovingMul": 1.25,
+          "carryTalkCatchRadiusAdd": 0.5
+        },
+        "rewardMul": 1.3
+      },
+      "budgetSecDelta": 0.5,
+      "appliesToTags": [
+        "cup",
+        "carry"
+      ],
+      "_note": "들고 다니기: 돌아오는 길에 든 물건이 크게 보임 → 이동 의심 ×1.25, 팀장 말걸기 붙잡는 반경 +0.5('그거 뭐야?'). 멈추면 위장(의심 0)은 그대로"
+    },
+    {
+      "type": "avoid",
+      "nameKey": "mod.avoid",
+      "cost": 1,
+      "kind": "soft",
+      "minRank": "staff",
+      "variants": {
+        "snitch": {
+          "minDay": 8
+        },
+        "team_lead": {
+          "minDay": 6
+        },
+        "director": {
+          "requiresInterrupt": "INT-10"
+        },
+        "hr_inspector": {
+          "requiresInterrupt": [
+            "INT-05",
+            "INT-06"
+          ]
+        },
+        "security_guard": {
+          "missions": [
+            "parcel"
+          ]
+        }
+      },
+      "effect": {
+        "condition": {
+          "id": "unseen_by",
+          "args": {
+            "actorIds": [
+              "{variant}"
+            ],
+            "maxSeenSec": 0.0
+          }
+        },
+        "rewardMul": 1.4,
+        "onFailByRank": {
+          "staff": "bonus_lost",
+          "assistant_manager": "bonus_lost",
+          "manager": "fail",
+          "deputy_general_manager": "fail",
+          "general_manager": "fail",
+          "executive": "fail"
+        }
+      },
+      "budgetSecDelta": 1.0,
+      "_note": "특정 인물 눈에 띄지 않기: 미션 중(자리 뜸~완료) 그 사람 콘에 0초. 사원·대리는 놓쳐도 보너스만 없음, 과장부터는 미션 실패(의심 가산 없음). 과장부터 cost 2로 계산"
+    },
+    {
+      "type": "silent",
+      "nameKey": "mod.silent",
+      "cost": 2,
+      "kind": "hard",
+      "minRank": "staff",
+      "effect": {
+        "condition": {
+          "id": "no_noise",
+          "args": {},
+          "onFail": "fail"
+        },
+        "rewardMul": 1.3
+      },
+      "budgetSecDelta": 0.5,
+      "appliesToTags": [
+        "noise"
+      ],
+      "_note": "소음 금지: 바스락·넘침·빵 터짐·딸깍 등 소음 이벤트 1번이면 미션 실패(소음 자체의 의심 가산은 그대로)"
+    },
+    {
+      "type": "bonus",
+      "nameKey": "mod.bonus",
+      "cost": 0,
+      "kind": "bonus",
+      "minRank": "staff",
+      "variants": {
+        "quick": {
+          "condition": {
+            "id": "within_frac",
+            "args": {
+              "frac": 0.6
+            }
+          },
+          "rewardMul": 1.3,
+          "labelKey": "mod.bonus.quick"
+        },
+        "clean": {
+          "condition": {
+            "id": "max_suspicion_gain",
+            "args": {
+              "max": 0.05
+            }
+          },
+          "rewardMul": 1.3,
+          "labelKey": "mod.bonus.clean"
+        },
+        "cover": {
+          "condition": {
+            "id": "touched_cover",
+            "args": {
+              "min": 2
+            }
+          },
+          "rewardMul": 1.2,
+          "labelKey": "mod.bonus.cover",
+          "where": "away"
+        },
+        "close_call": {
+          "condition": {
+            "id": "close_call_count",
+            "args": {
+              "min": 1
+            }
+          },
+          "rewardMul": 1.3,
+          "labelKey": "mod.bonus.close_call",
+          "minRank": "assistant_manager"
+        }
+      },
+      "budgetSecDelta": 0.0,
+      "_note": "보너스 조건: 지키면 보상만 늘고 못 지켜도 손해 없음(onFail 없음 = 보너스만 없음)"
+    },
+    {
+      "type": "during_tour",
+      "nameKey": "mod.during_tour",
+      "cost": 1,
+      "kind": "hard",
+      "minRank": "staff",
+      "minDay": 9,
+      "effect": {
+        "availability": {
+          "type": "while_actor_away",
+          "actorId": "team_lead"
+        },
+        "condition": {
+          "id": "started_while",
+          "args": {
+            "state": "tl_away"
+          }
+        },
+        "rewardMul": 1.2
+      },
+      "budgetSecDelta": 2.0,
+      "guard": "그날 순회 중 '미션 해금 뒤 시작 + 자리 비움 ≥ 미션 예상 행동 시간(이동 제외)'인 회차가 2회 이상이어야 붙임",
+      "_note": "팀장 순회 중에만: 팀장이 자리를 비운 동안에만 칩이 켜짐(시작만 그 안에 하면 됨). 칩에 팀장 실루엣 표시. 기다림 비용 2초를 예산에 넣음"
+    },
+    {
+      "type": "deadline",
+      "nameKey": "mod.deadline",
+      "cost": 1,
+      "kind": "hard",
+      "minRank": "staff",
+      "effect": {
+        "condition": {
+          "id": "before_clock",
+          "args": {
+            "time": "{hhmm}"
+          },
+          "onFail": "fail"
+        },
+        "rewardMul": 1.2
+      },
+      "budgetSecDelta": 0.0,
+      "hhmmRule": "미션 해금 시각 + 미션 예상 시간 × 2를 게임 시계로 바꾼 뒤 10분 단위 올림(최소 해금 + 18초 분량). 예: '14:00까지 택배 찾기'",
+      "_note": "마감 시각: 그 시각 전에 완료해야 함. 못 하면 그 미션만 실패(의심 가산 없음)"
+    },
+    {
+      "type": "zone_only",
+      "nameKey": "mod.zone_only",
+      "cost": 1,
+      "kind": "hard",
+      "minRank": "assistant_manager",
+      "effect": {
+        "hint": "zone_only",
+        "revealRadiusTiles": 3,
+        "rewardMul": 1.15
+      },
+      "budgetSecDelta": 1.5,
+      "appliesToTags": [
+        "away"
+      ],
+      "_note": "어디더라?: 칩을 누르면 구역 입구까지만 가고, 정확한 장소는 3타일 안에 들어가야 반짝임. 매일 바뀌는 층에서 '찾는 재미'. 화면 밖 장소 화살표는 구역 방향만"
+    }
+  ],
+  "modifiers": [
+    {
+      "id": "rush",
+      "type": "rush",
+      "labelKey": "mod.rush",
+      "cost": 2,
+      "timeLimit": {
+        "mul": 0.8
+      },
+      "rewardMul": 1.25,
+      "budgetSecDelta": 0.0,
+      "minRank": "assistant_manager",
+      "kind": "hard"
+    },
+    {
+      "id": "relocate.coffee_cafe",
+      "type": "relocate",
+      "labelKey": "mod.relocate",
+      "cost": 1,
+      "missions": [
+        "coffee"
+      ],
+      "spot": "cafe_use",
+      "rewardMul": 1.1,
+      "budgetSecDelta": "travel_diff",
+      "minRank": "staff",
+      "kind": "hard"
+    },
+    {
+      "id": "relocate.nap_lounge",
+      "type": "relocate",
+      "labelKey": "mod.relocate",
+      "cost": 1,
+      "missions": [
+        "nap"
+      ],
+      "spot": "lounge_nap",
+      "rewardMul": 1.1,
+      "budgetSecDelta": "travel_diff",
+      "minRank": "staff",
+      "kind": "hard"
+    },
+    {
+      "id": "relocate.snack_pantry",
+      "type": "relocate",
+      "labelKey": "mod.relocate",
+      "cost": 2,
+      "missions": [
+        "snack"
+      ],
+      "spot": "tour_pantry",
+      "rewardMul": 1.3,
+      "budgetSecDelta": "travel_diff",
+      "params": {
+        "startsAt": "arrive_spot",
+        "completeAt": "return_to_seat",
+        "awayFromDesk": true
+      },
+      "_note": "간식이 자리 밖 미션이 됨(왕복 추가) → cost 2",
+      "minRank": "staff",
+      "kind": "hard"
+    },
+    {
+      "id": "relocate.bank_stall",
+      "type": "relocate",
+      "labelKey": "mod.relocate",
+      "cost": 1,
+      "missions": [
+        "bank"
+      ],
+      "spot": "restroom_stall",
+      "rewardMul": 1.0,
+      "budgetSecDelta": "travel_diff",
+      "params": {
+        "startsAt": "arrive_spot",
+        "completeAt": "return_to_seat",
+        "awayFromDesk": true,
+        "stallIsSafeZone": true
+      },
+      "_note": "안전 구역이라 화면 전환 걱정은 없지만 왕복이 생김. 보상 그대로(쉬워지고 길어짐)",
+      "minRank": "staff",
+      "kind": "hard"
+    },
+    {
+      "id": "relocate.print_other",
+      "type": "relocate",
+      "labelKey": "mod.relocate",
+      "cost": 1,
+      "missions": [
+        "print"
+      ],
+      "spot": "copier_use|printer_use",
+      "rewardMul": 1.1,
+      "budgetSecDelta": "travel_diff",
+      "_note": "그날 쓰던 쪽이 아닌 프린터",
+      "minRank": "staff",
+      "kind": "hard"
+    },
+    {
+      "id": "double.coffee",
+      "type": "double",
+      "labelKey": "mod.double",
+      "cost": 3,
+      "missions": [
+        "coffee"
+      ],
+      "params": {
+        "cupsRequired": 2
+      },
+      "timeLimit": {
+        "add": 6
+      },
+      "rewardMul": 1.6,
+      "budgetSecDelta": 4.0,
+      "minRank": "manager",
+      "kind": "hard"
+    },
+    {
+      "id": "double.window",
+      "type": "double",
+      "labelKey": "mod.double",
+      "cost": 3,
+      "missions": [
+        "window"
+      ],
+      "params": {
+        "cupsRequired": 5
+      },
+      "timeLimit": {
+        "add": 6
+      },
+      "rewardMul": 1.6,
+      "budgetSecDelta": 4.0,
+      "minRank": "manager",
+      "kind": "hard"
+    },
+    {
+      "id": "double.bank",
+      "type": "double",
+      "labelKey": "mod.double",
+      "cost": 3,
+      "missions": [
+        "bank"
+      ],
+      "params": {
+        "itemsRequired": 5
+      },
+      "timeLimit": {
+        "add": 6
+      },
+      "rewardMul": 1.6,
+      "budgetSecDelta": 4.0,
+      "minRank": "manager",
+      "kind": "hard"
+    },
+    {
+      "id": "double.shopping",
+      "type": "double",
+      "labelKey": "mod.double",
+      "cost": 3,
+      "missions": [
+        "shopping"
+      ],
+      "params": {
+        "itemsRequired": 3
+      },
+      "timeLimit": {
+        "add": 6
+      },
+      "rewardMul": 1.6,
+      "budgetSecDelta": 4.0,
+      "minRank": "manager",
+      "kind": "hard"
+    },
+    {
+      "id": "double.snack",
+      "type": "double",
+      "labelKey": "mod.double",
+      "cost": 3,
+      "missions": [
+        "snack"
+      ],
+      "params": {
+        "bitesRequired": 9
+      },
+      "timeLimit": {
+        "add": 6
+      },
+      "rewardMul": 1.6,
+      "budgetSecDelta": 4.0,
+      "minRank": "manager",
+      "kind": "hard"
+    },
+    {
+      "id": "double.chat",
+      "type": "double",
+      "labelKey": "mod.double",
+      "cost": 3,
+      "missions": [
+        "chat"
+      ],
+      "params": {
+        "bitesRequired": 8
+      },
+      "timeLimit": {
+        "add": 6
+      },
+      "rewardMul": 1.6,
+      "budgetSecDelta": 4.0,
+      "minRank": "manager",
+      "kind": "hard"
+    },
+    {
+      "id": "carry.coffee",
+      "type": "carry",
+      "labelKey": "mod.carry",
+      "cost": 2,
+      "missions": [
+        "coffee"
+      ],
+      "params": {
+        "carryVisible": true,
+        "carryMovingMul": 1.25,
+        "carryTalkCatchRadiusAdd": 0.5
+      },
+      "rewardMul": 1.3,
+      "budgetSecDelta": 0.5,
+      "minRank": "assistant_manager",
+      "kind": "hard"
+    },
+    {
+      "id": "carry.print",
+      "type": "carry",
+      "labelKey": "mod.carry",
+      "cost": 2,
+      "missions": [
+        "print"
+      ],
+      "params": {
+        "carryVisible": true,
+        "carryMovingMul": 1.25,
+        "carryTalkCatchRadiusAdd": 0.5
+      },
+      "rewardMul": 1.3,
+      "budgetSecDelta": 0.5,
+      "minRank": "assistant_manager",
+      "kind": "hard"
+    },
+    {
+      "id": "carry.cafe",
+      "type": "carry",
+      "labelKey": "mod.carry",
+      "cost": 2,
+      "missions": [
+        "cafe"
+      ],
+      "params": {
+        "carryVisible": true,
+        "carryMovingMul": 1.25,
+        "carryTalkCatchRadiusAdd": 0.5
+      },
+      "rewardMul": 1.3,
+      "budgetSecDelta": 0.5,
+      "minRank": "assistant_manager",
+      "kind": "hard"
+    },
+    {
+      "id": "avoid.snitch",
+      "type": "avoid",
+      "labelKey": "mod.avoid.snitch",
+      "cost": 1,
+      "condition": {
+        "id": "unseen_by",
+        "args": {
+          "actorIds": [
+            "snitch"
+          ],
+          "maxSeenSec": 0.0
+        }
+      },
+      "rewardMul": 1.4,
+      "budgetSecDelta": 1.0,
+      "onFailByRank": {
+        "manager": "fail",
+        "deputy_general_manager": "fail",
+        "general_manager": "fail",
+        "executive": "fail"
+      },
+      "costByRank": {
+        "manager": 2,
+        "deputy_general_manager": 2,
+        "general_manager": 2,
+        "executive": 2
+      },
+      "minDay": 8,
+      "minRank": "staff",
+      "kind": "soft"
+    },
+    {
+      "id": "avoid.team_lead",
+      "type": "avoid",
+      "labelKey": "mod.avoid.team_lead",
+      "cost": 1,
+      "condition": {
+        "id": "unseen_by",
+        "args": {
+          "actorIds": [
+            "team_lead"
+          ],
+          "maxSeenSec": 0.0
+        }
+      },
+      "rewardMul": 1.4,
+      "budgetSecDelta": 1.0,
+      "onFailByRank": {
+        "manager": "fail",
+        "deputy_general_manager": "fail",
+        "general_manager": "fail",
+        "executive": "fail"
+      },
+      "costByRank": {
+        "manager": 2,
+        "deputy_general_manager": 2,
+        "general_manager": 2,
+        "executive": 2
+      },
+      "minDay": 6,
+      "minRank": "staff",
+      "kind": "soft"
+    },
+    {
+      "id": "avoid.director",
+      "type": "avoid",
+      "labelKey": "mod.avoid.director",
+      "cost": 1,
+      "condition": {
+        "id": "unseen_by",
+        "args": {
+          "actorIds": [
+            "director"
+          ],
+          "maxSeenSec": 0.0
+        }
+      },
+      "rewardMul": 1.4,
+      "budgetSecDelta": 1.0,
+      "onFailByRank": {
+        "manager": "fail",
+        "deputy_general_manager": "fail",
+        "general_manager": "fail",
+        "executive": "fail"
+      },
+      "costByRank": {
+        "manager": 2,
+        "deputy_general_manager": 2,
+        "general_manager": 2,
+        "executive": 2
+      },
+      "requiresInterrupt": [
+        "INT-10"
+      ],
+      "minRank": "staff",
+      "kind": "soft"
+    },
+    {
+      "id": "avoid.hr_inspector",
+      "type": "avoid",
+      "labelKey": "mod.avoid.hr_inspector",
+      "cost": 1,
+      "condition": {
+        "id": "unseen_by",
+        "args": {
+          "actorIds": [
+            "hr_inspector"
+          ],
+          "maxSeenSec": 0.0
+        }
+      },
+      "rewardMul": 1.4,
+      "budgetSecDelta": 1.0,
+      "onFailByRank": {
+        "manager": "fail",
+        "deputy_general_manager": "fail",
+        "general_manager": "fail",
+        "executive": "fail"
+      },
+      "costByRank": {
+        "manager": 2,
+        "deputy_general_manager": 2,
+        "general_manager": 2,
+        "executive": 2
+      },
+      "requiresInterrupt": [
+        "INT-05",
+        "INT-06"
+      ],
+      "minRank": "staff",
+      "kind": "soft"
+    },
+    {
+      "id": "avoid.security_guard",
+      "type": "avoid",
+      "labelKey": "mod.avoid.security_guard",
+      "cost": 1,
+      "condition": {
+        "id": "unseen_by",
+        "args": {
+          "actorIds": [
+            "security_guard"
+          ],
+          "maxSeenSec": 0.0
+        }
+      },
+      "rewardMul": 1.4,
+      "budgetSecDelta": 1.0,
+      "onFailByRank": {
+        "manager": "fail",
+        "deputy_general_manager": "fail",
+        "general_manager": "fail",
+        "executive": "fail"
+      },
+      "costByRank": {
+        "manager": 2,
+        "deputy_general_manager": 2,
+        "general_manager": 2,
+        "executive": 2
+      },
+      "missions": [
+        "parcel"
+      ],
+      "minRank": "staff",
+      "kind": "soft"
+    },
+    {
+      "id": "silent",
+      "type": "silent",
+      "labelKey": "mod.silent",
+      "cost": 2,
+      "appliesToTags": [
+        "noise"
+      ],
+      "condition": {
+        "id": "no_noise",
+        "args": {},
+        "onFail": "fail"
+      },
+      "rewardMul": 1.3,
+      "budgetSecDelta": 0.5,
+      "minRank": "staff",
+      "kind": "hard"
+    },
+    {
+      "id": "bonus.quick",
+      "type": "bonus",
+      "labelKey": "mod.bonus.quick",
+      "cost": 0,
+      "condition": {
+        "id": "within_frac",
+        "args": {
+          "frac": 0.6
+        }
+      },
+      "rewardMul": 1.3,
+      "budgetSecDelta": 0.0,
+      "minRank": "staff",
+      "kind": "bonus"
+    },
+    {
+      "id": "bonus.clean",
+      "type": "bonus",
+      "labelKey": "mod.bonus.clean",
+      "cost": 0,
+      "condition": {
+        "id": "max_suspicion_gain",
+        "args": {
+          "max": 0.05
+        }
+      },
+      "rewardMul": 1.3,
+      "budgetSecDelta": 0.0,
+      "minRank": "staff",
+      "kind": "bonus"
+    },
+    {
+      "id": "bonus.cover",
+      "type": "bonus",
+      "labelKey": "mod.bonus.cover",
+      "cost": 0,
+      "appliesToTags": [
+        "away"
+      ],
+      "condition": {
+        "id": "touched_cover",
+        "args": {
+          "min": 2
+        }
+      },
+      "rewardMul": 1.2,
+      "budgetSecDelta": 0.0,
+      "minRank": "staff",
+      "kind": "bonus"
+    },
+    {
+      "id": "bonus.close_call",
+      "type": "bonus",
+      "labelKey": "mod.bonus.close_call",
+      "cost": 0,
+      "minRank": "assistant_manager",
+      "condition": {
+        "id": "close_call_count",
+        "args": {
+          "min": 1
+        }
+      },
+      "rewardMul": 1.3,
+      "budgetSecDelta": 0.0,
+      "kind": "bonus"
+    },
+    {
+      "id": "during_tour",
+      "type": "during_tour",
+      "labelKey": "mod.during_tour",
+      "cost": 1,
+      "minDay": 9,
+      "availability": {
+        "type": "while_actor_away",
+        "actorId": "team_lead"
+      },
+      "condition": {
+        "id": "started_while",
+        "args": {
+          "state": "tl_away"
+        },
+        "onFail": "fail"
+      },
+      "rewardMul": 1.2,
+      "budgetSecDelta": 2.0,
+      "minRank": "staff",
+      "kind": "hard"
+    },
+    {
+      "id": "deadline",
+      "type": "deadline",
+      "labelKey": "mod.deadline",
+      "cost": 1,
+      "condition": {
+        "id": "before_clock",
+        "args": {
+          "time": "{hhmm}"
+        },
+        "onFail": "fail"
+      },
+      "rewardMul": 1.2,
+      "budgetSecDelta": 0.0,
+      "_note": "{hhmm}은 생성기가 채움(templates.deadline.hhmmRule)",
+      "minRank": "staff",
+      "kind": "hard"
+    },
+    {
+      "id": "zone_only",
+      "type": "zone_only",
+      "labelKey": "mod.zone_only",
+      "cost": 1,
+      "appliesToTags": [
+        "away"
+      ],
+      "params": {
+        "hint": "zone_only",
+        "revealRadiusTiles": 3
+      },
+      "rewardMul": 1.15,
+      "budgetSecDelta": 1.5,
+      "minRank": "assistant_manager",
+      "kind": "hard"
+    }
+  ],
+  "conditions": [
+    {
+      "id": "unseen",
+      "status": "구현됨(T-144)",
+      "args": {
+        "maxSeenSec": "초, 기본 0"
+      },
+      "rule": "미션 중 누구의 콘에도 걸린 시간 ≤ maxSeenSec"
+    },
+    {
+      "id": "max_suspicion_gain",
+      "status": "구현됨(T-144)",
+      "args": {
+        "max": "0~1"
+      },
+      "rule": "미션 시작 대비 의심 증가 ≤ max"
+    },
+    {
+      "id": "within_sec",
+      "status": "구현됨(T-144)",
+      "args": {
+        "sec": "초"
+      },
+      "rule": "시작 후 sec 안에 완료"
+    },
+    {
+      "id": "within_frac",
+      "status": "🔧 추가",
+      "args": {
+        "frac": "0~1"
+      },
+      "rule": "시작 후 (변형 적용 뒤 timeLimitSec × frac) 안에 완료. 미션마다 제한이 달라 비율로 씀"
+    },
+    {
+      "id": "unseen_by",
+      "status": "🔧 추가",
+      "args": {
+        "actorIds": "ActorId[]",
+        "maxSeenSec": "초"
+      },
+      "rule": "지정 인물의 콘에 걸린 시간 ≤ maxSeenSec. 위장 중이라도 콘 안이면 '본 것'(의심이 0이어도 눈에 띔). 화면 밖 인물은 세지 않음(§5-5와 같음)",
+      "statsNeeded": "MissionRunStats.seenSecBy: Record<ActorId, number>"
+    },
+    {
+      "id": "no_noise",
+      "status": "🔧 추가",
+      "args": {},
+      "rule": "미션 중 소음 이벤트 0회(간식 바스락, 커피·창가 넘침, 수다 빵 터짐, 카페 딸깍)",
+      "statsNeeded": "MissionRunStats.noiseCount"
+    },
+    {
+      "id": "touched_cover",
+      "status": "🔧 추가",
+      "args": {
+        "min": "칸 수"
+      },
+      "rule": "미션 중 서로 다른 엄폐 칸(coverSpots)을 min개 이상 밟음",
+      "statsNeeded": "MissionRunStats.coverTilesVisited"
+    },
+    {
+      "id": "close_call_count",
+      "status": "🔧 추가",
+      "args": {
+        "min": "회"
+      },
+      "rule": "미션 중 '아슬아슬!' 판정 min회 이상(rules.disguise.closeCallWindowSec)",
+      "statsNeeded": "MissionRunStats.closeCalls"
+    },
+    {
+      "id": "started_while",
+      "status": "🔧 추가",
+      "args": {
+        "state": "'tl_away'"
+      },
+      "rule": "미션 시작 순간 팀장이 순회 중(자리 비움)",
+      "statsNeeded": "MissionRunStats.startState"
+    },
+    {
+      "id": "before_clock",
+      "status": "🔧 추가",
+      "args": {
+        "time": "HH:MM"
+      },
+      "rule": "완료 순간 게임 시계 < time",
+      "statsNeeded": "MissionRunStats.completedAtClock"
+    }
+  ],
+  "combination": {
+    "stream": "day-{day}-mission",
+    "_streamNote": "새 RNG 스트림. 기존 plan/boss/npc/event/leave 스트림의 소비 순서를 바꾸지 않음(미션 목록·방해·대표님 결과 유지)",
+    "order": "① 미션 목록(days.generator.missions, 풀 = missionPool.poolByRank) ② 층 생성(layout, 미션이 요구한 모듈 포함) ③ 팀장 순회(leadRoaming) ④ 변형 추첨(여기) ⑤ budgetCheck(변형의 budgetSecDelta·이동 거리 보정 포함) → 필수 수 조정",
+    "modifiedMissionsPerDay": {
+      "intern": [
+        0,
+        0
+      ],
+      "staff": [
+        0,
+        1
+      ],
+      "assistant_manager": [
+        1,
+        2
+      ],
+      "manager": [
+        1,
+        2
+      ],
+      "deputy_general_manager": [
+        2,
+        3
+      ],
+      "general_manager": [
+        2,
+        3
+      ],
+      "executive": [
+        2,
+        3
+      ]
+    },
+    "costBudgetPerDay": {
+      "intern": 0,
+      "staff": 2,
+      "assistant_manager": 3,
+      "manager": 4,
+      "deputy_general_manager": 5,
+      "general_manager": 6,
+      "executive": 6
+    },
+    "maxModifiersPerMission": {
+      "intern": 0,
+      "staff": 1,
+      "assistant_manager": 1,
+      "manager": 2,
+      "deputy_general_manager": 2,
+      "general_manager": 2,
+      "executive": 2
+    },
+    "bonusPerDay": [
+      0,
+      1
+    ],
+    "ceoDay": {
+      "costBudgetDelta": -2,
+      "maxModifiedMissions": 1,
+      "maxMissionsNeedingNewModule": 1,
+      "_note": "대표님 날은 미션 −1·근무 44초라 변형도 줄임. 프린터·카페·창가(새 모듈이 필요한 미션)는 하루 1개만(프로토 폴백 3건이 모두 이 조합)"
+    },
+    "excludePairs": [
+      [
+        "rush",
+        "double"
+      ],
+      [
+        "rush",
+        "deadline"
+      ],
+      [
+        "during_tour",
+        "deadline"
+      ],
+      [
+        "during_tour",
+        "rush"
+      ],
+      [
+        "relocate",
+        "zone_only"
+      ],
+      [
+        "avoid",
+        "avoid"
+      ]
+    ],
+    "neverModify": [
+      "leave"
+    ],
+    "rules": [
+      "1) 직급의 modifiedMissionsPerDay 범위에서 변형 붙일 미션 수 k를 추첨(stream mission). 대표님 날은 min(k, 1)",
+      "2) 대상 미션: 그날 미션 중 필수 미션을 먼저(위험한 선택지를 만들기 위해), 같은 미션이 어제도 변형됐으면 가중치 ×0.5",
+      "3) 미션마다 변형 후보 = minRank·minDay·missions·appliesToTags·requiresInterrupt·guard를 통과하고, 대상 스팟이 층에 있는 것. 가중치 = 1 + (그 type이 마지막으로 나온 뒤 지난 생성일 수) ÷ 3(오래 안 나온 type 우선, 6일 안에 모든 type이 한 번은 나오게)",
+      "4) 하드·소프트 변형 비용 합 ≤ costBudgetPerDay(+ ceoDay.costBudgetDelta). 넘치면 그 후보를 빼고 다시 추첨. 미션당 maxModifiersPerMission개(그중 하드는 1개)",
+      "5) excludePairs(type 기준)는 한 미션에 같이 못 붙음. 같은 type을 이틀 연속 같은 미션에 붙이지 않음",
+      "6) 보너스(cost 0)는 bonusPerDay 범위에서 따로 1개까지, 하드 변형이 없는 미션에 우선",
+      "7) 결과는 days 계획의 missions[i].modifiers = [변형 id 문자열…](개발 parseModifiers와 같은 형식). deadline의 {hhmm}처럼 채울 값이 있으면 객체로 넣음",
+      "8) budgetCheck: expectedSec = budgetModel.missionExpectedSec(새 미션은 missionPool.expectedDurationSec) + 2 × (생성 맵 편도 − 기준 편도) ÷ 3 + Σ budgetSecDelta. 'travel_diff'는 바뀐 장소 편도로 다시 계산"
+    ],
+    "difficultyNote": "미션 난도(difficulty)는 조합 추첨에 쓰지 않고 QA 분석·튜닝용(미션 난도 + 변형 cost = 그날의 체감 난도 지표). 목표: 사원 2~5, 대리 4~8, 과장 6~10, 차장~ 7~12 (필수 미션 난도 합 + 변형 cost 합)"
+  },
+  "authoredOverlays": {
+    "_designNote": "저작일(3~15일차)은 days.json 미션 목록·필수 수를 그대로 두고(T-139 보정 유지) 변형만 얹음. 하드 변형은 쉬운 쪽(during_tour = 오히려 기회)만, 나머지는 보너스. 인턴(3~5)은 없음. 🧪 QA: 얹기 전/후 6~15일 칼퇴율 차이 ≤ 2%p",
+    "days": {
+      "6": [],
+      "7": [],
+      "8": [
+        {
+          "eventId": "shopping",
+          "modifiers": [
+            "bonus.quick"
+          ]
+        }
+      ],
+      "9": [
+        {
+          "eventId": "shopping",
+          "modifiers": [
+            "during_tour"
+          ]
+        }
+      ],
+      "10": [],
+      "11": [
+        {
+          "eventId": "restroom",
+          "modifiers": [
+            "bonus.cover"
+          ]
+        }
+      ],
+      "12": [
+        {
+          "eventId": "snack",
+          "modifiers": [
+            "avoid.snitch"
+          ]
+        }
+      ],
+      "13": [
+        {
+          "eventId": "coffee",
+          "modifiers": [
+            "bonus.clean"
+          ]
+        }
+      ],
+      "14": [
+        {
+          "eventId": "snack",
+          "modifiers": [
+            "silent"
+          ]
+        }
+      ],
+      "15": [
+        {
+          "eventId": "coffee",
+          "modifiers": [
+            "relocate.coffee_cafe"
+          ],
+          "ifSpotExists": true
+        }
+      ]
+    },
+    "_dayNotes": {
+      "9": "팀장 회의 데뷔(INT-08)와 같은 날: '팀장님 자리 비울 때만 쇼핑' = 순회 개념 튜토리얼",
+      "10": "인사팀 데뷔 + 시간이 빠듯해 변형 없음",
+      "12": "avoid는 사원이라 놓쳐도 보너스만 없음",
+      "14": "공범 간식 날: 소음 금지는 공범 합류 시 한 입 수 ×1.5라 더 어려움 → 하드 중 유일",
+      "15": "라운지가 없는 층이면 건너뜀(사원 복잡도에선 라운지 미등장 → 사실상 보너스 없음 날)"
+    }
+  },
+  "stringsKo": {
+    "event.parcel.name": "몰래 택배 받기",
+    "event.parcel.desc": "경비님 앞 보관함에서 내 택배를 꺼내 자리로!",
+    "event.print.name": "몰래 출력하기",
+    "event.print.desc": "여행 일정표 인쇄 중… 남이 보기 전에 가져오기",
+    "event.chat.name": "동기와 수다",
+    "event.chat.desc": "옆 팀 동기랑 어제 본 예능 얘기. 맞장구는 조용히",
+    "event.bank.name": "몰래 공과금 내기",
+    "event.bank.desc": "로그인, 입력, 확인. 폰은 책상 아래로",
+    "event.cafe.name": "카페 쿠폰 도장",
+    "event.cafe.desc": "라운지 카페에서 한 잔 받고 도장 쾅",
+    "event.window.name": "창가 바람 쐬기",
+    "event.window.desc": "세 번만 크게 숨 쉬고 올게요",
+    "bank.step.login": "로그인",
+    "bank.step.fill": "입력",
+    "bank.step.confirm": "확인",
+    "react.parcel.caught": "그 상자… 업무용 맞죠?",
+    "react.print.found": "이 여행 일정표 누구 거예요~?",
+    "react.chat.caught": "둘이 무슨 회의를 그렇게 재밌게 해?",
+    "react.bank.caught": "지금 고지서 보는 거… 업무 고지서죠?",
+    "react.cafe.caught": "어, 나도 한 잔 사 주는 거야?",
+    "react.window.caught": "창밖에 뭐 있어? 나도 좀 보자",
+    "mod.rush": "서둘러!",
+    "mod.relocate": "오늘은 여기서",
+    "mod.double": "두 배로",
+    "mod.carry": "들고 오기",
+    "mod.avoid.snitch": "정의로운 동료 몰래",
+    "mod.avoid.team_lead": "팀장님 몰래",
+    "mod.avoid.director": "본부장님 몰래",
+    "mod.avoid.hr_inspector": "인사팀 몰래",
+    "mod.avoid.security_guard": "경비님 몰래",
+    "mod.silent": "소리 없이",
+    "mod.bonus.quick": "빨리 끝내면 보너스",
+    "mod.bonus.clean": "깔끔하게 하면 보너스",
+    "mod.bonus.cover": "숨어 다니면 보너스",
+    "mod.bonus.close_call": "아슬아슬 한 번이면 보너스",
+    "mod.during_tour": "팀장님 자리 비울 때만",
+    "mod.deadline": "{time}까지",
+    "mod.zone_only": "어디더라?",
+    "tour.tl.printer": "출력물 좀 가지러…",
+    "tour.tl.pantry": "커피 한 잔 해야겠다",
+    "tour.tl.meeting": "회의 다녀올게요",
+    "tour.tl.next_team": "옆 팀이랑 얘기 좀…",
+    "tour.tl.exec_report": "본부장님께 보고드리고 올게요",
+    "tour.tl.exec_report_end": "네, 그럼 그렇게 하겠습니다!",
+    "hud.tl_away": "자리 비움",
+    "mod.avoid": "몰래 하기",
+    "mod.bonus": "보너스 조건",
+    "zone.lounge": "휴게 라운지",
+    "zone.printer_room": "프린터실",
+    "zone.storage": "창고",
+    "zone.window": "창가",
+    "codex.title.cafe_regular": "카페 단골",
+    "tut_tour": "팀장님이 자리를 비우면 기회예요. 말풍선 아이콘이 가는 곳이에요"
+  },
+  "_stringsNote": "strings.ko.json 병합 대기(통합 단계에서 기획이 strings 아래 같은 키로 옮김). 검사기는 이 블록도 문자열 키 출처로 인정"
+}

@@ -34,11 +34,16 @@ def load(name):
 
 
 T = {n[:-5]: load(n) for n in sorted(os.listdir(ROOT)) if n.endswith(".json")}
+V3_TABLES = {"layout", "missions"}  # T-142: 생성기·미션 풀 새 테이블(schemaVersion 3, design/data-schema-v3-draft.md)
 for name, t in T.items():
-    if t.get("schemaVersion") != 2:
-        err(f"{name}: schemaVersion != 2")
+    want = 3 if name in V3_TABLES else 2
+    if t.get("schemaVersion") != want:
+        err(f"{name}: schemaVersion != {want}")
 
 S = T["strings.ko"]["strings"]
+S3 = {}  # T-142: v3 테이블의 병합 대기 문자열(missions.json stringsKo). strings.ko.json 병합 전까지 키 출처로 인정
+for _t in T.values():
+    S3.update(_t.get("stringsKo", {}))
 rules = T["rules"]
 MIN_TELL = rules["tell"]["minSec"]
 FAKE_CAP = rules["fake"]["absoluteCapProb"]
@@ -60,11 +65,11 @@ for name, t in T.items():
     if name == "strings.ko":
         continue
     for p, k, v in walk_json(t):
-        if isinstance(v, str) and (k.endswith("Key") and k not in NON_STRING_KEYS) and v not in S:
+        if isinstance(v, str) and (k.endswith("Key") and k not in NON_STRING_KEYS) and v not in S and v not in S3:
             err(f"{name}{p}: 문자열 키 없음 '{v}'")
         if k in ("reactionKeys", "failReactionKeys") and isinstance(v, list):
             for s in v:
-                if s not in S:
+                if s not in S and s not in S3:
                     err(f"{name}{p}: 리액션 키 없음 '{s}'")
 
 # 2) 전조·페이크
@@ -571,6 +576,106 @@ if not (0.1 <= T["rules"]["suspicion"]["star3PeakBelow"] <= 0.3):
 i5_ = next(i for i in T["interrupts"]["interrupts"] if i["id"] == "INT-05")
 if i5_["effect"].get("cancelOnLeaveStart") is not True:
     err("interrupts.INT-05.effect.cancelOnLeaveStart true 필요(D-070)")
+
+# T-142: 생성 맵(layout.json)·미션 풀(missions.json) 기본 검사
+if "layout" in T:
+    LY = T["layout"]
+    LEG3 = dict(T["maps"]["maps"][0]["legend"]); LEG3.update(LY["legendAdd"])
+    W3 = LY["grid"]["width"]
+    WILD3 = set(LY["wildcards"])
+    for ch, opts in LY["wildcards"].items():
+        for o in opts:
+            if o["ch"] not in LEG3:
+                err(f"layout.wildcards['{ch}']: 문자 '{o['ch']}' legend 없음")
+            if len(o["weight"]) != 2 or min(o["weight"]) < 0:
+                err(f"layout.wildcards['{ch}']: weight는 [c0, c1] 0 이상")
+    for e in ("P",):
+        if LEG3[e]["blocksSight"] is not True:
+            err("layout: P(전높이 칸막이)는 blocksSight true(D-080)")
+    if LY["legendAdd"].get("i", {}).get("blocksSight") is not False or LY["legendAdd"].get("i", {}).get("cover"):
+        err("layout: i(반높이 칸막이)는 blocksSight false·cover 없음(D-080)")
+    all_spots = set()
+    for m in LY["modules"]:
+        for y, r in enumerate(m["rows"]):
+            if len(r) != W3:
+                err(f"layout.modules.{m['id']}: {y}행 길이 {len(r)} ≠ {W3}")
+            for x, ch in enumerate(r):
+                if ch not in LEG3 and ch not in WILD3:
+                    err(f"layout.modules.{m['id']}: ({x},{y}) 문자 '{ch}' legend·와일드카드 없음")
+        for k, sp in m["spots"].items():
+            all_spots.add(k)
+            x, y = sp["tile"]
+            ch = m["rows"][y][x] if 0 <= y < len(m["rows"]) and 0 <= x < W3 else "#"
+            ok_ = ch in WILD3 or LEG3.get(ch, {}).get("walkable")
+            if sp.get("type") == "door":
+                ok_ = ok_ or ch == "="
+            if not ok_:
+                err(f"layout.modules.{m['id']}.spots.{k}: ({x},{y}) '{ch}' 통행 불가")
+        for side in ("top", "bottom"):
+            for x in m.get("ports", {}).get(side, []):
+                if not (0 < x < W3 - 1):
+                    err(f"layout.modules.{m['id']}.ports.{side}: 열 {x} 범위 밖")
+    for need in ("player_seat", "gate_use", "tl_seat", "elevator_service_spawn", "ceo_greet_spot", "hr_inspect_spot"):
+        if need not in all_spots:
+            err(f"layout: 필수 스폿 {need}가 어떤 모듈에도 없음")
+    LR = LY["leadRoaming"]
+    if LR["standTell"]["sec"] < MIN_TELL or LR["standTell"]["minSec"] < MIN_TELL:
+        err(f"layout.leadRoaming.standTell < {MIN_TELL}")
+    for d in LR["destinations"]:
+        if not any(sp in all_spots for sp in d["spots"]):
+            err(f"layout.leadRoaming.destinations.{d['id']}: 스폿 {d['spots']} 없음")
+        if "endTell" in d and d["endTell"]["sec"] < MIN_TELL:
+            err(f"layout.leadRoaming.destinations.{d['id']}.endTell < {MIN_TELL}")
+    for rk, v in LR["byRank"].items():
+        if rk.startswith("_"):
+            continue
+        if not (2 <= v["countRange"][0] <= v["countRange"][1] <= 4):
+            err(f"layout.leadRoaming.byRank.{rk}: 하루 2~4회(D-075) 밖")
+        if v["speedTilesPerSec"] >= T["rules"]["playerSpeedTilesPerSec"]:
+            err(f"layout.leadRoaming.byRank.{rk}: 팀장 순회 속도가 플레이어 이상")
+    for tr in LY["complexityByRank"]:
+        c0, c1 = tr["complexity"]
+        if not (0 <= c0 <= c1 <= 1):
+            err(f"layout.complexityByRank.{tr['rankId']}: complexity 범위")
+    V12 = next(v for v in LY["validators"]["list"] if v["id"] == "V12_time_budget")
+    if V12["ceoDayMaxPredictedSec"] > 81.0 or V12["normalDayMaxPredictedSec"] > 85.0:
+        err("layout.validators.V12: 1판 예측 상한이 T-139 여유(95초 최댓값)를 넘음")
+if "missions" in T:
+    MS = T["missions"]
+    ev_ids = {e["id"] for e in T["events"]["events"]}
+    pool_ids = {e["id"] for e in MS["missionPool"]["existing"]} | {e["id"] for e in MS["missionPool"]["new"]}
+    for e in MS["missionPool"]["existing"]:
+        if e["id"] not in ev_ids:
+            err(f"missions.existing.{e['id']}: events.json에 없음")
+    for e in MS["missionPool"]["new"]:
+        if e["id"] in ev_ids:
+            err(f"missions.new.{e['id']}: events.json과 id 중복")
+        if e["timeLimitSec"] < e["expectedDurationSec"] + 4:
+            err(f"missions.new.{e['id']}: timeLimitSec < expectedDurationSec + 4")
+    mod_ids = {m["id"] for m in MS["modifiers"]}
+    cond_ids = {c["id"] for c in MS["conditions"]}
+    for m in MS["modifiers"]:
+        c = m.get("condition")
+        if c and c["id"] not in cond_ids:
+            err(f"missions.modifiers.{m['id']}: 조건 {c['id']} 정의 없음")
+        if "chance" in json.dumps(m) or "Prob" in json.dumps(m):
+            err(f"missions.modifiers.{m['id']}: 확률 필드 금지(보상은 결정적, D-004)")
+        if m.get("rewardMul", 1) <= 0:
+            err(f"missions.modifiers.{m['id']}: rewardMul ≤ 0")
+        for mid in m.get("missions", []):
+            if mid not in pool_ids:
+                err(f"missions.modifiers.{m['id']}: 미션 {mid} 없음")
+    for d, lst in MS["authoredOverlays"]["days"].items():
+        for it in lst:
+            for mid in it["modifiers"]:
+                if mid not in mod_ids:
+                    err(f"missions.authoredOverlays.{d}: 변형 {mid} 없음")
+    for rk, w in MS["missionPool"]["poolByRank"].items():
+        if rk.startswith("_"):
+            continue
+        for mid in w:
+            if mid not in pool_ids:
+                err(f"missions.poolByRank.{rk}: 미션 {mid} 없음")
 
 print(f"tables: {', '.join(T)}")
 print("화면 안 최악 인원(직급별, 플레이어 포함): " + ", ".join(f"{k} {v[0]}" for k, v in RANK_SCREEN.items()))

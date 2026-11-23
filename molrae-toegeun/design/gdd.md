@@ -6,6 +6,8 @@
 - 검사: `python3 -I design/tools/validate_data.py` (참조·전조·페이크 상한·맵 경로·인원·사원증 색 자동 검사)
 - 표기: 🔶 = 정책 위험 요소(§17에 모음), 📐 = 수치 근거, 🧪 = QA 시뮬레이션 검증 항목, 🔧 = 개발 확장 요청
 
+> **v3 추가편(T-142)**: 3일차부터 생성 사무실·팀장 순회·미션 변형은 `design/gdd-v3-procedural.md`(데이터 `layout.json`·`missions.json`, 스키마 `design/data-schema-v3-draft.md`)를 따릅니다. 이 문서의 §7(수작업 맵)은 1~2일차와 생성 모듈의 기준입니다.
+
 > v1(측면 홀드/떼기, D-001)은 D-033으로 대체되었습니다. 폐기·변경 내역은 §18과 `design/backlog.md`에 있습니다.
 
 ---

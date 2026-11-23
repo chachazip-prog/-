@@ -543,6 +543,7 @@ interface AdsTable {
 | 2 (T-134) | 2026-11-23 | 개발 T-129 해석 6건 확정(`design/gdd.md` §19-3) + spriteKey 데이터 요청. **필드 추가·값 수정 1건만, 구조 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
 | 2 (T-136) | 2026-11-23 | 개발 T-133 코드 상수 → 데이터(숫자 4, 문구 키 2), T-133 해석 6건 확정(`design/gdd.md` §19-4). **필드 추가만, 값·키 이름·계층 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
 | 2 (T-139) | 2026-11-23 | QA T-131 밸런스 제안 10건 + D-070 반영(`design/gdd.md` §19-5). **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
+| 3-draft (T-142) | 2026-11-23 | 새 테이블 `layout.json`·`missions.json`(schemaVersion 3) 추가. 상세 스키마는 `design/data-schema-v3-draft.md`. **v2 테이블은 변경 없음**(키·값 그대로). 검사기는 테이블별 버전 확인(layout·missions = 3, 나머지 = 2)과 v3 기본 검사를 추가 |
 
 ### v1 → v2 상세
 - **신규 테이블**: `maps`, `patrols`, `interrupts`, `ads`.
