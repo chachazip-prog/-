@@ -28,6 +28,7 @@
         "cupsRequired": 1,
         "tapBelowBand": "pause",
         "tapInBand": "success",
+        "tapAboveBand": "fail",
         "carryCupWhileReturning": true
       },
       "accompliceEffect": { "cupsRequired": 2 },
@@ -40,7 +41,7 @@
       },
       "failReactionKeys": ["react.coffee.overflow"],
       "tutorialId": "tut_coffee",
-      "_designNote": "왕복 14+14타일(9.3초) + 따르기 약 1.9초 + 위장 대기. 띠 폭 0.17 ÷ 0.45 = 0.38초 창(과장 0.2초). 띠 아래에서 탭하면 '물 마시는 척' 일시정지 → 다시 탭하면 이어 따름: v1 홀드/떼기를 탭 토글로 옮김."
+      "_designNote": "왕복 14+14타일(9.3초) + 따르기 약 1.9초 + 위장 대기. 띠 폭 0.17 ÷ 0.45 = 0.38초 창(과장 0.2초). 띠 아래에서 탭하면 '물 마시는 척' 일시정지(T-134: 띠 위·넘침 전 탭 = 흘림 실패, failPenalty 동일. 띠 위를 성공으로 치면 창이 0.38초 → 0.56초로 늘어 띠가 의미 없어짐) → 다시 탭하면 이어 따름: v1 홀드/떼기를 탭 토글로 옮김."
     },
     {
       "id": "restroom",
@@ -134,7 +135,8 @@
       "timeoutPenalty": { "suspicion": 0.1 },
       "params": {
         "cartFillPerSec": 0.3,
-        "itemsRequired": 3,
+        "itemsRequired": 2,
+        "_itemsRequiredNote": "T-134 확정: 결제 전에 채울 장바구니 상품 수. 결제(checkoutHoldSec)는 별도 단계라 세지 않음. 2개 × 3.33초 + 결제 0.8초 = 7.5초 → 위장 왕복 여유 포함 예상 9초 / 제한 13초. 3개면 10.8초로 제한 대비 여유 2.2초뿐이라 팀장 look 1회만 겹쳐도 시간 초과",
         "checkoutHoldSec": 0.8,
         "tapDuringCheckout": "cancel_checkout_progress",
         "pausedShowsSpreadsheet": true

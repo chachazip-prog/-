@@ -4,6 +4,7 @@
   "npcs": [
     {
       "id": "security_guard",
+      "spriteKey": "guard",
       "nameKey": "npc.security_guard.name",
       "codexKey": "codex.npc.security_guard",
       "role": "gate",
@@ -82,7 +83,11 @@
         "failShowsAttemptsLeftKey": "hud.gate_attempts_left",
         "okVisual": "gate_pass_flash",
         "okTextKey": "hud.gate_ok",
-        "firstTryWindowMultiplierOnDay1": 2.0
+        "firstTryWindowMultiplierOnDay1": 2.0,
+        "windowCenter": 0.5,
+        "markerMotion": "ping_pong",
+        "waitingCountsAsDisguised": true,
+        "_t134Note": "T-134 확정: 판정 창은 막대 가운데(0.5) 고정, 마커는 0→1→0 왕복(markerCycleSec 한 주기). 랜덤 위치는 실력이 아닌 운이 되므로 쓰지 않음. 게이트 사용 칸에 서서 막대를 보는 동안은 멈춘 상태 = 위장(anyStopIsDisguised)이고, 위장 정체 규칙(콘 안 3초 초과 0.03×배율, 경비 0.6 → 0.018/초)은 그대로 적용 → 오래 머뭇거리면 조금씩 오름. 이 단계의 탭은 전부 게이트 시도(이동 아님)."
       },
       "frozenByCeo": true,
       "reactionKeys": [
@@ -128,6 +133,7 @@
     },
     {
       "id": "snitch",
+      "spriteKey": "snitch",
       "nameKey": "npc.snitch.name",
       "codexKey": "codex.npc.snitch",
       "role": "obstruct",
@@ -282,6 +288,7 @@
     },
     {
       "id": "accomplice",
+      "spriteKey": "accomplice",
       "nameKey": "npc.accomplice.name",
       "codexKey": "codex.npc.accomplice",
       "role": "assist",
@@ -339,6 +346,7 @@
     },
     {
       "id": "hr_inspector",
+      "spriteKey": "hr",
       "nameKey": "npc.hr_inspector.name",
       "codexKey": "codex.npc.hr_inspector",
       "role": "inspect",

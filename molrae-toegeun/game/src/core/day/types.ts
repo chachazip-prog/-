@@ -106,6 +106,93 @@ export interface ScriptedBeat {
   readonly [k: string]: unknown;
 }
 
+/** 인사 QTE(bosses.ceo.greetingQte). INT-09·INT-11 공용 */
+export interface QteDef {
+  readonly preCueSecRange: readonly [number, number];
+  readonly windowSec: number;
+  readonly maxPressSec: number;
+  readonly earlyPenalty: number;
+  readonly missPenalty: number;
+  readonly longPressPenalty: number;
+}
+
+/** 대표님 순시(INT-09, bosses.ceo.visit). buildDay가 그날 순시가 있을 때만 채운다 */
+export interface CeoVisitDef {
+  /** 'scheduled'(수요일 정기) | 'random'(시드로 미리 정해진 랜덤) */
+  readonly kind: 'scheduled' | 'random';
+  /** 예정 시각(근무 구간 초). 이후 플레이어가 자리에 앉아 있는 첫 순간 시작 */
+  readonly atSec: number;
+  readonly patrolId: string;
+  readonly tellSec: number;
+  readonly tellTextKey?: string;
+  readonly greetStop: string;
+  readonly talkStop: string;
+  readonly freezeMaxSec: number;
+  readonly moveStartInstantSuspicion: number;
+  /** 얼음 중 이동·행동 상승률 = movingPerSec × 대표님 gazeMultiplier */
+  readonly freezeGazeMultiplier: number;
+  readonly talkWindowSec: number;
+  readonly talkSlackMultiplier: number;
+  readonly exitResumeDelaySec: number;
+  readonly qte: QteDef;
+  /** 첫 순시(28일차) QTE 창 배율, 전조 슬로모 */
+  readonly qteWindowScale: number;
+  readonly slowMoTell: number;
+  /** 눈도장(생존) 조건·보상 */
+  readonly survivalMaxGain: number;
+  readonly survivalRequiresQte: boolean;
+  readonly eyeContactPoints: number;
+  readonly reactionEarly?: string;
+  readonly reactionLong?: string;
+}
+
+/** 엘리베이터 대표님(INT-11). 발생 여부는 시드로 미리 정해 둔다(난이도·연출 확률) */
+export interface CeoElevatorDef {
+  readonly patrolId: string;
+  readonly tellSec: number;
+  readonly tellTextKey?: string;
+  readonly qte: QteDef;
+  readonly successPoints: number;
+  readonly failSuspicion: number;
+  readonly successLineKey?: string;
+  readonly failLineKey?: string;
+}
+
+/** 공범 동료 제안·합류(INT-12, npcs.accomplice.offer/effects) */
+export interface AccompliceDef {
+  /** 이 날 제안할 미션 id와 강제 여부(1~15일차 = days.scripted, 16일차~ = 시드 판정 결과) */
+  readonly offers: readonly { readonly eventId: string; readonly forced: boolean }[];
+  readonly offerSec: number;
+  readonly offerTextKeys: Readonly<Record<string, string>>;
+  readonly rewardMultiplier: number;
+  readonly suspicionGainMultiplier: number;
+  readonly hitboxIncludesAccomplice: boolean;
+  readonly lookoutCoughLeadSec: number;
+  readonly lookoutRadiusTiles: number;
+  readonly followGapTiles: number;
+  readonly seatPatrolId: string;
+  readonly speedTilesPerSec: number;
+  readonly reactionKey?: string;
+}
+
+/** 위계 연쇄 H1·H2: 본부장이 구역에 들어오면 팀장이 나와 인사(INT-10 effect.teamLeadGreeting) */
+export interface GreetingDef {
+  readonly bossActorId: string;
+  readonly greeterActorId: string;
+  readonly zoneId: string;
+  readonly greetSpot: { readonly x: number; readonly y: number };
+  readonly lineKey?: string;
+  readonly resumeDelaySec: number;
+}
+
+/** 튜토리얼 경로 힌트(maps.playerRoutes) */
+export interface RouteDef {
+  readonly id: string;
+  readonly from: string;
+  readonly to: string;
+  readonly via: readonly { readonly x: number; readonly y: number }[];
+}
+
 export interface DayContent {
   readonly day: number;
   readonly seed: string;
@@ -154,6 +241,18 @@ export interface DayContent {
   readonly resultInputGuardSec: number;
   /** 무음 대응 시각 신호(rules.visualCues, 표시 전용 원본) */
   readonly visualCues: Readonly<Record<string, unknown>>;
+  // ── T-133 확장(선택 필드: 손으로 만든 DayContent와 호환) ──
+  /** 대표님 순시(없으면 순시 없는 날) */
+  readonly ceoVisit?: CeoVisitDef;
+  /** 엘리베이터 대표님(이 날 발생이 확정된 경우만) */
+  readonly ceoElevator?: CeoElevatorDef;
+  readonly accomplice?: AccompliceDef;
+  readonly greeting?: GreetingDef;
+  readonly routes?: readonly RouteDef[];
+  /** 출근 준비 화면 표시용 */
+  readonly prep?: { readonly ceoPassAvailable: boolean };
+  /** 이어하기(rules.continueAd) */
+  readonly continueAd?: { readonly resumeSuspicion: number; readonly submitScoreToLeaderboard: boolean };
 }
 
 export type DayPhase = 'intro' | 'day' | 'leave' | 'ended';
@@ -177,4 +276,11 @@ export interface DayResult {
   /** 잡은 사람(적발 리액션) */
   readonly caughtBy: string | null;
   readonly reactionKey: string | null;
+  // ── T-133 ──
+  /** 이어하기 광고로 이어간 판(D-056: 리더보드 미제출) */
+  readonly continued?: boolean;
+  /** 대표님 눈도장 */
+  readonly eyeContact?: boolean;
+  /** 대표님 순시 결과: none(없음) / skipped(CEO 패스) / cancelled(끝까지 안 앉음) / done */
+  readonly ceoVisit?: 'none' | 'skipped' | 'cancelled' | 'done';
 }

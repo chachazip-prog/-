@@ -111,7 +111,8 @@ interface RulesTable {
   offscreenWarning: { sources: string[]; showWhenThreat: ('approaching'|'turning')[]; minLeadSecBeforeGaze: Sec;
                       offscreenSourceNoGain: boolean; arrowColorBy: 'lanyard'; pulseOnTell: boolean; missionMarkerArrows: boolean };
   characters: { maxOnFloor: 12; maxOnScreen: 8; screenRowsTiles: 20; backgroundCountsTowardLimits: true;
-                playerProps: string[] };                                      // T-132: D-049·D-052
+                playerProps: string[];                                        // T-132: D-049·D-052
+                playerSpriteKey: 'player' };                                  // T-134: 아트 anims.json 캐릭터 키
   work: { fillPerSec: number; fillOnlyWhen: 'seated_working'; max: Ratio01 };
   day: { clockStart; dayPhaseClockEnd; leaveClockStart; leaveGameMinutesPerSec; earlyLeaveBefore; overtimeAt;
          introSec; targetDurationSec: Range; tutorialDayDurationSec: Range; clockPausedDuring: string[] };
@@ -171,7 +172,9 @@ interface MapDef {
   playerStart: { x: number; y: number };      // = LevelDef.playerStart
   exitZone: string;                            // = LevelDef.exitZone ('exit')
   camera: { viewportTiles: [number, number]; visibleAboveTiles: number; visibleBelowTiles: number;
-            followAxis: 'y'; deadZoneTiles: Tiles; lerpPerFrame: number; clampToMap: boolean };
+            followAxis: 'y'; deadZoneTiles: Tiles; lerpPerFrame: number; clampToMap: boolean;
+            clampIncludesHudInset: true;        // T-134: clamp 때 HUD 높이만큼 여유(맵 끝 행이 HUD에 안 가림)
+            hudCoveredRowsAreOffscreen: true }; // T-134: HUD가 가리는 행의 인물 = 화면 밖(offscreenSourceNoGain·화살표)
   legend: Record<string, LegendEntryV2>;
   rows: string[];                              // = LevelDef.rows. 길이 heightTiles, 각 행 widthTiles
   zones: { id: string; nameKey: StringKey; rect: [x: number, y: number, w: number, h: number];
@@ -231,8 +234,12 @@ interface TalkDefV2 {                // = 개발 TalkDef {radius, durationSec, c
   catchRadius: Tiles;    // 전조 끝에 이 거리 안이면 성립, 밖이면 취소(그쪽을 돌아봄 = look). radius < c ≤ 2×radius
   releaseSec: Sec;       // 말걸기 끝난 뒤 이 NPC 시선을 의심에 반영하지 않는 시간. ≥ 최대 실제 전조 + postTalkHoldSec
   warnLineKey: StringKey;    // 말풍선 문구(없으면 talk.warn_default '저기요?')
-  dodgedLineKey: StringKey;  // 피했을 때 혼잣말
+  dodgedLineKey: StringKey;  // 조용한 취소(위장 또는 radius 미진입) 때만 혼잣말
 }
+// T-134 전조 끝 판정(rules.talk.catchRequiresEnterRadiusDuringTell · silentCancelSaysDodgedLine · dodgeAfterEnterLooksAtPlayer = true)
+//   성립 = 전조 중 radius 안에 한 번이라도 들어옴 && 지금 catchRadius 안 && 위장 아님
+//   위장 또는 radius 미진입 → 조용히 취소 + dodgedLineKey (돌아보지 않음)
+//   radius 진입 후 catchRadius 밖 → 취소 + 플레이어 쪽 돌아보기(전조 rules.sight.cornerTurnTellSec → lookSec, releaseSec 미적용, 혼잣말 없음)
 ```
 
 | 액터 | radius | warnSec(실제) | catchRadius | releaseSec | 반응 없이 지나침 → 성립 | 0.3초 안에 피함 → 취소 |
@@ -247,7 +254,8 @@ interface TalkDefV2 {                // = 개발 TalkDef {radius, durationSec, c
 ```ts
 
 interface BossDef {
-  id: BossId; nameKey; codexKey; tier: 1|2|3|4; unlockRank: RankId; firstDay: number;
+  id: BossId; spriteKey: string;               // T-134: anims.json 캐릭터 키(senior·teamlead·exec·ceo). `{spriteKey}/idle_down` 등
+  nameKey; codexKey; tier: 1|2|3|4; unlockRank: RankId; firstDay: number;
   role: 'boss'; props: string[];               // 첫 원소 lanyard_red (D-037)
   tell: { visual: string; sfx: string; bgm?: 'stop' };
   sim: ActorSim;
@@ -273,7 +281,8 @@ interface BossDef {
 }
 
 interface NpcDefData {
-  id: NpcId; nameKey; codexKey; role: 'gate'|'obstruct'|'assist'|'inspect'; renderRole: string;
+  id: NpcId; spriteKey: string;                // T-134: guard·snitch·accomplice·hr. 배경 동료는 background[].sprite(bg_a/b/c)
+  nameKey; codexKey; role: 'gate'|'obstruct'|'assist'|'inspect'; renderRole: string;
   mvp: boolean; unlockRank: RankId; firstDay: number; ambientFromDay?: number;   // 배경 동료로 먼저 앉아 있음
   props: string[]; defaultPatrol: string | null;
   sim: ActorSim;
@@ -287,6 +296,8 @@ interface NpcDefData {
 // T-132 추가 필드
 //   sim.walkTellSfx?: { lookAround; glanceBack; cornerTurn; stopLook: AudioKey; onScreenOnly: true }  // 본부장·팀장·경비·인사팀
 //   gate.failSfx 'sfx_gate_beep' · okSfx 'sfx_gate_ok' · failVisual · failVisualSec · failShowsAttemptsLeftKey · okVisual · okTextKey
+// T-134 추가 필드
+//   gate.windowCenter 0.5 · markerMotion 'ping_pong' · waitingCountsAsDisguised true   // 창 가운데 고정, 게이트 앞 = 위장(정체 규칙은 적용)
 //   offer.authoredDaysScriptedOnly: true · offerRollStream: 'npc'   // 1~15일차 공범 제안은 days.scripted로만(시드 고정)
 
 interface NpcsTable { ...; background: BackgroundCoworker[] }   // T-132, D-049
@@ -382,9 +393,9 @@ interface InterruptDef {
 |---|---|
 | talk_stop | `forcedStop`, `talkLineKey`, `leaveLineKey?`, `leaveExtraSuspicion`(v2 = 0, D-043), `earlyLeavePoints?` |
 | report_run | `patrolId`, `showPath`, `arrivalSuspicion`, `forcedLookBy`, `forcedLook{tellSec, lookSec, coneRange, aimAtPlayer}`, `waitIfReceiverSuppressedMaxSec` |
-| block | `patrolIds[]`, `blockTiles`, `blockSec`, `leavePrePositioned`, `leaveBlockSec`, `talkIfAdjacent{radius, durationSec, lineKey}` |
+| block | `patrolIds[]`, `blockTiles`, `blockSec`, `leavePrePositioned`, `leaveBlockSec`, `leaveStartsAt`(T-134: 퇴근 땐 이 stopId 웨이포인트에 서서 시작, 대기 = leaveBlockSec), `talkIfAdjacent{radius, durationSec, lineKey}` |
 | countdown | `patrolId`, `countdownSec: 'eta_to_stop_inspect'`, `countdownMinSec`, `inspectSec`, `absentSuspicion` |
-| walker / walker_talk / walker_opportunity | `patrolId` 또는 `patrolVariants[]`, `leaveVariant`, `teamLeadGreeting{whenDirectorInZone, moveTo, gazeOff, talkOff}`, `meetingSec`, `letoutTellSec`, `blocksMissions[]` |
+| walker / walker_talk / walker_opportunity | `patrolId` 또는 `patrolVariants[]`, `leaveVariant`, `teamLeadGreeting{whenDirectorInZone, moveTo, gazeOff, talkOff}`, `meetingSec`, `letoutTellSec`, `blocksMissions[]`, `leaveStartsAt`(stopId), `leaveStopWaitSec`(T-134: 퇴근 땐 그 웨이포인트에서 시작해 이만큼 대기 = letoutTellSec 1.0) |
 | freeze | `seeBoss: 'ceo.visit'`, `clockPaused` |
 | qte | `patrolId`, `qteRef`, `successPoints`, `failSuspicion` |
 | assist | `patrolId`, `effectsRef` |
@@ -416,10 +427,10 @@ interface EventDef {
 ```
 | mechanic | params |
 |---|---|
-| pour_tap_stop (coffee) | `pourRatePerSec`, `targetBand`, `overflowAt`, `cupsRequired`, `tapBelowBand: 'pause'`, `tapInBand: 'success'`, `carryCupWhileReturning` |
+| pour_tap_stop (coffee) | `pourRatePerSec`, `targetBand`, `overflowAt`, `cupsRequired`, `tapBelowBand: 'pause'`, `tapInBand: 'success'`, `tapAboveBand: 'fail'`(T-134, failPenalty 적용), `carryCupWhileReturning` |
 | trip_safe_zone (restroom) | `insideRestSec`, `insideBonusMaxSec`, `insidePointsPerSec`, `tapInsideAfterRest: 'leave_stall'`, `stallIsSafeZone` |
 | nap_tap_toggle (nap) | `fatigueStart`, `fatigueRecoverPerSec`, `headDropPerSec`, `headRaisePerSec`, `headThudAt`, `headDownVisibleThreshold`, `headDownVisibleStateMultiplier`, `tapToggles`, `lockedDuringInterrupt` |
-| screen_swap_tap (shopping) | `cartFillPerSec`, `itemsRequired`, `checkoutHoldSec`, `tapDuringCheckout`, `pausedShowsSpreadsheet` |
+| screen_swap_tap (shopping) | `cartFillPerSec`, `itemsRequired`(T-134: 결제 전 상품 수, 결제는 안 셈. 값 2), `checkoutHoldSec`, `tapDuringCheckout`, `pausedShowsSpreadsheet` |
 | rhythm_tap (snack) | `bitesRequired`, `minIntervalSec`, `perfectWindowSec`, `maxPressSec`, `noiseSuspicion`, `noiseAlertsRadiusTiles`, `noiseShortensBossIdleTo`, `biteUnderGazeSuspicion`, `activityStateAfterBiteSec`, `perfectBonusPoints` |
 | leave_sequence | `clockStart`, `gameMinutesPerSec`, `phases[]`: `pack{sec, tapPauses, ifAwayWalkToSeatFirst}` → `walk{to, carryingBag}` → `gate{npc, ref}` → `elevator{waitSecRange, safeAfterGate, interruptHook}` |
 
@@ -509,7 +520,7 @@ interface AdsTable {
 ---
 
 ## 10. 검사기 `design/tools/validate_data.py`
-`python3 -I molrae-toegeun/design/tools/validate_data.py` → `OK` 또는 오류 목록(종료 코드 1). 검사 항목: schemaVersion, `*Key`·`reactionKeys` 문자열 존재, 전조 최소·페이크 상한(보간 값 포함), 맵 크기·legend·스폿/웨이포인트 통행·도달, 테이블 간 ID 참조, 방해 phase·unlockDay, 하루 예상 길이 범위, D-037 사원증 색. **T-132 추가**: 층 인원 ≤ 12·화면 안 ≤ 8(수작업 날은 그날 구성, 생성 날은 직급별 방해 countRange 최대 개수의 모든 조합 중 최악, 대표님 날 H7 반영. 각 캐릭터가 있을 수 있는 y 범위로 보수적 계산), 배경 동료(2~3명·메카닉 전부 false·회색 줄·자리/경로 유효), 말걸기 `warnSec`·`catchRadius`·`releaseSec`·문구 키, `talkedPerSec = 0`, `resultInputGuardSec ≥ 0.4`, 유리벽 walkable=false·blocksSight=false(D-053), 플레이어 줄 하늘색(D-052), `exemptFirstGamesLifetime` 없음(D-048), 이어하기 조건(D-050·D-056), 문자열 이모지·내부 ID·`{n}원`, 수작업 날 공범 제안 미션 존재, sfx 키 ⊂ `game/assets/audio/audio-manifest.json`(읽기 전용), 걷는 NPC `walkTellSfx`, 게이트 sfx, `visualCues` 6종·깜빡임 ≤ 3Hz. 실행 끝에 직급별 화면 안 최악 인원을 출력합니다. 데이터를 고칠 때마다 실행하세요. CI 편입은 개발·QA 판단입니다.
+`python3 -I molrae-toegeun/design/tools/validate_data.py` → `OK` 또는 오류 목록(종료 코드 1). 검사 항목: schemaVersion, `*Key`·`reactionKeys` 문자열 존재, 전조 최소·페이크 상한(보간 값 포함), 맵 크기·legend·스폿/웨이포인트 통행·도달, 테이블 간 ID 참조, 방해 phase·unlockDay, 하루 예상 길이 범위, D-037 사원증 색. **T-132 추가**: 층 인원 ≤ 12·화면 안 ≤ 8(수작업 날은 그날 구성, 생성 날은 직급별 방해 countRange 최대 개수의 모든 조합 중 최악, 대표님 날 H7 반영. 각 캐릭터가 있을 수 있는 y 범위로 보수적 계산), 배경 동료(2~3명·메카닉 전부 false·회색 줄·자리/경로 유효), 말걸기 `warnSec`·`catchRadius`·`releaseSec`·문구 키, `talkedPerSec = 0`, `resultInputGuardSec ≥ 0.4`, 유리벽 walkable=false·blocksSight=false(D-053), 플레이어 줄 하늘색(D-052), `exemptFirstGamesLifetime` 없음(D-048), 이어하기 조건(D-050·D-056), 문자열 이모지·내부 ID·`{n}원`, 수작업 날 공범 제안 미션 존재, sfx 키 ⊂ `game/assets/audio/audio-manifest.json`(읽기 전용), 걷는 NPC `walkTellSfx`, 게이트 sfx, `visualCues` 6종·깜빡임 ≤ 3Hz. **T-134 추가**: `spriteKey`·`playerSpriteKey`·배경 `sprite` ⊂ `game/assets/sprites/anims.json`(idle·walk 4방향). 실행 끝에 직급별 화면 안 최악 인원을 출력합니다. 데이터를 고칠 때마다 실행하세요. CI 편입은 개발·QA 판단입니다.
 
 ---
 
@@ -520,6 +531,7 @@ interface AdsTable {
 | 1 | 2026-11-22 | 최초 작성(T-101, 측면 홀드/떼기 기준) |
 | 2 | 2026-11-22 | **탑다운 전면 개정(T-121)**. 아래 상세 |
 | 2 (T-132) | 2026-11-22 | 개발 T-127·아트 T-125·사운드 T-113·컴플라이언스 리뷰 반영. **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
+| 2 (T-134) | 2026-11-23 | 개발 T-129 해석 6건 확정(`design/gdd.md` §19-3) + spriteKey 데이터 요청. **필드 추가·값 수정 1건만, 구조 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
 
 ### v1 → v2 상세
 - **신규 테이블**: `maps`, `patrols`, `interrupts`, `ads`.
@@ -555,3 +567,18 @@ interface AdsTable {
   - `maps.legend.g`(유리벽): walkable=false, blocksSight=false(D-053). 검사기가 고정합니다.
   - 문자열 이모지: 없음. `★`(U+2605)만 허용 특수문자로 남겼습니다.
   - 화면 문구에 내부 ID가 노출된 곳: 없음.
+
+### T-134 상세 (v2 유지)
+- **추가**
+  - bosses `spriteKey`: senior→`senior`, team_lead→`teamlead`, director→`exec`, ceo→`ceo`.
+  - npcs `spriteKey`: security_guard→`guard`, snitch→`snitch`, accomplice→`accomplice`, hr_inspector→`hr`.
+  - rules `characters.playerSpriteKey` `player`. 배경 동료는 기존 `background[].sprite`(bg_a/b/c)를 그대로 씀(필드 이름 변경 없음).
+  - events `coffee.params.tapAboveBand` `fail`, `shopping.params._itemsRequiredNote`.
+  - npcs `security_guard.gate`: `windowCenter` 0.5, `markerMotion` `ping_pong`, `waitingCountsAsDisguised` true, `_t134Note`.
+  - rules `talk`: `catchRequiresEnterRadiusDuringTell`·`silentCancelSaysDodgedLine`·`dodgeAfterEnterLooksAtPlayer`(모두 true), `_resolveRule`.
+  - maps `office_floor_1.camera`: `clampIncludesHudInset`·`hudCoveredRowsAreOffscreen`(true), `_t134Note`.
+  - interrupts `INT-04.effect.leaveStartsAt` `stop_gossip`(개발 하드코딩 대체용), `INT-08.effect.leaveStopWaitSec` 1.0, 둘 다 `_leaveNote`.
+- **값 수정**
+  - `events.shopping.params.itemsRequired` 3 → **2**. 뜻은 '결제 전 상품 수'(개발 해석과 같음). GDD 본문·`_designNote`·예상 9초가 2개 기준이었고, 데이터 3은 오기였습니다.
+- **검사기**: `spriteKey`·`playerSpriteKey`는 문자열 키 검사에서 제외합니다. 대신 이 키와 배경 `sprite`마다 `game/assets/sprites/anims.json`(아트 출력, 읽기 전용)에 `idle_*`·`walk_*` 4방향 애니가 있는지 검사합니다. 파일이 없으면 경고만 냅니다.
+- 개발 영향: 새 플래그(`tapAboveBand`, `windowCenter`, `talk.*`, `camera.*`)는 모두 개발 현재 구현을 명시한 값이라 동작 변화가 없습니다. 동작이 바뀌는 것은 `itemsRequired` 2 하나입니다. `spriteKey`는 `render/sprites.ts` `ACTOR_SPRITE`와 값이 같습니다.

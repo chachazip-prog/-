@@ -8,7 +8,8 @@
       T-132: 말걸기 warnSec·catchRadius·releaseSec(D-043·D-054), 결과 화면 입력 보호,
       유리벽(D-053), 배경 동료(D-049), 광고 첫 5판 면제 삭제(D-048), 이어하기 수용 기준(D-050·D-056),
       문자열 이모지(D-047)·내부 ID 노출, 수작업 날 공범 제안 고정,
-      sfx 키 ⊂ 오디오 매니페스트(T-113), 무음 대응 시각 신호.
+      sfx 키 ⊂ 오디오 매니페스트(T-113), 무음 대응 시각 신호,
+      T-134: spriteKey ⊂ 아트 anims.json(idle·walk 4방향).
 """
 import itertools
 import json
@@ -51,12 +52,13 @@ def walk_json(o, path=""):
             yield from walk_json(v, f"{path}[{i}]")
 
 
-# 1) 문자열 키
+# 1) 문자열 키 (spriteKey류는 아트 키라 §T-134에서 따로 검사)
+NON_STRING_KEYS = {"key", "spriteKey", "playerSpriteKey"}
 for name, t in T.items():
     if name == "strings.ko":
         continue
     for p, k, v in walk_json(t):
-        if isinstance(v, str) and (k.endswith("Key") and k != "key") and v not in S:
+        if isinstance(v, str) and (k.endswith("Key") and k not in NON_STRING_KEYS) and v not in S:
             err(f"{name}{p}: 문자열 키 없음 '{v}'")
         if k in ("reactionKeys", "failReactionKeys") and isinstance(v, list):
             for s in v:
@@ -468,6 +470,28 @@ if VC:
             err(f"rules.visualCues{p}: 깜빡임 {v}Hz > 3 (광과민)")
     if os.path.exists(AUDIO) and set(am["bgm"]["bgm_office"]["stages"]) - {"_doc"} - set(VC["dangerBorder"]["byStage"]):
         err("rules.visualCues.dangerBorder.byStage: BGM 단계 누락")
+
+# T-134) spriteKey ⊂ 아트 출력 anims.json (읽기 전용). 캐릭터마다 idle·walk 4방향이 있어야 함
+ANIMS = os.path.join(ROOT, "..", "assets", "sprites", "anims.json")
+if os.path.exists(ANIMS):
+    with open(ANIMS, encoding="utf-8") as fa:
+        anim_keys = {a["key"] for a in json.load(fa)["anims"]}
+    need = [f"{st}_{d}" for st in ("idle", "walk") for d in ("down", "up", "left", "right")]
+    sprite_refs = [("rules.characters.playerSpriteKey", rules["characters"].get("playerSpriteKey"))]
+    for name, key in (("bosses", "bosses"), ("npcs", "npcs")):
+        for a in T[name][key]:
+            sprite_refs.append((f"{name}.{a['id']}.spriteKey", a.get("spriteKey")))
+    for b in T["npcs"].get("background", []):
+        sprite_refs.append((f"npcs.background.{b['id']}.sprite", b.get("sprite")))
+    for where, sk in sprite_refs:
+        if not sk:
+            err(f"{where} 없음(T-134)")
+            continue
+        miss = [n for n in need if f"{sk}/{n}" not in anim_keys]
+        if miss:
+            err(f"{where} '{sk}': anims.json에 없는 애니 {', '.join(miss)}")
+else:
+    warns.append("assets/sprites/anims.json 없음: spriteKey 검사 생략")
 
 print(f"tables: {', '.join(T)}")
 print("화면 안 최악 인원(직급별, 플레이어 포함): " + ", ".join(f"{k} {v[0]}" for k, v in RANK_SCREEN.items()))

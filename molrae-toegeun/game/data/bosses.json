@@ -4,6 +4,7 @@
   "bosses": [
     {
       "id": "senior",
+      "spriteKey": "senior",
       "nameKey": "boss.senior.name",
       "codexKey": "codex.boss.senior",
       "tier": 1,
@@ -87,6 +88,7 @@
     },
     {
       "id": "team_lead",
+      "spriteKey": "teamlead",
       "nameKey": "boss.team_lead.name",
       "codexKey": "codex.boss.team_lead",
       "tier": 2,
@@ -435,6 +437,7 @@
     },
     {
       "id": "director",
+      "spriteKey": "exec",
       "nameKey": "boss.director.name",
       "codexKey": "codex.boss.director",
       "tier": 3,
@@ -625,6 +628,7 @@
     },
     {
       "id": "ceo",
+      "spriteKey": "ceo",
       "nameKey": "boss.ceo.name",
       "codexKey": "codex.boss.ceo",
       "tier": 4,

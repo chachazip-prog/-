@@ -30,6 +30,9 @@
         "deadZoneTiles": 2,
         "lerpPerFrame": 0.15,
         "clampToMap": true,
+        "clampIncludesHudInset": true,
+        "hudCoveredRowsAreOffscreen": true,
+        "_t134Note": "T-134 확정: 맵 위·아래 끝에서 clamp할 때 HUD 높이만큼 여유를 둬서 끝 행(출구·탕비실)이 HUD에 가리지 않게 함. HUD가 가리는 행에 있는 사람은 '화면 밖'(offscreenSourceNoGain·가장자리 화살표 대상). 화살표는 HUD 경계 안쪽(보이는 영역 끝)에 그림. '보이는 것 = 판정' 원칙(§5-5)",
         "_designNote": "T-123 실측: 플레이어 위 약 11타일, 아래 약 8타일 보임(출구가 위쪽이라 위를 더 보여 줌). 가로는 맵 전체가 보이므로 스크롤하지 않음."
       },
       "legend": {
