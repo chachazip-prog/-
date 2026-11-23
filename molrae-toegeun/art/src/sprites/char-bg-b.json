@@ -2,7 +2,7 @@
  "name": "bg_b",
  "group": "background",
  "base": "body-b",
- "note": "배경 동료(D-049, 메카닉 없음·상호작용 없음). 사원증 줄 = 회색(mid, 배경 동료 전용 중립색). 걷기 4방향 + 앉아서 타이핑 sit_type_0/1(뒷모습, 의자 등받이 쪽에서 본 모습, 2px 낮춤). 옷은 채도가 낮은 색으로 골라 역할 캐릭터보다 덜 튀게 함. bg_b: 바디 B + 연청색 셔츠 + 둥근 뒤통수 정수리 한 가닥",
+ "note": "배경 동료(D-049, 메카닉 없음·상호작용 없음). 사원증 줄 = 회색(mid, 배경 동료 전용 중립색). 걷기 4방향 + 앉아서 타이핑 sit_type_0/1(뒷모습, 의자 등받이 쪽에서 본 모습, 2px 낮춤). 옷은 채도가 낮은 색으로 골라 역할 캐릭터보다 덜 튀게 함. bg_b: 바디 B + 연청색 셔츠 + 둥근 뒤통수 정수리 한 가닥 T-135: 서서 휴대폰 보기 stand_phone_<right|left>_0/1(0 = 화면 봄, 1 = 피식 웃음 + 어깨 1px 들썩). 서기 정지 = idle_<dir>",
  "swap": {
   "shirt": "wall",
   "shirt_sh": "wall_sh",
@@ -24,6 +24,26 @@
     2,
     16
    ]
+  },
+  {
+   "name": "stand_phone_right_0",
+   "from": "idle_right"
+  },
+  {
+   "name": "stand_phone_right_1",
+   "from": "idle_right",
+   "bob": [
+    1,
+    10
+   ]
+  },
+  {
+   "name": "stand_phone_left_0",
+   "flip": "stand_phone_right_0"
+  },
+  {
+   "name": "stand_phone_left_1",
+   "flip": "stand_phone_right_1"
   }
  ],
  "stamps": [
@@ -84,6 +104,67 @@
    "rows": [
     "p........p"
    ]
+  },
+  {
+   "frames": [
+    "stand_phone_right_0",
+    "stand_phone_right_1"
+   ],
+   "x": 7,
+   "y": 14,
+   "rows": [
+    "P"
+   ]
+  },
+  {
+   "frames": [
+    "stand_phone_right_0"
+   ],
+   "x": 10,
+   "y": 11,
+   "rows": [
+    ".OOO",
+    "SOCO",
+    "SODO",
+    ".OOO"
+   ]
+  },
+  {
+   "frames": [
+    "stand_phone_right_1"
+   ],
+   "x": 10,
+   "y": 11,
+   "rows": [
+    ".OOO",
+    "SOWO",
+    "SOCO",
+    ".OOO"
+   ]
+  },
+  {
+   "frames": [
+    "stand_phone_right_0"
+   ],
+   "x": 11,
+   "y": 7,
+   "rows": [
+    "S",
+    "O",
+    "O"
+   ]
+  },
+  {
+   "frames": [
+    "stand_phone_right_1"
+   ],
+   "x": 10,
+   "y": 7,
+   "rows": [
+    "SS",
+    "OO",
+    "Ss"
+   ]
   }
  ],
  "anims": [
@@ -102,6 +183,32 @@
     "sit_type_0"
    ],
    "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "stand_phone_right",
+   "frames": [
+    "stand_phone_right_0",
+    "stand_phone_right_0",
+    "stand_phone_right_0",
+    "stand_phone_right_1",
+    "stand_phone_right_0",
+    "stand_phone_right_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "stand_phone_left",
+   "frames": [
+    "stand_phone_left_0",
+    "stand_phone_left_0",
+    "stand_phone_left_0",
+    "stand_phone_left_1",
+    "stand_phone_left_0",
+    "stand_phone_left_1"
+   ],
+   "frameRate": 2,
    "repeat": -1
   }
  ]

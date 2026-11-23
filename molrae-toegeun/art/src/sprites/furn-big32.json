@@ -1,0 +1,52 @@
+{
+ "name": "big32",
+ "group": "furniture",
+ "size": [
+  32,
+  32
+ ],
+ "origin": [
+  0.5,
+  1
+ ],
+ "note": "T-135: 2x2칸 블록용 회의 테이블(32x32). 기존 big/meet_table(48x32)은 유지. 맵의 2x2 'M' 블록 오른쪽 아래 칸에서 x = 칸 왼쪽 변(x*16), y = 칸 아래 변으로 놓으면 블록에 딱 맞음(좌우 1px 여백). 노트북 2, 스피커폰, 서류 2, 물병 2, 로고 없음",
+ "frames": [
+  {
+   "name": "meet_table",
+   "rows": [
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    ".OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.",
+    ".OWWWWWWWWWWWWWWWWWWWWWWWWWWWWO.",
+    ".OWOOOOOOWWWOOOOOOOOWWWOOOOOOWO.",
+    ".OWODDDDOWWWOWMMMMWOWWWODDDDOWO.",
+    ".OWODCDDOWWWOWMMWWWOWWWODDCDOWO.",
+    ".OWOOOOOOWWWOOOOOOOOWWWOOOOOOWO.",
+    ".OWOMMMMOWWWWWWWWWWWWWWOMMMMOWO.",
+    ".OWOOOOOOWWWWWWWWWWWWWWOOOOOOWO.",
+    ".OWWWWWWWWWWOOOOOOOOWWWWWWWWWWO.",
+    ".OWWWWWWWWWWODDDDDDOWWWWWWWWWWO.",
+    ".OWWWWWWWWWWODDCCDDOWWWWWWWWWWO.",
+    ".OWWWWWWWWWWOOOOOOOOWWWWWWWWWWO.",
+    ".OWWWWWWWWWWWWWWWWWWWWWWWWWWWWO.",
+    ".OWWOOOOOWWOOOWWWWOOOWWOOOOOWWO.",
+    ".OWWOWWWOWWOCOWWWWOCOWWOWWWOWWO.",
+    ".OWWOWMMOWWOCOWWWWOCOWWOMMWOWWO.",
+    ".OWWOOOOOWWOOOWWWWOOOWWOOOOOWWO.",
+    ".OWWWWWWWWWWWWWWWWWWWWWWWWWWWWO.",
+    ".OWWWWWWWWWWWWWWWWWWWWWWWWWWWWO.",
+    ".OLLLLLLLLLLLLLLLLLLLLLLLLLLLLO.",
+    ".OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.",
+    ".OMMMMMMMMMMMMMMMMMMMMMMMMMMMMO.",
+    ".OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.",
+    "...OMO....................OMO...",
+    "...OMO....................OMO...",
+    "...OOO....................OOO...",
+    "................................",
+    "................................"
+   ]
+  }
+ ]
+}

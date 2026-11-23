@@ -2,7 +2,7 @@
  "name": "bg_a",
  "group": "background",
  "base": "body-a",
- "note": "배경 동료(D-049, 메카닉 없음·상호작용 없음). 사원증 줄 = 회색(mid, 배경 동료 전용 중립색). 걷기 4방향 + 앉아서 타이핑 sit_type_0/1(뒷모습, 의자 등받이 쪽에서 본 모습, 2px 낮춤). 옷은 채도가 낮은 색으로 골라 역할 캐릭터보다 덜 튀게 함. bg_a: 바디 A + 베이지 니트. 기본 머리(옆 가르마)",
+ "note": "배경 동료(D-049, 메카닉 없음·상호작용 없음). 사원증 줄 = 회색(mid, 배경 동료 전용 중립색). 걷기 4방향 + 앉아서 타이핑 sit_type_0/1(뒷모습, 의자 등받이 쪽에서 본 모습, 2px 낮춤). 옷은 채도가 낮은 색으로 골라 역할 캐릭터보다 덜 튀게 함. bg_a: 바디 A + 베이지 니트. 기본 머리(옆 가르마) T-135: 앉아서 기지개 sit_stretch_0/1(anim sit_stretch, 1회 재생 후 sit_type_0 에서 멈춤). 서기 정지 = idle_<dir>",
  "swap": {
   "shirt": "floor",
   "shirt_sh": "floor_sh",
@@ -22,6 +22,22 @@
    "from": "idle_up",
    "bob": [
     2,
+    16
+   ]
+  },
+  {
+   "name": "sit_stretch_0",
+   "from": "idle_up",
+   "bob": [
+    2,
+    16
+   ]
+  },
+  {
+   "name": "sit_stretch_1",
+   "from": "idle_up",
+   "bob": [
+    1,
     16
    ]
   }
@@ -57,6 +73,55 @@
    "rows": [
     "p......p"
    ]
+  },
+  {
+   "frames": [
+    "sit_stretch_0"
+   ],
+   "x": 0,
+   "y": 4,
+   "rows": [
+    ".OO..........OO.",
+    "OSSO........OSSO",
+    "OPO..........OPO",
+    "OPO..........OPO",
+    "OpO..........OpO",
+    ".OpO........OpO.",
+    "..OpO......OpO..",
+    "...OP......PO..."
+   ]
+  },
+  {
+   "frames": [
+    "sit_stretch_1"
+   ],
+   "x": 0,
+   "y": 0,
+   "rows": [
+    ".OO..........OO.",
+    "OSSO........OSSO",
+    "OPO..........OPO",
+    "OPO..........OPO",
+    "OPO..........OPO",
+    "OPO..........OPO",
+    "OPO..........OPO",
+    "OPO..........OPO",
+    "OpO..........OpO",
+    ".OpO........OpO.",
+    "..OpO......OpO..",
+    "...OP......PO..."
+   ]
+  },
+  {
+   "frames": [
+    "sit_stretch_0",
+    "sit_stretch_1"
+   ],
+   "x": 4,
+   "y": 14,
+   "rows": [
+    "p......p"
+   ]
   }
  ],
  "anims": [
@@ -76,6 +141,19 @@
    ],
    "frameRate": 1,
    "repeat": -1
+  },
+  {
+   "key": "sit_stretch",
+   "frames": [
+    "sit_stretch_0",
+    "sit_stretch_1",
+    "sit_stretch_1",
+    "sit_stretch_1",
+    "sit_stretch_0",
+    "sit_type_0"
+   ],
+   "frameRate": 4,
+   "repeat": 0
   }
  ]
 }
