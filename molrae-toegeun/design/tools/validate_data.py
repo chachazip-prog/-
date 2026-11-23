@@ -11,6 +11,7 @@
       sfx 키 ⊂ 오디오 매니페스트(T-113), 무음 대응 시각 신호,
       T-134: spriteKey ⊂ 아트 anims.json(idle·walk 4방향).
       T-136: 이어하기 재개 의심·컷인 길이·alert 임계·H7 간격·대표님 재확인·얼음 안전장치·공범 제안 종료·간식 판정 시점·광고 문구 키.
+      T-139: 생성기 시간 예산 검사(budgetCheck)·예산 모델 키, 인사 QTE 창 하한, 탈출 보너스 시각 범위, ★3 임계 범위, INT-05 퇴근 시 취소.
 """
 import itertools
 import json
@@ -538,6 +539,38 @@ for e_ in T["events"]["events"]:
 for k_ in ("ad.today_done", "ad.ceo_pass_not_completed"):
     if k_ not in S:
         err(f"strings: {k_} 없음(T-136)")
+
+# T-139) 밸런스 조정(필드 추가·값 수정만)
+bm_ = T["ranks"]["budgetModel"]
+ev_ids_ = {e["id"] for e in T["events"]["events"] if e["mechanic"] != "leave_sequence"}
+if set(bm_.get("missionExpectedSec", {})) != ev_ids_ or not all(isinstance(v, (int, float)) and v > 0 for v in bm_["missionExpectedSec"].values()):
+    err("ranks.budgetModel.missionExpectedSec: 미션 이벤트 id 전부(퇴근 제외)에 양수 필요(T-139)")
+int_ids_ = {i["id"] for i in T["interrupts"]["interrupts"]}
+for k_, v_ in bm_.get("dayInterruptReserveSec", {}).items():
+    if k_ not in int_ids_ or not (isinstance(v_, (int, float)) and 0 <= v_ <= 10):
+        err(f"ranks.budgetModel.dayInterruptReserveSec.{k_}: 없는 방해 id 또는 0~10 밖(T-139)")
+if not (1.0 <= bm_.get("perLeaveInterruptSec", 0) <= 3.0):
+    err("ranks.budgetModel.perLeaveInterruptSec 1.0~3.0 밖(T-139, QA 실측 1.4~1.7)")
+bc_ = T["days"]["generator"]["missions"].get("budgetCheck")
+if not isinstance(bc_, dict) or bc_.get("enabled") is not True or bc_.get("onOver") != "drop_required" \
+        or not (isinstance(bc_.get("minRequired"), int) and bc_["minRequired"] >= 1) or not (0 <= bc_.get("minSlackSec", -1) <= 10):
+    err("days.generator.missions.budgetCheck: enabled true·onOver drop_required·minRequired ≥ 1·minSlackSec 0~10 필요(T-139)")
+q_min_ = [ceo_["greetingQte"]["windowSec"]] + [v[x]["greetingQte.windowSec"] for v in ceo_["rankScaling"].values() for x in ("start", "end") if "greetingQte.windowSec" in v.get(x, {})]
+if min(q_min_) < 0.4:
+    err(f"bosses.ceo greetingQte.windowSec 최솟값 {min(q_min_)} < 0.4(반응 창 하한, T-139)")
+if not (0 < ceo_["survival"]["maxSuspicionGain"] <= 0.2):
+    err("bosses.ceo.survival.maxSuspicionGain 0~0.2 밖(T-139)")
+if not ceo_["sim"].get("coneActiveIn"):
+    err("bosses.ceo.sim.coneActiveIn 비어 있음(재확인 look 필요, T-139)")
+dy_ = T["rules"]["day"]
+_m = lambda t: int(t.split(":")[0]) * 60 + int(t.split(":")[1])
+if not (_m(dy_["leaveClockStart"]) < _m(dy_["earlyLeaveBefore"]) < _m(dy_["overtimeAt"])):
+    err("rules.day.earlyLeaveBefore가 leaveClockStart~overtimeAt 사이가 아님(T-139)")
+if not (0.1 <= T["rules"]["suspicion"]["star3PeakBelow"] <= 0.3):
+    err("rules.suspicion.star3PeakBelow 0.1~0.3 밖(T-139)")
+i5_ = next(i for i in T["interrupts"]["interrupts"] if i["id"] == "INT-05")
+if i5_["effect"].get("cancelOnLeaveStart") is not True:
+    err("interrupts.INT-05.effect.cancelOnLeaveStart true 필요(D-070)")
 
 print(f"tables: {', '.join(T)}")
 print("화면 안 최악 인원(직급별, 플레이어 포함): " + ", ".join(f"{k} {v[0]}" for k, v in RANK_SCREEN.items()))

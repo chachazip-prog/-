@@ -1,20 +1,28 @@
 {
   "schemaVersion": 2,
-  "_comment": "직급(탑다운 v2). dayPhaseSec = 09:00→17:48 근무 구간 실시간 길이. missionsRequired = ★2에 필요한 완료 미션 수. 퇴근 방해는 leaveInterrupts(phases에 leave가 있는 것만). CEO 순시가 있는 날은 미션 1개·근무 구간 ceoDayPhaseReductionSec초를 줄이고 퇴근 방해 최대 2개. 시간 예산 검증: design/gdd.md §12-2.",
+  "_comment": "직급(탑다운 v2). dayPhaseSec = 09:00→17:48 근무 구간 실시간 길이. missionsRequired = ★2에 필요한 완료 미션 수. 퇴근 방해는 leaveInterrupts(phases에 leave가 있는 것만). CEO 순시가 있는 날은 미션 1개·근무 구간 ceoDayPhaseReductionSec초를 줄이고 퇴근 방해 최대 2개. T-139: 과장 이상 대표님 날 근무 구간은 모두 45초(56−11, 57−12) → 1판 최댓값 ≤ 95초(퇴근 최장 약 34초 + 인트로 2 + 순시 정지 약 12초 + 45 = 93~95초). 시간 예산 검증: design/gdd.md §12-2.",
   "budgetModel": {
     "introSec": 2.0,
     "leaveBaseSec": 16.3,
-    "perLeaveInterruptSec": 2.0,
+    "perLeaveInterruptSec": 1.7,
     "detourSec": 1.0,
     "ceoVisitPausedSec": 12.5,
     "missionExpectedSec": {
-      "coffee": 13,
-      "restroom": 16,
-      "nap": 15,
-      "shopping": 9,
-      "snack": 7
+      "coffee": 12.5,
+      "restroom": 17.5,
+      "nap": 14,
+      "shopping": 10,
+      "snack": 7.5
     },
-    "_comment": "QA가 실측으로 교체할 추정 모델"
+    "dayInterruptReserveSec": {
+      "INT-04": 2.0,
+      "INT-05": 3.0,
+      "INT-06": 1.5,
+      "INT-08": 2.0,
+      "INT-10": 3.0
+    },
+    "_comment": "QA가 실측으로 교체할 추정 모델",
+    "_t139Note": "T-139: QA T-131 실측으로 교체. ① perLeaveInterruptSec 2.0 → 1.7: T-131 실측 1.40초(e51a7f6), T-140 코드 + 18:05 기준(INT-07 실제 발동) 재측정 1.68초. 유형별 실측 INT-04 2.16 / INT-06 2.30 / INT-10 2.27 / INT-07 1.57 / INT-02 1.51 / INT-03 0.19 / INT-08 −0.03초 ② missionExpectedSec: 캐주얼 봇 생성일 실측(도착~완료) + 편도 이동(커피 4.7·화장실 5.7·낮잠 3.3초)의 평균 근처로 반올림 ③ dayInterruptReserveSec(신규): 근무 방해가 미션 시간을 잡아먹는 예약분(생성기 budgetCheck 전용). INT-05 근태 점검 = 자리 복귀 강제(약 3초 손실), INT-08 회의 = 낮잠 잠김, INT-10 본부장 = 숨어 기다림, INT-04 수다 = 우회, INT-06 사원증 = 확인 1.5초. 근접형(INT-01·02·03)은 하루 종일 켜져 있어 예약분 대신 여유로 흡수"
   },
   "ranks": [
     {
@@ -369,7 +377,7 @@
       "starsToPromote": 22,
       "maxStars": 39,
       "dayPhaseSec": 56,
-      "ceoDayPhaseReductionSec": 6,
+      "ceoDayPhaseReductionSec": 11,
       "missionsPerDay": [
         4,
         4
@@ -502,7 +510,7 @@
       "starsToPromote": 21,
       "maxStars": 36,
       "dayPhaseSec": 56,
-      "ceoDayPhaseReductionSec": 6,
+      "ceoDayPhaseReductionSec": 11,
       "missionsPerDay": [
         4,
         4
@@ -635,7 +643,7 @@
       "starsToPromote": 21,
       "maxStars": 36,
       "dayPhaseSec": 57,
-      "ceoDayPhaseReductionSec": 7,
+      "ceoDayPhaseReductionSec": 12,
       "missionsPerDay": [
         4,
         4
@@ -768,7 +776,7 @@
       "starsToPromote": null,
       "maxStars": null,
       "dayPhaseSec": 57,
-      "ceoDayPhaseReductionSec": 7,
+      "ceoDayPhaseReductionSec": 12,
       "missionsPerDay": [
         4,
         4

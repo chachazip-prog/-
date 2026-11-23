@@ -127,7 +127,7 @@
       "awayFromDesk": false,
       "isFinale": false,
       "unlockRank": "intern",
-      "timeLimitSec": 13,
+      "timeLimitSec": 15,
       "expectedDurationSec": 9,
       "accompliceAllowed": false,
       "reward": { "slackPoints": 170 },
@@ -139,7 +139,8 @@
         "_itemsRequiredNote": "T-134 확정: 결제 전에 채울 장바구니 상품 수. 결제(checkoutHoldSec)는 별도 단계라 세지 않음. 2개 × 3.33초 + 결제 0.8초 = 7.5초 → 위장 왕복 여유 포함 예상 9초 / 제한 13초. 3개면 10.8초로 제한 대비 여유 2.2초뿐이라 팀장 look 1회만 겹쳐도 시간 초과",
         "checkoutHoldSec": 0.8,
         "tapDuringCheckout": "cancel_checkout_progress",
-        "pausedShowsSpreadsheet": true
+        "pausedShowsSpreadsheet": true,
+        "_t139TimeLimitNote": "T-139(QA 제안 ⑦): timeLimitSec 13 → 15. 최소 7.5초 + 돌아볼 때마다 스프레드시트로 바꾸는 손실(선배 5.5초 주기 중 약 2.6초) → 위장하며 하면 약 14.2초가 필요해 5일차 캐주얼 봇 59%(시간 초과 41%). 정답 행동(위장)이 시간 초과로 벌받지 않게 함. 15초 실측 5일차 100%, 사원 100%, 생성일 쇼핑 시간 초과 감소. 선배 대기 3.0 → 4.0 안은 1~4일차 선배 리듬(튜토리얼 전체)까지 바꾸므로 기각. timeLimitSec는 params 밖 필드라 직급 덮어쓰기(rankScaling)로 인턴만 바꿀 수 없음"
       },
       "rankScaling": {
         "manager": { "checkoutHoldSec": 1.0 },

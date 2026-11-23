@@ -85,7 +85,8 @@
         "tut_route",
         "tut_offscreen"
       ],
-      "dayPhaseSec": 40,
+      "dayPhaseSec": 44,
+      "_t139DayPhaseNote": "T-139: 40 → 44초. 커피(13) + 화장실(17.5) + 할당량 10초 = 40.5초로 40초 근무 구간을 넘어 T-140 코드 기준 캐주얼 봇 칼퇴 7%(화장실 미착수 92%). 2일차는 화장실·경로 튜토리얼이라 화장실을 빼지 않고 시간을 늘림. 실측 칼퇴 89%, 길이 평균 66.3초(튜토리얼 50~75초 안)",
       "missions": [
         {
           "eventId": "coffee",
@@ -128,7 +129,7 @@
         }
       ],
       "ceo": "none",
-      "expectedDurationSec": 63.3,
+      "expectedDurationSec": 67.3,
       "ambientOnly": [
         "snitch",
         "accomplice"
@@ -209,7 +210,8 @@
           "unlockAtSec": 18
         }
       ],
-      "missionsRequired": 2,
+      "missionsRequired": 1,
+      "_t139RequiredNote": "T-139(QA 제안 ①): 필수 2 → 1. 낮잠(14) + 화장실(17.5) + 할당량 10초 + 선배 스몰토크 1.5초 = 43초로 40초 안에 둘 다 할 수 없어 칼퇴 0%. 화장실 해금 18 → 8초 안은 총량이 그대로라 효과 0(실측 0%). 4일차 학습 목표는 낮잠·말걸기 회피이므로 화장실은 '욕심 미션'(보상만)으로 둠. 실측 칼퇴 0 → 77%",
       "castPatrols": [
         "p_senior_seat",
         "p_guard_gatehall",
@@ -242,7 +244,7 @@
         "snitch",
         "accomplice"
       ],
-      "_designNote": "회의실 낮잠 + 말걸기 회피(‘!’에 탭해서 멈추면 말 안 검) 연습. 퇴근 때 선배가 한 번 더 말 검."
+      "_designNote": "회의실 낮잠 + 말걸기 회피(‘!’에 탭해서 멈추면 말 안 검) 연습. 퇴근 때 선배가 한 번 더 말 검. T-139: 필수는 낮잠 1개, 화장실은 시간 남으면 하는 선택 미션."
     },
     {
       "day": 5,
@@ -921,10 +923,21 @@
     "missions": {
       "stream": "plan",
       "count": "t < 0.5 이면 missionsPerDay[0], 아니면 [1]. CEO 날은 -1(최소 2)",
-      "required": "t < 0.5 이면 missionsRequired[0], 아니면 [1]. CEO 날은 -1(최소 2)",
+      "required": "t < 0.5 이면 missionsRequired[0], 아니면 [1]. CEO 날은 -1(최소 2). 그 뒤 budgetCheck(시간 예산 초과 시 −1, 최소 2)",
       "selection": "eventPool 가중치 비복원 추첨. 최근 2일간 안 나온 이벤트 강제 포함, 전날 첫 미션과 다르게",
       "unlockAtSec": "i번째(0부터) = 3 + i × floor((dayPhaseSec - 22) / count)",
-      "_comment": "마지막 미션도 퇴근 22초 전에는 열려서 끝낼 시간이 있음"
+      "_comment": "마지막 미션도 퇴근 22초 전에는 열려서 끝낼 시간이 있음",
+      "budgetCheck": {
+        "enabled": true,
+        "minRequired": 2,
+        "minSlackSec": 0,
+        "onOver": "drop_required",
+        "expectedSecFrom": "ranks.budgetModel.missionExpectedSec",
+        "reserveSecFrom": "ranks.budgetModel.dayInterruptReserveSec",
+        "rule": "need = (이 날 미션 중 expectedSec가 큰 순서로 required개의 합) + 할당량 시간(rank.workQuota ÷ rules.work.fillPerSec) + Σ reserve[근무 방해 id](H7 필터 뒤 dayInterrupts 기준, 없는 id는 0). need > dayPhaseSec − minSlackSec 이고 required > minRequired 이면 required −1 후 다시 계산(반복). 미션 목록·해금 시각은 바꾸지 않음",
+        "order": "미션·근무 방해·대표님·퇴근 방해 추첨을 모두 끝낸 뒤 마지막에 적용(RNG 소비 순서·결과 불변 → 같은 시드 = 같은 구성 유지). 대표님 날의 −1(최소 2)을 먼저 적용한 required에서 시작",
+        "_designNote": "T-139(QA 제안 ②). 25·31·37·40·54일차처럼 필수 미션이 시간 예산을 넘는 날을 막는 규칙. '가장 비싼 required개' = 플레이어가 어떤 조합을 골라도 시간 안에 끝날 수 있다는 보수적 기준. 초과 시 미션을 빼지 않고 필수만 낮춤: 미션을 빼면 화장실(17.5초)이 늘 먼저 빠져 생성일에서 사라지고, 필수만 낮추면 '위험한 미션 하나 이상을 버리는 판단'(GDD §6-4)이 더 넓어짐. 스크래치 참조 구현 실측(캐주얼 봇): 16~30일 칼퇴 68.8 → 74.8%, 31~60일 43.2 → 54.9%. 🧪 QA: 생성 16~60일 각 날 need ≤ dayPhaseSec 또는 required = 2, 규칙 적용 날의 칼퇴율"
+      }
     },
     "dayInterrupts": {
       "stream": "plan",

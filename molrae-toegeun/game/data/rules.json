@@ -41,7 +41,7 @@
     "graceSec": 0.12,
     "decayPerSec": 0.02,
     "gazeStacking": "max",
-    "star3PeakBelow": 0.3,
+    "star3PeakBelow": 0.15,
     "continueResetTo": 0.6,
     "_designNote": "최종 상승률 = 상태별 값 × 보는 사람의 gazeMultiplier(동시 시선은 최댓값 하나). 팀장(×1.0) 콘을 걸어서 가로지르는 시간 ≈ 1.3초 → 0.45×1.18 ≈ 0.53. T-124 반영: 위장(멈춤)이 손해가 되지 않게 위장 0/초, 콘 안에서 3초 넘게 서 있을 때만 0.03/초(엄폐물 옆은 면제). 멈춤은 모두 위장으로 간주(anyStopIsDisguised: 길막 대기·말걸기 후·도착 포함) → idle 0. 기획 측 검증(개발 FloorSim + QA 봇, 퇴근 동선 400판): 직진 봇 탈출 40~100%·★3 0%, 위장 봇 탈출 100%, 느린 초보 66~100%(design/gdd.md §16-1).",
     "disguiseStaleAfterSec": 3.0,
@@ -51,7 +51,8 @@
     "_deprecated": {
       "continueResetTo": "T-136: rules.continueAd.resumeSuspicion으로 대체(같은 값 0.6 유지, 검사기가 일치 확인). 런타임은 읽지 않음. 다음 schemaVersion에서 삭제",
       "talkedPerSec": "T-132 폐지(D-043). 런타임은 talked 상태 상승률을 0으로 고정하고 이 값을 읽지 않음. 개발 SuspicionRules 타입 호환을 위해 값 0으로만 남김. 다음 schemaVersion에서 삭제"
-    }
+    },
+    "_t139Star3Note": "T-139(QA 제안 ⑤): 0.30 → 0.15(0.20 안은 사원 ★3 45%로 목표 초과). 0.15 = 팀장 콘에 약 0.3초 한 번 걸리는 정도까지만 허용하는 '완벽'. 실측(T-140 코드) 캐주얼 ★3: 사원 6~15일 35%, 1~60일 전체 31%, 1~10일 46%(튜토리얼 1~5일 58% 포함), 31~60일 14%"
   },
   "leavePhase": {
     "suspicionOverrides": {},
@@ -244,7 +245,7 @@
     "dayPhaseClockEnd": "17:48",
     "leaveClockStart": "17:48",
     "leaveGameMinutesPerSec": 1.0,
-    "earlyLeaveBefore": "18:00",
+    "earlyLeaveBefore": "18:05",
     "overtimeAt": "18:18",
     "introSec": 2.0,
     "targetDurationSec": [
@@ -257,7 +258,8 @@
     ],
     "clockPausedDuring": [
       "ceo_visit"
-    ]
+    ],
+    "_t139EarlyNote": "T-139(QA 제안 ⑩, BUG-011): 18:00 → 18:05. 최적 플레이 최단 종료가 18:03:23이라 18:00은 도달 불가. 퇴근 시계 속도(1초 = 0.5분) 안은 야근 기준 18:18·제한 30초와 시계 표시를 함께 바꿔야 해서 기각. 이 값 하나로 '탈출 보너스'(엘리베이터 출발 시각)와 INT-07·경비 말걸기 조건(clock_before_1800 / leave_phase_before_1800, 이름은 유지)이 같이 움직임. 실측 보너스: 직진 봇 인턴 33%·사원 9%, 캐주얼 5~6%, 최적 40판 중 33판"
   },
   "stars": {
     "caught": 0,

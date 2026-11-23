@@ -335,7 +335,9 @@
         "countdownMinSec": 6.0,
         "inspectSec": 5.0,
         "absentSuspicion": 0.25,
-        "absentReactionKey": "react.hr_inspector.absent"
+        "absentReactionKey": "react.hr_inspector.absent",
+        "cancelOnLeaveStart": true,
+        "_cancelNote": "D-070: 퇴근 단계가 시작되면 진행 중인 카운트다운·점검을 취소(인사팀은 그대로 퇴장 동선). 퇴근 중 '자리 없음' +0.25가 붙지 않게 함. 개발 구현은 다음 작업"
       },
       "counters": [
         {
