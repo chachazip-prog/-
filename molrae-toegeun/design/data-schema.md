@@ -121,7 +121,9 @@ interface RulesTable {
   slack: { restroomInsidePointsPerSec; ceoTalkWindowMultiplier; ceoEyeContactPoints; earlyLeavePoints; ... };
   snackStock: { startPerDay; max; gainOnSnackSuccess };
   continueAd: { maxPerDay; restorePlayerTo: 'last_checkpoint'; checkpoints: string[];
+                resumeSuspicion: Ratio01;                                      // 🔧 T-136: 0.6(D-064). suspicion.continueResetTo 대체
                 submitScoreToLeaderboard: false };                             // T-132: D-056
+  caughtCutin: { durationSec: Sec; isPlayState: true };                        // 🔧 T-136: 적발 컷인 2.0초(1.5~3.0, 광고 금지 구간)
   assist: { consecutiveCaughtThreshold; suspicionGainMultiplier; showHint; showRouteHint };
 }
 
@@ -133,7 +135,8 @@ interface SuspicionRulesV2 {           // 개발 SuspicionRules + 확장
   seatedWorkingPerSec: 0; activityPerSec: 0.55; activityPausedPerSec: 0;           // 🔧 미션 상태
   disguiseStaleAfterSec: 3.0; disguiseStalePerSec: 0.03; disguiseStaleExemptNearCover: true;  // 🔧
   anyStopIsDisguised: true;                                                          // 🔧 멈춤 = 위장
-  gazeStacking: 'max'; star3PeakBelow: 0.3; continueResetTo: 0.6;
+  gazeStacking: 'max'; star3PeakBelow: 0.3;
+  continueResetTo: 0.6;                // ⛔ T-136: continueAd.resumeSuspicion으로 대체(같은 값, 검사기 일치 확인). 런타임 무시, v3에서 삭제
 }
 
 interface ThreatRules {                // 개발 FloorRules.threat + 확장
@@ -155,6 +158,7 @@ interface VisualCues {                 // T-132: 효과음·BGM과 짝을 이루
   missionChipDone: { pairsWith: 'sfx_mission_complete'; visual: string; overlayIcon: 'icon_done'; textKey };
   suspicionHigh:   { pairsWith: 'sfx_suspicion_loop'; threshold: 0.7; visual: 'gauge_danger'; pulseHz: 2.0 };
   dangerBorder:    { pairsWith: 'bgm_office.stages'; followsBgmHysteresis: true;
+                     alertSuspicionMin: 0.4;   // 🔧 T-136: alert 진입 의심(BGM·테두리 공용). danger = suspicionHigh.threshold
                      byStage: Record<'calm'|'alert'|'finale'|'danger'|'freeze'|'stopped', { show: boolean; visual?: string; color?: string; borderPx?: number; pulseHz?: number }> };
 }
 ```
@@ -485,10 +489,12 @@ interface AdsTable {
                   everyNGames: 3; maxPerDay: 5; minIntervalSec: 180;      // T-132: exemptFirstGamesLifetime 삭제(D-048)
                   skipIfRewardedWatchedThisGame: true; removedByIap: 'remove_ads'; dayBoundary: 'local_midnight' };
   rewarded: { enabled; maxPerDay: 12;
+              dailyCapReachedKey: 'ad.today_done';                    // 🔧 T-136: 하루 상한 도달 토스트(D-031)
               placements: { id: 'ceo_pass'|'continue'|'salary_double'; screen: 'prep'|'caught_offer'|'result';
                             labelKey; descKey?; condition: string; maxPerDay: number; effect: string;
                             // continue 전용(T-132, D-050 ①~⑧·D-056)
-                            declineLabelKey?; notCompletedKey?; unavailableKey?; declineButtonSameSize?: true; autoCountdown?: false;
+                            declineLabelKey?; notCompletedKey?; unavailableKey?;   // T-136: ceo_pass도 notCompletedKey·unavailableKey 사용
+                            onNotEarned?: 'go_to_result_no_retry' | 'keep_visit_button_reenabled';   // T-136: ceo_pass는 후자 declineButtonSameSize?: true; autoCountdown?: false;
                             onNotEarned?: 'go_to_result_no_retry'; onAdUnavailable?: 'skip_offer_screen'; submitScoreToLeaderboard?: false;
                             // salary_double 전용
                             buttonOnlyNoPopup?: true }[] };
@@ -520,7 +526,7 @@ interface AdsTable {
 ---
 
 ## 10. 검사기 `design/tools/validate_data.py`
-`python3 -I molrae-toegeun/design/tools/validate_data.py` → `OK` 또는 오류 목록(종료 코드 1). 검사 항목: schemaVersion, `*Key`·`reactionKeys` 문자열 존재, 전조 최소·페이크 상한(보간 값 포함), 맵 크기·legend·스폿/웨이포인트 통행·도달, 테이블 간 ID 참조, 방해 phase·unlockDay, 하루 예상 길이 범위, D-037 사원증 색. **T-132 추가**: 층 인원 ≤ 12·화면 안 ≤ 8(수작업 날은 그날 구성, 생성 날은 직급별 방해 countRange 최대 개수의 모든 조합 중 최악, 대표님 날 H7 반영. 각 캐릭터가 있을 수 있는 y 범위로 보수적 계산), 배경 동료(2~3명·메카닉 전부 false·회색 줄·자리/경로 유효), 말걸기 `warnSec`·`catchRadius`·`releaseSec`·문구 키, `talkedPerSec = 0`, `resultInputGuardSec ≥ 0.4`, 유리벽 walkable=false·blocksSight=false(D-053), 플레이어 줄 하늘색(D-052), `exemptFirstGamesLifetime` 없음(D-048), 이어하기 조건(D-050·D-056), 문자열 이모지·내부 ID·`{n}원`, 수작업 날 공범 제안 미션 존재, sfx 키 ⊂ `game/assets/audio/audio-manifest.json`(읽기 전용), 걷는 NPC `walkTellSfx`, 게이트 sfx, `visualCues` 6종·깜빡임 ≤ 3Hz. **T-134 추가**: `spriteKey`·`playerSpriteKey`·배경 `sprite` ⊂ `game/assets/sprites/anims.json`(idle·walk 4방향). 실행 끝에 직급별 화면 안 최악 인원을 출력합니다. 데이터를 고칠 때마다 실행하세요. CI 편입은 개발·QA 판단입니다.
+`python3 -I molrae-toegeun/design/tools/validate_data.py` → `OK` 또는 오류 목록(종료 코드 1). 검사 항목: schemaVersion, `*Key`·`reactionKeys` 문자열 존재, 전조 최소·페이크 상한(보간 값 포함), 맵 크기·legend·스폿/웨이포인트 통행·도달, 테이블 간 ID 참조, 방해 phase·unlockDay, 하루 예상 길이 범위, D-037 사원증 색. **T-132 추가**: 층 인원 ≤ 12·화면 안 ≤ 8(수작업 날은 그날 구성, 생성 날은 직급별 방해 countRange 최대 개수의 모든 조합 중 최악, 대표님 날 H7 반영. 각 캐릭터가 있을 수 있는 y 범위로 보수적 계산), 배경 동료(2~3명·메카닉 전부 false·회색 줄·자리/경로 유효), 말걸기 `warnSec`·`catchRadius`·`releaseSec`·문구 키, `talkedPerSec = 0`, `resultInputGuardSec ≥ 0.4`, 유리벽 walkable=false·blocksSight=false(D-053), 플레이어 줄 하늘색(D-052), `exemptFirstGamesLifetime` 없음(D-048), 이어하기 조건(D-050·D-056), 문자열 이모지·내부 ID·`{n}원`, 수작업 날 공범 제안 미션 존재, sfx 키 ⊂ `game/assets/audio/audio-manifest.json`(읽기 전용), 걷는 NPC `walkTellSfx`, 게이트 sfx, `visualCues` 6종·깜빡임 ≤ 3Hz. **T-134 추가**: `spriteKey`·`playerSpriteKey`·배경 `sprite` ⊂ `game/assets/sprites/anims.json`(idle·walk 4방향). **T-136 추가**: 이어하기 재개 의심(구 필드와 일치)·컷인 길이·alert 임계(매니페스트 숫자 일치)·H7 간격·대표님 재확인 플래그와 전조·얼음 안전장치·공범 제안 종료 규칙·간식 판정 시점·광고 문구 키. 실행 끝에 직급별 화면 안 최악 인원을 출력합니다. 데이터를 고칠 때마다 실행하세요. CI 편입은 개발·QA 판단입니다.
 
 ---
 
@@ -532,6 +538,7 @@ interface AdsTable {
 | 2 | 2026-11-22 | **탑다운 전면 개정(T-121)**. 아래 상세 |
 | 2 (T-132) | 2026-11-22 | 개발 T-127·아트 T-125·사운드 T-113·컴플라이언스 리뷰 반영. **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
 | 2 (T-134) | 2026-11-23 | 개발 T-129 해석 6건 확정(`design/gdd.md` §19-3) + spriteKey 데이터 요청. **필드 추가·값 수정 1건만, 구조 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
+| 2 (T-136) | 2026-11-23 | 개발 T-133 코드 상수 → 데이터(숫자 4, 문구 키 2), T-133 해석 6건 확정(`design/gdd.md` §19-4). **필드 추가만, 값·키 이름·계층 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
 
 ### v1 → v2 상세
 - **신규 테이블**: `maps`, `patrols`, `interrupts`, `ads`.
@@ -582,3 +589,20 @@ interface AdsTable {
   - `events.shopping.params.itemsRequired` 3 → **2**. 뜻은 '결제 전 상품 수'(개발 해석과 같음). GDD 본문·`_designNote`·예상 9초가 2개 기준이었고, 데이터 3은 오기였습니다.
 - **검사기**: `spriteKey`·`playerSpriteKey`는 문자열 키 검사에서 제외합니다. 대신 이 키와 배경 `sprite`마다 `game/assets/sprites/anims.json`(아트 출력, 읽기 전용)에 `idle_*`·`walk_*` 4방향 애니가 있는지 검사합니다. 파일이 없으면 경고만 냅니다.
 - 개발 영향: 새 플래그(`tapAboveBand`, `windowCenter`, `talk.*`, `camera.*`)는 모두 개발 현재 구현을 명시한 값이라 동작 변화가 없습니다. 동작이 바뀌는 것은 `itemsRequired` 2 하나입니다. `spriteKey`는 `render/sprites.ts` `ACTOR_SPRITE`와 값이 같습니다.
+
+### T-136 상세 (v2 유지)
+- **추가(숫자, 개발 상수 대체)**
+  - rules `continueAd.resumeSuspicion` 0.6 (`DEFAULTS.continueResumeSuspicion` 대체). 기존 `suspicion.continueResetTo`는 같은 값으로 남기고 `_deprecated`에 표시. 검사기가 두 값 일치 확인. v3에서 `continueResetTo` 삭제.
+  - rules `caughtCutin.durationSec` 2.0, `isPlayState` true (`GameScene.CUTIN_SEC` 대체). 검사기 1.5~3.0, `ads.global.playStates`에 `caught_cutin` 포함 확인.
+  - rules `visualCues.dangerBorder.alertSuspicionMin` 0.4 (`GameScene.ALERT_SUSPICION`·`dangerStage.ts` 대체). 검사기: `star3PeakBelow` ≤ 값 < `suspicionHigh.threshold`, 오디오 매니페스트 `alert.when` 문장 숫자와 일치.
+  - days `generator.dayInterrupts.h7`: `ceoDirectorMinGapSec` 25 (`buildDay.H7_GAP_SEC` 대체), `onPlanConflict` `drop_director_patrol`, `ceoStartWaitsWhileDirectorOnFloor` true, `directorStartWaitsWhileCeoOnFloor` true, `hrInterruptsOnCeoDay` `none`. `constraints` 문장은 사람용으로 유지. 검사기 ≥ 20.
+- **추가(문구 키)**
+  - strings `ad.today_done`, `ad.ceo_pass_not_completed`.
+  - ads `rewarded.dailyCapReachedKey` `ad.today_done`. `placements[ceo_pass]`: `notCompletedKey` `ad.ceo_pass_not_completed`, `unavailableKey` `ad.continue_unavailable`(범용 문구 재사용), `onNotEarned` `keep_visit_button_reenabled`.
+- **추가(해석 확정용 플래그)**
+  - npcs `accomplice.offer`: `forcedHoldsUntil` `mission_commit`, `endsAtMissionCommit` true, `missionCommit` `{awayFromDesk: 'activity_start', atDesk: 'first_input'}`.
+  - bosses `ceo.sim.fake.asRealLookAtRecheckWaypoint` true(재확인 = 진짜 시선, 확률은 보간된 `fake.chance`, 전조는 `fake.tellSec` 0.5).
+  - bosses `ceo.visit.freeze.safetyExtraSec` 3.0(개발 `freezeMaxSec + 3` 대체).
+  - events `snack.params.judgeOn` `release`.
+- **검사기**: 위 항목 전부(§10 T-136). 음성 테스트(값을 일부러 틀리게 한 복사본)로 오류 검출 확인.
+- 개발 영향: 동작이 바뀌는 것은 ① 공범 제안이 자리 미션(간식)에서 첫 입 때 끝남 ② 대표님 재확인 확률이 직급 보간(과장 초반 0.30)·전조 0.5초 ③ 대표님이 층에 있는 동안 본부장 등장 연기 ④ 하루 보상형 상한일 때 보상형 버튼 숨김. 나머지는 현재 구현과 같은 값을 데이터로 옮긴 것입니다.

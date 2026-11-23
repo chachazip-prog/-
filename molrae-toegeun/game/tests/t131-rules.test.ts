@@ -38,11 +38,11 @@ function walkTiles(sim: DaySim): Tile[] {
 // ═══ 4. 말걸기
 section('4. 말걸기 (D-043·D-054, GDD §5-4 ⑤)');
 type Policy = 'none' | 'stop' | 'evade';
-interface TalkOut { warns: number; talk: number; disguised: number; missed: number; escaped: number; armedWarns: number; releaseViol: number; postHoldRise: number; postHoldTalks: number; lookAfterEscapeTellOk: number; lookAfterEscape: number }
+interface TalkOut { escapedNoEvent: number; warns: number; talk: number; disguised: number; missed: number; escaped: number; armedWarns: number; releaseViol: number; postHoldRise: number; postHoldTalks: number; lookAfterEscapeTellOk: number; lookAfterEscape: number }
 
 /** 액터 하나에 대해 지나가기 시도를 반복. setup(seed)은 대상 NPC가 말을 걸 수 있는 상태의 DaySim을 돌려준다 */
 function talkTrials(actor: string, setup: (seed: string) => { sim: DaySim; npc: PatrolNpc } | null, policy: Policy, n: number): TalkOut {
-  const o: TalkOut = { warns: 0, talk: 0, disguised: 0, missed: 0, escaped: 0, armedWarns: 0, releaseViol: 0, postHoldRise: 0, postHoldTalks: 0, lookAfterEscapeTellOk: 0, lookAfterEscape: 0 };
+  const o: TalkOut = { escapedNoEvent: 0, warns: 0, talk: 0, disguised: 0, missed: 0, escaped: 0, armedWarns: 0, releaseViol: 0, postHoldRise: 0, postHoldTalks: 0, lookAfterEscapeTellOk: 0, lookAfterEscape: 0 };
   const r = createRng(`talk-${actor}-${policy}`);
   for (let k = 0; k < n; k++) {
     const st = setup(`talk-${actor}-${k}`);
@@ -90,11 +90,14 @@ function talkTrials(actor: string, setup: (seed: string) => { sim: DaySim; npc: 
         }
       }
       const before = f.suspicion.value;
+      const pm = npc.mode, pk = npc.tellKind;
       sim.step();
+      // 회피(D-054): T-133부터 tell(talk) → tell(look)으로 바로 넘어가며 talkCancel(escaped) 이벤트가 나오지 않음(BUG-015) → 상태 전이로 셈
+      if (pm === 'tell' && pk === 'talk' && npc.mode === 'tell' && npc.tellKind === 'look' && warnAt >= 0) { o.escaped++; o.escapedNoEvent++; resolved = true; escapeAt = f.time; }
       for (const e of sim.drainFloorEvents()) {
         if (e.type === 'talkWarn' && e.npc === npc.def.id && warnAt < 0) { warnAt = f.time; o.warns++; }
         if (e.type === 'talk' && e.npc === npc.def.id) { o.talk++; resolved = true; talked = true; }
-        if (e.type === 'talkCancel' && e.npc === npc.def.id) { o[e.reason]++; resolved = true; if (e.reason === 'escaped') escapeAt = f.time; }
+        if (e.type === 'talkCancel' && e.npc === npc.def.id) { o[e.reason]++; resolved = true; if (e.reason === 'escaped') { escapeAt = f.time; o.escapedNoEvent--; } }
         if (e.type === 'talkEnd' && e.npc === npc.def.id) talkEndAt = f.time;
       }
       sim.drainEvents();
@@ -104,7 +107,7 @@ function talkTrials(actor: string, setup: (seed: string) => { sim: DaySim; npc: 
       if (npc.releaseLeft > 0 && idx >= 0 && f.seeing[idx]) o.releaseViol++;
       // 말걸기 종료 후 postTalkHoldSec 동안 의심 상승(의심 0 고정 전 값 기준: 이번 스텝 상승분)
       if (talkEndAt >= 0 && f.time - talkEndAt <= (f.rules.movement?.postTalkHoldSec ?? 0.5) + 1e-9 && f.suspicion.value - before > 1e-12) o.postHoldRise += f.suspicion.value - before;
-      if (escapeAt >= 0 && npc.mode === 'look' && o.lookAfterEscape < 1e9) { o.lookAfterEscape++; if (f.time - escapeAt >= 0.4 - 1e-9) o.lookAfterEscapeTellOk++; escapeAt = -1; }
+      if (escapeAt >= 0 && npc.mode === 'look') { o.lookAfterEscape++; if (f.time - escapeAt >= 0.4 - 1e-9) o.lookAfterEscapeTellOk++; escapeAt = -1; }
       if (resolved && (talked ? talkEndAt >= 0 && f.time - talkEndAt > 2.2 : f.time - warnAt > 2.5)) break;
       if (!resolved && warnAt < 0 && f.player.mode !== 'moving') break;
     }
@@ -177,7 +180,9 @@ for (const [actor, label0, setup] of TALK_ACTORS) {
   const ph = all.reduce((a, o) => a + o.postHoldRise, 0), pt = all.reduce((a, o) => a + o.postHoldTalks, 0);
   check(`${label}: 말걸기 종료 후 postTalkHoldSec 동안 의심 상승 0`, ph < 1e-9, `말걸기 ${pt}회, 합계 상승 ${ph.toFixed(3)}`);
   const la = all.reduce((a, o) => a + o.lookAfterEscape, 0), lok = all.reduce((a, o) => a + o.lookAfterEscapeTellOk, 0);
-  check(`${label}: 들어왔다 피한 뒤 돌아보기 전 전조 ≥ 0.4초 (§19-3 ④)`, la === lok, `${lok}/${la}`);
+  check(`${label}: 들어왔다 피한 뒤 돌아보기 전 전조 ≥ 0.4초 (§19-3 ④)`, la === lok && (la > 0 || all.every((o) => o.escaped === 0)), `${lok}/${la}`);
+  const noEv = all.reduce((a, o) => a + o.escapedNoEvent, 0), esc = all.reduce((a, o) => a + o.escaped, 0);
+  if (esc > 0) check(`${label}: 회피 취소 시 talkCancel(escaped) 이벤트 발행`, noEv === 0, `회피 ${esc}회 중 이벤트 없음 ${noEv}회`);
 }
 report['talk'] = talkTable;
 {
@@ -558,7 +563,7 @@ section('8. T-133 추가: 순시·INT-11·공범·H1');
     for (let k = 0; k < 40; k++) {
       const sim = new DaySim(contentFor(tables, 19), { view: VIEW }, `h1-${k}`);
       let greet = false;
-      for (let i = 0; i < 60 * 60 && sim.phase === 'day' && !greet; i++) {
+      for (let i = 0; i < 60 * 60 && (sim.phase === 'intro' || sim.phase === 'day') && !greet; i++) {
         sim.floor.suspicion.value = 0; sim.step(); sim.drainEvents(); sim.drainFloorEvents();
         greet = !!sim.floor.findNpc((n) => (n.def.patrolId ?? '').endsWith('_greet') && n.mode === 'hold');
       }
