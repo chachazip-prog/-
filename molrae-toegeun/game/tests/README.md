@@ -8,8 +8,8 @@ QA(mt-qa-tester) 소유: 자동 플레이·밸런스 시뮬레이션 테스트�
 - `tests/.out/`은 번들·원자료 출력(생성물, 커밋 불필요)
 
 ## T-131 (1차 플레이어블: 하루 한 판) — game/ 에서 실행
-- 기본은 고정 스냅샷 `tests/.out/t131-snap/`(측정 시점 git HEAD의 src·data 복사본)에서 번들한다. 작업 트리 그대로 돌리려면 `QA_LIVE=1`.
-  - 스냅샷 만들기(1회): `git archive HEAD game/src game/data ...`로 풀고 `node_modules` 심볼릭 링크(`qa/t131-report.md` §0 참고)
+- 기본은 고정 스냅샷 `tests/.out/t131-snap/`(측정 시점 커밋(T-131 최종: `e51a7f6`)의 game/ 복사본)에서 번들한다. 작업 트리 그대로 돌리려면 `QA_LIVE=1`.
+  - 스냅샷 만들기: `git archive e51a7f6 game | tar -x -C tests/.out/t131-snap --strip-components=1` 후 `node_modules` 심볼릭 링크(`qa/t131-report.md` §0 참고)
 - `bash tests/run-t131.sh core` — T-124 코어 검증(T-127 변경 반영: advance 분할은 끝나지 않는 층, (2,58) 탭 = 'here', 전조 기준 = 범위 최소값)
 - `bash tests/run-t131.sh rules` — 말걸기·배경 동료·미션 5종·퇴근·전면광고 경계값 → `tests/.out/t131-rules.json`
 - `bash tests/run-t131.sh balance [저작일 시드=300] [생성일 시드=100] [워커=4]` — 하루 전체 봇 3종 + 공정성 전수 검사 → `tests/.out/t131-balance.json`
