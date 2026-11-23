@@ -10,7 +10,10 @@
  *  - tapMission(id): HUD 미션 칩. 화면 탭이 아니므로 이동 중에도 멈추지 않고 목적지만 바꾼다(rules.input.hudTapDoesNotStop)
  */
 import { FloorSim, type SimEvent } from '../floorSim';
-import { zoneAt, type Tile } from '../grid';
+import { tileCenter, tileOf, zoneAt, type Tile } from '../grid';
+import { DIR_ANGLE, canSee, type Dir } from '../vision';
+import { Follower } from './follower';
+import { GreetQte, type QteResult } from './qte';
 import { findPath } from '../pathfinding';
 import type { NpcDef, PatrolNpc, WaypointDef } from '../patrol';
 import { addSuspicion } from '../suspicion';
@@ -19,6 +22,9 @@ import type { CameraView } from '../camera';
 import type {
   DayContent, DayInterruptDef, DayOutcome, DayPhase, DayResult, LeaveStage, MissionDef, MissionState,
 } from './types';
+
+export type CeoVisitState = 'none' | 'skipped' | 'pending' | 'tell' | 'freeze' | 'qte' | 'talk' | 'exit' | 'resume' | 'done' | 'cancelled';
+export type ElevatorCeoState = 'none' | 'tell' | 'qte' | 'done';
 
 export type DayEvent =
   | { t: number; type: 'phase'; phase: DayPhase }
@@ -35,7 +41,18 @@ export type DayEvent =
   | { t: number; type: 'hrAbsent' }
   | { t: number; type: 'report'; result: 'start' | 'arrive' | 'doubt' | 'blocked' | 'giveUp' }
   | { t: number; type: 'closeCall'; points: number }
-  | { t: number; type: 'result'; result: DayResult };
+  | { t: number; type: 'result'; result: DayResult }
+  // ── T-133 ──
+  | { t: number; type: 'ceo'; stage: CeoVisitState }
+  | { t: number; type: 'qte'; source: 'ceo' | 'elevator'; stage: 'precue' | 'cue' | 'result'; result?: QteResult }
+  | { t: number; type: 'eyeContact'; points: number }
+  | { t: number; type: 'offer'; missionId: string; textKey: string; forced: boolean }
+  | { t: number; type: 'offerEnd'; missionId: string; accepted: boolean }
+  | { t: number; type: 'accomplice'; action: 'join' | 'leave' | 'cough' }
+  | { t: number; type: 'say'; npc: string; key: string; sec: number }
+  | { t: number; type: 'routeHint'; routes: { id: string; kind: 'hint' | 'caution'; tiles: Tile[] }[]; sec: number }
+  | { t: number; type: 'offscreenDemo'; actor: string; sec: number }
+  | { t: number; type: 'continued' };
 
 /** 미션 런타임 상태 */
 export interface MissionRuntime {
@@ -50,6 +67,10 @@ export interface MissionRuntime {
 export interface DaySimOptions {
   /** 화면 밖 판정용 화면 배치(HUD가 가리는 행). 표시 설정 — config/display.ts의 값을 넘긴다 */
   readonly view: CameraView;
+  /** 출근 준비 화면에서 CEO 순시 패스(보상형 광고)를 받음(D-027): 순시 없음, 눈도장 없음 */
+  readonly skipCeoVisit?: boolean;
+  /** 이미 본 튜토리얼 문구 키(재방문 생략, GDD §13). 이 키의 hint 이벤트는 다시 나오지 않음 */
+  readonly seenHints?: Iterable<string>;
 }
 
 /** 직업 표시용 단계: 지금 플레이어 상태(의심 상승률 선택에 씀) */
@@ -71,7 +92,15 @@ const TUTORIAL_ON: Readonly<Record<string, string>> = {
   tut_meeting: 'int:INT-08',
   tut_badge: 'int:INT-06',
   tut_snitch: 'int:INT-03',
+  tut_accomplice: 'offer',
+  tut_director: 'int:INT-10',
+  tut_ceo: 'ceoTell',
+  tut_ceo_2: 'ceoTalk',
+  tut_ceo_elevator: 'int:INT-11',
 };
+
+/** 공범 망보기 헛기침 대상(상사) */
+const BOSS_ROLE = 'boss';
 
 export class DaySim {
   readonly content: DayContent;
@@ -121,6 +150,42 @@ export class DaySim {
   private caughtBy: string | null = null;
   private seatedWorkSeen = false;
 
+  // ── 대표님 순시(INT-09) ──
+  ceoState: CeoVisitState = 'none';
+  /** 진행 중인 인사 QTE(순시·엘리베이터 공용). 표시용 */
+  qte: GreetQte | null = null;
+  qteSource: 'ceo' | 'elevator' | null = null;
+  eyeContact = false;
+  /** 대표님 대화 구간(점수 ×slackMultiplier, 팀장·본부장 시선 OFF) */
+  ceoTalkWindow = false;
+  private ceoNpc: PatrolNpc | null = null;
+  private ceoTimer = 0;
+  private ceoGain = 0;
+  private ceoQteOk = false;
+  private frozenAll = false;
+  private wasMovingInFreeze = false;
+  private ceoStarted = false;
+  // ── 엘리베이터 대표님(INT-11) ──
+  elevatorCeo: ElevatorCeoState = 'none';
+  private elevNpc: PatrolNpc | null = null;
+  // ── 공범(INT-12) ──
+  /** 지금 떠 있는 공범 제안(말풍선 탭 = acceptOffer) */
+  offer: { missionId: string; left: number; forced: boolean; textKey: string } | null = null;
+  follower: Follower | null = null;
+  private joinedMission: MissionRuntime | null = null;
+  private offered = new Set<string>();
+  private coughed = new Set<PatrolNpc>();
+  // ── 위계 연쇄 H1·H2 ──
+  private greetState: 'idle' | 'greeting' | 'returning' = 'idle';
+  private greetTimer = 0;
+  // ── 스크립트·연출 ──
+  private slowMoLeft = 0;
+  private slowMoScale = 1;
+  private scriptCount = new Map<number, number>();
+  // ── 이어하기(D-050) ──
+  continued = false;
+  private endedFrom: { phase: DayPhase; leaveStage: LeaveStage } | null = null;
+
   constructor(content: DayContent, opts: DaySimOptions, seed: string = content.seed) {
     this.content = content;
     this.floor = new FloorSim(content.floor, seed, {
@@ -132,9 +197,13 @@ export class DaySim {
         talkAllowed: (npc) => this.talkAllowed(npc),
         blockedForPlayer: (x, y) => this.gateBlocked(x, y),
         onNpcEnded: (npc) => this.onNpcEnded(npc),
+        npcFrozen: (npc) => this.frozenAll && npc !== this.ceoNpc,
+        extraGaze: () => this.followerGaze(),
       },
     });
     for (const b of content.background) this.floor.addNpc(b.npc);
+    if (content.ceoVisit) this.ceoState = opts.skipCeoVisit ? 'skipped' : 'pending';
+    if (opts.seenHints) for (const k of opts.seenHints) this.hintsShown.add(k);
     this.snackStock = content.scoring.snackStockStart;
     this.missions = content.missions.map((def) => ({ def, state: 'locked' as MissionState, startedAt: null, blocked: false }));
     this.push({ t: 0, type: 'phase', phase: 'intro' });

@@ -70,6 +70,10 @@ export interface FloorHooks {
   blockedForPlayer?(x: number, y: number): boolean;
   /** 순찰이 끝난 NPC 처리: 새 NpcDef(thenPatrol)를 돌려주면 교체, null이면 제거(despawnAtEnd)·유지 */
   onNpcEnded?(npc: PatrolNpc): NpcDef | null;
+  /** 얼어붙은 NPC(대표님 순시 H3·H4): 갱신·시선·말걸기·경고 모두 없음 */
+  npcFrozen?(npc: PatrolNpc): boolean;
+  /** 플레이어 외 '나로 계산되는 몸'(공범 동료, INT-12)에 대한 시선 배율. 0 = 없음 */
+  extraGaze?(): number;
 }
 
 export interface FloorOptions {
@@ -336,7 +340,9 @@ export class FloorSim {
       playerDisguised: this.playerStill,
     };
     const ended: PatrolNpc[] = [];
+    const frozen = (n: PatrolNpc) => this.hooks.npcFrozen?.(n) === true;
     for (const npc of this.npcs.slice()) {
+      if (frozen(npc)) continue;
       const before = npc.mode;
       const beforeKind = npc.tellKind;
       npc.step(dt, this.rng, ctx);
@@ -361,7 +367,7 @@ export class FloorSim {
     // 말걸기 전조 시작(반경 진입). 플레이어는 아직 조작 가능 — 전조 동안 피하거나 위장하면 취소된다
     for (const npc of this.npcs) {
       const talk = npc.def.talk;
-      if (!talk || !npc.canTalk() || p.mode === 'talked') continue;
+      if (!talk || !npc.canTalk() || p.mode === 'talked' || frozen(npc)) continue;
       if (this.hooks.talkAllowed && !this.hooks.talkAllowed(npc)) continue;
       if (talk.skipIfPlayerDisguised && this.playerStill) continue; // 위장 중인 플레이어에게는 말을 걸지 않음
       const dx = p.x - npc.x, dy = p.y - npc.y;
@@ -382,6 +388,7 @@ export class FloorSim {
       this.seeing[i] = sees;
       if (sees) mult = Math.max(mult, npc.gazeMultiplier);
     }
+    if (this.hooks.extraGaze) mult = Math.max(mult, this.hooks.extraGaze());
     const startedExposure = mult > 0 && this.gazeNow === 0;
     this.gazeNow = mult;
     if (startedExposure) this.checkCloseCallOnExposure();
@@ -410,11 +417,24 @@ export class FloorSim {
   }
 
   /** NPC가 지금 플레이어를 '의심 판정에 들어가게' 보고 있는가 */
-  npcSees(npc: PatrolNpc): boolean {
+  npcSees(npc: PatrolNpc, target: { x: number; y: number } = this.player.pos): boolean {
     if (!npc.coneActive || npc.ignoresPlayer) return false;
+    if (this.hooks.npcFrozen?.(npc)) return false;
     if (this.hooks.gazeAllowed && !this.hooks.gazeAllowed(npc)) return false;
     if (this.rules.offscreenSourceNoGain && this.camera && !this.camera.isOnScreen(npc.y)) return false;
-    return canSee(this.map, npc.pos, npc.facing, npc.cone, this.player.pos);
+    return canSee(this.map, npc.pos, npc.facing, npc.cone, target);
+  }
+
+  /** 이어하기(D-050): 상위 규칙이 판을 다시 진행 상태로 되돌림 */
+  revive(): void {
+    this.outcome = 'playing';
+    this.talkingNpc = null;
+    this.destination = null;
+    this.resumeDestination = null;
+    this.blockTimer = -1;
+    this.suspicion.exposedSec = 0;
+    this.gazeNow = 0;
+    this.seeing = this.npcs.map(() => false);
   }
 
   /** 화면 안 여부(카메라 없으면 항상 true) */
@@ -532,6 +552,7 @@ export class FloorSim {
   threatOfNpc(npc: PatrolNpc): Threat {
     const i = this.npcs.indexOf(npc);
     if (i >= 0 && this.seeing[i]) return 'seeing';
+    if (this.hooks.npcFrozen?.(npc)) return 'none';
     const pp = this.player.pos;
     const th = this.rules.threat;
     const wide = this.wideCone(npc);

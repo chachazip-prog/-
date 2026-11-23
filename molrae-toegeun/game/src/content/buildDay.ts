@@ -80,10 +80,14 @@ export function generateDay(tables: Tables, day: number): O {
   const t = rankProgress(day, [num(dr[0], 1), dr[1] === null ? null : num(dr[1], 1)]);
   const plan = createRng(`day-${day}-plan`);
   const leaveRng = createRng(`day-${day}-leave`);
-  const dayPhaseSec = num(rank['dayPhaseSec'], 50);
+  const ceoPlan = ceoForDay(tables, day, rank, t);
+  const ceoDay = ceoPlan.kind !== 'none';
+  const dayPhaseSec = num(rank['dayPhaseSec'], 50) - (ceoDay ? num(rank['ceoDayPhaseReductionSec'], 0) : 0);
   const half = t < 0.5 ? 0 : 1;
-  const count = num(arr(rank['missionsPerDay'])[half], 3);
-  const required = num(arr(rank['missionsRequired'])[half], 2);
+  // 대표님 날: 미션 −1, 필수 −1 (최소 2) — days.generator.missions
+  const count = Math.max(ceoDay ? 2 : 0, num(arr(rank['missionsPerDay'])[half], 3) - (ceoDay ? 1 : 0));
+  const required = Math.max(ceoDay ? 2 : 0, num(arr(rank['missionsRequired'])[half], 2) - (ceoDay ? 1 : 0));
+  const ceoAtSec = ceoDay ? Math.round(dayPhaseSec * ceoPlan.atFrac * 10) / 10 : -1;
   const pool = arr(rank['eventPool']).map(obj);
   const picked: string[] = [];
   const left = pool.slice();
@@ -117,8 +121,14 @@ export function generateDay(tables: Tables, day: number): O {
     dayInterrupts.push({ id, atSec: Math.round(lastAt * 10) / 10 });
   }
   for (const id of proximity) if (unlocked(id) && !dayInterrupts.some((d) => d['id'] === id) && id !== 'INT-02') dayInterrupts.push({ id, atSec: 0 });
+  // H7: 대표님 순시 ±25초 안의 본부장 순찰 금지, 순시 날 인사팀(INT-05·06) 없음. 충돌하면 그 방해를 뺀다(재배치는 하지 않음)
+  const H7_GAP_SEC = 25; // days.generator.dayInterrupts.constraints 문장의 값(데이터 필드 없음 → 스키마 v3 요청)
+  const dayInts = ceoDay
+    ? dayInterrupts.filter((d) => !['INT-05', 'INT-06'].includes(str(d['id'])) && !(d['id'] === 'INT-10' && Math.abs(num(d['atSec'], 0) - ceoAtSec) < H7_GAP_SEC))
+    : dayInterrupts;
   const li = obj(rank['leaveInterrupts']);
-  const lcount = leaveRng.int(num(arr(li['countRange'])[0], 0), num(arr(li['countRange'])[1], 0));
+  const lcount0 = leaveRng.int(num(arr(li['countRange'])[0], 0), num(arr(li['countRange'])[1], 0));
+  const lcount = ceoDay ? Math.min(2, lcount0) : lcount0; // 대표님 날 퇴근 방해 최대 2
   const lpool = arr(li['pool']).map(obj).filter((p) => unlocked(str(p['id'])));
   const leaveInterrupts: O[] = [{ id: 'INT-01' }];
   for (let i = 0; i < lcount && lpool.length > 0; i++) {
@@ -130,8 +140,33 @@ export function generateDay(tables: Tables, day: number): O {
   return {
     day, rankId: rank['id'], weekday: (day - 1) % 5, seed: `day-${day}`, mapId: 'office_floor_1',
     titleKey: 'day.generated.title', tutorialIds: [], dayPhaseSec, missions, missionsRequired: required,
-    castPatrols, dayInterrupts, leaveInterrupts, scripted: [], ceo: 'none', generated: true,
+    castPatrols, dayInterrupts: dayInts, leaveInterrupts, scripted: [], ceo: ceoPlan.kind, generated: true,
+    ...(ceoDay ? { ceoAtSec } : {}),
   };
+}
+
+/**
+ * 대표님 순시 여부(days.generator.ceo): 직급 cast에 ceo가 있고 firstDay 이후. 수요일(occurrence.scheduledWeekday) 정기,
+ * 그 외 날은 시드 스트림 day-{n}-boss로 randomChancePerDay 판정(같은 날 = 모든 플레이어 같은 결과, 출근 준비 화면에 예보 D-027).
+ * 예정 시각 비율은 같은 스트림에서 [0.4, 0.7] 균등 추첨.
+ */
+export function ceoForDay(tables: Tables, day: number, rank: O, t: number): { kind: 'none' | 'scheduled' | 'random'; atFrac: number } {
+  const none = { kind: 'none' as const, atFrac: 0 };
+  if (num(obj(obj(rank['cast'])['bosses'])['ceo'], 0) < 1) return none;
+  const ceoRaw = arr(obj(tables['bosses'])['bosses']).map(obj).find((b) => b['id'] === 'ceo');
+  if (!ceoRaw) return none;
+  const ceo = applyInterpScaling(ceoRaw, str(rank['id']), t);
+  const gen = obj(obj(tables['days'])['generator']);
+  const debut = num(obj(gen['ceo'])['debutDay'], num(ceo['firstDay'], 28));
+  if (day < debut) return none;
+  const occ = obj(ceo['occurrence']);
+  const rng = createRng(`day-${day}-boss`);
+  const forced = arr(gen['debuts']).map(obj).some((d) => d['day'] === day && d['bossId'] === 'ceo');
+  const weekday = (day - 1) % 5;
+  const roll = rng.next();
+  const atFrac = 0.4 + rng.next() * 0.3;
+  if (forced || weekday === num(occ['scheduledWeekday'], 2)) return { kind: 'scheduled', atFrac };
+  return roll < num(occ['randomChancePerDay'], 0) ? { kind: 'random', atFrac } : none;
 }
 
 /** 하루 콘텐츠 조립 */
@@ -198,6 +233,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   const strings = obj(obj(tables['strings.ko'])['strings']);
   const ambient = arr(plan['ambientOnly']).map((x) => str(x));
   const tellMin = num(obj(rules['tell'])['minSec'], 0.4);
+  const talkRules = obj(rules['talk']);
   const talkMin = num(obj(rules['talk'])['tellSecMin'], DEFAULTS.talkWarnSec);
 
   const actors: Record<string, ActorInfo> = {};
@@ -215,6 +251,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       ...(typeof talk['warnLineKey'] === 'string' ? { warnLineKey: talk['warnLineKey'] as string } : {}),
       ...(typeof talk['dodgedLineKey'] === 'string' ? { dodgedLineKey: talk['dodgedLineKey'] as string } : {}),
       ...(a['hierarchy'] ? { hierarchy: obj(a['hierarchy']) } : {}),
+      ...(typeof a['spriteKey'] === 'string' ? { spriteKey: a['spriteKey'] as string } : {}),
     };
   }
 
@@ -288,7 +325,13 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     if (seated && phoneOpp && !isAmbient && num(phoneOpp['probPerCycle'], 0) > 0) {
       d['phone'] = { probPerCycle: num(phoneOpp['probPerCycle'], 0), durationSecRange: range2(phoneOpp['durationSecRange']) ?? [3, 5] };
     }
-    if (talk) d['talk'] = talk;
+    if (talk) {
+      d['talk'] = talk;
+      // T-134 ④: 들어왔다 피하면 cornerTurnTellSec 전조 후 그 액터 lookSec 돌아보기
+      if (talkRules['dodgeAfterEnterLooksAtPlayer'] === true) d['escapeLookTellSec'] = num(sight['cornerTurnTellSec'], tellMin);
+    }
+    // 대표님 재확인(fake.type 'recheck')은 '전조 후 헛기침'이 아니라 웨이포인트 lookChance로 표현된 진짜 시선이다 → 페이크로 쓰지 않음
+    if (obj(sim['fake'])['type'] === 'recheck') delete d['fake'];
     return d as unknown as NpcDef;
   };
   const patrols: Record<string, NpcDef> = {};
@@ -394,6 +437,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       beepAttractsGuardLook: gate['beepAttractsGuardLook'] === true,
       firstTryWindowScale: gateScript ? num(gateScript['scale'], 1) : 1,
       firstTryAttempts: gateScript ? num(gateScript['attempts'], 1) : 0,
+      windowCenter: num(gate['windowCenter'], 0.5),
     },
     exitSpot: spots[str(obj(leaveEv['location'])['spot'], 'elevator_main_use')]?.tile ?? { x: 5, y: 2 },
     elevatorWaitSecRange: range2(elevPh['waitSecRange']) ?? [1.5, 3],

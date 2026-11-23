@@ -1,6 +1,6 @@
 /**
  * 액터 → 스프라이트 키 매핑(표시 전용). 아트 출력(game/assets/sprites/anims.json)의 캐릭터 키와 데이터 액터 id를 잇는다.
- * [데이터 요청] bosses/npcs.json에 spriteKey 필드가 생기면 그 값을 우선 사용(현재 스키마에 없음 → 이 표로 대체)
+ * 데이터 bosses/npcs.json spriteKey(T-134)를 먼저 쓰고, 없을 때만 이 표로 대체한다
  */
 export const ATLAS_KEY = 'sprites';
 
@@ -16,8 +16,8 @@ const ACTOR_SPRITE: Readonly<Record<string, string>> = {
 };
 
 /** 배경 동료(actorId 'background:<id>')는 BackgroundDef.sprite를 따로 넘긴다 */
-export function spriteKeyFor(actorId: string | undefined): string {
-  return (actorId && ACTOR_SPRITE[actorId]) || 'guard';
+export function spriteKeyFor(actorId: string | undefined, dataKey?: string): string {
+  return dataKey || (actorId && ACTOR_SPRITE[actorId]) || 'guard';
 }
 
 export type Facing4 = 'down' | 'up' | 'left' | 'right';

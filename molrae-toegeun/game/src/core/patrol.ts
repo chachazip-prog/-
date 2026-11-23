@@ -171,6 +171,11 @@ export interface NpcDef {
   readonly thenPatrol?: string;
   /** 플레이어 길막 판정에서 제외(배경 동료 blocksPlayer:false) */
   readonly passable?: boolean;
+  /**
+   * 말걸기 전조 중 반경에 들어왔다가 피해 나갔을 때 돌아보기 전 전조(T-134 ④ rules.talk.dodgeAfterEnterLooksAtPlayer,
+   * 길이 = rules.sight.cornerTurnTellSec). 없으면 전조 없이 바로 돌아봄(T-127 동작)
+   */
+  readonly escapeLookTellSec?: number;
 }
 
 export type NpcMode = 'spawn' | 'walk' | 'wait' | 'tell' | 'look' | 'return' | 'fake' | 'talk' | 'phone' | 'hold' | 'done';
@@ -505,13 +510,52 @@ export class PatrolNpc {
       this.setMode(this.talkResume);
       return;
     }
-    // 피해 나감(D-054): 전조로 예고한 방향을 돌아본다(전조 → look, 공정)
+    // 피해 나감(D-054): 플레이어 쪽을 돌아본다. T-134 ④: 정상 시선이므로 고개 먼저 + 점선 콘 전조(escapeLookTellSec) 뒤 look(lookSec)
     this.lastTalkCancel = 'escaped';
+    const toward = normAngle(Math.atan2(dy, dx));
+    this.lookHold = this.def.lookSec;
+    if (this.def.escapeLookTellSec !== undefined && this.def.escapeLookTellSec > 0) {
+      this.pendingFacing = toward;
+      this.tellKind = 'look';
+      this.tellIsFake = false;
+      this.escapeLookPending = true;
+      this.timer = this.def.escapeLookTellSec;
+      this.resume = this.talkResume;
+      this.setMode('tell');
+      return;
+    }
     this.curLookKind = 'cancel';
-    this.facing = normAngle(Math.atan2(dy, dx));
+    this.facing = toward;
     this.timer = this.lookHold;
     this.returnFacing = this.def.seated ? this.talkPrevFacing : null;
     this.setMode('look');
+  }
+
+  private escapeLookPending = false;
+
+  /**
+   * 진행 중인 전조·돌아보기를 끊고 원래 상태로(대표님 얼음 해제·위계 연쇄 복귀 H2). 다음 시선은 반드시 전조부터 시작한다.
+   * 앉은 사람은 새 대기 주기, 걷는 사람은 걷기·대기로 재개.
+   */
+  interruptLook(rng: Rng): void {
+    if (!(this.mode === 'tell' || this.mode === 'look' || this.mode === 'fake' || this.mode === 'return' || this.mode === 'talk')) return;
+    this.pendingFacing = null;
+    this.tellKind = null;
+    this.coneRangeOverride = null;
+    this.gazeScaleOverride = null;
+    this.pendingSecond = null;
+    this.inSecondLook = false;
+    this.escapeLookPending = false;
+    if (this.returnFacing !== null) { this.facing = this.returnFacing; this.returnFacing = null; }
+    if (this.mode === 'talk') this.facing = this.talkPrevFacing;
+    if (this.def.seated) { this.arrive(this.wpIndex, rng, null); return; }
+    this.resumeAfter(rng, ALWAYS_TELL);
+  }
+
+  /** 앉은 사람이 다음 전조를 시작하기까지 남은 대기(초). 모르면 null (공범 망보기 헛기침, INT-12) */
+  get upcomingTellSec(): number | null {
+    if (this.mode === 'wait' && this.def.seated && this.seatLookPending && Number.isFinite(this.waitLeft)) return this.waitLeft;
+    return null;
   }
 
   /** 맞장구로 대화 길이를 줄였을 때 NPC 쪽 타이머 동기화 */
@@ -543,12 +587,15 @@ export class PatrolNpc {
             return;
           }
           const wasLook = this.tellKind === 'look';
-          this.curLookKind = wasLook ? 'look' : 'turn';
+          this.curLookKind = this.escapeLookPending ? 'cancel' : wasLook ? 'look' : 'turn';
+          const wasEscape = this.escapeLookPending;
+          this.escapeLookPending = false;
           this.facing = this.pendingFacing ?? this.facing;
           this.pendingFacing = null;
           this.tellKind = null;
           this.timer = this.lookHold;
-          if (wasLook && this.def.seated) this.returnFacing = DIR_ANGLE[this.def.waypoints[this.wpIndex]?.facing ?? 'up'];
+          if (wasEscape) this.returnFacing = this.def.seated ? this.talkPrevFacing : null;
+          else if (wasLook && this.def.seated) this.returnFacing = DIR_ANGLE[this.def.waypoints[this.wpIndex]?.facing ?? 'up'];
           this.setMode('look');
         }
         return;

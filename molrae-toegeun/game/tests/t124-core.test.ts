@@ -70,15 +70,22 @@ section('1. 결정성');
 
   // advance() 분할: 같은 총 시간을 다른 dt로 쪼갰을 때 스텝 수와 상태
   const N = 3600; // 60초
-  const ref = new FloorSim(PROTO_FLOOR, 'day-1'); ref.tap(5, 1);
+  // T-131: 판이 60초 안에 끝나면(탈출·적발) 스텝이 멈춰 분할 비교가 무의미하다(T-127 이후 1266스텝에서 탈출).
+  // 출구 없음 + 시선 배율 0 층으로 바꿔 판이 끝나지 않는 조건에서 dt 분할만 검증한다(NPC 이동·RNG는 그대로).
+  const NOEND: FloorContent = {
+    level: { ...PROTO_FLOOR.level, exitZone: 'none', npcs: PROTO_FLOOR.level.npcs.map((n) => ({ ...n, gazeMultiplier: 0 })) },
+    rules: RULES,
+  };
+  const ref = new FloorSim(NOEND, 'day-1'); ref.tap(5, 1);
   for (let i = 0; i < N; i++) ref.step();
   const refFp = ref.fingerprint();
+  check('advance 분할 기준판: 60초 동안 판이 끝나지 않음', ref.outcome === 'playing' && ref.steps === N, `outcome=${ref.outcome} steps=${ref.steps}`);
   const patterns: Record<string, (i: number, r: ReturnType<typeof createRng>) => number> = {
     '1/60': () => 1 / 60, '1/30': () => 1 / 30, '0.05': () => 0.05, '0.1(max)': () => 0.1, '1/120': () => 1 / 120,
     '1/144': () => 1 / 144, '1/90': () => 1 / 90, '0.033': () => 0.033, '무작위 0.001~0.1': (_i, r) => r.range(0.001, 0.1),
   };
   for (const [name, gen] of Object.entries(patterns)) {
-    const s = new FloorSim(PROTO_FLOOR, 'day-1'); s.tap(5, 1);
+    const s = new FloorSim(NOEND, 'day-1'); s.tap(5, 1);
     const r = createRng(`dt-${name}`);
     let total = 0, calls = 0;
     // 총 60초를 채울 때까지 advance (마지막 호출은 잔여 시간)
@@ -88,7 +95,7 @@ section('1. 결정성');
     }
     const stepsOk = s.steps === N;
     // 스텝 수가 다르면 같은 스텝 수까지 맞춘 뒤 상태 비교
-    const s2 = new FloorSim(PROTO_FLOOR, 'day-1'); s2.tap(5, 1);
+    const s2 = new FloorSim(NOEND, 'day-1'); s2.tap(5, 1);
     for (let i = 0; i < s.steps; i++) s2.step();
     const stateOk = s2.fingerprint() === s.fingerprint();
     check(`advance dt=${name}: 총 60초 → 스텝 ${N}개`, stepsOk, `실제 ${s.steps}스텝 (${calls}회 호출)`);
@@ -137,7 +144,7 @@ section('2. 입력 의미');
 
   // 벽 탭 보정(반경 2): 프로토 층의 모든 비통행 타일(+맵 밖 1칸)
   const map = new FloorSim(PROTO_FLOOR, 'x').map;
-  let total = 0, ok = 0, moving = 0, unreach = 0;
+  let total = 0, ok = 0, moving = 0, unreach = 0, here = 0;
   const bad: string[] = [];
   for (let y = -1; y <= map.height; y++) {
     for (let x = -1; x <= map.width; x++) {
@@ -156,15 +163,19 @@ section('2. 입력 의미');
       const res = s.tap(x, y);
       const dest = s.destination;
       let good: boolean;
+      const st0 = PROTO_FLOOR.level.playerStart;
+      const selfBest = bestD !== Infinity && Math.abs(st0.x - x) + Math.abs(st0.y - y) === bestD && (st0.x - x) ** 2 + (st0.y - y) ** 2 === bestE;
       if (bestD === Infinity) good = res === 'unreachable';
+      // T-127(BUG-004 수정): 보정 결과가 지금 서 있는 타일이면 'here'
+      else if (selfBest && res === 'here') good = true;
       else good = res === 'moving' && !!dest && Math.abs(dest.x - x) + Math.abs(dest.y - y) === bestD
         && (dest.x - x) ** 2 + (dest.y - y) ** 2 === bestE;
-      if (res === 'moving') moving++; else if (res === 'unreachable') unreach++;
+      if (res === 'moving') moving++; else if (res === 'unreachable') unreach++; else if (res === 'here') here++;
       if (good) ok++; else if (bad.length < 5) bad.push(`(${x},${y}) res=${res} dest=${JSON.stringify(dest)} 기대거리=${bestD}`);
     }
   }
   check('벽·엄폐물·맵 밖 탭 → 반경 2 안 최근접 통행 타일로 보정, 없으면 unreachable', ok === total,
-    `${ok}/${total} (moving ${moving}, unreachable ${unreach}) ${bad.join('; ')}`);
+    `${ok}/${total} (moving ${moving}, here ${here}, unreachable ${unreach}) ${bad.join('; ')}`);
   // 반경 3 이상 떨어진 탭
   check('반경 밖(맵에서 3칸 이상) 탭 → unreachable', new FloorSim(PROTO_FLOOR, 'x').tap(-3, 30) === 'unreachable');
   // 분리 구역

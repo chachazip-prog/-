@@ -1,0 +1,162 @@
+{
+ "_doc": "T-135 견본(176x256, 11x16칸). maps.json 실제 행을 game/src/render/tilemap.ts 규칙대로 옮김: 위 8행 = 0~7행(로비: 메인 엘리베이터 E(1행) + 앞 출구 매트 e(2행) + 게이트), 아래 8행 = 21~28행(회의실: x=6 세로 유리벽 + 유리문(25행), 32x32 회의 테이블, 화장실 칸 영역은 바닥만). 레벨 원본이 아니라 견본(art/tools 밖 보조 스크립트로 만든 뒤 원본으로 고정)",
+ "name": "t135-sample",
+ "preview": "t135-scene",
+ "size": [
+  176,
+  256
+ ],
+ "tile": [
+  16,
+  16
+ ],
+ "offset": [
+  0,
+  0
+ ],
+ "bg": "floor",
+ "depth_sort": true,
+ "tiles": {
+  "A": "tile/wall_cap",
+  "B": "tile/wall_cap_l",
+  "C": "tile/floor_lobby",
+  "D": "tile/elev_l",
+  "E": "tile/elev_m",
+  "F": "tile/elev_r",
+  "G": "tile/wall_cap_r",
+  "H": "tile/floor_exit",
+  "I": "tile/wall_face",
+  "J": "tile/wall_window",
+  "K": "tile/floor_b",
+  "L": "tile/floor",
+  "N": "tile/wall_cap_v",
+  "O": "tile/wall_clock",
+  "P": "tile/floor_rest",
+  "Q": "tile/floor_meet",
+  " ": null
+ },
+ "layers": [
+  [
+   "AAAAAAAAAAA",
+   "BCCCDEFCCCG",
+   "BCCCHHHCCCG",
+   "BCCCCCCCCCG",
+   "BIJIKLLIIIG",
+   "BCCCCCCCCCG",
+   "BCCCCCCCCCG",
+   "BJIILLLIIJG",
+   "BKLLLLKLLLG",
+   "BOIIALIJLIG",
+   "BPPPILLQQQG",
+   "BPPPKLLQQQG",
+   "BPPPNKLQQQG",
+   "BPPPNLKQQQG",
+   "BIIJILOILIG",
+   "BLLKLLLLKLG"
+  ]
+ ],
+ "objects": [
+  {
+   "sprite": "tall/plant",
+   "tx": 1,
+   "ty": 1
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 9,
+   "ty": 1
+  },
+  {
+   "sprite": "bg_b/stand_phone_left_1",
+   "tx": 2,
+   "ty": 2,
+   "shadow": true
+  },
+  {
+   "sprite": "player/walk_up_0",
+   "tx": 5,
+   "ty": 3,
+   "shadow": true
+  },
+  {
+   "sprite": "bg_b/stand_phone_left_0",
+   "tx": 9,
+   "ty": 3,
+   "shadow": true
+  },
+  {
+   "sprite": "furn/gate_l",
+   "tx": 4,
+   "ty": 4
+  },
+  {
+   "sprite": "furn/gate_r",
+   "tx": 5,
+   "ty": 4
+  },
+  {
+   "sprite": "furn/gate_l",
+   "tx": 6,
+   "ty": 4
+  },
+  {
+   "sprite": "booth/guard",
+   "tx": 1,
+   "ty": 5,
+   "dx": 8
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 1,
+   "ty": 6
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 9,
+   "ty": 6
+  },
+  {
+   "sprite": "tall/glass_v_top",
+   "tx": 6,
+   "ty": 10
+  },
+  {
+   "sprite": "senior/idle_left",
+   "tx": 9,
+   "ty": 10,
+   "shadow": true
+  },
+  {
+   "sprite": "tall/glass_v_mid",
+   "tx": 6,
+   "ty": 11
+  },
+  {
+   "sprite": "tall/glass_v_door",
+   "tx": 6,
+   "ty": 12
+  },
+  {
+   "sprite": "big32/meet_table",
+   "tx": 8,
+   "ty": 12,
+   "dx": -8
+  },
+  {
+   "sprite": "tall/glass_v_bot",
+   "tx": 6,
+   "ty": 13
+  },
+  {
+   "sprite": "bg_a/sit_stretch_1",
+   "tx": 7,
+   "ty": 13,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 7,
+   "ty": 13
+  }
+ ]
+}

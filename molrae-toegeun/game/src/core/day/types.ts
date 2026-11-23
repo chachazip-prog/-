@@ -43,6 +43,8 @@ export interface GateDef {
   /** 처음 N번 시도의 창 배율(1일차 튜토리얼) */
   readonly firstTryWindowScale: number;
   readonly firstTryAttempts: number;
+  /** 판정 창 중심(T-134 ③, 기본 0.5) */
+  readonly windowCenter?: number;
 }
 
 export interface LeaveDef {
@@ -89,6 +91,8 @@ export interface ActorInfo {
   readonly warnLineKey?: string;
   readonly dodgedLineKey?: string;
   readonly hierarchy?: Readonly<Record<string, unknown>>;
+  /** 아트 캐릭터 키(bosses/npcs.json spriteKey, T-134) */
+  readonly spriteKey?: string;
 }
 
 /** 배경 동료(D-049). 메카닉 없음(시선·말걸기 없음), 표시 전용 */
@@ -251,6 +255,8 @@ export interface DayContent {
   readonly routes?: readonly RouteDef[];
   /** 출근 준비 화면 표시용 */
   readonly prep?: { readonly ceoPassAvailable: boolean };
+  /** 플레이어 아트 키(rules.characters.playerSpriteKey, T-134) */
+  readonly playerSpriteKey?: string;
   /** 이어하기(rules.continueAd) */
   readonly continueAd?: { readonly resumeSuspicion: number; readonly submitScoreToLeaderboard: boolean };
 }

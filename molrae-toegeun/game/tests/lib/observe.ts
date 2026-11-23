@@ -5,7 +5,18 @@
  *  - look 진입마다 직전 tell 길이를 기록한다.
  * 제품 코드(src/)는 읽기만 한다.
  */
-import { FloorSim, canSee, angleDiff, type NpcMode } from '../../src/core';
+import { FloorSim, canSee, angleDiff, type NpcMode, type NpcDef, type PatrolNpc } from '../../src/core';
+
+/** 전조 종류별 최소 허용 길이(T-131). 범위 추첨(tellSecRange)은 최소값, 정지 둘러보기·모퉁이·두 번째 보기 값도 후보.
+ *  어떤 경우든 rules.tell.minSec 0.4 아래로는 내려가지 않는다(말걸기는 0.5). */
+export function requiredTellSec(def: NpcDef, kind: PatrolNpc['tellKind']): number {
+  if (kind === 'turn') return Math.max(0.4, def.turnTellSec ?? def.tellSec);
+  if (kind === 'talk') return 0.5;
+  const c: number[] = [def.tellSecRange ? def.tellSecRange[0] : def.tellSec];
+  if (def.stopLookTellSec !== undefined) c.push(def.stopLookTellSec);
+  if (def.doubleLook?.secondTellSec !== undefined) c.push(def.doubleLook.secondTellSec);
+  return Math.max(0.4, Math.min(...c));
+}
 
 /** 시선 시작 원인
  *  - tellLook: 전조(tell) → look으로 돌아본 순간 (공정)
@@ -26,7 +37,7 @@ export interface Onset { t: number; npc: string; cause: OnsetCause; }
 export interface UntoldTurn { t: number; npc: string; kind: 'corner' | 'resume' | 'talkEnd' | 'talkStart'; seesPlayer: boolean; deltaDeg: number; }
 export interface LookStart { t: number; npc: string; tellSec: number; required: number; }
 
-interface NpcSnap { x: number; y: number; facing: number; mode: NpcMode; walkFrom: NpcMode | 'init'; walkSteps: number; tellStart: number; }
+interface NpcSnap { x: number; y: number; facing: number; mode: NpcMode; walkFrom: NpcMode | 'init'; walkSteps: number; tellStart: number; tellKind: PatrolNpc['tellKind']; }
 
 export class Observer {
   readonly onsets: Onset[] = [];
@@ -37,7 +48,7 @@ export class Observer {
   private snaps: NpcSnap[];
 
   constructor(readonly sim: FloorSim) {
-    this.snaps = sim.npcs.map((n) => ({ x: n.x, y: n.y, facing: n.facing, mode: n.mode, walkFrom: 'init', walkSteps: 0, tellStart: n.mode === 'tell' ? 0 : -1 }));
+    this.snaps = sim.npcs.map((n) => ({ x: n.x, y: n.y, facing: n.facing, mode: n.mode, walkFrom: 'init', walkSteps: 0, tellStart: n.mode === 'tell' ? 0 : -1, tellKind: n.tellKind }));
     this.episodeCause = sim.npcs.map(() => null);
   }
 
@@ -52,9 +63,9 @@ export class Observer {
       const s = this.snaps[i]!;
       const turned = angleDiff(n.facing, s.facing) > 1e-6;
       // tell 시작 시각 / look 진입 기록
-      if (n.mode === 'tell' && s.mode !== 'tell') s.tellStart = sim.time;
+      if (n.mode === 'tell' && s.mode !== 'tell') { s.tellStart = sim.time; s.tellKind = n.tellKind; }
       if (n.mode === 'look' && s.mode === 'tell') {
-        this.looks.push({ t: sim.time, npc: n.def.id, tellSec: sim.time - s.tellStart, required: n.def.tellSec });
+        this.looks.push({ t: sim.time, npc: n.def.id, tellSec: sim.time - s.tellStart, required: requiredTellSec(n.def, s.tellKind) });
       }
       // 걷기 진입 출처
       if (n.mode === 'walk' && s.mode !== 'walk') { s.walkFrom = s.mode; s.walkSteps = 0; }

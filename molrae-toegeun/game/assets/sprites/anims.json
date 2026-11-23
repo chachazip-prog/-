@@ -469,6 +469,50 @@
   },
   {
    "delay": 0,
+   "frameRate": 4,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_a/sit_stretch_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/sit_stretch_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/sit_stretch_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/sit_stretch_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/sit_stretch_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_a/sit_type_0",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_a/sit_stretch",
+   "repeat": 0,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
    "frameRate": 1,
    "frames": [
     {
@@ -715,6 +759,94 @@
    ],
    "hideOnComplete": false,
    "key": "bg_b/sit_idle",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_right_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_right_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/stand_phone_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_left_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_b/stand_phone_left_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_b/stand_phone_left",
    "repeat": -1,
    "repeatDelay": 0,
    "showOnStart": false,

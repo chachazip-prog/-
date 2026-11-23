@@ -138,6 +138,14 @@ export class PlayerMover {
     return ok;
   }
 
+  /** 순간 이동(이어하기 체크포인트, D-050). 모든 경로를 버리고 idle */
+  teleport(t: Tile): void {
+    const c = tileCenter(t);
+    this.x = c.x; this.y = c.y;
+    this.path = []; this.pathIndex = 0; this.savedPath = []; this.savedIndex = 0; this.pauseLeft = 0; this.talkLeft = 0;
+    this.setMode('idle');
+  }
+
   /** 강제 이동 정지(미션 시작·결과 등). 경로·보관 경로 모두 버리고 idle */
   halt(): void {
     this.path = []; this.pathIndex = 0; this.savedPath = []; this.savedIndex = 0; this.pauseLeft = 0;

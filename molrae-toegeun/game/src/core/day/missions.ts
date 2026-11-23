@@ -14,6 +14,8 @@ export interface ActivityCtx {
   readonly seen: boolean;
   /** 행동 시작 후 경과(초) */
   readonly elapsed: number;
+  /** 이번 탭을 누르고 있던 시간(초). 모르면 없음(= 짧은 탭) — 간식 길게 누름 판정 */
+  readonly pressSec?: number;
 }
 
 /** 행동이 상위(DaySim)에 요청하는 부수효과 */
@@ -66,11 +68,13 @@ class PourActivity implements Activity {
   private readonly band: readonly [number, number];
   private readonly overflow: number;
   private readonly cupsRequired: number;
+  private readonly tapAboveBand: string;
   constructor(p: Readonly<Record<string, unknown>>) {
     this.rate = num(p, 'pourRatePerSec', 0.45);
     this.band = range(p, 'targetBand', [0.75, 0.92]);
     this.overflow = num(p, 'overflowAt', 1);
     this.cupsRequired = Math.max(1, Math.round(num(p, 'cupsRequired', 1)));
+    this.tapAboveBand = typeof p['tapAboveBand'] === 'string' ? p['tapAboveBand'] as string : 'fail';
   }
   tick(dt: number, _c: ActivityCtx, fx: ActivityEffects): ActivityStatus {
     if (this.paused) return 'running';
@@ -92,7 +96,8 @@ class PourActivity implements Activity {
       this.level = 0;
       return 'running';
     }
-    // 띠 위(넘치기 직전)에서 멈춤 = 흘림으로 처리 [추측: 기획 문서에 띠 위 탭 규칙 없음]
+    // 띠 위(넘치기 직전)에서 멈춤 = 흘림(T-134 ①, events.coffee.params.tapAboveBand: "fail"). 'fail'이 아니면 성공으로 침
+    if (this.tapAboveBand !== 'fail') { this.cups++; if (this.cups >= this.cupsRequired) return 'success'; this.level = 0; return 'running'; }
     fx.event = 'coffeeOverflow';
     return 'fail';
   }
@@ -196,7 +201,7 @@ class ShopActivity implements Activity {
   private readonly checkoutSec: number;
   constructor(p: Readonly<Record<string, unknown>>) {
     this.fill = num(p, 'cartFillPerSec', 0.3);
-    // [추측] itemsRequired = 결제 전에 채울 상품 수(GDD 본문은 2개 + 결제, 데이터는 3)
+    // itemsRequired = 결제 전에 채울 장바구니 상품 수(T-134 ② 확정, 결제는 별도 단계)
     this.itemsRequired = Math.max(1, Math.round(num(p, 'itemsRequired', 2)));
     this.checkoutSec = num(p, 'checkoutHoldSec', 0.8);
   }
@@ -239,7 +244,9 @@ class SnackActivity implements Activity {
   private readonly gazeSusp: number;
   private readonly activeSec: number;
   private readonly perfectPts: number;
+  private readonly maxPress: number;
   constructor(p: Readonly<Record<string, unknown>>, biteMul: number) {
+    this.maxPress = num(p, 'maxPressSec', Infinity);
     this.required = Math.max(1, Math.round(num(p, 'bitesRequired', 6) * biteMul));
     this.minInterval = num(p, 'minIntervalSec', 0.55);
     this.perfect = range(p, 'perfectWindowSec', [0.55, 1.1]);
@@ -261,7 +268,9 @@ class SnackActivity implements Activity {
     this.bites++;
     this.activeLeft = this.activeSec;
     this.posture = 'activity';
-    if (gap < this.minInterval) {
+    // '바스락!!' = 너무 빠른 입 또는 너무 길게 누름(maxPressSec, GDD §11 간식)
+    const longPress = ctx.pressSec !== undefined && ctx.pressSec > this.maxPress;
+    if (gap < this.minInterval || longPress) {
       fx.suspicion += this.noiseSusp;
       fx.noise = { radius: this.noiseRadius, idleTo: this.noiseIdleTo };
       fx.toastKey = 'event.snack.noise';
