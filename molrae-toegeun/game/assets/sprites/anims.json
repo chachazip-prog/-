@@ -3274,6 +3274,141 @@
    "skipMissedFrames": true,
    "type": "frame",
    "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "teamlead/sit_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "teamlead/sit_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 4,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "teamlead/rise_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "teamlead/rise_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "teamlead/rise_up_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "teamlead/rise_up",
+   "repeat": 0,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "teamlead/sit_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "teamlead/sit_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 4,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "teamlead/rise_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "teamlead/rise_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "teamlead/rise_down_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "teamlead/rise_down",
+   "repeat": 0,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 3,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "teamlead/wait_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "teamlead/wait_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "teamlead/wait_up_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "teamlead/wait_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "teamlead/wait_up_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "teamlead/wait_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
   }
  ]
 }

@@ -1,0 +1,351 @@
+{
+ "name": "phalf",
+ "group": "furniture",
+ "size": [
+  16,
+  16
+ ],
+ "note": "T-143 반높이 칸막이(시선 통과). 키 접미사 = 이웃 칸막이 연결(n,e,s,w 순서, 없으면 o). 하늘색 천, 앞면 8px",
+ "frames": [
+  {
+   "name": "o",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "..OOOOOOOOOOOO..",
+    "..OLLLLLLLLLLO..",
+    "..OMMMMMMMMMMO..",
+    "..OOOOOOOOOOOO..",
+    "..OcCCCCCCCcCO..",
+    "..OCCCCCCCCCCO..",
+    "..OCCCCcCCCCCO..",
+    "..OCCCCCCCCCCO..",
+    "..OccccccccccO..",
+    "..OMMMMMMMMMMO..",
+    "..OOOOOOOOOOOO.."
+   ]
+  },
+  {
+   "name": "n",
+   "rows": [
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OOOO......",
+    "......OCCO......",
+    "......OCCO......",
+    "......OcCO......",
+    "......OCCO......",
+    "......OccO......",
+    "......OMMO......",
+    "......OOOO......"
+   ]
+  },
+  {
+   "name": "e",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "..OOOOOOOOOOOOOO",
+    "..OLLLLLLLLLLLLL",
+    "..OMMMMMMMMMMMMM",
+    "..OOOOOOOOOOOOOO",
+    "..OcCCCCCCCcCCCC",
+    "..OCCCCCCCCCCCCC",
+    "..OCCCCcCCCCCCCC",
+    "..OCCCCCCCCCCCCC",
+    "..Occccccccccccc",
+    "..OMMMMMMMMMMMMM",
+    "..OOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "s",
+   "rows": [
+    "......OOOO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......"
+   ]
+  },
+  {
+   "name": "w",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "OOOOOOOOOOOOOO..",
+    "LLLLLLLLLLLLLO..",
+    "MMMMMMMMMMMMMO..",
+    "OOOOOOOOOOOOOO..",
+    "CCCcCCCCCCCcCO..",
+    "CCCCCCCCCCCCCO..",
+    "CCCCCCCcCCCCCO..",
+    "CCCCCCCCCCCCCO..",
+    "cccccccccccccO..",
+    "MMMMMMMMMMMMMO..",
+    "OOOOOOOOOOOOOO.."
+   ]
+  },
+  {
+   "name": "ne",
+   "rows": [
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMOOOOOOO",
+    "......OLMLLLLLLL",
+    "......OLMMMMMMMM",
+    "......OOOOOOOOOO",
+    "......OCCCCcCCCC",
+    "......OCCCCCCCCC",
+    "......OcCCCCCCCC",
+    "......OCCCCCCCCC",
+    "......Occccccccc",
+    "......OMMMMMMMMM",
+    "......OOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "ns",
+   "rows": [
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......"
+   ]
+  },
+  {
+   "name": "nw",
+   "rows": [
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "OOOOOOOLMO......",
+    "LLLLLLLLMO......",
+    "MMMMMMMLMO......",
+    "OOOOOOOOOO......",
+    "CCCcCCCCCO......",
+    "CCCCCCCCCO......",
+    "CCCCCCCcCO......",
+    "CCCCCCCCCO......",
+    "cccccccccO......",
+    "MMMMMMMMMO......",
+    "OOOOOOOOOO......"
+   ]
+  },
+  {
+   "name": "es",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "......OOOOOOOOOO",
+    "......OLMLLLLLLL",
+    "......OLMMMMMMMM",
+    "......OLMOOOOOOO",
+    "......OLMOCcCCCC",
+    "......OLMOCCCCCC",
+    "......OLMOCCCCCC",
+    "......OLMOCCCCCC",
+    "......OLMOcccccc",
+    "......OLMOMMMMMM",
+    "......OLMOOOOOOO"
+   ]
+  },
+  {
+   "name": "ew",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "OOOOOOOOOOOOOOOO",
+    "LLLLLLLLLLLLLLLL",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO",
+    "CCCcCCCCCCCcCCCC",
+    "CCCCCCCCCCCCCCCC",
+    "CCCCCCCcCCCCCCCC",
+    "CCCCCCCCCCCCCCCC",
+    "cccccccccccccccc",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "sw",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "OOOOOOOOOO......",
+    "LLLLLLLLMO......",
+    "MMMMMMMLMO......",
+    "OOOOOOOLMO......",
+    "CCCcCCOLMO......",
+    "CCCCCCOLMO......",
+    "CCCCCCOLMO......",
+    "CCCCCCOLMO......",
+    "ccccccOLMO......",
+    "MMMMMMOLMO......",
+    "OOOOOOOLMO......"
+   ]
+  },
+  {
+   "name": "nes",
+   "rows": [
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMOOOOOOO",
+    "......OLMLLLLLLL",
+    "......OLMMMMMMMM",
+    "......OLMOOOOOOO",
+    "......OLMOCcCCCC",
+    "......OLMOCCCCCC",
+    "......OLMOCCCCCC",
+    "......OLMOCCCCCC",
+    "......OLMOcccccc",
+    "......OLMOMMMMMM",
+    "......OLMOOOOOOO"
+   ]
+  },
+  {
+   "name": "new",
+   "rows": [
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "OOOOOOOLMOOOOOOO",
+    "LLLLLLLLMLLLLLLL",
+    "MMMMMMMLMMMMMMMM",
+    "OOOOOOOOOOOOOOOO",
+    "CCCcCCCCCCCcCCCC",
+    "CCCCCCCCCCCCCCCC",
+    "CCCCCCCcCCCCCCCC",
+    "CCCCCCCCCCCCCCCC",
+    "cccccccccccccccc",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "nsw",
+   "rows": [
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "OOOOOOOLMO......",
+    "LLLLLLLLMO......",
+    "MMMMMMMLMO......",
+    "OOOOOOOLMO......",
+    "CCCcCCOLMO......",
+    "CCCCCCOLMO......",
+    "CCCCCCOLMO......",
+    "CCCCCCOLMO......",
+    "ccccccOLMO......",
+    "MMMMMMOLMO......",
+    "OOOOOOOLMO......"
+   ]
+  },
+  {
+   "name": "esw",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "OOOOOOOOOOOOOOOO",
+    "LLLLLLLLMLLLLLLL",
+    "MMMMMMMLMMMMMMMM",
+    "OOOOOOOLMOOOOOOO",
+    "CCCcCCOLMOCcCCCC",
+    "CCCCCCOLMOCCCCCC",
+    "CCCCCCOLMOCCCCCC",
+    "CCCCCCOLMOCCCCCC",
+    "ccccccOLMOcccccc",
+    "MMMMMMOLMOMMMMMM",
+    "OOOOOOOLMOOOOOOO"
+   ]
+  },
+  {
+   "name": "nesw",
+   "rows": [
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "......OLMO......",
+    "OOOOOOOLMOOOOOOO",
+    "LLLLLLLLMLLLLLLL",
+    "MMMMMMMLMMMMMMMM",
+    "OOOOOOOLMOOOOOOO",
+    "CCCcCCOLMOCcCCCC",
+    "CCCCCCOLMOCCCCCC",
+    "CCCCCCOLMOCCCCCC",
+    "CCCCCCOLMOCCCCCC",
+    "ccccccOLMOcccccc",
+    "MMMMMMOLMOMMMMMM",
+    "OOOOOOOLMOOOOOOO"
+   ]
+  }
+ ],
+ "origin": [
+  0.5,
+  1
+ ]
+}

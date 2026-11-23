@@ -581,7 +581,8 @@ export class GameScene extends Phaser.Scene {
         if (!this.sayLeft.has(npc)) setPixelText(v.bubble, str.t(actor?.warnLineKey ?? 'talk.warn_default', { name: str.t('ui.player_default_name') }));
       } else if (seeing) {
         v.mark.anims.stop(); v.mark.setFrame('ui/alert').setVisible(true).setPosition(sx, headY);
-      } else if (npc.mode === 'tell' && npc.def.gazeMultiplier > 0) {
+      } else if ((npc.mode === 'tell' || (npc.mode === 'wait' && npc.stopId === 'stop_tour_stand')) && npc.def.gazeMultiplier > 0) {
+        // 팀장 순회 '일어나기 전조'(D-075, T-144)도 돌아보기 전조와 같은 '!' 깜빡임 [임시 표시 — 아트 전용 프레임 생기면 교체]
         v.mark.anims.stop(); v.mark.setFrame('ui/suspect').setVisible(blink).setPosition(sx, headY);
       } else if (npc.mode === 'talk' || npc.mode === 'phone') {
         v.mark.anims.stop(); v.mark.setFrame(npc.mode === 'phone' ? 'hud/hey' : 'hud/talk_2').setVisible(npc.mode === 'talk').setPosition(sx, headY);

@@ -1,0 +1,313 @@
+{
+ "name": "furn2",
+ "group": "furniture",
+ "size": [
+  16,
+  16
+ ],
+ "note": "T-143 16x16 소품: 막힌 길 표지(노랑), 상자, 낮은 캐비닛, 라운지·카페 탁자, 벽 붙은 책상 잇기, 매달린 비상구 표지",
+ "frames": [
+  {
+   "name": "sign_wet",
+   "rows": [
+    "................",
+    "................",
+    "......OOOO......",
+    ".....OYYYYO.....",
+    ".....OYYDYO.....",
+    "....OYYDDDYO....",
+    "....OYYDDDYO....",
+    "....OYYYYYYO....",
+    "...ODYYDYYDTO...",
+    "...OYDDYDDYDO...",
+    "...OYYYYYYYTO...",
+    "..OYTTYTTYTTTO..",
+    "..OOOOOOOOOOOO..",
+    "..OM........MO..",
+    ".OOM........MOO.",
+    ".OOO........OOO."
+   ]
+  },
+  {
+   "name": "sign_work",
+   "rows": [
+    "................",
+    "................",
+    "......OOOO......",
+    ".....ODYYDO.....",
+    ".....OYYDDO.....",
+    "....OYYDDYYO....",
+    "....OYDDYYDO....",
+    "....ODDYYDDO....",
+    "...ODDYYDDYTO...",
+    "...ODYYDDYYTO...",
+    "...OYYDDYYDTO...",
+    "..OYYDDYYDDYTO..",
+    "..OOOOOOOOOOOO..",
+    "..OM........MO..",
+    ".OOM........MOO.",
+    ".OOO........OOO."
+   ]
+  },
+  {
+   "name": "cone",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    ".......OO.......",
+    "......OYYO......",
+    "......OYTO......",
+    ".....OWWWWO.....",
+    ".....OWWWTO.....",
+    ".....OYYYTO.....",
+    "....OYYYYYTO....",
+    "....OWWWWWWO....",
+    "...OYYYYYYYTO...",
+    "..OOOOOOOOOOOO..",
+    "..ODDDDDDDDDDO..",
+    "..OOOOOOOOOOOO.."
+   ]
+  },
+  {
+   "name": "barrier",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "OOOOOOOOOOOOOOOO",
+    "YYDDYYDDYYDDYYDD",
+    "YDDYYDDYYDDYYDDY",
+    "OOOOOOOOOOOOOOOO",
+    ".OMO........OMO.",
+    ".OMO........OMO.",
+    ".OMO........OMO.",
+    ".OMO........OMO.",
+    "OOMOO......OOMOO",
+    "OMMMO......OMMMO",
+    "OOOOO......OOOOO"
+   ]
+  },
+  {
+   "name": "box_low",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "....OOOOOOO.....",
+    "....OTTLTTO.....",
+    "....OTTLTTO.....",
+    "....OOOOOOO.....",
+    "....OttLttO.....",
+    ".OOOOOOOOOOOOOO.",
+    ".OTTTLTTOTTLTTO.",
+    ".OTTTLTTOTTLTTO.",
+    ".OOOOOOOOOOOOOO.",
+    ".OtttLttOttLttO.",
+    ".OttttttOtttttO.",
+    ".OOOOOOOOOOOOOO."
+   ]
+  },
+  {
+   "name": "cabinet_low",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    ".OOOOOOOOOOOOOO.",
+    ".OWWWWWWWWWWWWO.",
+    ".OLLLLLLLLLLLLO.",
+    ".OOOOOOOOOOOOOO.",
+    ".OLLLLLLLLLLLMO.",
+    ".OLLLLOOOOLLLMO.",
+    ".OMMMMMMMMMMMMO.",
+    ".OLLLLLLLLLLLMO.",
+    ".OLLLLOOOOLLLMO.",
+    ".OMMMMMMMMMMMMO.",
+    ".OOOOOOOOOOOOOO.",
+    "..OO........OO.."
+   ]
+  },
+  {
+   "name": "plant_small",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "......OOOO......",
+    "....OOGGGGOO....",
+    "...OGGgGGGGGO...",
+    "...OGGGGGgGGO...",
+    "....OgGGGGgO....",
+    ".....OWWWWO.....",
+    ".....OLLLMO.....",
+    ".....OLLLMO.....",
+    "......OLMO......",
+    "......OOOO......"
+   ]
+  },
+  {
+   "name": "lounge_table",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "..OOOOOOOOOOOO..",
+    ".OTTTTTTTTTTTTO.",
+    ".OTOOOOTTTOOTTO.",
+    ".OTOCCOTTTOWOTO.",
+    ".OTOWWOTTTOOOTO.",
+    ".OTOOOOTTTTTTTO.",
+    ".OttttttttttttO.",
+    ".OOOOOOOOOOOOOO.",
+    "..OO........OO.."
+   ]
+  },
+  {
+   "name": "cafe_table",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "....OOOOOOOO....",
+    "..OOTTTTTTTTOO..",
+    ".OTTWWTTTTWWTTO.",
+    ".OTTOOTTTTOOTTO.",
+    ".OtTTTTTTTTTTtO.",
+    "..OOttttttttOO..",
+    "....OOOOOOOO....",
+    ".......OO.......",
+    ".......OM.......",
+    ".......OM.......",
+    ".....OMMMMO.....",
+    ".....OOOOOO....."
+   ]
+  },
+  {
+   "name": "paper_box",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "....OOOOOOOO....",
+    "....OWWWWWWO....",
+    "....OCCCCCCO....",
+    "....OWWWWWWO....",
+    "...OOOOOOOOOO...",
+    "...OWWWWWWWWO...",
+    "...OLLLLLLLLO...",
+    "..OOOOOOOOOOOO..",
+    "..OTTTTLTTTTTO..",
+    "..OttttLtttttO..",
+    "..OOOOOOOOOOOO.."
+   ]
+  },
+  {
+   "name": "exit_hang_l",
+   "rows": [
+    "....O......O....",
+    "....O......O....",
+    ".OOOOOOOOOOOOOO.",
+    ".OGGGWGGGGGGGGO.",
+    ".OGGWWWWWWWWGGO.",
+    ".OGGGWGGGGGGGGO.",
+    ".OggggggggggggO.",
+    ".OOOOOOOOOOOOOO.",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    "................"
+   ]
+  },
+  {
+   "name": "desk_row_l",
+   "rows": [
+    "..OOOOOOOOOOOO..",
+    "..ODDDDDDDDDDO..",
+    "..ODGGGGGGGGDO..",
+    "..ODWMWWMWWWDO..",
+    "..ODMMMMMMMMDO..",
+    "..ODWMWGMWWWDO..",
+    "OOODDDDDDDDDDOOO",
+    "OWWOOOODDOOOOWWW",
+    "OWLLLLODDOLLLLLL",
+    "OLLLLOOOOOOLLLLL",
+    "OLLLLLLLLLLLLLLL",
+    "OLLLOOOOOOOOLLLL",
+    "OLLLOWWWWWWOLLLL",
+    "OOOOOOOOOOOOOOOO",
+    "OMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "desk_row_m",
+   "rows": [
+    "..OOOOOOOOOOOO..",
+    "..ODDDDDDDDDDO..",
+    "..ODGGGGGGGGDO..",
+    "..ODWMWWMWWWDO..",
+    "..ODMMMMMMMMDO..",
+    "..ODWMWGMWWWDO..",
+    "OOODDDDDDDDDDOOO",
+    "WWWOOOODDOOOOWWW",
+    "LWLLLLODDOLLLLLL",
+    "LLLLLOOOOOOLLLLL",
+    "LLLLLLLLLLLLLLLL",
+    "LLLLOOOOOOOOLLLL",
+    "LLLLOWWWWWWOLLLL",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "desk_row_r",
+   "rows": [
+    "..OOOOOOOOOOOO..",
+    "..ODDDDDDDDDDO..",
+    "..ODGGGGGGGGDO..",
+    "..ODWMWWMWWWDO..",
+    "..ODMMMMMMMMDO..",
+    "..ODWMWGMWWWDO..",
+    "OOODDDDDDDDDDOOO",
+    "WWWOOOODDOOOOWWO",
+    "LWLLLLODDOLLLLLO",
+    "LLLLLOOOOOOLLLLO",
+    "LLLLLLLLLLLLLLLO",
+    "LLLLOOOOOOOOLLLO",
+    "LLLLOWWWWWWOLLLO",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMO",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "exit_hang_r",
+   "flip": "exit_hang_l"
+  }
+ ],
+ "origin": [
+  0.5,
+  1
+ ]
+}

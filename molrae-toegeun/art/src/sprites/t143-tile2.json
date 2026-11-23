@@ -1,0 +1,502 @@
+{
+ "name": "tile2",
+ "group": "tile",
+ "size": [
+  16,
+  16
+ ],
+ "note": "T-143 구역 바닥·벽 앞면 변형(프린터·창고, 옆 팀 카펫, 라운지, 카페, 복도 2종, 계단, 블라인드 창, 책장 벽, 비상구, 회의실 문 사용 중/빈 방)",
+ "frames": [
+  {
+   "name": "floor_print",
+   "rows": [
+    "qqqqqqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "qqMqqqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "LLLLLLLLLLLLLLLL",
+    "qqqqqqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "qqqqqqqLqqqMqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "qqqqMqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "LLLLLLLLLLLLLLLL"
+   ]
+  },
+  {
+   "name": "floor_print_mark",
+   "rows": [
+    "qqqqqqqLqqqqqqqL",
+    "qqqYYqqYYqqYYqqL",
+    "qqqqqqqLqqqqqqYL",
+    "qYMqqqqLqqqqqqYL",
+    "qYqqqqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqYL",
+    "LYLLLLLLLLLLLLYL",
+    "qYqqqqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "qqqqqqqLqqqMqqYL",
+    "qYqqqqqLqqqqqqYL",
+    "qYqqMqqLqqqqqqqL",
+    "qqqqqqqLqqqqqqqL",
+    "qqYYqqYYqqYYqqYL",
+    "LLLLLLLLLLLLLLLL"
+   ]
+  },
+  {
+   "name": "floor_team2",
+   "rows": [
+    "QQQQQQQQQQQqQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQqQQQQ",
+    "qQqQqQqQQQQQQQQQ",
+    "QQQQQQQQQQQqQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQqQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQqQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQqQQQQQQQQQQQQ",
+    "QQQQQQQQqQqQqQqQ",
+    "QQQqQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQqQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ"
+   ]
+  },
+  {
+   "name": "floor_team2_b",
+   "rows": [
+    "qQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQqQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQQqQQQ",
+    "QQQQQQQQQQQqQQQQ",
+    "QQQQQQQQQQQQQQQQ"
+   ]
+  },
+  {
+   "name": "floor_lounge",
+   "rows": [
+    "fffffffffffTfffT",
+    "fffffffffffTfffT",
+    "fffffffffffTfffT",
+    "TTTTTTTTfffTfffT",
+    "fffffffffffTfffT",
+    "fffffffffffTfffT",
+    "fffffffffffTfffT",
+    "TTTTTTTTfffTfffT",
+    "fffTfffTffffffff",
+    "fffTfffTffffffff",
+    "fffTfffTffffffff",
+    "fffTfffTTTTTTTTT",
+    "fffTfffTffffffff",
+    "fffTfffTffffffff",
+    "fffTfffTffffffff",
+    "fffTfffTTTTTTTTT"
+   ]
+  },
+  {
+   "name": "floor_cafe",
+   "rows": [
+    "WWWWWWWWWWWWWWWL",
+    "WWWWWWWWWCWWWWWL",
+    "WWWWWWWWWWWWWWWL",
+    "WWTTWWWWWWWWWWWL",
+    "WWWWWWWWWWWWWWWL",
+    "WWWWWWWWLWWWWWWL",
+    "WWWWWWWWWWWWMWWL",
+    "WWWWWWWWWWWWWWWL",
+    "WWWWWWWWWWWWWWWL",
+    "WWWWWLLWWWWWWWWL",
+    "WWWWWWWWWWWWWWWL",
+    "WWWWWWWWWWWWWWWL",
+    "WWCWWWWWWWTWWWWL",
+    "WWWWWWWWWWWWWLWL",
+    "WWWWWWWWWWWWWWWL",
+    "LLLLLLLLLLLLLLLL"
+   ]
+  },
+  {
+   "name": "floor_hall_a",
+   "rows": [
+    "FFFFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "FFWWFFFFFFFFFFFf",
+    "FFWFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "FFFFFFFFFFFFFFFf",
+    "ffffffffffffffff"
+   ]
+  },
+  {
+   "name": "floor_hall_b_v",
+   "rows": [
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMDMMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMDMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMMMMLfFFF",
+    "FFFfLMMMMMMLfFFF"
+   ]
+  },
+  {
+   "name": "floor_hall_b_h",
+   "rows": [
+    "FFFFFFFFFFFFFFFF",
+    "FFFFFFFFFFFFFFFF",
+    "FFFFFFFFFFFFFFFF",
+    "ffffffffffffffff",
+    "LLLLLLLLLLLLLLLL",
+    "MMMMMMMMMMMMMMMM",
+    "MMMMMMMMMMMMMMMM",
+    "MMMMDMMMMMMMMMMM",
+    "MMMMMMMMMMMMDMMM",
+    "MMMMMMMMMMMMMMMM",
+    "MMMMMMMMMMMMMMMM",
+    "LLLLLLLLLLLLLLLL",
+    "ffffffffffffffff",
+    "FFFFFFFFFFFFFFFF",
+    "FFFFFFFFFFFFFFFF",
+    "FFFFFFFFFFFFFFFF"
+   ]
+  },
+  {
+   "name": "floor_stairs_l",
+   "rows": [
+    "OWMODDDDDDDDDDDD",
+    "OWMODDDDDDDDDDDD",
+    "OWMODDDDDDDDDDDD",
+    "OWMOOOOOOOOOOOOO",
+    "OWMOMMMMMMMMMMMM",
+    "OWMOMMMMMMMMMMMM",
+    "OWMOMMMMMMMMMMMM",
+    "OWMODDDDDDDDDDDD",
+    "OWMOLLLLLLLLLLLL",
+    "OWMOLLLLLLLLLLLL",
+    "OWMOLLLLLLLLLLLL",
+    "OWMOMMMMMMMMMMMM",
+    "OWMOWWWWWWWWWWWW",
+    "OWMOWWWWWWWWWWWW",
+    "OWMOWWWWWWWWWWWW",
+    "OWMOLLLLLLLLLLLL"
+   ]
+  },
+  {
+   "name": "floor_stairs_r",
+   "flip": "floor_stairs_l"
+  },
+  {
+   "name": "wall_blind",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "QOOOOOOOOOOOOOOQ",
+    "QOWWWWWWWWWWWWOQ",
+    "QOLLLLLLLLLLLLOQ",
+    "QOWWWWWWWWWWWWOQ",
+    "QOLLLLLLLLLDLLOQ",
+    "QOWWWWWWWWWDWWOQ",
+    "QOLLLLLLLLLDLLOQ",
+    "QOWWWWWWWWWMWWOQ",
+    "QOOOOOOOOOOOOOOQ",
+    "QQqqqqqqqqqqqqQQ",
+    "qqqqqqqqqqqqqqqq",
+    "qqqqqqqqqqqqqqqq",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_blind_up",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "QOOOOOOOOOOOOOOQ",
+    "QOWWWWWWWWWWWWOQ",
+    "QOLLLLLLLLLLLLOQ",
+    "QOMMMMMMMMMDMMOQ",
+    "QOCCCWCCCCCDCCOQ",
+    "QOCCWCCCCCCMCCOQ",
+    "QOCCCCCCCWCCCCOQ",
+    "QOccccccWccccCOQ",
+    "QOOOOOOOOOOOOOOQ",
+    "QQqqqqqqqqqqqqQQ",
+    "qqqqqqqqqqqqqqqq",
+    "qqqqqqqqqqqqqqqq",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_print_sign",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQOOOOOOOOOOQQQ",
+    "QQQOWWOOOOWWOqQQ",
+    "QQQOWWOWWOWWOqQQ",
+    "QQQOWODDDDOWOqQQ",
+    "QQQOWODMMDOWOqQQ",
+    "QQQOWODDDDOWOqQQ",
+    "QQQOWWOOOOWWOqQQ",
+    "QQQOOOOOOOOOOqQQ",
+    "QQQQqqqqqqqqqqQQ",
+    "qqqqqqqqqqqqqqqq",
+    "qqqqqqqqqqqqqqqq",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_cafe_menu",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "QOOOOOOOOOOOOOOQ",
+    "QOTDDDDDDDDDDTOQ",
+    "QOTDWWWDLLLLDTOQ",
+    "QOTDWWWWDDDDDTOQ",
+    "QOTDWWWDLLLDDTOQ",
+    "QOTDDDDDDDDDDTOQ",
+    "QOTDLLDLLLLDDTOQ",
+    "QOTDDDDDDDDDDTOQ",
+    "QOOOOOOOOOOOOOOQ",
+    "QQqqqqqqqqqqqqQQ",
+    "qqqqqqqqqqqqqqqq",
+    "qqqqqqqqqqqqqqqq",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_lounge",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQqQQQQQQQQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQQQqQQQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "OOOOOOOOOOOOOOOO",
+    "TTTTTTTTTTTTTTTT",
+    "TTTtTTTtTTTtTTTt",
+    "TTTtTTTtTTTtTTTt",
+    "TTTtTTTtTTTtTTTt",
+    "TTTtTTTtTTTtTTTt",
+    "tttttttttttttttt",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_lounge_art",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "QQQQOOOOOOOQQQQQ",
+    "QQQQOCCCYYOqQQQQ",
+    "QQQQOCGCCCOqQQQQ",
+    "QQQQOGGGGGOqQQQQ",
+    "QQQQOOOOOOOqQQQQ",
+    "OOOOOOOOOOOOOOOO",
+    "TTTTTTTTTTTTTTTT",
+    "TTTtTTTtTTTtTTTt",
+    "TTTtTTTtTTTtTTTt",
+    "TTTtTTTtTTTtTTTt",
+    "TTTtTTTtTTTtTTTt",
+    "tttttttttttttttt",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_team2",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "QOOOOOOOOOOOOOOQ",
+    "QOTTTTTTTTTTTTOQ",
+    "QOTWWTTYYTTCCTOQ",
+    "QOTWWTTYYTTCCTOQ",
+    "QOTTTTTTTTTTTTOQ",
+    "QOTTGGTTWWTTTTOQ",
+    "QOTTGGTTWWTTtTOQ",
+    "QOttttttttttttOQ",
+    "QOOOOOOOOOOOOOOQ",
+    "QQqqqqqqqqqqqqQQ",
+    "qqqqqqqqqqqqqqqq",
+    "qqqqqqqqqqqqqqqq",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_books",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "OOOOOOOOOOOOOOOO",
+    "CCOGGOYOWWOBBOLL",
+    "CCOGGOYOWWOBBOLL",
+    "CCOGGOYOWWOBBOLL",
+    "ccOggOTOLLObbOMM",
+    "TTTTTTTTTTTTTTTT",
+    "OOOOOOOOOOOOOOOO",
+    "WOBBOCCCOTTOGOYY",
+    "WOBBOCCCOTTOGOYY",
+    "LObbOcccOttOgOTT",
+    "TTTTTTTTTTTTTTTT",
+    "tttttttttttttttt",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_rack",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "MMMMMMMMMMMMMMMM",
+    "MQOOOOOOQOOOOOQM",
+    "MQOTTTTOQOWWWOQM",
+    "MQOTLLTOQOWWWOQM",
+    "MQOttttOQOLLLOQM",
+    "MMMMMMMMMMMMMMMM",
+    "MQOOOOOOOQQOOOQM",
+    "MQOTTTTTOQQOTOQM",
+    "MQOTTLTTOQQOTOQM",
+    "MQOtttttOQQOtOQM",
+    "MMMMMMMMMMMMMMMM",
+    "qqqqqqqqqqqqqqqq",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_stairs",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "QQQQQOOOOOOQQQQQ",
+    "QQQQQOGGGWOqQQQQ",
+    "QQQQQOGGWWOqQQQQ",
+    "QQQQQOGWWWOqQQQQ",
+    "QQOOOOOOOOOOOOQQ",
+    "QQOMLLLLLLLLMOQQ",
+    "QQOMLOOOOLLLMOQQ",
+    "QQOMLOCWOLLLMOQQ",
+    "QQOMLOCCOLLLMOQQ",
+    "QQOMLOOOOLDDMOQQ",
+    "qqOMLLLLLLLLMOqq",
+    "qqOMMMMMMMMMMOqq",
+    "OOOOOOOOOOOOOOOO",
+    "MMOMMMMMMMMMMOMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_exit_sign_l",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "QQQQQQQQQQQQQQQQ",
+    "QQOOOOOOOOOOOOQQ",
+    "QQOGGWGGGGGGGOqQ",
+    "QQOGWWWWWWWWGOqQ",
+    "QQOGGWGGGGGGGOqQ",
+    "QQOggggggggggOqQ",
+    "QQOOOOOOOOOOOOqQ",
+    "QQQqqqqqqqqqqqQQ",
+    "QQQQQQQQQQQQQQQQ",
+    "QQQQQQQQQqQQQQQQ",
+    "qqqqqqqqqqqqqqqq",
+    "qqqqqqqqqqqqqqqq",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_door_busy",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "QOOOOOOYYOOOOOOQ",
+    "QOLLLLLLLLLLLLOQ",
+    "QOLLOOOOOOOOLLOQ",
+    "QOLLOYYYYYYOLLOQ",
+    "QOLLOYDYDDYOLLOQ",
+    "QOLLOYYYYYYOLLOQ",
+    "QOLLOOOOOOOOLLOQ",
+    "QOLLLLLLLLLLLLOQ",
+    "QOLLLLLLLLLDDLOQ",
+    "QOLLLLLLLLLLLLOQ",
+    "qOLLLLLLLLLLLLOq",
+    "qOMMMMMMMMMMMMOq",
+    "OOOOOOOOOOOOOOOO",
+    "MOLLLLLLLLLLLLOM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_door_free",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "QOOOOOOGGOOOOOOQ",
+    "QOLLLLLLLLLLLLOQ",
+    "QOLLLLLLLLLLLLOQ",
+    "QOLLLOOOOOOLLLOQ",
+    "QOLLLOWWWWOLLLOQ",
+    "QOLLLOOOOOOLLLOQ",
+    "QOLLLLLLLLLLLLOQ",
+    "QOLLLLLLLLLLLLOQ",
+    "QOLLLLLLLLLDDLOQ",
+    "QOLLLLLLLLLLLLOQ",
+    "qOLLLLLLLLLLLLOq",
+    "qOMMMMMMMMMMMMOq",
+    "OOOOOOOOOOOOOOOO",
+    "MOLLLLLLLLLLLLOM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  },
+  {
+   "name": "wall_exit_sign_r",
+   "flip": "wall_exit_sign_l"
+  }
+ ]
+}

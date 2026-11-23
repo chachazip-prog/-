@@ -1,6 +1,6 @@
-# 몰래퇴근 아트 스타일 가이드 v2.3 (탑다운 3/4 시점)
+# 몰래퇴근 아트 스타일 가이드 v2.4 (탑다운 3/4 시점)
 
-- 버전: v2.3 (T-135, 2026-11-23: 세로 유리벽 5종, 32×32 회의 테이블, 엘리베이터·출구 매트 배치 규칙, 배경 동료 서서 휴대폰·기지개, 서기 정지 키 확정 → §12). v2.2 (T-130, 2026-11-22: 엘리베이터 2종·경비 부스·화장실 칸 보강, 위장 포즈 5종, 배경 동료 3종, 화면 밖 화살표 4색×3단계, 말풍선·바닥 효과·아이콘, 무음 대응 시각 신호). v2.1 (T-125: 캐릭터 9종 완성, 구역 타일 1차, 게임 출력). v2(T-122)를 오너가 확정(D-041). v1(측면 시점, T-111)은 `archive/sideview/`에 보관했습니다.
+- 버전: v2.4 (T-143, 2026-11-23: 생성 맵용 범용 사무실 모듈 99키 — 구역 바닥·벽 변형, 반높이/전높이 칸막이 16종씩, 책상 배치 4종, 막힌 길, 팀장 순회 프레임 → §13). v2.3 (T-135, 2026-11-23: 세로 유리벽 5종, 32×32 회의 테이블, 엘리베이터·출구 매트 배치 규칙, 배경 동료 서서 휴대폰·기지개, 서기 정지 키 확정 → §12). v2.2 (T-130, 2026-11-22: 엘리베이터 2종·경비 부스·화장실 칸 보강, 위장 포즈 5종, 배경 동료 3종, 화면 밖 화살표 4색×3단계, 말풍선·바닥 효과·아이콘, 무음 대응 시각 신호). v2.1 (T-125: 캐릭터 9종 완성, 구역 타일 1차, 게임 출력). v2(T-122)를 오너가 확정(D-041). v1(측면 시점, T-111)은 `archive/sideview/`에 보관했습니다.
 - 근거 결정: D-025(톤 B + 위험색 규칙), D-033(탑다운·탭 이동·위장), D-034(세로 스크롤 맵·화면 밖 경고), D-035(시선 콘·엄폐물), D-036(타일 16, 캐릭터 16×20, 4방향), D-037(사원증 줄 색).
 
 ## 1. 파이프라인
@@ -11,9 +11,10 @@
 | 문자 → 역할 표 | `art/src/legend.json` |
 | 스프라이트 원본(문자 격자 JSON) | `art/src/sprites/*.json` |
 | 장면 원본(여러 개 가능) | `art/src/scenes/*.json` |
-| 생성기(표준 라이브러리만, 외부 의존성 없음) | `art/tools/pixelgen.py` |
+| 생성기(표준 라이브러리만, 외부 의존성 없음) | `art/tools/pixelgen.py` (v2.3: 장면 `labels` 이름표) |
+| T-143 모듈 원본 부트스트랩(1회용) | `art/tools/t143_modules_src.py` → `src/sprites/t143-*.json`, `src/scenes/t143-modules.json`. 이미 있으면 `--force` 없이 덮어쓰지 않음. **원본은 JSON**이며 오너 보정 후에는 다시 돌리지 않음 |
 | 시안 빌드 | `art/build/topdown/` (sheet.png, sheet.json, anims.json, png/, scenes/) |
-| 미리보기(4배) | `art/preview/t135-*.png`(characters, sheet, scene = maps.json 실제 0~7행·21~28행) + `art/preview/t130-*.png`(characters, sheet, scene) + `t125-zones.png`(T-130 화장실 바닥 반영으로 재생성됨) + `topdown-scene.png`. `topdown-characters/sheet.png`는 T-122 당시 기록 |
+| 미리보기(4배) | `art/preview/t143-modules.png`(모듈 견본 세로 층, 논리 180×752) · `t143-sheet.png` · `t143-characters.png` + `art/preview/t135-*.png`(characters, sheet, scene = maps.json 실제 0~7행·21~28행) + `art/preview/t130-*.png`(characters, sheet, scene) + `t125-zones.png`(T-130 화장실 바닥 반영으로 재생성됨) + `topdown-scene.png`. `topdown-characters/sheet.png`는 T-122 당시 기록 |
 | 게임 출력(T-125부터 사용) | `--out game/assets/sprites` → sheet.png, sheet.json, anims.json **3개만** |
 
 ```
@@ -335,3 +336,112 @@ python3 art/tools/pixelgen.py --preview-tag t130   # 미리보기 파일 접두�
 
 - 데이터 연결(개발 코드 기준: idleAnims 값에서 끝의 `_숫자`를 떼어 애니메이션 키로 씀): `bg_pantry_phone`은 `"idleAnims": ["stand_phone_left_0"]` → `bg_b/stand_phone_left`, `bg_next_team_a`는 `["sit_type_0", "sit_stretch_0"]` → `bg_a/sit_type` / `bg_a/sit_stretch`. 서기 정지만 쓰려면 `["idle_left"]` → `bg_b/idle_left`.
 - 휴대폰 화면은 하늘색·흰색만 씁니다(로고·앱 아이콘 없음). 플레이어 위장 `check_phone`(얼굴 앞에 들고 봄)과 달리 배경 동료는 **가슴 앞에서 내려다봐서** 실루엣이 다릅니다.
+
+
+## 13. T-143 생성 맵용 범용 모듈 (D-074~076, REQ-013~015)
+
+- 맵 생성기(D-076)가 조립할 재료입니다. 톤 B·위험색 규칙·3/4 시점을 그대로 지킵니다. **새 키에는 빨강이 1px도 없습니다**(팀장 줄만 기존대로 빨강). 막힌 길 표지는 노랑 + 남색 줄무늬, '사용 중'은 노랑입니다.
+- 견본: `art/preview/t143-modules.png`. 위에서부터 프린터·창고 → 칸막이 시선 비교 → 칸막이 잇기 → 책상 배치 → 라운지·카페 → 복도·막힌 길 순서입니다.
+- 원점: 타일(`tile2/*`)은 왼쪽 위(0,0), 나머지는 모두 **하단 중앙 (0.5, 1)**이고 `x = 칸(들) 가운데`, `y = 맨 아래 칸의 아래 변`, 깊이 = y입니다. 32px 폭은 `dx: 8`(왼쪽 칸 기준), 48px 폭은 가운데 칸 기준입니다.
+- 아래 표의 `walkable`/`blocksSight`는 **아트 제안값**입니다. 최종 값은 기획(T-142)의 legend가 정합니다. 여러 칸짜리는 '발자국(footprint)' 칸 전체에 같은 값을 줍니다.
+
+### 13-1. 칸막이: 반높이(시선 통과) vs 전높이(시선 차단)
+
+| | 반높이 `phalf/<mask>` | 전높이 `pfull/<mask>` |
+|---|---|---|
+| 크기 | 16×16 | **16×36**(위 칸으로 20px 솟음) |
+| 높이 | 앞면 8px(캐릭터 허리 아래) | 앞면 29px(캐릭터 20px보다 **9px 더 높음**) |
+| 색 | **밝은 하늘색 천**(`C`) + 밝은 윗면 | **탁한 청회색 패널**(`q`) + 밝은 가운데 레일 + 진한 걸레받이 |
+| 세로 띠 폭 | 4px(`OLMO`) | 6px(`OLLMMO`) |
+| 뒤(북쪽 칸)에 선 사람 | 전신이 보임 | **완전히 가려짐** |
+| 제안 | walkable false, **blocksSight false**, cover false | walkable false, **blocksSight true**, cover true |
+
+- `<mask>` = 같은 종류 칸막이가 있는 이웃 방향을 **n, e, s, w 순서**로 이은 문자열입니다. 이웃이 없으면 `o`입니다. 16종 모두 있습니다.
+  - `o`(외톨이) · `n` `e` `s` `w`(끝) · `ew`(가로) · `ns`(세로) · `es` `sw` `ne` `nw`(L자) · `esw` `new` `nes` `nsw`(T자) · `nesw`(십자)
+  - 예: 가로줄 왼쪽 끝 = `e`, 가운데 = `ew`, 오른쪽 끝 = `w`. 세로줄 위끝 = `s`, 가운데 = `ns`, 아래끝(앞면 마구리) = `n`.
+- 반높이와 전높이가 맞닿는 이음 조각은 없습니다. 생성기는 두 종류를 **이웃으로 치지 않고**(각자 끝 조각) 붙이거나, 1칸 띄워 주세요.
+- 벽(`#`)은 이웃으로 치지 않는 것을 권장합니다(벽 앞에서 끝 조각으로 끝나는 편이 자연스럽습니다).
+- **개발 주의(전높이)**: 플레이어가 전높이 칸막이 바로 북쪽 칸에 서면 완전히 가려집니다. 플레이어와 겹치는 `pfull/*`·`cube52/*`만 알파 0.5로 낮추거나, 플레이어 실루엣을 덧그리는 처리를 권장합니다.
+- **기존 `furn/partition_*`(maps.json `P`, blocksSight true)와의 충돌**: 기존 칸막이는 그림이 반높이(하늘색, 앞면 6px)인데 규칙은 시선 차단입니다. 생성 맵에서는 `P` → `pfull/*`로 그리고 반높이는 새 legend(예: `p`, blocksSight false) → `phalf/*`로 나누는 것을 제안합니다. 튜토리얼 맵(office_floor_1)은 기존대로 둬도 됩니다(기획 판단).
+
+### 13-2. 구역 바닥·벽 앞면 (`tile2/*`, 16×16)
+
+| 키 | 구역 | 설명 | 제안 |
+|---|---|---|---|
+| `floor_print`, `floor_print_mark` | 프린터·창고 | 청회색 산업 타일(8px 줄눈). mark = 노란 점선 대기 칸(프린터 앞, 팀장 대기 자리) | 통행 O, 시선 통과 |
+| `floor_team2`, `floor_team2_b` | 옆 팀 | 연청 카펫(방향이 엇갈린 점선 결) / 무늬 적은 변형 | 통행 O, 시선 통과 |
+| `floor_lounge` | 휴게 라운지 | 연한 바탕 + 나무색 줄 쪽마루(임원실 긴 판재와 구분) | 통행 O, 시선 통과 |
+| `floor_cafe` | 사내 카페 | 흰 테라조(색 조각) | 통행 O, 시선 통과 |
+| `floor_hall_a` | 복도 변형 1 | 베이지 대형 타일(16px 줄눈 + 광택점) | 통행 O, 시선 통과 |
+| `floor_hall_b_v`, `floor_hall_b_h` | 복도 변형 2 | 회색 러너 카펫(세로/가로) | 통행 O, 시선 통과 |
+| `floor_stairs_l`, `floor_stairs_r` | 계단 출입구 | 아래로 내려가는 계단 2칸(바깥쪽 난간, r = 좌우 반전). 먼 계단일수록 어두움 | 통행 X(장식) 또는 출구 후보(기획), 시선 통과 |
+| `wall_blind`, `wall_blind_up` | 창가 | 블라인드 내린 창 / 올린 창(하늘) | 벽: 통행 X, 시선 차단 |
+| `wall_print_sign` | 프린터 | 프린터 그림 표지판(글자 없음) | 벽 |
+| `wall_rack` | 창고 | 금속 선반 + 상자(가로로 이어 붙임) | 벽 |
+| `wall_books` | 책장 벽 | 벽 붙박이 책장(가로로 이어 붙임, 빨간 책 없음) | 벽 |
+| `wall_lounge`, `wall_lounge_art` | 라운지 | 나무 징두리 벽 / + 작은 액자 | 벽 |
+| `wall_cafe_menu` | 카페 | 칠판 메뉴판(컵 그림 + 점선 글줄) | 벽 |
+| `wall_team2` | 옆 팀 | 코르크 게시판(메모지) | 벽 |
+| `wall_stairs` | 계단 | 회색 철문 + 작은 창 + 초록 계단 표지 | 벽(문이지만 잠김 제안) |
+| `wall_exit_sign_l`, `_r` | 비상구 | 초록 표지 + 흰 화살표만(픽토그램·글자 없음) | 벽 |
+| `wall_door_busy` | 회의실 | **사용 중**: 문 위 노란 등 + 노란 '사용 중' 패(남색 점선). 빨강 아님 | 통행 X, 시선 차단(막힌 문) |
+| `wall_door_free` | 회의실 | 빈 방: 초록 등 + 흰 패 | 통행 O(문), 시선 통과 |
+
+### 13-3. 구조물·소품
+
+| 키 | 크기·발자국 | 설명 | walkable | blocksSight |
+|---|---|---|---|---|
+| `tall2/pillar` | 16×24, 1칸 | 기둥(벽 윗면과 같은 진한 윗면 + 세로 하이라이트) | false | **true** (cover) |
+| `tall2/cabinet` | 16×24, 1칸 | 4단 서류 캐비닛. 나란히 놓으면 2px 틈으로 '줄'이 됨 | false | **true** (cover) |
+| `tall2/cabinet_open` | 16×24, 1칸 | 둘째 서랍을 뺀 캐비닛(서류철 색 탭) | false | true |
+| `furn2/cabinet_low` | 16×16, 1칸 | 2단 낮은 캐비닛(허리 높이) | false | false |
+| `tall2/vending_drink`, `vending_snack` | 16×24, 1칸 | 자판기(음료 흰 몸체 / 과자 진한 몸체, 로고 없음) | false | **true** (cover) |
+| `tall2/purifier` | 16×24, 1칸 | 슬림 정수기(냉 하늘색·온 노랑 버튼). 기존 `tall/water`(물통형)과 함께 씀 | false | false (폭이 좁음) |
+| `wide24/mfp` | 32×24, 2×1칸 | 대형 복합기(스캐너 덮개, 조작부 화면, 서랍 3단, 출력 종이) | false | **true** (cover, 위장 copying 후보) |
+| `furn2/paper_box` | 16×16, 1칸 | 복사지 묶음 + 상자 | false | false |
+| `wide24/locker` | 32×24, 2×1칸 | 택배 보관함(작은 문 11칸 + 조작 화면, 초록·노랑 LED) | false | **true** (cover) |
+| `wide24/plant_group` | 32×24, 2×1칸 | 화분 군락(큰 잎 2 + 나무 화단) | false | **true** (cover) |
+| `furn2/plant_small` | 16×16, 1칸 | 낮은 화분 | false | false |
+| `wide2/sofa_lounge` | 32×16, 2×1칸 | 라운지 소파(회색 천 + 하늘색 쿠션) | false | false |
+| `wide2/lounge_table`, `furn2/lounge_table` | 32×16 / 16×16 | 낮은 탁자(잡지·컵) | false | false |
+| `wide24/cafe_counter` | 32×24, 2×1칸 | 카페 카운터(흰 상판, 커피머신, 컵) | false | false (기존 `K`와 같게) |
+| `furn2/cafe_table` | 16×16, 1칸 | 높은 원탁 + 컵 2. 의자는 기존 `furn/stool` | false | false |
+| `furn2/exit_hang_l`, `_r` | 16×16 | 천장에 매단 비상구 표지(위 8px만 그림). **최상위 깊이**로 그리기 권장 | true(장식) | false |
+| `tall2/glass_door_busy` | 16×24, 1칸 | 가로 유리문(`tall/glass_door`) + 노란 '사용 중' 패 | false | false (유리) |
+
+### 13-4. 책상 배치 변형
+
+| 키 | 크기·발자국 | 설명 | 제안 |
+|---|---|---|---|
+| `furn2/desk_row_l`, `_m`, `_r` | 16×16 ×n, 1행 | 벽 붙은 1열 책상. 왼끝 l → 가운데 m 반복 → 오른끝 r(이음매 없이 상판이 이어짐). 의자는 남쪽 칸 `furn/chair` | 책상 칸 false/false |
+| `isle32/island4` | 32×32, 2×2칸 | 4인 섬. 북쪽 2석 = 모니터 뒷면(앉는 사람은 북쪽 칸, `furn/chair_s` `dy:4`), 남쪽 2석 = 화면(남쪽 칸 `furn/chair`). 가운데 낮은 하늘색 가림판 | 4칸 false/false |
+| `isle48/island6` | 48×32, 3×2칸 | 6인 섬(위와 같은 규칙) | 6칸 false/false |
+| `isle32/cubicle_low` | 32×32, 2×2칸 | **반높이 큐비클**: 하늘색 ㄷ자 낮은 칸막이 + 책상. 남쪽이 열림 | 위 2칸 false/false, 아래 2칸 = 좌석(true/false) |
+| `cube52/cubicle_high` | 32×52, 2×2칸 | **전높이 큐비클**: 청회색 ㄷ자 높은 칸막이(위 20px 솟음). 남쪽만 열림 | 위 2칸 false/**true**, 아래 2칸 = 좌석(true), 동·서·북에서 시선 차단(기획: `coverFrom`) |
+
+- 앉은 사람은 기존 규칙(`sit_type`, `dy:-3`, 의자를 캐릭터 다음에 그림)을 그대로 씁니다. 큐비클 좌석은 `dx:8`(두 칸 가운데)입니다.
+
+### 13-5. 막힌 길 (빨강 금지)
+
+| 키 | 크기 | 설명 | 제안 |
+|---|---|---|---|
+| `furn2/sign_wet` | 16×16 | 청소 중 A자 표지(노랑, 물방울·물결) | false / false |
+| `furn2/sign_work` | 16×16 | 공사 중 A자 표지(노랑·남색 사선) | false / false |
+| `furn2/cone` | 16×16 | 노란 고깔(흰 띠) | false / false |
+| `furn2/barrier` | 16×16 | 노랑·남색 사선 차단봉. 가로로 이어 붙이면 무늬가 이어짐 | false / false |
+| `furn2/box_low` | 16×16 | 낮은 상자 2개 | false / false |
+| `tall2/box_stack` | 16×24 | 상자 3단 더미(키보다 높음) | false / **true** (cover) |
+| `wide24/box_pile` | 32×24, 2×1칸 | 큰 박스 더미 | false / **true** (cover) |
+| `tile2/wall_door_busy`, `tall2/glass_door_busy` | | 사용 중 회의실 문(노랑) | false / 벽 true · 유리 false |
+
+### 13-6. 팀장 순회 프레임 (16×20, 원점 (0.5, 1))
+
+| 프레임 | 애니메이션 | 설명·배치 |
+|---|---|---|
+| `teamlead/sit_up` | `teamlead/sit_up` (1프레임) | 자리에 앉음(뒷모습, 2px 낮음). 지금 맵처럼 `furn/chair_high`를 **캐릭터 다음에** 그리고 캐릭터는 `dy:-3` |
+| `teamlead/rise_up_0`, `_1` | `teamlead/rise_up` (4fps, **1회**, 0·0·1) | 일어나기 전조. 0 = 결재판을 내려놓고 **팔꿈치를 양옆으로 벌림**(실루엣 1px씩 넓어짐) + 머리 1px 솟음, 1 = 거의 섬(머리가 등받이 위로) + 의자 옆 흰 먼지 점. 끝나면 `idle_up` → 방향 전환 |
+| `teamlead/sit_down` | `teamlead/sit_down` (1프레임) | 정면으로 앉음(사무실 쪽을 보는 자리용). 남쪽을 보는 의자(`furn/chair_exec`·`chair_s`)를 **먼저** 그림(`depth_bias` 음수) |
+| `teamlead/rise_down_0`, `_1` | `teamlead/rise_down` (4fps, 1회) | 정면 일어나기. 0 = 왼팔꿈치 짚음, 1 = 반쯤 일어남 + 먼지 |
+| `teamlead/wait_up_0`, `_1` | `teamlead/wait_up` (3fps, 반복, 0·0·1·0·1) | 프린터 앞 서류 대기(뒷모습). 결재판을 **뒷짐**으로 들고, 1 = 결재판 1px 내려감 + 오른발 까딱. `tile2/floor_print_mark` 위에 세우면 '기다리는 중'이 한눈에 보임 |
+
+- 순회 시작 전조는 기획(T-142) 시간값에 맞추되, `rise_*`는 0.75초(3프레임/4fps) 안에 끝납니다.

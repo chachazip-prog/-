@@ -6,14 +6,18 @@
  */
 import { createRng } from '../core/rng';
 import type { FloorRules, LevelDef } from '../core/floorSim';
-import type { LegendEntry, Tile } from '../core/grid';
+import { buildGridMap, type Tile } from '../core/grid';
+import { findPath } from '../core/pathfinding';
 import type { ConeState, NpcDef, TalkDef, WaypointDef } from '../core/patrol';
 import type { Dir } from '../core/vision';
 import type {
   AccompliceDef, ActorInfo, BackgroundDef, CeoElevatorDef, CeoVisitDef, DayContent, DayInterruptDef, GreetingDef, LeaveDef, Mechanic,
-  MissionDef, QteDef, RouteDef, ScriptedBeat,
+  MissionDef, MissionModifier, QteDef, RouteDef, ScriptedBeat,
 } from '../core/day/types';
+import { applyMissionModifiers } from '../core/day/modifiers';
 import { applyInterpScaling, applyOverrideScaling, rankProgress } from './scaling';
+import { createLevelProvider, layoutEnabledInData, remapWaypoints, type LevelProvider } from './levelProvider';
+import { buildDevTour } from './devTour';
 
 /** 데이터 미정 기본값 (D-054). 데이터에 같은 이름의 값이 생기면 그쪽이 우선 */
 export const DEFAULTS = {
@@ -66,6 +70,46 @@ function requiredNum(o: O, key: string): number {
 export type Tables = Readonly<Record<string, unknown>>;
 
 export interface BuildWarnings { push(msg: string): void }
+
+/** T-144: 층 공급자·순회 선택 */
+export interface BuildOptions {
+  /** 일차별 층 공급자. 없으면 데이터 기준 기본값(layout.json enabled면 3일차부터 생성, 아니면 모든 날 수작업 맵) */
+  readonly levelProvider?: LevelProvider;
+  /** 팀장 순회(D-075): true 강제 / false 끔 / 'auto'(기본) = 생성 층인 날만 [임시 정책] */
+  readonly tours?: boolean | 'auto';
+}
+
+/**
+ * 미션 변형 파싱([추측] T-142 스키마 전): 계획 항목의 modifiers = 변형 객체 또는 id 문자열 배열.
+ * id는 tables.missions.modifiers[] (id 일치)에서 찾는다
+ */
+function parseModifiers(tables: Tables, raw: unknown, warn: BuildWarnings): MissionModifier[] {
+  const lib = arr(obj(tables['missions'])['modifiers']).map(obj);
+  const out: MissionModifier[] = [];
+  for (const r of arr(raw)) {
+    const m = typeof r === 'string' ? lib.find((x) => x['id'] === r) : obj(r);
+    if (!m || typeof m['id'] !== 'string') { warn.push(`미션 변형 ${JSON.stringify(r)} 정의 없음`); continue; }
+    const tl = obj(m['timeLimit']);
+    const cond = obj(m['condition']);
+    out.push({
+      id: m['id'] as string,
+      ...(typeof m['labelKey'] === 'string' ? { labelKey: m['labelKey'] as string } : {}),
+      ...(m['timeLimit'] ? { timeLimit: {
+        ...(typeof tl['set'] === 'number' ? { set: tl['set'] as number } : {}),
+        ...(typeof tl['mul'] === 'number' ? { mul: tl['mul'] as number } : {}),
+        ...(typeof tl['add'] === 'number' ? { add: tl['add'] as number } : {}),
+      } } : {}),
+      ...(typeof m['spot'] === 'string' ? { spot: m['spot'] as string } : {}),
+      ...(m['params'] ? { params: obj(m['params']) } : {}),
+      ...(typeof m['rewardMul'] === 'number' ? { rewardMul: m['rewardMul'] as number } : {}),
+      ...(typeof cond['id'] === 'string' ? { condition: {
+        id: cond['id'] as string, args: obj(cond['args']),
+        ...(cond['onFail'] === 'fail' ? { onFail: 'fail' as const } : {}),
+      } } : {}),
+    });
+  }
+  return out;
+}
 
 /** 사원증 줄 색 역할(D-037) — 렌더링 역할 이름 */
 function lanyardOf(actor: O): string {
@@ -199,7 +243,7 @@ export function ceoForDay(tables: Tables, day: number, rank: O, t: number): { ki
 }
 
 /** 하루 콘텐츠 조립 */
-export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings = { push: () => {} }): DayContent {
+export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings = { push: () => {} }, opts: BuildOptions = {}): DayContent {
   const rules = obj(tables['rules']);
   const plan = dayPlan(tables, day);
   const ranks = arr(obj(tables['ranks'])['ranks']).map(obj);
@@ -207,8 +251,35 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   const rankId = str(rank['id'], 'intern');
   const dr = arr(rank['dayRange']);
   const t = rankProgress(day, [num(dr[0], 1), dr[1] === null ? null : num(dr[1], 1)]);
-  const map = arr(obj(tables['maps'])['maps']).map(obj).find((m) => m['id'] === str(plan['mapId'], 'office_floor_1'));
-  if (!map) throw new Error(`content: 맵 ${String(plan['mapId'])} 없음`);
+  // ── 층(T-144): 일차별 공급자. 1~2일차 수작업 맵, 이후 생성(꺼져 있거나 실패하면 수작업 맵 폴백) ──
+  const eventsAll = arr(obj(tables['events'])['events']).map(obj);
+  const extraRequiredSpots: string[] = [];
+  for (const m of arr(plan['missions']).map(obj)) {
+    const e = eventsAll.find((x) => x['id'] === m['eventId']);
+    const sp = str(obj(e?.['location'])['spot']);
+    if (sp) extraRequiredSpots.push(sp);
+  }
+  // 이 날 쓰는 순찰: 출연 + 방해 이벤트 effect의 순찰 id + 대표님 순시/엘리베이터
+  const requiredPatrols = new Set<string>(arr(plan['castPatrols']).map((x) => str(x)));
+  const intAll = arr(obj(tables['interrupts'])['interrupts']).map(obj);
+  for (const r of [...arr(plan['dayInterrupts']), ...arr(plan['leaveInterrupts'])].map(obj)) {
+    const eff = obj(intAll.find((x) => x['id'] === r['id'])?.['effect']);
+    for (const k of ['patrolId', 'leaveVariant']) if (typeof eff[k] === 'string') requiredPatrols.add(eff[k] as string);
+    for (const k of ['patrolIds', 'patrolVariants']) for (const v of arr(eff[k])) if (typeof v === 'string') requiredPatrols.add(v);
+  }
+  if (str(plan['ceo'], 'none') !== 'none') requiredPatrols.add(str(obj(arr(obj(tables['bosses'])['bosses']).map(obj).find((b) => b['id'] === 'ceo')?.['visit'])['patrolId'], 'p_ceo_visit'));
+  // thenPatrol 연쇄도 포함
+  const patrolRaw = arr(obj(tables['patrols'])['patrols']).map(obj);
+  for (let grew = true; grew;) {
+    grew = false;
+    for (const id of [...requiredPatrols]) {
+      const nx = patrolRaw.find((p) => p['id'] === id)?.['thenPatrol'];
+      if (typeof nx === 'string' && !requiredPatrols.has(nx)) { requiredPatrols.add(nx); grew = true; }
+    }
+  }
+  const provider = opts.levelProvider ?? createLevelProvider({ generate: layoutEnabledInData(tables) });
+  const map = provider.levelFor({ tables, day, plan, rankId, t, extraRequiredSpots, requiredPatrols: [...requiredPatrols] });
+  if (map.source === 'fallback') warn.push(`days.${day}: 생성 층 검증 실패 ${map.gen?.attempts ?? 0}회 → 수작업 맵 폴백 (${(map.gen?.failures ?? []).slice(-3).join(' / ')})`);
 
   // ── 규칙 ──
   const sight = obj(rules['sight']);
@@ -376,8 +447,30 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     return d as unknown as NpcDef;
   };
   const patrols: Record<string, NpcDef> = {};
-  for (const p of patrolTable) {
-    if (p['mapId'] !== map['id']) continue;
+  const remap = map.remap;
+  // 생성 층: 옮긴 웨이포인트 사이가 이어지는지(PatrolNpc 생성 시 예외 방지)
+  const genGrid = remap ? buildGridMap(map.rows, map.legend) : null;
+  const patrolConnected = (wps: readonly O[], loop: boolean): boolean => {
+    if (!genGrid) return true;
+    for (let i = 0; i < wps.length; i++) {
+      if (i + 1 >= wps.length && !(loop && wps.length > 1)) break;
+      const a = tile2(wps[i]), b = tile2(wps[(i + 1) % wps.length]);
+      if (!findPath(genGrid, a, b)) return false;
+    }
+    return true;
+  };
+  for (const p0 of patrolTable) {
+    if (p0['mapId'] !== map.patrolMapId) continue;
+    let p = p0;
+    if (remap) {
+      // 생성 층: 수작업 맵 좌표 → 생성 층 좌표. 정지 지점을 옮길 수 없으면 순찰 제외
+      const wps = remapWaypoints(arr(p0['waypoints']), remap);
+      if (!wps || !patrolConnected(wps, p0['loop'] !== false && p0['kind'] !== 'seated')) {
+        if (requiredPatrols.has(str(p0['id']))) warn.push(`생성 층 ${map.id}: 순찰 ${str(p0['id'])} 재매핑 불가 → 제외`);
+        continue;
+      }
+      p = { ...p0, waypoints: wps };
+    }
     const d = toNpcDef(p);
     if (d) patrols[str(p['id'])] = d;
   }
@@ -396,9 +489,15 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     const sprite = str(b['sprite'], 'bg_a');
     const behavior = str(b['behavior'], 'sit');
     const at = obj(behavior === 'sit' ? b['seat'] : b['spot']);
-    const wps: WaypointDef[] = behavior === 'walk'
+    let wps: WaypointDef[] = behavior === 'walk'
       ? arr(b['waypoints']).map(obj).map(toWaypoint)
       : [{ x: num(at['x'], 0), y: num(at['y'], 0), waitSec: 0, ...(typeof at['facing'] === 'string' ? { facing: at['facing'] as Dir } : {}) }];
+    if (remap) {
+      // 생성 층(T-144): 배경 동료도 재매핑. 옮길 수 없거나 경로가 끊기면 이 날은 빠짐(메카닉 없음)
+      const moved = remapWaypoints(wps, remap);
+      if (!moved || !patrolConnected(moved, behavior === 'walk' && b['loop'] !== false)) continue;
+      wps = moved as unknown as WaypointDef[];
+    }
     const id = str(b['id'], `bg_${background.length}`);
     background.push({
       sprite,
@@ -421,21 +520,15 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   if (cast.length + background.length + 1 > maxOn) warn.push(`days.${day}: 층 인원 ${cast.length + background.length + 1} > ${maxOn}`);
 
   // ── 맵 ──
-  const spots: Record<string, { tile: Tile; facing?: Dir }> = {};
-  for (const [k, v] of Object.entries(obj(map['spots']))) {
-    const s = obj(v);
-    spots[k] = { tile: tile2(s['tile']), ...(typeof s['facing'] === 'string' ? { facing: s['facing'] as Dir } : {}) };
-  }
-  const legend: Record<string, LegendEntry> = {};
-  for (const [ch, e] of Object.entries(obj(map['legend']))) legend[ch] = obj(e) as unknown as LegendEntry;
+  const spots: Record<string, { tile: Tile; facing?: Dir }> = { ...map.spots };
   const level: LevelDef = {
-    id: str(map['id']), rows: arr(map['rows']).map((r) => str(r)), legend,
-    playerStart: tile2(map['playerStart']), exitZone: str(map['exitZone'], 'exit'), npcs: cast,
+    id: map.id, rows: map.rows, legend: map.legend,
+    playerStart: map.playerStart, exitZone: map.exitZone, npcs: cast,
   };
   const playerSeat = spots['player_seat']?.tile ?? level.playerStart;
 
   // ── 미션 ──
-  const events = arr(obj(tables['events'])['events']).map(obj);
+  const events = eventsAll;
   const missions: MissionDef[] = [];
   for (const m of arr(plan['missions']).map(obj)) {
     const e = events.find((x) => x['id'] === m['eventId']);
@@ -444,7 +537,8 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     const spot = spots[str(loc['spot'])]?.tile ?? playerSeat;
     const params = applyOverrideScaling(obj(e['params']), obj(e['rankScaling']) as Record<string, Record<string, unknown>>, rankId);
     const reward = obj(e['reward']);
-    missions.push({
+    const mods = parseModifiers(tables, m['modifiers'], warn);
+    const def: MissionDef = {
       id: str(e['id']), nameKey: str(e['nameKey']), descKey: str(e['descKey']), iconSprite: str(e['iconSprite']),
       mechanic: str(e['mechanic']) as Mechanic, unlockAtSec: num(m['unlockAtSec'], 0), spot,
       startsAt: e['startsAt'] === 'chip_tap_at_seat' ? 'chip_tap_at_seat' : 'arrive_spot',
@@ -454,7 +548,8 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       failPenalty: num(obj(e['failPenalty'])['suspicion'], 0), timeoutPenalty: num(obj(e['timeoutPenalty'])['suspicion'], 0),
       params, ...(typeof e['tutorialId'] === 'string' ? { tutorialId: e['tutorialId'] as string } : {}),
       ...(e['accompliceAllowed'] === true && e['accompliceEffect'] ? { accompliceEffect: accompliceEffectOf(obj(e['accompliceEffect'])) } : {}),
-    });
+    };
+    missions.push(applyMissionModifiers(def, mods, spots, warn));
   }
 
   // ── 퇴근 ──
@@ -589,7 +684,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       };
     }
   }
-  const routes: RouteDef[] = arr(map['playerRoutes']).map(obj).map((r) => ({
+  const routes: RouteDef[] = map.playerRoutes.map((r) => ({
     id: str(r['id']), from: str(r['from']), to: str(r['to']), via: arr(r['via']).map(tile2),
   }));
   const contAd = obj(rules['continueAd']);
@@ -602,7 +697,11 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   const h7 = obj(obj(obj(obj(tables['days'])['generator'])['dayInterrupts'])['h7']);
 
   const dayCfg = obj(rules['day']);
-  const camera = obj(map['camera']);
+  const camera = map.camera;
+  // ── 팀장 순회(D-075, T-144) [임시: dev 상수] ──
+  const toursOn = opts.tours === true || ((opts.tours ?? 'auto') === 'auto' && map.source === 'generated');
+  const dayPhaseSecFinal = num(plan['dayPhaseSec'], num(rank['dayPhaseSec'], 50));
+  const tour = toursOn && cast.some((n) => n.patrolId === 'p_tl_seat') ? buildDevTour(day, dayPhaseSecFinal, tellMin, spots) : null;
   const salary = obj(rules['salary']);
   const snack = obj(rules['snackStock']);
   return {
@@ -614,12 +713,9 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       deadZoneTiles: num(camera['deadZoneTiles'], 2), lerpPerFrame: num(camera['lerpPerFrame'], 0.15), clampToMap: camera['clampToMap'] !== false,
     },
     spots,
-    zones: arr(map['zones']).map(obj).map((z) => ({
-      id: str(z['id']), nameKey: str(z['nameKey']), rect: (arr(z['rect']).map((v) => num(v, 0)) as unknown) as [number, number, number, number],
-      ...(z['outsideOffice'] === true ? { outsideOffice: true } : {}),
-    })),
+    zones: map.zones,
     playerSeat,
-    coverSpots: arr(map['coverSpots']).map(obj).map((c) => tile2(c['tile'])),
+    coverSpots: map.coverSpots,
     introSec: num(dayCfg['introSec'], 2),
     dayPhaseSec: num(plan['dayPhaseSec'], num(rank['dayPhaseSec'], 50)),
     // BUG-011: 시계 기준(18시 전 탈출·야근 등)은 데이터(rules.day)에서만 읽는다. 코드 기본 시각 없음 → 빠지면 로드 실패
@@ -666,5 +762,12 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       directorStartWaitsWhileCeoOnFloor: h7['directorStartWaitsWhileCeoOnFloor'] === true,
     },
     playerSpriteKey: str(obj(rules['characters'])['playerSpriteKey'], 'player'),
+    ...(tour ? { bossTours: [tour] } : {}),
+    layout: {
+      source: map.source, mapId: map.id,
+      ...(map.gen ? {
+        seed: map.gen.seed, complexity: map.gen.complexity, attempts: map.gen.attempts, modules: map.gen.modules, failures: map.gen.failures,
+      } : {}),
+    },
   };
 }

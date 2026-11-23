@@ -18,9 +18,10 @@ import { findPath } from '../pathfinding';
 import type { NpcDef, PatrolNpc, WaypointDef } from '../patrol';
 import { addSuspicion } from '../suspicion';
 import { createActivity, emptyEffects, type Activity, type ActivityEffects, type ActivityView } from './missions';
+import { evaluateMissionConditions } from './modifiers';
 import type { CameraView } from '../camera';
 import type {
-  DayContent, DayInterruptDef, DayOutcome, DayPhase, DayResult, LeaveStage, MissionDef, MissionState,
+  BossTourDef, DayContent, DayInterruptDef, DayOutcome, DayPhase, DayResult, LeaveStage, MissionDef, MissionState,
 } from './types';
 
 export type CeoVisitState = 'none' | 'skipped' | 'pending' | 'tell' | 'freeze' | 'qte' | 'talk' | 'exit' | 'resume' | 'done' | 'cancelled';
@@ -33,7 +34,7 @@ export type DayEvent =
   | { t: number; type: 'missionUnlocked'; id: string }
   | { t: number; type: 'missionStart'; id: string }
   | { t: number; type: 'missionSuccess'; id: string }
-  | { t: number; type: 'missionDone'; id: string; points: number }
+  | { t: number; type: 'missionDone'; id: string; points: number; bonus?: readonly string[] }
   | { t: number; type: 'missionFail'; id: string; reason: 'fail' | 'timeout' }
   | { t: number; type: 'interrupt'; id: string; textKey?: string }
   | { t: number; type: 'leaveStage'; stage: LeaveStage }
@@ -52,7 +53,9 @@ export type DayEvent =
   | { t: number; type: 'say'; npc: string; key: string; sec: number }
   | { t: number; type: 'routeHint'; routes: { id: string; kind: 'hint' | 'caution'; tiles: Tile[] }[]; sec: number }
   | { t: number; type: 'offscreenDemo'; actor: string; sec: number }
-  | { t: number; type: 'continued' };
+  | { t: number; type: 'continued' }
+  // ── T-144 팀장 순회(D-075): stand = 일어나기 전조 시작, seated = 자리 복귀 완료, skipped = 늦어져 취소 ──
+  | { t: number; type: 'tour'; actor: string; stage: 'stand' | 'seated' | 'skipped'; index: number; npc?: string };
 
 /** 미션 런타임 상태 */
 export interface MissionRuntime {
@@ -62,6 +65,8 @@ export interface MissionRuntime {
   startedAt: number | null;
   /** 잠김 사유(회의 중) */
   blocked: boolean;
+  /** 변형 조건 판정용 기록(T-144). 시작 시점에 생김 */
+  run?: { susAtStart: number; seenSec: number };
 }
 
 export interface DaySimOptions {
@@ -189,6 +194,8 @@ export class DaySim {
   private slowMoLeft = 0;
   private slowMoScale = 1;
   private scriptCount = new Map<number, number>();
+  // ── 팀장 순회(D-075, T-144) ──
+  private tours = new Map<BossTourDef, { next: number; npc: PatrolNpc | null; index: number }>();
   // ── 이어하기(D-050) ──
   continued = false;
   private endedFrom: { phase: DayPhase; leaveStage: LeaveStage } | null = null;
@@ -334,8 +341,8 @@ export class DaySim {
     this.floor.player.teleport(tile);
     this.floor.camera?.snap(this.floor.player.y);
     for (const n of this.floor.npcs) if (n.mode === 'talk' || n.mode === 'tell' || n.mode === 'look') n.interruptLook(this.floor.rng);
-    if (this.activeMission) { this.activeMission.state = 'open'; this.activeMission.startedAt = null; }
-    for (const m of this.missions) if (m.state === 'carry' || m.state === 'active') { m.state = 'open'; m.startedAt = null; }
+    if (this.activeMission) { this.activeMission.state = 'open'; this.activeMission.startedAt = null; delete this.activeMission.run; }
+    for (const m of this.missions) if (m.state === 'carry' || m.state === 'active') { m.state = 'open'; m.startedAt = null; delete m.run; }
     this.activity = null; this.activeMission = null; this.pendingMission = null;
     this.dismissAccomplice();
     this.endCeoVisit(false);
@@ -453,6 +460,7 @@ export class DaySim {
     this.elevatorCeoStep();
     this.accompliceStep(dt);
     this.greetingStep(dt);
+    this.tourStep();
     this.scriptWatchers();
     if (this.ceoState !== 'none' && this.ceoState !== 'pending' && this.ceoState !== 'skipped' && this.ceoState !== 'done' && this.ceoState !== 'cancelled') {
       this.ceoGain += Math.max(0, this.floor.suspicion.value - s0);
@@ -672,6 +680,12 @@ export class DaySim {
     for (const m of this.missions) {
       if (m.state === 'carry' && this.playerAtSeat && this.floor.playerStill) this.completeMission(m);
     }
+    // 변형 조건 기록(T-144): 시작 후 의심 증가·시선 시간
+    for (const m of this.missions) {
+      if (m.startedAt === null || m.state === 'done' || m.state === 'failed' || m.state === 'locked') continue;
+      if (!m.run) m.run = { susAtStart: this.floor.suspicion.value, seenSec: 0 };
+      else if (this.floor.gazeNow > 0) m.run.seenSec += dt;
+    }
     // 제한 시간
     for (const m of this.missions) {
       if ((m.state === 'active' || m.state === 'carry' || (m.state === 'open' && m === this.pendingMission)) && m.startedAt !== null
@@ -750,11 +764,26 @@ export class DaySim {
   }
 
   private completeMission(m: MissionRuntime): void {
+    // 변형 조건(T-144): 충족한 변형의 rewardMul을 곱하고, onFail 'fail' 조건을 놓치면 실패 처리
+    let modMul = 1;
+    let bonus: string[] = [];
+    if (m.def.modifiers && m.def.modifiers.length > 0) {
+      const r = evaluateMissionConditions(m.def, {
+        elapsedSec: m.startedAt !== null ? this.time - m.startedAt : 0,
+        suspicionGain: Math.max(0, this.floor.suspicion.value - (m.run?.susAtStart ?? this.floor.suspicion.value)),
+        seenSec: m.run?.seenSec ?? 0,
+      });
+      if (r.fail) { this.failMission(m, 'fail'); return; }
+      modMul = r.rewardMul;
+      bonus = r.met;
+    }
     m.state = 'done';
-    const mul = m === this.joinedMission ? (this.content.accomplice?.rewardMultiplier ?? 1) : 1;
+    const mul = (m === this.joinedMission ? (this.content.accomplice?.rewardMultiplier ?? 1) : 1) * modMul;
     this.addPoints(m.def.reward.slackPoints * mul);
     if (m.def.reward.snackStock) this.snackStock = Math.min(this.content.scoring.snackStockMax, this.snackStock + m.def.reward.snackStock);
-    this.push({ t: this.time, type: 'missionDone', id: m.def.id, points: m.def.reward.slackPoints * mul });
+    this.push(bonus.length > 0
+      ? { t: this.time, type: 'missionDone', id: m.def.id, points: m.def.reward.slackPoints * mul, bonus }
+      : { t: this.time, type: 'missionDone', id: m.def.id, points: m.def.reward.slackPoints * mul });
     if (m === this.joinedMission) this.dismissAccomplice();
   }
 
@@ -1449,6 +1478,78 @@ export class DaySim {
       this.floor.addNpc(ok ? rest : seatDef);
     }
     this.push({ t: this.time, type: 'accomplice', action: 'leave' });
+  }
+
+  // ── 팀장 순회(D-075, T-144) ─────────────────────────────
+
+  /** 지금 순회 중인 상사 NPC(표시·QA용) */
+  touringNpcs(): PatrolNpc[] {
+    const out: PatrolNpc[] = [];
+    for (const st of this.tours.values()) if (st.npc && this.floor.npcs.includes(st.npc)) out.push(st.npc);
+    return out;
+  }
+
+  /** 오늘 시작한 순회 횟수(actorId별, QA용) */
+  tourCount(actorId: string): number {
+    let n = 0;
+    for (const [def, st] of this.tours) if (def.actorId === actorId) n += st.index;
+    return n;
+  }
+
+  /**
+   * 앉은 상사 순회. 예정 시각이 지나면 '앉아서 대기(wait) 중'일 때만 출발한다(전조·돌아보기·통화·말걸기 중이면 다음 스텝으로 미룸).
+   * 출발 = 앉은 순찰을 순회 순찰로 교체: 0번 웨이포인트(자리)에서 standTellSec 동안 시선 없이 서 있음(일어나기 전조) →
+   * 경유지 → 자리 → thenPatrol로 앉은 순찰 복귀. 걷기 방향 전환 전조는 PatrolNpc(D-038/D-044)가 처리한다.
+   */
+  private tourStep(): void {
+    const defs = this.content.bossTours;
+    if (!defs || defs.length === 0) return;
+    for (const def of defs) {
+      let st = this.tours.get(def);
+      if (!st) { st = { next: 0, npc: null, index: 0 }; this.tours.set(def, st); }
+      if (st.npc) {
+        if (this.floor.npcs.includes(st.npc)) continue;
+        // 교체됨(thenPatrol로 앉음 또는 다른 규칙이 바꿈)
+        const back = this.floor.findNpc((n) => n.def.actorId === def.actorId && !!n.def.seated && n.def.patrolId === def.seatPatrolId);
+        st.npc = null;
+        if (back) this.push({ t: this.time, type: 'tour', actor: def.actorId, stage: 'seated', index: st.index - 1, npc: back.def.id });
+        continue;
+      }
+      if (this.phase !== 'day' || st.next >= def.atSec.length) continue;
+      if (this.dayTime < def.atSec[st.next]!) continue;
+      if (this.dayTime > def.latestStartSec) {
+        for (; st.next < def.atSec.length; st.next++) this.push({ t: this.time, type: 'tour', actor: def.actorId, stage: 'skipped', index: st.next });
+        continue;
+      }
+      if (this.frozenAll || this.qteActive || this.greetState !== 'idle') continue;
+      if (this.ceoState !== 'none' && this.ceoState !== 'pending' && this.ceoState !== 'skipped' && this.ceoState !== 'done' && this.ceoState !== 'cancelled') continue;
+      const seat = this.floor.findNpc((n) => n.def.actorId === def.actorId && !!n.def.seated && n.def.patrolId === def.seatPatrolId);
+      if (!seat || seat.mode !== 'wait' || seat.suppressed) continue;
+      const route = def.routes[st.next] ?? def.routes[def.routes.length - 1] ?? [];
+      if (route.length === 0) { st.next++; continue; }
+      const sw = seat.def.waypoints[0]!;
+      const wps: WaypointDef[] = [
+        { x: sw.x, y: sw.y, waitSec: def.standTellSec, lookChance: 0, coneOff: true, stopId: 'stop_tour_stand', ...(sw.facing ? { facing: sw.facing } : {}) },
+        ...route.map((s): WaypointDef => ({
+          x: s.tile.x, y: s.tile.y, waitSec: s.waitSec, lookChance: s.lookChance ?? 0, stopId: `stop_tour_${s.id}`,
+          ...(s.facing ? { facing: s.facing } : {}),
+        })),
+        { x: sw.x, y: sw.y, waitSec: 0, lookChance: 0 },
+      ];
+      const { phone: _p, coneActiveIn: _c, idleSecRange: _i, ...base } = seat.def;
+      const tour: NpcDef = {
+        ...base, id: `${seat.def.id}_tour`, patrolId: `${def.seatPatrolId}_tour`, seated: false, loop: false,
+        thenPatrol: def.seatPatrolId, waypoints: wps,
+        ...(def.speedTilesPerSec !== undefined ? { speedTilesPerSec: def.speedTilesPerSec } : {}),
+        ...(def.coneActiveIn ? { coneActiveIn: def.coneActiveIn } : {}),
+      };
+      let npc: PatrolNpc;
+      try { npc = this.floor.replaceNpc(seat, tour); } catch { st.next++; continue; } // 경로 없음(생성 층 오류) → 이 회차 건너뜀
+      st.npc = npc;
+      st.next++;
+      st.index++;
+      this.push({ t: this.time, type: 'tour', actor: def.actorId, stage: 'stand', index: st.index - 1, npc: npc.def.id });
+    }
   }
 
   // ── 위계 연쇄 H1·H2(본부장 → 팀장 인사·길막) ─────────────────

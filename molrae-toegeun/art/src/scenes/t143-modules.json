@@ -1,0 +1,837 @@
+{
+ "_doc": "T-143 모듈 견본(180xN, 11칸 + 좌우 2px). 구역 바닥·벽 변형, 칸막이 반높이(시선 통과)/전높이(시선 차단) 비교와 잇기 16종 중 12종, 책상 배치 4종, 라운지·카페, 복도·막힌 길, 팀장 대기·앉기·일어나기. art/tools/t143_modules_src.py 로 만든 뒤 원본으로 고정",
+ "name": "t143-modules",
+ "preview": "t143-modules",
+ "size": [
+  180,
+  752
+ ],
+ "tile": [
+  16,
+  16
+ ],
+ "offset": [
+  2,
+  0
+ ],
+ "bg": "outline",
+ "depth_sort": true,
+ "tiles": {
+  "#": "tile/wall_cap",
+  "[": "tile/wall_cap_l",
+  "]": "tile/wall_cap_r",
+  "=": "tile/wall_face",
+  "w": "tile/wall_window",
+  "k": "tile2/wall_rack",
+  "p": "tile2/wall_print_sign",
+  "b": "tile2/wall_blind",
+  "u": "tile2/wall_blind_up",
+  "B": "tile2/wall_books",
+  "m": "tile2/wall_cafe_menu",
+  "l": "tile2/wall_lounge",
+  "a": "tile2/wall_lounge_art",
+  "n": "tile2/wall_team2",
+  "s": "tile2/wall_stairs",
+  "x": "tile2/wall_exit_sign_l",
+  "X": "tile2/wall_exit_sign_r",
+  "y": "tile2/wall_door_busy",
+  "g": "tile2/wall_door_free",
+  "P": "tile2/floor_print",
+  "Y": "tile2/floor_print_mark",
+  "F": "tile/floor",
+  "f": "tile/floor_b",
+  "T": "tile2/floor_team2",
+  "t": "tile2/floor_team2_b",
+  "L": "tile2/floor_lounge",
+  "C": "tile2/floor_cafe",
+  "H": "tile2/floor_hall_a",
+  "V": "tile2/floor_hall_b_v",
+  "h": "tile2/floor_hall_b_h",
+  "1": "tile2/floor_stairs_l",
+  "2": "tile2/floor_stairs_r",
+  " ": null
+ },
+ "layers": [
+  [
+   "###########",
+   "[kkkpbubkk]",
+   "[PPPPPPPPP]",
+   "[PPPPYYPPP]",
+   "[PPPPPPPPP]",
+   "[#########]",
+   "[w===w===w]",
+   "[FFfFFFFfF]",
+   "[FFFFFFFFF]",
+   "[FFFFFFFFF]",
+   "[FFFFfFFFF]",
+   "[FFFFFFFFF]",
+   "[FFFFFFFFF]",
+   "[FFFFFFFFF]",
+   "[FFFFFFFFF]",
+   "[FFFFFFFFF]",
+   "[FFfFFFFFF]",
+   "[FFFFFFFFF]",
+   "[#########]",
+   "[BBBB=nnnn]",
+   "[FFFFFTTTT]",
+   "[FFFFFTtTT]",
+   "[FFFFFTTTT]",
+   "[FFFFFTTTT]",
+   "[FFFFFFFFF]",
+   "[FFFFFFFFF]",
+   "[FFFfFFFFF]",
+   "[FFFFFFFFF]",
+   "[FFFFFFFFF]",
+   "[#########]",
+   "[laabl=mm=]",
+   "[LLLLLCCCC]",
+   "[LLLLLCCCC]",
+   "[LLLLLCCCC]",
+   "[LLLLLCCCC]",
+   "[LLLLLCCCC]",
+   "[#########]",
+   "[sxy=g=BBB]",
+   "[HHHHHHHHH]",
+   "[HHHHHHHHH]",
+   "[HHHHHHHHH]",
+   "[hhhhhhhhh]",
+   "[hhhhhhhhh]",
+   "[12VFFFFFF]",
+   "[12VFFFFFF]",
+   "[FFVFFFFFF]",
+   "###########"
+  ]
+ ],
+ "objects": [
+  {
+   "sprite": "tall2/cabinet",
+   "tx": 1,
+   "ty": 2
+  },
+  {
+   "sprite": "tall2/cabinet",
+   "tx": 2,
+   "ty": 2
+  },
+  {
+   "sprite": "tall2/cabinet_open",
+   "tx": 3,
+   "ty": 2
+  },
+  {
+   "sprite": "wide24/mfp",
+   "tx": 5,
+   "ty": 2,
+   "dx": 8
+  },
+  {
+   "sprite": "furn2/paper_box",
+   "tx": 7,
+   "ty": 2
+  },
+  {
+   "sprite": "furn2/cabinet_low",
+   "tx": 8,
+   "ty": 2
+  },
+  {
+   "sprite": "tall2/box_stack",
+   "tx": 9,
+   "ty": 2
+  },
+  {
+   "sprite": "teamlead/wait_up_0",
+   "tx": 5,
+   "ty": 3,
+   "dx": 8,
+   "shadow": true
+  },
+  {
+   "sprite": "furn2/box_low",
+   "tx": 9,
+   "ty": 4
+  },
+  {
+   "sprite": "bg_a/idle_down",
+   "tx": 2,
+   "ty": 8,
+   "shadow": true
+  },
+  {
+   "sprite": "bg_c/idle_down",
+   "tx": 7,
+   "ty": 8,
+   "shadow": true
+  },
+  {
+   "sprite": "phalf/e",
+   "tx": 1,
+   "ty": 9
+  },
+  {
+   "sprite": "phalf/ew",
+   "tx": 2,
+   "ty": 9
+  },
+  {
+   "sprite": "phalf/ew",
+   "tx": 3,
+   "ty": 9
+  },
+  {
+   "sprite": "phalf/w",
+   "tx": 4,
+   "ty": 9
+  },
+  {
+   "sprite": "pfull/e",
+   "tx": 6,
+   "ty": 9
+  },
+  {
+   "sprite": "pfull/ew",
+   "tx": 7,
+   "ty": 9
+  },
+  {
+   "sprite": "pfull/ew",
+   "tx": 8,
+   "ty": 9
+  },
+  {
+   "sprite": "pfull/w",
+   "tx": 9,
+   "ty": 9
+  },
+  {
+   "sprite": "player/idle_down",
+   "tx": 5,
+   "ty": 9,
+   "shadow": true
+  },
+  {
+   "sprite": "bg_b/idle_up",
+   "tx": 3,
+   "ty": 10,
+   "shadow": true
+  },
+  {
+   "sprite": "teamlead/idle_up",
+   "tx": 8,
+   "ty": 10,
+   "shadow": true
+  },
+  {
+   "sprite": "phalf/es",
+   "tx": 1,
+   "ty": 13
+  },
+  {
+   "sprite": "pfull/es",
+   "tx": 6,
+   "ty": 13
+  },
+  {
+   "sprite": "phalf/ew",
+   "tx": 2,
+   "ty": 13
+  },
+  {
+   "sprite": "pfull/ew",
+   "tx": 7,
+   "ty": 13
+  },
+  {
+   "sprite": "phalf/esw",
+   "tx": 3,
+   "ty": 13
+  },
+  {
+   "sprite": "pfull/esw",
+   "tx": 8,
+   "ty": 13
+  },
+  {
+   "sprite": "phalf/sw",
+   "tx": 4,
+   "ty": 13
+  },
+  {
+   "sprite": "pfull/sw",
+   "tx": 9,
+   "ty": 13
+  },
+  {
+   "sprite": "phalf/ns",
+   "tx": 1,
+   "ty": 14
+  },
+  {
+   "sprite": "pfull/ns",
+   "tx": 6,
+   "ty": 14
+  },
+  {
+   "sprite": "phalf/ns",
+   "tx": 3,
+   "ty": 14
+  },
+  {
+   "sprite": "pfull/ns",
+   "tx": 8,
+   "ty": 14
+  },
+  {
+   "sprite": "phalf/ns",
+   "tx": 4,
+   "ty": 14
+  },
+  {
+   "sprite": "pfull/ns",
+   "tx": 9,
+   "ty": 14
+  },
+  {
+   "sprite": "phalf/nes",
+   "tx": 1,
+   "ty": 15
+  },
+  {
+   "sprite": "pfull/nes",
+   "tx": 6,
+   "ty": 15
+  },
+  {
+   "sprite": "phalf/ew",
+   "tx": 2,
+   "ty": 15
+  },
+  {
+   "sprite": "pfull/ew",
+   "tx": 7,
+   "ty": 15
+  },
+  {
+   "sprite": "phalf/nesw",
+   "tx": 3,
+   "ty": 15
+  },
+  {
+   "sprite": "pfull/nesw",
+   "tx": 8,
+   "ty": 15
+  },
+  {
+   "sprite": "phalf/nsw",
+   "tx": 4,
+   "ty": 15
+  },
+  {
+   "sprite": "pfull/nsw",
+   "tx": 9,
+   "ty": 15
+  },
+  {
+   "sprite": "phalf/ne",
+   "tx": 1,
+   "ty": 16
+  },
+  {
+   "sprite": "pfull/ne",
+   "tx": 6,
+   "ty": 16
+  },
+  {
+   "sprite": "phalf/ew",
+   "tx": 2,
+   "ty": 16
+  },
+  {
+   "sprite": "pfull/ew",
+   "tx": 7,
+   "ty": 16
+  },
+  {
+   "sprite": "phalf/new",
+   "tx": 3,
+   "ty": 16
+  },
+  {
+   "sprite": "pfull/new",
+   "tx": 8,
+   "ty": 16
+  },
+  {
+   "sprite": "phalf/nw",
+   "tx": 4,
+   "ty": 16
+  },
+  {
+   "sprite": "pfull/nw",
+   "tx": 9,
+   "ty": 16
+  },
+  {
+   "sprite": "bg_a/idle_down",
+   "tx": 2,
+   "ty": 14,
+   "shadow": true
+  },
+  {
+   "sprite": "bg_a/idle_down",
+   "tx": 7,
+   "ty": 14,
+   "shadow": true
+  },
+  {
+   "sprite": "phalf/o",
+   "tx": 5,
+   "ty": 12
+  },
+  {
+   "sprite": "pfull/s",
+   "tx": 5,
+   "ty": 14
+  },
+  {
+   "sprite": "pfull/n",
+   "tx": 5,
+   "ty": 15
+  },
+  {
+   "sprite": "furn2/desk_row_l",
+   "tx": 1,
+   "ty": 20
+  },
+  {
+   "sprite": "furn2/desk_row_m",
+   "tx": 2,
+   "ty": 20
+  },
+  {
+   "sprite": "furn2/desk_row_m",
+   "tx": 3,
+   "ty": 20
+  },
+  {
+   "sprite": "furn2/desk_row_r",
+   "tx": 4,
+   "ty": 20
+  },
+  {
+   "sprite": "bg_a/sit_type_0",
+   "tx": 2,
+   "ty": 21,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 1,
+   "ty": 21
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 2,
+   "ty": 21
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 3,
+   "ty": 21
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 4,
+   "ty": 21
+  },
+  {
+   "sprite": "furn/chair_s",
+   "tx": 7,
+   "ty": 20,
+   "dy": 4
+  },
+  {
+   "sprite": "furn/chair_s",
+   "tx": 8,
+   "ty": 20,
+   "dy": 4
+  },
+  {
+   "sprite": "isle32/island4",
+   "tx": 7,
+   "ty": 22,
+   "dx": 8
+  },
+  {
+   "sprite": "bg_c/sit_type_1",
+   "tx": 7,
+   "ty": 23,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 7,
+   "ty": 23
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 8,
+   "ty": 23
+  },
+  {
+   "sprite": "furn/chair_s",
+   "tx": 1,
+   "ty": 23,
+   "dy": 4
+  },
+  {
+   "sprite": "furn/chair_s",
+   "tx": 2,
+   "ty": 23,
+   "dy": 4
+  },
+  {
+   "sprite": "furn/chair_s",
+   "tx": 3,
+   "ty": 23,
+   "dy": 4
+  },
+  {
+   "sprite": "isle48/island6",
+   "tx": 2,
+   "ty": 25
+  },
+  {
+   "sprite": "bg_b/sit_type_0",
+   "tx": 1,
+   "ty": 26,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 1,
+   "ty": 26
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 2,
+   "ty": 26
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 3,
+   "ty": 26
+  },
+  {
+   "sprite": "isle32/cubicle_low",
+   "tx": 5,
+   "ty": 27,
+   "dx": 8
+  },
+  {
+   "sprite": "bg_a/sit_type_1",
+   "tx": 5,
+   "ty": 27,
+   "dx": 8,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 5,
+   "ty": 27,
+   "dx": 8
+  },
+  {
+   "sprite": "cube52/cubicle_high",
+   "tx": 7,
+   "ty": 27,
+   "dx": 8
+  },
+  {
+   "sprite": "bg_c/sit_type_0",
+   "tx": 7,
+   "ty": 27,
+   "dx": 8,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair",
+   "tx": 7,
+   "ty": 27,
+   "dx": 8
+  },
+  {
+   "sprite": "teamlead/sit_up",
+   "tx": 9,
+   "ty": 27,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair_high",
+   "tx": 9,
+   "ty": 27
+  },
+  {
+   "sprite": "tall2/vending_drink",
+   "tx": 1,
+   "ty": 31
+  },
+  {
+   "sprite": "tall2/vending_snack",
+   "tx": 2,
+   "ty": 31
+  },
+  {
+   "sprite": "tall2/purifier",
+   "tx": 3,
+   "ty": 31
+  },
+  {
+   "sprite": "tall/plant",
+   "tx": 5,
+   "ty": 31
+  },
+  {
+   "sprite": "wide2/sofa_lounge",
+   "tx": 1,
+   "ty": 33,
+   "dx": 8
+  },
+  {
+   "sprite": "wide2/lounge_table",
+   "tx": 1,
+   "ty": 34,
+   "dx": 8,
+   "dy": 6
+  },
+  {
+   "sprite": "furn2/lounge_table",
+   "tx": 3,
+   "ty": 34
+  },
+  {
+   "sprite": "furn2/plant_small",
+   "tx": 4,
+   "ty": 33
+  },
+  {
+   "sprite": "wide24/plant_group",
+   "tx": 3,
+   "ty": 35,
+   "dx": 8
+  },
+  {
+   "sprite": "wide24/cafe_counter",
+   "tx": 6,
+   "ty": 31,
+   "dx": 8
+  },
+  {
+   "sprite": "tall/fridge",
+   "tx": 9,
+   "ty": 31
+  },
+  {
+   "sprite": "furn2/cafe_table",
+   "tx": 7,
+   "ty": 33
+  },
+  {
+   "sprite": "furn/stool",
+   "tx": 6,
+   "ty": 33
+  },
+  {
+   "sprite": "furn/stool",
+   "tx": 8,
+   "ty": 33
+  },
+  {
+   "sprite": "furn2/cafe_table",
+   "tx": 7,
+   "ty": 35
+  },
+  {
+   "sprite": "bg_b/stand_phone_left_0",
+   "tx": 9,
+   "ty": 34,
+   "shadow": true
+  },
+  {
+   "sprite": "teamlead/rise_up_1",
+   "tx": 6,
+   "ty": 35,
+   "dy": -3
+  },
+  {
+   "sprite": "furn/chair_high",
+   "tx": 6,
+   "ty": 35
+  },
+  {
+   "sprite": "tall2/pillar",
+   "tx": 4,
+   "ty": 38
+  },
+  {
+   "sprite": "wide24/locker",
+   "tx": 8,
+   "ty": 38,
+   "dx": 8
+  },
+  {
+   "sprite": "furn2/exit_hang_l",
+   "tx": 2,
+   "ty": 39,
+   "dy": -10
+  },
+  {
+   "sprite": "furn2/sign_wet",
+   "tx": 2,
+   "ty": 40
+  },
+  {
+   "sprite": "furn2/cone",
+   "tx": 3,
+   "ty": 40
+  },
+  {
+   "sprite": "furn2/sign_work",
+   "tx": 6,
+   "ty": 40
+  },
+  {
+   "sprite": "furn2/barrier",
+   "tx": 5,
+   "ty": 40
+  },
+  {
+   "sprite": "furn2/barrier",
+   "tx": 7,
+   "ty": 40
+  },
+  {
+   "sprite": "tall2/pillar",
+   "tx": 4,
+   "ty": 42
+  },
+  {
+   "sprite": "wide24/box_pile",
+   "tx": 7,
+   "ty": 42,
+   "dx": 8
+  },
+  {
+   "sprite": "furn2/box_low",
+   "tx": 9,
+   "ty": 42
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 4,
+   "ty": 44
+  },
+  {
+   "sprite": "tall2/glass_door_busy",
+   "tx": 5,
+   "ty": 44
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 6,
+   "ty": 44
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 7,
+   "ty": 44
+  },
+  {
+   "sprite": "tall2/glass_door_busy",
+   "tx": 8,
+   "ty": 44
+  },
+  {
+   "sprite": "tall/glass_h",
+   "tx": 9,
+   "ty": 44
+  },
+  {
+   "sprite": "player/idle_up",
+   "tx": 3,
+   "ty": 41,
+   "shadow": true
+  },
+  {
+   "sprite": "furn/chair_exec",
+   "tx": 6,
+   "ty": 45,
+   "depth_bias": -10
+  },
+  {
+   "sprite": "teamlead/sit_down",
+   "tx": 6,
+   "ty": 45,
+   "dy": -2
+  },
+  {
+   "sprite": "teamlead/rise_down_1",
+   "tx": 8,
+   "ty": 45,
+   "dy": -1,
+   "shadow": true
+  }
+ ],
+ "labels": [
+  {
+   "x": 6,
+   "y": 76,
+   "text": "PRINT STORAGE"
+  },
+  {
+   "x": 6,
+   "y": 180,
+   "text": "HALF SEE"
+  },
+  {
+   "x": 98,
+   "y": 180,
+   "text": "FULL BLOCK"
+  },
+  {
+   "x": 6,
+   "y": 278,
+   "text": "HALF"
+  },
+  {
+   "x": 98,
+   "y": 278,
+   "text": "FULL"
+  },
+  {
+   "x": 6,
+   "y": 452,
+   "text": "ROW ISLAND"
+  },
+  {
+   "x": 82,
+   "y": 452,
+   "text": "CUBE LOW HIGH"
+  },
+  {
+   "x": 6,
+   "y": 580,
+   "text": "LOUNGE"
+  },
+  {
+   "x": 98,
+   "y": 580,
+   "text": "CAFE"
+  },
+  {
+   "x": 50,
+   "y": 732,
+   "text": "HALL STAIRS BLOCKED"
+  }
+ ]
+}

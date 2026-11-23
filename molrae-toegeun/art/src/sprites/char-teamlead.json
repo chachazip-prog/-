@@ -2,76 +2,336 @@
  "name": "teamlead",
  "group": "boss",
  "base": "body-b",
- "note": "팀장(상사). 바디 B(평평한 윗머리) + 보라 정장 + 흰 셔츠 깃 + 빨간 사원증 줄(D-037) + 결재판(갈색). T-125: 왼쪽 가르마(밝은 가르마선 M) + 굵은 눈썹 2px(플레이어는 눈썹 없음, 삐침머리 없음)",
+ "note": "팀장(상사). 바디 B(평평한 윗머리) + 보라 정장 + 흰 셔츠 깃 + 빨간 사원증 줄(D-037) + 결재판(갈색). T-125: 왼쪽 가르마(밝은 가르마선 M) + 굵은 눈썹 2px(플레이어는 눈썹 없음, 삐침머리 없음) T-143: 순회용 sit_up(뒷모습 앉기, chair_high 뒤 dy:-3) · rise_up_0/1(일어나기 전조: 팔꿈치 벌림 → 반쯤 일어남 + 먼지), 정면 sit_down · rise_down_0/1, 프린터 앞 대기 wait_up_0/1(결재판 뒷짐 + 발 까딱)",
  "swap": {
   "shirt": "suit",
   "shirt_sh": "suit_sh",
   "$lanyard": "point"
  },
  "stamps": [
-  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
-   "................",
-   "..OOOOOOOOOOOO..",
-   "..OHHHMHHHHHHO..",
-   ".OHHHHMHHDDHHHO.",
-   ".OHHHHHHHHHHHHO.",
-   ".OHHSSSSSSSSHHO.",
-   ".OHSHHSSSSHHSHO.",
-   ".OSSSOSSSSOSSSO.",
-   ".OSSSOSSSSOSSSO.",
-   ".OSSSSSssSSSSSO.",
-   "..OOOOssssOOOO.."
-  ]},
-  {"dir": "up", "clear": true, "x": 0, "y": 0, "rows": [
-   "................",
-   "..OOOOOOOOOOOO..",
-   "..OHHHHHHMHHHO..",
-   ".OHHHDDHHMHHHHO.",
-   ".OHHHHHHHHHHHHO.",
-   ".OHHHHHHHHHHHHO.",
-   ".OHHHHHHHHHHHHO.",
-   ".OHHHHHHHHHHHHO.",
-   ".OSHHHHHHHHHHSO.",
-   ".OHHHHHHHHHHHHO.",
-   "..OOOOssssOOOO.."
-  ]},
-  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
-   "................",
-   "..OOOOOOOOOO....",
-   "..OHHHHHMHHO....",
-   ".OHHHHHHMDDHO...",
-   ".OHHHHHHHHHHHO..",
-   ".OHHHHHHHHHHHO..",
-   ".OHHHHHHHSHHHO..",
-   ".OHHHHHSSSSOSO..",
-   ".OHHHHHsSSSOSO..",
-   ".OHHHHHSSSSSSO..",
-   "..OOOOOsssOOO..."
-  ]},
-  {"dir": "down", "x": 7, "y": 11, "rows": ["WW"]},
-  {"dir": "down", "x": 12, "y": 12, "rows": [
-   ".OOO",
-   ".OtO",
-   "SOtO",
-   "OOtO",
-   ".OtO",
-   ".OOO"
-  ]},
-  {"dir": "up", "x": 0, "y": 12, "rows": [
-   "OOO",
-   "OtO",
-   "OtO",
-   "OtO",
-   "OtO",
-   "OOO"
-  ]},
-  {"dir": "right", "x": 10, "y": 11, "rows": ["W"]},
-  {"dir": "right", "x": 3, "y": 12, "rows": [
-   "OOOO",
-   "OWtO",
-   "OWtO",
-   "OWtO",
-   "OOOO"
-  ]}
+  {
+   "dir": "down",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "................",
+    "..OOOOOOOOOOOO..",
+    "..OHHHMHHHHHHO..",
+    ".OHHHHMHHDDHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHSSSSSSSSHHO.",
+    ".OHSHHSSSSHHSHO.",
+    ".OSSSOSSSSOSSSO.",
+    ".OSSSOSSSSOSSSO.",
+    ".OSSSSSssSSSSSO.",
+    "..OOOOssssOOOO.."
+   ]
+  },
+  {
+   "dir": "up",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "................",
+    "..OOOOOOOOOOOO..",
+    "..OHHHHHHMHHHO..",
+    ".OHHHDDHHMHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OSHHHHHHHHHHSO.",
+    ".OHHHHHHHHHHHHO.",
+    "..OOOOssssOOOO.."
+   ]
+  },
+  {
+   "dir": "right",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "................",
+    "..OOOOOOOOOO....",
+    "..OHHHHHMHHO....",
+    ".OHHHHHHMDDHO...",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHSHHHO..",
+    ".OHHHHHSSSSOSO..",
+    ".OHHHHHsSSSOSO..",
+    ".OHHHHHSSSSSSO..",
+    "..OOOOOsssOOO..."
+   ]
+  },
+  {
+   "dir": "down",
+   "x": 7,
+   "y": 11,
+   "rows": [
+    "WW"
+   ]
+  },
+  {
+   "dir": "down",
+   "x": 12,
+   "y": 12,
+   "rows": [
+    ".OOO",
+    ".OtO",
+    "SOtO",
+    "OOtO",
+    ".OtO",
+    ".OOO"
+   ]
+  },
+  {
+   "dir": "up",
+   "x": 0,
+   "y": 12,
+   "rows": [
+    "OOO",
+    "OtO",
+    "OtO",
+    "OtO",
+    "OtO",
+    "OOO"
+   ]
+  },
+  {
+   "dir": "right",
+   "x": 10,
+   "y": 11,
+   "rows": [
+    "W"
+   ]
+  },
+  {
+   "dir": "right",
+   "x": 3,
+   "y": 12,
+   "rows": [
+    "OOOO",
+    "OWtO",
+    "OWtO",
+    "OWtO",
+    "OOOO"
+   ]
+  },
+  {
+   "frames": [
+    "rise_up_0",
+    "rise_up_1"
+   ],
+   "x": 0,
+   "y": 12,
+   "clear": true,
+   "rows": [
+    "..OPPPPPPPPPPO..",
+    ".OpOPPPPPPPPOpO.",
+    ".OpOpPPPPPPpOpO.",
+    ".OSOppppppppOSO.",
+    "...ODDDDDDDDO...",
+    "...ODDDOODDDO..."
+   ]
+  },
+  {
+   "frames": [
+    "rise_up_1",
+    "rise_down_1"
+   ],
+   "x": 0,
+   "y": 18,
+   "rows": [
+    "W..............W",
+    ".W............W."
+   ]
+  },
+  {
+   "frames": [
+    "rise_down_0",
+    "rise_down_1"
+   ],
+   "x": 0,
+   "y": 12,
+   "rows": [
+    ".OO.............",
+    "OpO.............",
+    "OSO.............",
+    ".O.............."
+   ]
+  },
+  {
+   "frames": [
+    "sit_down",
+    "rise_down_0"
+   ],
+   "x": 0,
+   "y": 15,
+   "rows": [
+    "............OOOO",
+    "................",
+    "................",
+    "..ODDDDDDDDDDO..",
+    "..OOOOOOOOOOOO.."
+   ]
+  },
+  {
+   "frames": [
+    "wait_up_0",
+    "wait_up_1"
+   ],
+   "x": 0,
+   "y": 12,
+   "rows": [
+    "__O",
+    "__O",
+    "__O",
+    "___",
+    "___",
+    "___"
+   ]
+  },
+  {
+   "frames": [
+    "wait_up_0"
+   ],
+   "x": 3,
+   "y": 13,
+   "rows": [
+    "OOOOOOOOOO",
+    "OSttttttSO",
+    "OOOOOOOOOO"
+   ]
+  },
+  {
+   "frames": [
+    "wait_up_1"
+   ],
+   "x": 3,
+   "y": 14,
+   "rows": [
+    "OOOOOOOOOO",
+    "OSttttttSO",
+    "OOOOOOOOOO"
+   ]
+  },
+  {
+   "frames": [
+    "wait_up_1"
+   ],
+   "x": 3,
+   "y": 18,
+   "rows": [
+    "ODDDOOOOOO",
+    "OOOOO_____"
+   ]
+  }
+ ],
+ "frames": [
+  {
+   "name": "sit_up",
+   "from": "idle_up",
+   "bob": [
+    2,
+    16
+   ]
+  },
+  {
+   "name": "rise_up_0",
+   "from": "idle_up",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "rise_up_1",
+   "from": "idle_up"
+  },
+  {
+   "name": "sit_down",
+   "from": "idle_down",
+   "bob": [
+    2,
+    16
+   ]
+  },
+  {
+   "name": "rise_down_0",
+   "from": "idle_down",
+   "bob": [
+    2,
+    16
+   ]
+  },
+  {
+   "name": "rise_down_1",
+   "from": "idle_down",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "wait_up_0",
+   "from": "idle_up"
+  },
+  {
+   "name": "wait_up_1",
+   "from": "idle_up"
+  }
+ ],
+ "anims": [
+  {
+   "key": "sit_up",
+   "frames": [
+    "sit_up"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "rise_up",
+   "frames": [
+    "rise_up_0",
+    "rise_up_0",
+    "rise_up_1"
+   ],
+   "frameRate": 4,
+   "repeat": 0
+  },
+  {
+   "key": "sit_down",
+   "frames": [
+    "sit_down"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "rise_down",
+   "frames": [
+    "rise_down_0",
+    "rise_down_0",
+    "rise_down_1"
+   ],
+   "frameRate": 4,
+   "repeat": 0
+  },
+  {
+   "key": "wait_up",
+   "frames": [
+    "wait_up_0",
+    "wait_up_0",
+    "wait_up_1",
+    "wait_up_0",
+    "wait_up_1"
+   ],
+   "frameRate": 3,
+   "repeat": -1
+  }
  ]
 }

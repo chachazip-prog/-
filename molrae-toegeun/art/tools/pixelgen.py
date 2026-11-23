@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""몰래퇴근 픽셀 생성기 (pixelgen) v2.2 (T-130: from 프레임 복사, flat 키, 배경 동료 그룹).
+"""몰래퇴근 픽셀 생성기 (pixelgen) v2.3 (T-143: 장면 labels 이름표).
+(v2.2 T-130: from 프레임 복사, flat 키, 배경 동료 그룹)
 (v2.1 T-125: 걷기 들썩임 bob, clear 스탬프, 상사 줄 색 검사)
 
 원본(문자 격자 JSON)과 팔레트(art/palette.json)를 읽어 다음을 만든다.
@@ -30,7 +31,7 @@ PNG 인코더를 직접 구현했으므로 같은 입력이면 항상 같은 바
     {"name": "...", "from": "<frame>"} → 다른 프레임의 원본 격자(스탬프 전)를 복사(v2.2)
     flat: true          → 아틀라스 키를 "<name>/<frame>" 대신 "<frame>" 으로(데이터가 참조하는 아이콘 키, v2.2)
   scenes/*.json
-    size, tile, offset, bg, tiles, map, cones, objects(depth_sort), ui
+    size, tile, offset, bg, tiles, map, cones, objects(depth_sort), ui, labels[{x,y,text}](v2.3)
 """
 import argparse
 import hashlib
@@ -517,6 +518,10 @@ def build_scene(sc, by_key, legend, colors, pal):
         c.blit(render(f, legend, colors, ob.get("swap")), x + ox, y + oy, ob.get("flip", False))
     for ob in sc.get("ui", []):
         c.blit(render(by_key[ob["sprite"]], legend, colors), ob["x"], ob["y"])
+    for lb in sc.get("labels", []):  # 견본 이름표(v2.3): 흰 바탕 + 3x5 글자
+        n = len(lb["text"])
+        c.rect(lb["x"] - 1, lb["y"] - 1, n * 4 + 1, 7, colors["white"])
+        draw_text(c, lb["text"], lb["x"], lb["y"], colors[lb.get("color", "outline")])
     return c
 
 

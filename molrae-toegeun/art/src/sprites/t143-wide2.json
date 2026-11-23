@@ -1,0 +1,57 @@
+{
+ "name": "wide2",
+ "group": "furniture",
+ "size": [
+  32,
+  16
+ ],
+ "note": "T-143 32x16 라운지 소파·탁자",
+ "frames": [
+  {
+   "name": "sofa_lounge",
+   "rows": [
+    "................................",
+    "................................",
+    "....OOOOOOOOOOOOOOOOOOOOOOOO....",
+    "....OMMMMMMMMMMMMMMMMMMMMMMO....",
+    "....ODDOOOOOOODDDDOOOOOOODDO....",
+    ".OOOOODOCCCCCODDDDOCCCCCODOOOOO.",
+    ".OLLLODOCCCCCODDDDOCCCCCODOLLLO.",
+    ".OMMMODOcccccODDDDOcccccODOMMMO.",
+    ".OMMMODOOOOOOODDDDOOOOOOODOMMMO.",
+    ".OMMMOOOOOOOOOOOOOOOOOOOOOOMMMO.",
+    ".OMMMOLLLLLLLLLDLLLLLLLLLLOMMMO.",
+    ".OMMMOMMMMMMMMMDMMMMMMMMMMOMMMO.",
+    ".ODDDOOOOOOOOOOOOOOOOOOOOOODDDO.",
+    ".ODDDODDDDDDDDDDDDDDDDDDDDODDDO.",
+    ".OOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.",
+    "...OO......................OO..."
+   ]
+  },
+  {
+   "name": "lounge_table",
+   "rows": [
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "................................",
+    "..OOOOOOOOOOOOOOOOOOOOOOOOOOOO..",
+    "..OTTOOOOOOOTTTTTTTOOOTTTTTTTO..",
+    "..OTTOWWWWCOTTTTTTTOtOTTOOOTTO..",
+    "..OTTOCCCLLOTTTTTTTOOOTTOtOTTO..",
+    "..OTTOOOOOOOTTTTTTTTTTTTOOOTTO..",
+    "..OTTTTTTTTTTTTTTTTTTTTTTTTTTO..",
+    "..OOOOOOOOOOOOOOOOOOOOOOOOOOOO..",
+    "..OttttttttttttttttttttttttttO..",
+    "..OOOOOOOOOOOOOOOOOOOOOOOOOOOO..",
+    "....OO....................OO...."
+   ]
+  }
+ ],
+ "origin": [
+  0.5,
+  1
+ ]
+}

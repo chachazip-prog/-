@@ -32,6 +32,65 @@ export interface MissionDef {
   readonly tutorialId?: string;
   /** 공범 합류 시 적용(events[].accompliceEffect, T-136: 제안 수락 순간 적용). cupsRequired = 덮어쓰기, bitesRequiredMultiplier = 한 입 수 배율 */
   readonly accompliceEffect?: { readonly cupsRequired?: number; readonly bitesRequiredMultiplier?: number };
+  /**
+   * 변형(REQ-015, T-144 확장 지점). 정적 항목(제한 시간·장소·params·무조건 보상 배수)은 buildDay가 이미 반영했고,
+   * 여기 남은 목록은 조건(condition)이 있는 변형 — DaySim이 완료 시점에 판정한다(core/day/modifiers.ts)
+   */
+  readonly modifiers?: readonly MissionModifier[];
+}
+
+/**
+ * 미션 변형(modifier) 한 개. [임시] T-142 missions.json 스키마 확정 전 개발 모양 — 구체 변형 목록은 기획 데이터가 정한다.
+ * 적용 순서: timeLimit(set → mul → add) → spot → params 덮어쓰기 → rewardMul(조건 없으면 즉시, 있으면 조건 충족 시)
+ */
+export interface MissionModifier {
+  readonly id: string;
+  /** HUD 표시용 문구 키(선택) */
+  readonly labelKey?: string;
+  readonly timeLimit?: { readonly set?: number; readonly mul?: number; readonly add?: number };
+  /** 장소 바꾸기: 스팟 이름. 이 층에 없으면 무시(경고) */
+  readonly spot?: string;
+  /** mechanic params 얕은 덮어쓰기 */
+  readonly params?: Readonly<Record<string, unknown>>;
+  /** 보상(slackPoints) 배수 */
+  readonly rewardMul?: number;
+  /** 런타임 조건(MISSION_CONDITIONS 이름). 없으면 무조건 변형 */
+  readonly condition?: {
+    readonly id: string;
+    readonly args?: Readonly<Record<string, unknown>>;
+    /** 조건 실패 시: 보너스 없음(기본) / 미션 실패 처리 */
+    readonly onFail?: 'no_bonus' | 'fail';
+  };
+}
+
+/** 팀장 순회 한 지점(D-075) */
+export interface BossTourStop {
+  readonly id: string;
+  readonly tile: Tile;
+  readonly waitSec: number;
+  readonly facing?: Dir;
+  /** 도착 후 둘러보기 확률(전조 필수 — PatrolNpc 규칙) */
+  readonly lookChance?: number;
+}
+
+/**
+ * 앉은 상사 순회(D-075, T-144): atSec마다 '일어나기 전조(standTellSec, 시선 없음) → stops 순회 → 자리 복귀 → 앉기'.
+ * 출발·모퉁이 방향 전환 전조는 PatrolNpc의 D-038/D-044 규칙을 그대로 따른다. 자리를 비운 동안 앉은 모드 시선은 없다(앉은 순찰이 교체됨).
+ */
+export interface BossTourDef {
+  readonly actorId: string;
+  /** 앉아 있는 순찰 id(이 순찰로 앉아 있을 때만 출발, 끝나면 이 순찰로 복귀) */
+  readonly seatPatrolId: string;
+  /** 근무 구간 기준 출발 예정 시각(초, 오름차순) */
+  readonly atSec: readonly number[];
+  /** 회차별 경유지 */
+  readonly routes: readonly (readonly BossTourStop[])[];
+  readonly standTellSec: number;
+  /** 이 시각(근무 구간 초) 이후로 밀린 회차는 취소 */
+  readonly latestStartSec: number;
+  readonly speedTilesPerSec?: number;
+  /** 순회 중 시선이 켜지는 상태(없으면 걷기·대기·전조·돌아보기 모두) */
+  readonly coneActiveIn?: readonly ('walk' | 'wait' | 'tell' | 'look')[];
 }
 
 export interface GateDef {
@@ -274,6 +333,19 @@ export interface DayContent {
   readonly caughtCutinSec?: number;
   /** H7 런타임 보조(days.generator.dayInterrupts.h7, T-136 ④) */
   readonly h7?: { readonly ceoStartWaitsWhileDirectorOnFloor: boolean; readonly directorStartWaitsWhileCeoOnFloor: boolean };
+  // ── T-144 ──
+  /** 앉은 상사 순회(D-075). 없으면 순회 없음 */
+  readonly bossTours?: readonly BossTourDef[];
+  /** 이 날 층의 출처(디버그·QA): 수작업 / 생성 / 생성 실패 폴백 */
+  readonly layout?: {
+    readonly source: 'authored' | 'generated' | 'fallback';
+    readonly mapId: string;
+    readonly seed?: string;
+    readonly complexity?: number;
+    readonly attempts?: number;
+    readonly modules?: readonly string[];
+    readonly failures?: readonly string[];
+  };
 }
 
 export type DayPhase = 'intro' | 'day' | 'leave' | 'ended';
