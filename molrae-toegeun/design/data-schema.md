@@ -487,7 +487,7 @@ interface AdsTable {
 ```
 - 전면광고 판정 순서(개발): `iap 구매` → `global.neverDuringPlay` → `설치 당일` → `오늘 횟수 ≥ 5` → `마지막 광고 후 < 180초` → `이번 판 보상형 봄` → `판수 % 3`. 하나라도 걸리면 건너뜀.
 - strings: `{ schemaVersion, locale, strings: Record<key, string | string[]>, uiIcons?: Record<key, spriteId> }`. 새 접두사 `prep.` `map.` `zone.` `route.` `int.`. `uiIcons`는 해당 문구 앞에 그릴 UI 스프라이트(이모지 대체, D-042). 이모지 금지, 특수문자 `… · — ★`만.
-- T-132 문자열: 게임 속 화폐 단위는 `냥`(`ui.currency_unit`, `result.salary`). 실제 화폐 단위 `{n}원`과 내부 ID(`snitch` 등)가 문구에 들어가면 검사기 오류.
+- T-132 문자열: 게임 속 화폐 단위는 `닢`(`ui.currency_unit`, `result.salary`). 실제 화폐 단위 `{n}원`과 내부 ID(`snitch` 등)가 문구에 들어가면 검사기 오류.
 
 ---
 
@@ -546,7 +546,7 @@ interface AdsTable {
   - strings: §「개발 전달 키」(design/gdd.md §19) 참고.
 - **값 수정**
   - `rules.characters.maxOnFloor` 8 → 12(D-049).
-  - `result.salary` '원' → '냥'. `ad.salary_double`에 '(게임 속 월급)'. `ad.continue_desc`에 '광고를 끝까지 보면'.
+  - `result.salary` '원' → '닢'. `ad.salary_double`에 '(게임 속 월급)'. `ad.continue_desc`에 '광고를 끝까지 보면'.
   - `react.director.caught`: 보복 뉘앙스 제거. `react.hr_inspector.badge`: 외모 언급 제거.
 - **삭제·폐지**
   - `ads.interstitial.exemptFirstGamesLifetime` 삭제(D-048).

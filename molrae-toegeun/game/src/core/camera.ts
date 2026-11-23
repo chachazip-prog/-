@@ -34,7 +34,12 @@ export class CameraModel {
 
   private target(): number {
     let t = this.focusY - this.rules.visibleAboveTiles;
-    if (this.rules.clampToMap) t = Math.min(Math.max(0, t), Math.max(0, this.mapHeight - this.view.viewHeightTiles));
+    // clampToMap: 지도 위·아래 끝 행이 HUD에 가리지 않고 보이는 영역 끝에 오도록 HUD 높이만큼 여유를 둔다
+    if (this.rules.clampToMap) {
+      const min = -this.view.insetTopTiles;
+      const max = Math.max(min, this.mapHeight - this.view.viewHeightTiles + this.view.insetBottomTiles);
+      t = Math.min(Math.max(min, t), max);
+    }
     return t;
   }
 

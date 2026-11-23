@@ -85,12 +85,19 @@ export interface ActorInfo {
   readonly talkEnabledBy?: string;
   readonly talkOnlyWhilePlayerAway?: boolean;
   readonly talkOnlyWhen?: string;
+  /** 말걸기 전조 말풍선 문구 키 / 피했을 때 혼잣말 키 (sim.talk, T-132) */
+  readonly warnLineKey?: string;
+  readonly dodgedLineKey?: string;
   readonly hierarchy?: Readonly<Record<string, unknown>>;
 }
 
 /** 배경 동료(D-049). 메카닉 없음(시선·말걸기 없음), 표시 전용 */
 export interface BackgroundDef {
   readonly sprite: string;
+  readonly behavior: 'sit' | 'stand' | 'walk';
+  /** 앉은·선 동안 가끔 재생할 프레임(아트 프레임 접미사) */
+  readonly idleAnims: readonly string[];
+  readonly idleAnimEverySecRange: readonly [number, number];
   readonly npc: NpcDef;
 }
 
@@ -112,6 +119,8 @@ export interface DayContent {
   readonly spots: Readonly<Record<string, { readonly tile: Tile; readonly facing?: Dir }>>;
   readonly zones: readonly { readonly id: string; readonly nameKey: string; readonly rect: readonly [number, number, number, number]; readonly outsideOffice?: boolean }[];
   readonly playerSeat: Tile;
+  /** 엄폐 칸(maps.coverSpots, 바닥 반짝임 표시용) */
+  readonly coverSpots: readonly Tile[];
   readonly introSec: number;
   readonly dayPhaseSec: number;
   readonly clock: {
@@ -141,6 +150,10 @@ export interface DayContent {
     readonly salaryBase: number;
   };
   readonly poseByZone: Readonly<Record<string, string>>;
+  /** 결과 화면 표시 직후 탭 무시(rules.input.resultInputGuardSec, BUG-006) */
+  readonly resultInputGuardSec: number;
+  /** 무음 대응 시각 신호(rules.visualCues, 표시 전용 원본) */
+  readonly visualCues: Readonly<Record<string, unknown>>;
 }
 
 export type DayPhase = 'intro' | 'day' | 'leave' | 'ended';

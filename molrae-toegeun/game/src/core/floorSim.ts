@@ -215,7 +215,7 @@ export class FloorSim {
     if (this.hooks.blockedForPlayer?.(x, y)) return true;
     if (!this.rules.movement) return false; // T-123 호환: 동적 차단 없음
     for (const n of this.npcs) {
-      if (n.mode === 'walk' || n.mode === 'spawn') continue;
+      if (n.mode === 'walk' || n.mode === 'spawn' || n.def.passable) continue;
       const t = tileOf(n);
       if (t.x === x && t.y === y) return true;
     }

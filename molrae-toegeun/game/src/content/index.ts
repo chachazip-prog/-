@@ -1,21 +1,40 @@
 /**
- * 콘텐츠 공급 지점 (교체 포인트).
- * 지금은 src/dev/ 임시 데이터를 돌려준다. game/data/ 스키마(T-121)가 확정되면
- * 이 함수만 data/loader.ts 기반 변환으로 바꾸면 씬·core는 그대로 둔다.
+ * 콘텐츠 공급 지점: game/data/*.json v2(Vite 번들 포함) → DayContent.
+ * 조립 로직은 buildDay.ts(순수 함수, QA 헤드리스 재사용). dev 상수(src/dev/protoFloor.ts)는 QA 테스트용으로만 남김.
  */
-import type { FloorContent } from '../core/floorSim';
-import { PROTO_FLOOR, PROTO_RESULT_INPUT_GUARD_SEC, PROTO_ZONE_LABELS } from '../dev/protoFloor';
+import { getDataTables } from '../data/loader';
+import type { DayContent } from '../core/day/types';
+import { authoredDayCount, buildDayContent } from './buildDay';
+import { Strings, type StringsTable } from './strings';
 
-export interface FloorPresentation {
-  readonly zoneLabels: Readonly<Record<string, string>>;
-  /** 결과 화면이 뜬 뒤 탭(재시작)을 받지 않는 시간(초) */
-  readonly resultInputGuardSec: number;
+export { buildDayContent, generateDay, dayPlan, authoredDayCount, DEFAULTS, hhmm, type Tables } from './buildDay';
+export { Strings, type StringsTable, type Vars } from './strings';
+
+const cache = new Map<number, DayContent>();
+
+export function loadDayContent(day: number): DayContent {
+  const hit = cache.get(day);
+  if (hit) return hit;
+  const warnings: string[] = [];
+  const c = buildDayContent(getDataTables(), day, warnings);
+  for (const w of warnings) console.warn(`[content] ${w}`);
+  cache.set(day, c);
+  return c;
 }
 
-export function loadFloorContent(): FloorContent {
-  return PROTO_FLOOR;
+let strings: Strings | null = null;
+export function getStrings(): Strings {
+  if (!strings) {
+    strings = new Strings(getDataTables()['strings.ko'] as unknown as StringsTable | undefined, (k) => {
+      if (import.meta.env.DEV) console.warn(`[strings] 없는 키: ${k}`);
+    });
+  }
+  return strings;
 }
 
-export function loadFloorPresentation(): FloorPresentation {
-  return { zoneLabels: PROTO_ZONE_LABELS, resultInputGuardSec: PROTO_RESULT_INPUT_GUARD_SEC };
+export function lastAuthoredDay(): number { return authoredDayCount(getDataTables()); }
+
+/** ads.json 원본 */
+export function getAdsTable(): Readonly<Record<string, unknown>> {
+  return (getDataTables()['ads'] ?? {}) as Readonly<Record<string, unknown>>;
 }

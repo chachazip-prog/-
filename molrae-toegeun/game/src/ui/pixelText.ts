@@ -100,3 +100,10 @@ export function fitPanel(panel: Phaser.GameObjects.Rectangle, t: UIText, padX: n
     .setSize(Math.ceil(b.w) + padX * 2, Math.ceil(b.h) + padY * 2)
     .setVisible(t.visible);
 }
+
+/** 줄바꿈 폭(px). BitmapText 는 공백 기준 줄바꿈 */
+export function setWrap(t: UIText, width: number): UIText {
+  if (t instanceof Phaser.GameObjects.BitmapText) t.setMaxWidth(width);
+  else t.setWordWrapWidth(width, true);
+  return t;
+}

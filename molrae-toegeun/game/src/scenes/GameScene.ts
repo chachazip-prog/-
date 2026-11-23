@@ -1,351 +1,541 @@
 import Phaser from 'phaser';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
-import { loadFloorContent, loadFloorPresentation } from '../content';
-import { FloorSim, conePolygon, daySeed, tilesInZone, type Threat } from '../core';
+import { CAMERA_VIEW, HUD_BOTTOM_PX, HUD_TOP_PX, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
+import { getStrings, lastAuthoredDay, loadDayContent } from '../content';
+import { DaySim, conePolygon, isGateOnly, zoneAt, type DayEvent, type PatrolNpc, type SimEvent, type Threat } from '../core';
+import { color, overlay, pulseAlpha } from '../render/palette';
+import { ATLAS_KEY, coneOverlayKeys, edgeArrowKey, facing4, spriteKeyFor, type Facing4 } from '../render/sprites';
+import { TILE, buildTileLayout } from '../render/tilemap';
+import { Hud, type BorderStage } from '../ui/hud';
+import { addPixelText, fitPanel, placeText, setPixelText, setWrap, type UIText } from '../ui/pixelText';
 import { SceneKey } from './keys';
-import { addPixelText, fitPanel, placeText, setPixelText, type UIText } from '../ui/pixelText';
 
 /** 렌더링 기준값 (게임플레이 수치 아님) */
-const TILE = 16;
-const HUD_H = 18;
-/** HUD 게이지 막대 세로 중심 (barY 5 + barH 8 / 2) */
-const HUD_BAR_MID = 9;
-/** 카메라 추적 시 화면 안 플레이어 세로 위치 비율 (위로 진행하므로 아래쪽에 둠) */
-const CAM_ANCHOR_Y = 0.6;
-/** 카메라 추적 지수 감쇠 속도(1/초). 프레임레이트 무관 */
-const CAM_FOLLOW_RATE = 8;
 const CONE_RAYS = 14;
-const ARROW_MARGIN = 7;
-/** 말걸기 전조 시 NPC 몸통이 플레이어 쪽으로 다가서는 표시 거리(px) */
+/** 캐릭터 발밑이 타일 중심보다 아래로 내려오는 px (스타일 가이드 §4: depth = 발밑 y) */
+const FOOT_PX = 6;
+/** 말걸기 전조 시 NPC가 플레이어 쪽으로 다가서는 표시 거리(px) — 판정 위치는 그대로 */
 const TALK_LEAN_PX = 2;
-/** [임시 문자열] 말걸기 전조 말풍선 — strings.ko.json 확정 시 이동 */
-const TALK_WARN_TEXT = '저기요?';
+const ARROW_MARGIN = 9;
+const TOAST_SEC = 1.4;
+const D = { ground: -1000, cover: -950, shadow: -900, cone: -800, path: -700, overhead: 5000 } as const;
 
-/** 회색 박스 팔레트 (라이트 모드 기준. 빨강은 상사·위험 신호 전용 — D-025) */
-const COLOR = {
-  floor: 0xe6e6ea,
-  grid: 0xd6d6dc,
-  wall: 0x5c5c68,
-  desk: 0xb4b0a4,
-  cover: 0x6f8a78, // 파티션·화분·복사기(엄폐물)
-  seat: 0xc7d9f2,
-  pantry: 0xf2e6bf,
-  exit: 0xc4e8c4,
-  player: 0x2f63c8,
-  playerDisguised: 0x7f9fd8,
-  path: 0x2f63c8,
-  boss: 0xd02a2a,
-  guard: 0x222228,
-  hudBg: 0xf4f4f6,
-  barBg: 0xc8c8d0,
-  barFill: 0xd02a2a,
-  warnApproach: 0xe0b020,
-  text: 0x1b1b22,
-  textMuted: 0x4a4a55,
-  textDev: 0x55555f,
-  panel: 0xffffff,
-} as const;
+export interface GameSceneData { day?: number }
 
-const KIND_COLOR: Readonly<Record<string, number>> = {
-  wall: COLOR.wall, desk: COLOR.desk, partition: COLOR.cover, plant: COLOR.cover, copier: COLOR.cover,
-};
-const ZONE_COLOR: Readonly<Record<string, number>> = { seat: COLOR.seat, pantry: COLOR.pantry, exit: COLOR.exit };
-const ROLE_COLOR: Readonly<Record<string, number>> = { boss: COLOR.boss, guard: COLOR.guard };
-const MODE_LABEL = { idle: '', moving: '', disguised: '서류 보는 척', talked: '사원증 확인 중…' } as const;
+interface ActorView {
+  sprite: Phaser.GameObjects.Sprite;
+  mark: Phaser.GameObjects.Sprite;
+  bubble: UIText;
+  bubbleBg: Phaser.GameObjects.Rectangle;
+  base: string;
+  lanyard: string;
+  bgIdle?: { anims: readonly string[]; next: number; range: readonly [number, number] };
+}
 
-function seedFromUrl(): string {
-  try {
-    const s = new URLSearchParams(window.location.search).get('seed');
-    if (s) return s;
-  } catch { /* noop */ }
-  return daySeed(1);
+function urlParam(name: string): string | null {
+  try { return new URLSearchParams(window.location.search).get(name); } catch { return null; }
 }
 
 /**
- * 탑다운 회색 박스 프로토타입 씬 (T-123, D-033~D-035).
- * 판정·상태는 core/FloorSim이 소유하고, 씬은 입력 전달과 표시만 한다.
+ * 하루 한 판 씬 (T-129): DaySim(core)이 판정·상태를 소유하고, 씬은 입력 전달과 표시만 한다.
+ * 카메라 위치도 코어 CameraModel 값을 그대로 써서 '화면 밖 판정(X10)'과 화면이 일치한다.
  */
 export class GameScene extends Phaser.Scene {
-  private sim!: FloorSim;
+  private sim!: DaySim;
+  private day = 1;
   private offsetX = 0;
-  private camY = 0;
-  private player!: Phaser.GameObjects.Rectangle;
+  private hud!: Hud;
+  private views = new Map<PatrolNpc, ActorView>();
+  private player!: Phaser.GameObjects.Sprite;
   private playerLabel!: UIText;
   private playerLabelBg!: Phaser.GameObjects.Rectangle;
-  private npcBodies: Phaser.GameObjects.Rectangle[] = [];
-  private npcTells: UIText[] = [];
+  private shadows!: Phaser.GameObjects.Graphics;
   private cones!: Phaser.GameObjects.Graphics;
-  private pathGfx!: Phaser.GameObjects.Graphics;
-  private hudGfx!: Phaser.GameObjects.Graphics;
-  private arrows!: Phaser.GameObjects.Graphics;
-  private pctText!: UIText;
-  private fpsText: UIText | null = null;
-  private endText: UIText | null = null;
-  /** 결과 화면이 뜬 뒤 경과 시간(초). 입력 보호용 (BUG-006) */
-  private endAge = 0;
-  private resultGuardSec = 0;
-  private blink = 0;
+  private fx!: Phaser.GameObjects.Graphics;
+  private pathDots: Phaser.GameObjects.Image[] = [];
+  private dest!: Phaser.GameObjects.Sprite;
+  private arrows: Phaser.GameObjects.Image[] = [];
+  private stalls: { img: Phaser.GameObjects.Image; x: number; y: number }[] = [];
+  private gateTiles: { x: number; y: number }[] = [];
+  private toast!: UIText;
+  private toastBg!: Phaser.GameObjects.Rectangle;
+  private toastLeft = 0;
+  private banner!: UIText;
+  private bannerBg!: Phaser.GameObjects.Rectangle;
+  private result: UIText | null = null;
+  private resultAge = 0;
+  private t = 0;
+  private gateFlash: { key: string; left: number; flashes: number; on: number; off: number; icon: string } | null = null;
+  private gateIcon!: Phaser.GameObjects.Image;
+  private unreachableLeft = 0;
+  private hasAtlas = false;
 
   constructor() { super(SceneKey.Game); }
 
+  init(data: GameSceneData): void {
+    const q = Number(urlParam('day'));
+    this.day = Math.max(1, Math.floor(data.day ?? (Number.isFinite(q) && q > 0 ? q : 1)));
+  }
+
   create(): void {
-    this.sim = new FloorSim(loadFloorContent(), seedFromUrl());
-    this.npcBodies = [];
-    this.npcTells = [];
-    this.endText = null;
-    this.endAge = 0;
-    this.resultGuardSec = loadFloorPresentation().resultInputGuardSec;
-    const map = this.sim.map;
+    const str = getStrings();
+    const content = loadDayContent(this.day);
+    this.sim = new DaySim(content, { view: CAMERA_VIEW }, urlParam('seed') ?? content.seed);
+    this.hasAtlas = this.textures.exists(ATLAS_KEY);
+    this.views = new Map();
+    this.pathDots = [];
+    this.arrows = [];
+    this.stalls = [];
+    this.gateTiles = [];
+    this.result = null;
+    this.resultAge = 0;
+    this.t = 0;
+    this.toastLeft = 0;
+    const map = this.sim.floor.map;
     this.offsetX = Math.floor((LOGICAL_WIDTH - map.width * TILE) / 2);
-    this.cameras.main.setBackgroundColor(COLOR.wall);
+    this.cameras.main.setBackgroundColor(color('dark'));
 
-    this.buildMapTexture();
-    this.add.image(this.offsetX, 0, 'floor-map').setOrigin(0, 0);
-    this.addZoneLabels();
+    this.buildMap();
+    this.shadows = this.add.graphics().setDepth(D.shadow);
+    this.cones = this.add.graphics().setDepth(D.cone);
+    this.fx = this.add.graphics().setDepth(D.cover + 1);
+    for (let i = 0; i < 64; i++) this.pathDots.push(this.img(0, 0, 'dot/path').setDepth(D.path).setVisible(false));
+    this.dest = this.add.sprite(0, 0, ATLAS_KEY, 'fx/dest_0').setDepth(D.path + 1).setVisible(false);
+    if (this.anims.exists('fx/dest')) this.dest.play('fx/dest');
 
-    this.pathGfx = this.add.graphics();
-    this.cones = this.add.graphics();
+    this.player = this.add.sprite(0, 0, ATLAS_KEY, 'player/idle_up').setOrigin(0.5, 1);
+    this.playerLabelBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.85).setDepth(D.overhead);
+    this.playerLabel = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 1);
+    this.toastBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.9).setDepth(D.overhead + 2);
+    this.toast = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 3);
+    this.gateIcon = this.img(0, 0, 'ui/gate_fail').setDepth(D.overhead + 4).setVisible(false);
+    for (let i = 0; i < 8; i++) this.arrows.push(this.img(0, 0, 'edge_boss/down_2').setScrollFactor(0).setDepth(9000).setVisible(false));
 
-    // 캐릭터: 회색 박스 단계는 12×16 몸통 사각형 (스프라이트 프레임 16×20 — D-036 — 확정 시 교체)
-    for (const npc of this.sim.npcs) {
-      const body = this.add.rectangle(0, 0, 12, 16, ROLE_COLOR[npc.def.role] ?? COLOR.guard).setOrigin(0.5, 0.75);
-      const tell = addPixelText(this, 0, 0, '!', { role: 'body', color: COLOR.boss }).setVisible(false);
-      this.npcBodies.push(body);
-      this.npcTells.push(tell);
-    }
-    this.player = this.add.rectangle(0, 0, 12, 16, COLOR.player).setOrigin(0.5, 0.75).setStrokeStyle(1, 0xffffff);
-    // 한글 라벨은 10px(8px 한글 금지 — D-042). 배경은 BitmapText 뒤 사각형
-    this.playerLabelBg = this.add.rectangle(0, 0, 1, 1, COLOR.panel, 0.8);
-    this.playerLabel = addPixelText(this, 0, 0, '', { role: 'label', color: COLOR.text });
-
-    // HUD (카메라 고정)
-    this.arrows = this.add.graphics().setScrollFactor(0);
-    this.hudGfx = this.add.graphics().setScrollFactor(0);
-    // HUD 텍스트 세로 위치: 게이지 막대(y 5~13)의 가운데에 잉크 영역을 맞춤
-    placeText(addPixelText(this, 0, 0, '의심', { role: 'label', color: COLOR.text }).setScrollFactor(0), 4, HUD_BAR_MID, 0, 0.5);
-    this.pctText = addPixelText(this, 124, 0, '0%', { role: 'label', color: COLOR.text }).setScrollFactor(0);
-    placeText(this.pctText, 124, HUD_BAR_MID, 0, 0.5);
-    if (import.meta.env.DEV) {
-      this.fpsText = addPixelText(this, 0, 0, '60fps', { role: 'num', color: COLOR.textDev }).setScrollFactor(0);
-      placeText(this.fpsText, LOGICAL_WIDTH - 3, HUD_BAR_MID, 1, 0.5);
-    }
-
-    // 카메라 초기 위치: 플레이어 기준 즉시 맞춤
-    this.camY = this.cameraTarget();
-    this.cameras.main.scrollY = Math.round(this.camY);
+    this.hud = new Hud(this, this.sim, str);
+    this.bannerBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.94).setScrollFactor(0).setDepth(11000).setStrokeStyle(1, color('dark'));
+    this.banner = addPixelText(this, 0, 0, '', { role: 'body', color: color('outline'), align: 'center', lineSpacing: 3 }).setScrollFactor(0).setDepth(11001);
+    const weekday = str.t(`day.weekday.${content.weekday}`);
+    const title = str.variants(content.titleKey) > 1 ? str.t(content.titleKey, undefined, content.day) : str.t(content.titleKey);
+    setPixelText(this.banner, `${str.t('day.intro', { n: content.day, weekday })}\n${title}`);
+    placeText(this.banner, LOGICAL_WIDTH / 2, LOGICAL_HEIGHT * 0.42, 0.5, 0.5);
+    fitPanel(this.bannerBg, this.banner, 10, 7);
 
     this.input.on(Phaser.Input.Events.POINTER_DOWN, this.onPointerDown, this);
-    // 개발 빌드 전용: 브라우저 자동화(스크린샷·수동 디버그)에서 시뮬레이션 상태를 읽기 위한 훅. 프로덕션 번들에서는 제거됨
-    if (import.meta.env.DEV) (window as unknown as { __mtSim?: FloorSim }).__mtSim = this.sim;
+    // 개발 빌드 전용: 자동화(스크린샷·수동 디버그) 훅. 프로덕션 번들에서는 제거됨
+    if (import.meta.env.DEV) (window as unknown as { __mtDay?: DaySim; __mtScene?: GameScene }).__mtDay = this.sim;
+    if (import.meta.env.DEV) (window as unknown as { __mtScene?: GameScene }).__mtScene = this;
     this.syncView(0);
   }
 
+  private img(x: number, y: number, frame: string): Phaser.GameObjects.Image {
+    return this.hasAtlas ? this.add.image(x, y, ATLAS_KEY, frame) : this.add.image(x, y, '__WHITE');
+  }
+
+  // ── 지도 ─────────────────────────────────────────────
+
+  private buildMap(): void {
+    const c = this.sim.content;
+    const map = this.sim.floor.map;
+    const layout = buildTileLayout(c);
+    const rt = this.add.renderTexture(this.offsetX, 0, map.width * TILE, map.height * TILE).setOrigin(0, 0).setDepth(D.ground);
+    if (this.hasAtlas) {
+      layout.ground.forEach((frame, i) => {
+        const x = i % map.width, y = Math.floor(i / map.width);
+        rt.drawFrame(ATLAS_KEY, frame, x * TILE, y * TILE);
+      });
+    }
+    for (const o of layout.objects) {
+      const im = this.img(this.offsetX + o.x, o.y, o.frame).setOrigin(0.5, 1).setFlipX(o.flipX === true);
+      im.setDepth(o.y + (o.depthBias ?? 0));
+      if (o.frame === 'tall/stall' && o.tile) this.stalls.push({ img: im, x: o.tile.x, y: o.tile.y });
+    }
+    for (let y = 0; y < map.height; y++) for (let x = 0; x < map.width; x++) if (isGateOnly(map, x, y)) this.gateTiles.push({ x, y });
+    // 유리벽(세로, D-053: 이동 차단·시선 통과) — 세로 유리 스프라이트가 없어 코드로 그림
+    const gl = this.add.graphics();
+    for (const p of layout.glass) {
+      const x = this.offsetX + p.x * TILE + TILE / 2, y = p.y * TILE;
+      gl.fillStyle(color('cool'), p.door ? 0.12 : 0.22).fillRect(x - 3, y - 8, 6, TILE + 8);
+      gl.fillStyle(color('outline'), 1).fillRect(x - 3, y - 8, 1, TILE + 8).fillRect(x + 2, y - 8, 1, TILE + 8);
+      if (!p.door) gl.fillStyle(0xffffff, 0.8).fillRect(x - 1, y - 4, 1, 5);
+      else gl.fillStyle(color('mid'), 1).fillRect(x - 2, y + 4, 4, 1);
+    }
+    gl.setDepth((layout.glass[0]?.y ?? 0) * TILE + TILE);
+    // 엄폐 칸(maps.coverSpots): 바닥 반짝임
+    for (const s of this.coverSpots()) {
+      const sp = this.add.sprite(this.offsetX + s.x * TILE + TILE / 2, s.y * TILE + TILE / 2, ATLAS_KEY, 'fx/cover_glint_0').setDepth(D.cover + 2);
+      if (this.anims.exists('fx/cover_glint')) sp.play({ key: 'fx/cover_glint', startFrame: (s.x + s.y) % 4 });
+    }
+  }
+
+  private coverSpots(): readonly { x: number; y: number }[] { return this.sim.content.coverSpots; }
+
+  // ── 입력 ─────────────────────────────────────────────
+
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
-    if (this.sim.outcome !== 'playing') {
-      // 연타하던 탭으로 결과를 못 보고 넘어가지 않도록, 결과 화면 표시 후 보호 시간 동안은 무시 (BUG-006)
-      if (this.endText && this.endAge >= this.resultGuardSec) this.scene.restart();
+    const sim = this.sim;
+    if (sim.phase === 'ended') {
+      // 연타하던 탭으로 결과를 못 보고 넘어가지 않도록 보호 시간(rules.input.resultInputGuardSec, BUG-006)
+      if (this.result && this.resultAge >= sim.content.resultInputGuardSec) this.onResultTap();
       return;
     }
-    if (pointer.y < HUD_H && this.sim.player.mode !== 'moving') return; // HUD 영역 탭은 이동 명령으로 쓰지 않음
+    const hit = this.hud.hitTest(pointer.x, pointer.y);
+    if (hit?.startsWith('chip:')) { sim.tapMission(hit.slice(5)); return; }
+    if (hit === 'hud') return; // HUD 탭은 화면 탭이 아님(rules.input.hudTapDoesNotStop)
     const tx = Math.floor((pointer.worldX - this.offsetX) / TILE);
     const ty = Math.floor(pointer.worldY / TILE);
-    this.sim.tap(tx, ty);
+    const r = sim.tapWorld(tx, ty);
+    if (r === 'unreachable') this.unreachableLeft = 0.8;
+  }
+
+  private onResultTap(): void {
+    const r = this.sim.result;
+    const next = r && r.stars >= 1 ? Math.min(this.day + 1, Math.max(lastAuthoredDay() + 50, this.day + 1)) : this.day;
+    this.events.emit('day-finished', { day: this.day, result: r });
+    this.game.events.emit('mt-day-finished', { day: this.day, result: r });
+    this.scene.restart({ day: next } satisfies GameSceneData);
   }
 
   override update(_time: number, delta: number): void {
-    const dt = delta / 1000;
+    const dt = Math.min(delta / 1000, 0.1);
+    this.t += dt;
     this.sim.advance(dt);
-    this.sim.drainEvents(); // TODO: 사운드·연출 트리거 연결
-    if (this.endText) this.endAge += dt;
+    for (const e of this.sim.drainEvents()) this.onDayEvent(e);
+    for (const e of this.sim.drainFloorEvents()) this.onFloorEvent(e);
+    if (this.result) this.resultAge += dt;
     this.syncView(dt);
   }
 
-  // ── 렌더링 ───────────────────────────────────────────
-
-  private buildMapTexture(): void {
-    const map = this.sim.map;
-    if (this.textures.exists('floor-map')) this.textures.remove('floor-map');
-    const g = this.make.graphics({}, false);
-    for (let y = 0; y < map.height; y++) {
-      for (let x = 0; x < map.width; x++) {
-        const i = y * map.width + x;
-        const kind = map.kinds[i] ?? 'floor';
-        const zone = map.zones[i];
-        const px = x * TILE, py = y * TILE;
-        g.fillStyle((zone ? ZONE_COLOR[zone] : undefined) ?? COLOR.floor);
-        g.fillRect(px, py, TILE, TILE);
-        if (map.walkable[i]) {
-          g.fillStyle(COLOR.grid);
-          g.fillRect(px, py, TILE, 1);
-          g.fillRect(px, py, 1, TILE);
-        }
-        const kc = KIND_COLOR[kind];
-        if (kc !== undefined) {
-          g.fillStyle(kc);
-          if (kind === 'wall') g.fillRect(px, py, TILE, TILE);
-          else if (kind === 'desk') g.fillRect(px + 1, py + 1, TILE - 2, TILE - 2);
-          else if (kind === 'plant') g.fillCircle(px + 8, py + 8, 6);
-          else g.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
-        }
+  private onDayEvent(e: DayEvent): void {
+    const str = getStrings();
+    switch (e.type) {
+      case 'hint': this.hud.hint(e.key); break;
+      case 'toast': this.showToast(str.t(e.key)); break;
+      case 'closeCall': this.showToast(str.t('hud.close_call')); break;
+      case 'missionDone': this.showToast(str.t('hud.mission_done')); break;
+      case 'missionFail': {
+        const m = this.sim.content.missions.find((x) => x.id === e.id);
+        this.showToast(str.t(e.reason === 'timeout' ? 'event.result.timeout' : 'event.result.fail', undefined, Math.floor(this.t)));
+        void m;
+        break;
       }
+      case 'interrupt': if (e.textKey) this.showToast(str.t(e.textKey, { name: str.t('ui.player_default_name') })); break;
+      case 'gate': {
+        const cue = (this.sim.content.visualCues[e.result === 'pass' ? 'gateOk' : 'gateFail'] ?? {}) as Record<string, unknown>;
+        const n = (k: string, d: number) => (typeof cue[k] === 'number' ? cue[k] as number : d);
+        const flashes = n('flashes', e.result === 'pass' ? 1 : 3);
+        const dur = n('durationSec', 0.6);
+        this.gateFlash = { key: e.result === 'pass' ? 'gate_pass_flash' : 'gate_fail_flash', left: dur, flashes, on: dur / (flashes * 2), off: dur / (flashes * 2), icon: typeof cue['overlayIcon'] === 'string' ? cue['overlayIcon'] as string : 'ui/gate_fail' };
+        if (e.result === 'pass') this.showToast(str.t(typeof cue['textKey'] === 'string' ? cue['textKey'] as string : 'hud.gate_ok'));
+        else this.showToast(str.t('hud.gate_attempts_left', { n: this.sim.content.leave.gate.maxAttempts - this.sim.gateAttempts }));
+        break;
+      }
+      case 'hrAbsent': this.showToast(str.t('react.hr_inspector.absent')); break;
+      case 'phase': if (e.phase === 'day') { this.banner.setVisible(false); this.bannerBg.setVisible(false); } break;
+      case 'result': this.showResult(); break;
+      default: break;
     }
-    g.generateTexture('floor-map', map.width * TILE, map.height * TILE);
-    g.destroy();
   }
 
-  private addZoneLabels(): void {
-    const labels = loadFloorPresentation().zoneLabels;
-    for (const [zone, label] of Object.entries(labels)) {
-      const tiles = tilesInZone(this.sim.map, zone);
-      if (tiles.length === 0) continue;
-      let sx = 0, sy = 0;
-      for (const t of tiles) { sx += t.x + 0.5; sy += t.y + 0.5; }
-      const t = addPixelText(this, 0, 0, label, { role: 'label', color: COLOR.textMuted }).setAlpha(0.85);
-      placeText(t, this.offsetX + (sx / tiles.length) * TILE, (sy / tiles.length) * TILE, 0.5, 0.5);
-    }
+  private onFloorEvent(e: SimEvent): void {
+    const str = getStrings();
+    if (e.type === 'talkCancel') {
+      const npc = this.sim.floor.findNpc((n) => n.def.id === e.npc);
+      const actor = npc?.def.actorId ? this.sim.content.actors[npc.def.actorId] : undefined;
+      if (e.reason === 'disguised' || e.reason === 'escaped') this.npcSay(npc, str.t(actor?.dodgedLineKey ?? 'talk.dodged_default'), 1.4);
+    } else if (e.type === 'talk') {
+      const npc = this.sim.floor.findNpc((n) => n.def.id === e.npc);
+      const actor = npc?.def.actorId ? this.sim.content.actors[npc.def.actorId] : undefined;
+      const int = actor?.talkEnabledBy ? this.sim.content.interrupts.find((i) => i.id === actor.talkEnabledBy) : undefined;
+      const lineKey = int ? (this.sim.phase === 'leave' && typeof int.effect['leaveLineKey'] === 'string' ? int.effect['leaveLineKey'] : int.effect['talkLineKey']) : undefined;
+      if (typeof lineKey === 'string') this.npcSay(npc, str.t(lineKey, { name: str.t('ui.player_default_name') }, Math.floor(this.sim.time)), npc?.def.talk?.durationSec ?? 1.5);
+    } else if (e.type === 'tap' && e.result === 'unreachable') this.unreachableLeft = 0.8;
   }
+
+  private sayLeft = new Map<PatrolNpc, number>();
+  private npcSay(npc: PatrolNpc | undefined, text: string, sec: number): void {
+    if (!npc) return;
+    const v = this.views.get(npc);
+    if (!v) return;
+    setPixelText(v.bubble, text);
+    this.sayLeft.set(npc, sec);
+  }
+
+  private showToast(text: string): void {
+    setPixelText(this.toast, text);
+    this.toastLeft = TOAST_SEC;
+  }
+
+  // ── 표시 ─────────────────────────────────────────────
 
   private toWorld(x: number, y: number): { x: number; y: number } {
     return { x: this.offsetX + x * TILE, y: y * TILE };
   }
 
-  private cameraTarget(): number {
-    const py = this.sim.player.y * TILE;
-    const min = -HUD_H;
-    const max = this.sim.map.height * TILE - LOGICAL_HEIGHT;
-    return Math.min(max, Math.max(min, py - LOGICAL_HEIGHT * CAM_ANCHOR_Y));
+  private viewFor(npc: PatrolNpc): ActorView {
+    let v = this.views.get(npc);
+    if (v) return v;
+    const actorId = npc.def.actorId ?? '';
+    const bg = actorId.startsWith('background:') ? this.sim.content.background.find((b) => b.npc.id === npc.def.id) : undefined;
+    const base = bg ? bg.sprite : spriteKeyFor(actorId);
+    const lanyard = bg ? 'background' : (this.sim.content.actors[actorId]?.lanyard ?? 'background');
+    const sprite = this.add.sprite(0, 0, ATLAS_KEY, `${base}/idle_down`).setOrigin(0.5, 1);
+    const mark = this.add.sprite(0, 0, ATLAS_KEY, 'ui/suspect').setOrigin(0.5, 1).setDepth(D.overhead).setVisible(false);
+    const bubbleBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.92).setDepth(D.overhead + 1).setStrokeStyle(1, color('dark')).setVisible(false);
+    const bubble = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 2).setVisible(false);
+    setWrap(bubble, 110);
+    v = { sprite, mark, bubble, bubbleBg, base, lanyard };
+    if (bg && bg.behavior !== 'walk' && bg.idleAnims.length > 0) v.bgIdle = { anims: bg.idleAnims, next: 0, range: bg.idleAnimEverySecRange };
+    this.views.set(npc, v);
+    return v;
+  }
+
+  private playAnim(s: Phaser.GameObjects.Sprite, key: string, fallbackFrame?: string): void {
+    if (this.anims.exists(key)) {
+      if (s.anims.currentAnim?.key !== key || !s.anims.isPlaying) s.play(key, true);
+    } else if (fallbackFrame && this.textures.get(ATLAS_KEY).has(fallbackFrame)) {
+      s.anims.stop();
+      s.setFrame(fallbackFrame);
+    }
+  }
+
+  private cameraTop(): number {
+    const cam = this.sim.floor.camera;
+    return cam ? Math.round(cam.top * TILE) : 0;
   }
 
   private syncView(dt: number): void {
-    const sim = this.sim;
-    this.blink = (this.blink + dt) % 0.4;
-    const blinkOn = this.blink < 0.2;
+    const sim = this.sim, floor = sim.floor;
+    const t = this.t;
+    const str = getStrings();
+    this.cameras.main.scrollY = this.cameraTop();
 
-    // 카메라: 부드러운 추적(내부 실수) + 정수 픽셀 스냅
-    const target = this.cameraTarget();
-    this.camY += (target - this.camY) * (1 - Math.exp(-CAM_FOLLOW_RATE * dt));
-    if (Math.abs(target - this.camY) < 0.25) this.camY = target;
-    const cam = this.cameras.main;
-    cam.scrollY = Math.round(this.camY);
+    // 퇴근 중 의심 0.7 이상 = danger, 전조·접근 = alert, 퇴근 = finale (visualCues.dangerBorder)
+    let stage: BorderStage = sim.phase === 'leave' ? 'finale' : 'calm';
+    const threats = new Map<PatrolNpc, Threat>();
+    for (const n of floor.npcs) threats.set(n, floor.threatOfNpc(n));
+    const anyTurning = [...threats.entries()].some(([n, th]) => (th === 'turning' || th === 'approaching') && n.gazeMultiplier > 0 && !floor.isOnScreen(n));
+    if (anyTurning || [...threats.entries()].some(([n, th]) => th === 'turning' && n.gazeMultiplier > 0)) stage = 'alert';
+    if (sim.suspicion >= 0.7 || floor.gazeNow > 0) stage = 'danger';
+    if (sim.phase === 'intro' || sim.phase === 'ended') stage = 'calm';
 
-    // 플레이어
-    const p = sim.player;
+    // ── 플레이어 ──
+    const p = floor.player;
     const pw = this.toWorld(p.x, p.y);
-    this.player.setPosition(Math.round(pw.x), Math.round(pw.y));
-    this.player.setFillStyle(p.mode === 'disguised' ? COLOR.playerDisguised : COLOR.player);
-    const label = MODE_LABEL[p.mode];
-    setPixelText(this.playerLabel, label).setVisible(label !== '');
-    placeText(this.playerLabel, pw.x, Math.round(pw.y) - 15, 0.5, 1);
+    const hidden = sim.activity?.mechanic === 'trip_safe_zone';
+    this.player.setPosition(Math.round(pw.x), Math.round(pw.y) + FOOT_PX).setDepth(Math.round(pw.y) + FOOT_PX).setVisible(!hidden);
+    const pdir = facing4(p.facing);
+    let label = '';
+    if (sim.phase === 'ended' && sim.result?.outcome === 'caught') this.playAnim(this.player, 'player/caught', 'player/caught');
+    else if (p.mode === 'moving') this.playAnim(this.player, `player/walk_${pdir}`);
+    else if (p.mode === 'talked') { this.playAnim(this.player, `player/idle_${pdir}`); label = str.t('player.mode.talked'); }
+    else if (sim.activity || sim.seatedWorking || (sim.phase === 'leave' && sim.leaveStage === 'pack' && sim.playerAtSeat)) this.playAnim(this.player, 'player/idle_up');
+    else if (floor.playerStill && !(sim.gateOpen)) {
+      const pose = this.poseId();
+      const d2 = pdir === 'up' ? 'down' : pdir;
+      this.playAnim(this.player, `player/pose_${pose}_${d2}`, 'player/disguise');
+      if (p.mode === 'disguised') label = str.t('player.mode.disguised');
+    } else this.playAnim(this.player, `player/idle_${pdir}`);
+    if (this.unreachableLeft > 0) { this.unreachableLeft -= dt; label = str.t('hud.unreachable'); }
+    setPixelText(this.playerLabel, label).setVisible(label !== '' && !hidden);
+    placeText(this.playerLabel, pw.x, Math.round(pw.y) + FOOT_PX - 22, 0.5, 1);
     fitPanel(this.playerLabelBg, this.playerLabel, 2, 1);
+    for (const s of this.stalls) s.img.setFrame(hidden && p.tile.x === s.x && p.tile.y === s.y ? 'tall/stall_hiding' : 'tall/stall');
 
-    // 경로 표시
-    this.pathGfx.clear();
-    if (p.mode === 'moving' && sim.outcome === 'playing') {
-      this.pathGfx.fillStyle(COLOR.path, 0.55);
-      for (const n of p.remainingPath()) {
-        const w = this.toWorld(n.x, n.y);
-        this.pathGfx.fillRect(Math.round(w.x) - 1, Math.round(w.y) - 1, 2, 2);
-      }
-      if (sim.destination) {
-        const d = this.toWorld(sim.destination.x, sim.destination.y);
-        this.pathGfx.lineStyle(1, COLOR.path, 0.9);
-        this.pathGfx.strokeRect(Math.round(d.x) + 2.5, Math.round(d.y) + 2.5, TILE - 5, TILE - 5);
-      }
-    }
+    // 토스트(플레이어 머리 위)
+    if (this.toastLeft > 0) this.toastLeft -= dt;
+    this.toast.setVisible(this.toastLeft > 0 && sim.phase !== 'ended');
+    placeText(this.toast, Math.min(LOGICAL_WIDTH - 50, Math.max(50, pw.x)), Math.round(pw.y) - 26 - (label ? 12 : 0), 0.5, 1);
+    fitPanel(this.toastBg, this.toast, 3, 2);
 
-    // NPC + 시선 콘
+    // ── 경로 점선·목적지 ──
+    const path = p.remainingPath();
+    const showPath = (p.mode === 'moving' || p.paused) && sim.phase !== 'ended';
+    this.pathDots.forEach((d, i) => {
+      const n = path[i];
+      d.setVisible(showPath && !!n && i < path.length - 1);
+      if (n) { const w = this.toWorld(n.x, n.y); d.setPosition(Math.round(w.x), Math.round(w.y)); }
+    });
+    const dest = floor.destination;
+    this.dest.setVisible(showPath && !!dest);
+    if (dest) this.dest.setPosition(this.offsetX + dest.x * TILE + TILE / 2, dest.y * TILE + TILE / 2);
+
+    // ── NPC + 시선 콘 + 그림자 ──
+    this.shadows.clear();
     this.cones.clear();
-    const viewTop = cam.scrollY + HUD_H, viewBottom = cam.scrollY + LOGICAL_HEIGHT;
-    this.arrows.clear();
-    sim.npcs.forEach((npc, i) => {
+    this.fx.clear();
+    const sh = overlay('shadow');
+    this.shadows.fillStyle(sh.color, sh.alpha);
+    if (!hidden) this.shadows.fillEllipse(Math.round(pw.x), Math.round(pw.y) + FOOT_PX - 1, 11, 4);
+    const seen = new Set<PatrolNpc>();
+    const blink = Math.floor(t / 0.25) % 2 === 0;
+    let arrowIdx = 0;
+    const camTop = this.cameraTop();
+    for (let i = 0; i < floor.npcs.length; i++) {
+      const npc = floor.npcs[i]!;
+      seen.add(npc);
+      const v = this.viewFor(npc);
       const w = this.toWorld(npc.x, npc.y);
-      const body = this.npcBodies[i]!;
-      // 말걸기 전조(D-043): 플레이어 쪽으로 다가서는 동작(표시 전용 2px 기울임 — 판정 위치는 그대로)
       const talkWarn = npc.mode === 'tell' && npc.tellKind === 'talk';
       const lean = talkWarn && npc.pendingFacing !== null ? Math.min(1, npc.modeTime / 0.25) * TALK_LEAN_PX : 0;
-      const leanX = npc.pendingFacing !== null ? Math.cos(npc.pendingFacing) * lean : 0;
-      const leanY = npc.pendingFacing !== null ? Math.sin(npc.pendingFacing) * lean : 0;
-      body.setPosition(Math.round(w.x + leanX), Math.round(w.y + leanY));
-      const color = ROLE_COLOR[npc.def.role] ?? COLOR.guard;
-      const seeing = sim.seeing[i] === true;
-      const poly = conePolygon(sim.map, npc.pos, npc.facing, npc.def.cone, CONE_RAYS)
-        .map((v) => new Phaser.Math.Vector2(this.offsetX + v.x * TILE, v.y * TILE));
-      this.cones.fillStyle(color, seeing ? 0.38 : 0.18);
-      this.cones.fillPoints(poly, true);
-      // 전조: 머리 위 '!' 깜빡임 + 돌아볼 방향 점선
-      const tell = this.npcTells[i]!;
-      const telling = npc.mode === 'tell';
-      // 말걸기 전조는 깜빡이지 않는 말풍선 '…?' (돌아보기 전조 '!'와 구분)
-      setPixelText(tell, talkWarn ? TALK_WARN_TEXT : '!');
-      tell.setVisible(telling && (talkWarn || blinkOn));
-      placeText(tell, w.x, Math.round(w.y) - 14, 0.5, 1);
-      if (telling && npc.pendingFacing !== null) {
-        this.cones.lineStyle(1, color, 0.8);
-        const len = npc.def.cone.range * TILE * 0.5;
-        for (let k = 2; k < len; k += 4) {
-          const x = w.x + Math.cos(npc.pendingFacing) * k, y = w.y + Math.sin(npc.pendingFacing) * k;
-          this.cones.fillStyle(color, 0.8);
-          this.cones.fillRect(Math.round(x), Math.round(y), 1, 1);
+      const lx = npc.pendingFacing !== null ? Math.cos(npc.pendingFacing) * lean : 0;
+      const ly = npc.pendingFacing !== null ? Math.sin(npc.pendingFacing) * lean : 0;
+      const sx = Math.round(w.x + lx), sy = Math.round(w.y + ly) + FOOT_PX;
+      v.sprite.setPosition(sx, sy).setDepth(sy).setVisible(npc.mode !== 'spawn');
+      const dir: Facing4 = npc.tellKind === 'turn' && npc.pendingFacing !== null ? facing4(npc.pendingFacing) : facing4(npc.facing);
+      if (v.bgIdle && npc.mode !== 'walk') {
+        if (t >= v.bgIdle.next) {
+          const k = v.bgIdle.anims[Math.floor(t) % v.bgIdle.anims.length]!;
+          const key = `${v.base}/${k.replace(/_\d+$/, '')}`;
+          this.playAnim(v.sprite, key, `${v.base}/${k}`);
+          v.bgIdle.next = t + v.bgIdle.range[0] + ((Math.floor(t * 7) % 10) / 10) * (v.bgIdle.range[1] - v.bgIdle.range[0]);
         }
+      } else if (npc.mode === 'walk') this.playAnim(v.sprite, `${v.base}/walk_${dir}`);
+      else this.playAnim(v.sprite, `${v.base}/idle_${dir}`);
+      if (npc.mode !== 'spawn') this.shadows.fillEllipse(sx, sy - 1, 11, 4);
+
+      const seeing = floor.seeing[i] === true && npc.gazeMultiplier > 0;
+      const keys = coneOverlayKeys(v.lanyard);
+      if (npc.coneActive) {
+        const o = overlay(seeing ? 'cone_alert' : keys.normal);
+        const a = seeing && !blink ? o.alpha * 0.6 : o.alpha;
+        const poly = conePolygon(floor.map, npc.pos, npc.facing, npc.cone, CONE_RAYS).map((q) => new Phaser.Math.Vector2(this.offsetX + q.x * TILE, q.y * TILE));
+        this.cones.fillStyle(o.color, a).fillPoints(poly, true);
+        this.cones.lineStyle(1, o.color, o.edgeAlpha).strokePoints(poly, true);
       }
-      // 화면 밖 위험 경고 (D-034)
-      const offscreen = w.y < viewTop - 4 || w.y > viewBottom + 4;
-      if (offscreen) this.drawEdgeArrow(w.x, w.y - cam.scrollY, sim.threatOf(i), blinkOn);
-    });
+      // 전조: 돌아볼 방향 점선 콘(cone_tell, 2px 칠·2px 띄움, 0.1초마다 1px 흐름)
+      if (npc.mode === 'tell' && npc.pendingFacing !== null && npc.cone.range > 0 && npc.def.gazeMultiplier > 0) {
+        const o = overlay(keys.tell);
+        const poly = conePolygon(floor.map, npc.pos, npc.pendingFacing, npc.cone, CONE_RAYS).map((q) => ({ x: this.offsetX + q.x * TILE, y: q.y * TILE }));
+        this.cones.fillStyle(o.color, o.alpha).fillPoints(poly.map((q) => new Phaser.Math.Vector2(q.x, q.y)), true);
+        this.dashedPoly(poly, o.color, o.edgeAlpha, o.dash ?? [2, 2], Math.floor(t / 0.1));
+      }
+      // 머리 위 표시: 말걸기 전조 = 말풍선(hud/talk) + 문구, 돌아보기 전조 = '!'(hud.tell_mark 대신 아트 ui/suspect), 보는 중 = ui/alert
+      const headY = sy - 21;
+      if (talkWarn) {
+        this.playAnim(v.mark, 'hud/talk', 'hud/talk_0');
+        v.mark.setVisible(true).setPosition(sx, headY);
+        const actor = npc.def.actorId ? this.sim.content.actors[npc.def.actorId] : undefined;
+        if (!this.sayLeft.has(npc)) setPixelText(v.bubble, str.t(actor?.warnLineKey ?? 'talk.warn_default', { name: str.t('ui.player_default_name') }));
+      } else if (seeing) {
+        v.mark.anims.stop(); v.mark.setFrame('ui/alert').setVisible(true).setPosition(sx, headY);
+      } else if (npc.mode === 'tell' && npc.def.gazeMultiplier > 0) {
+        v.mark.anims.stop(); v.mark.setFrame('ui/suspect').setVisible(blink).setPosition(sx, headY);
+      } else if (npc.mode === 'talk' || npc.mode === 'phone') {
+        v.mark.anims.stop(); v.mark.setFrame(npc.mode === 'phone' ? 'hud/hey' : 'hud/talk_2').setVisible(npc.mode === 'talk').setPosition(sx, headY);
+      } else v.mark.setVisible(false);
+      // 대사 말풍선
+      const say = this.sayLeft.get(npc);
+      if (say !== undefined) { const left = say - dt; if (left <= 0) this.sayLeft.delete(npc); else this.sayLeft.set(npc, left); }
+      const bubbleOn = this.sayLeft.has(npc) || talkWarn;
+      v.bubble.setVisible(bubbleOn);
+      if (bubbleOn) {
+        placeText(v.bubble, Math.min(LOGICAL_WIDTH - 58, Math.max(58, sx)), headY - 13, 0.5, 1);
+        fitPanel(v.bubbleBg, v.bubble, 3, 2);
+      } else v.bubbleBg.setVisible(false);
 
-    // HUD
-    this.drawHud();
-    if (this.fpsText) {
-      setPixelText(this.fpsText, `${Math.round(this.game.loop.actualFps)}fps`);
-      placeText(this.fpsText, LOGICAL_WIDTH - 3, HUD_BAR_MID, 1, 0.5);
+      // 화면 밖 경고 화살표(D-034, 색 = 사원증 줄, 크기 = 거리 3단계)
+      const th = threats.get(npc) ?? 'none';
+      const ak = edgeArrowKey(v.lanyard);
+      if (ak && !floor.isOnScreen(npc) && (th === 'turning' || th === 'approaching') && npc.gazeMultiplier >= 0 && arrowIdx < this.arrows.length) {
+        if (th === 'turning' && !blink) continue;
+        const above = npc.y < (floor.camera?.visibleTop ?? 0);
+        const edgeTiles = above ? (floor.camera?.visibleTop ?? 0) - npc.y : npc.y - (floor.camera?.visibleBottom ?? 0);
+        const size = edgeTiles < 3 ? 3 : edgeTiles < 7 ? 2 : 1;
+        const ar = this.arrows[arrowIdx++]!;
+        const ay = above ? HUD_TOP_PX + ARROW_MARGIN : LOGICAL_HEIGHT - HUD_BOTTOM_PX - ARROW_MARGIN;
+        ar.setFrame(`${ak}/down_${size}`).setVisible(true).setAngle(above ? 180 : 0)
+          .setPosition(Math.round(Phaser.Math.Clamp(sx, ARROW_MARGIN, LOGICAL_WIDTH - ARROW_MARGIN)), ay);
+      }
+      void camTop;
+    }
+    for (let k = arrowIdx; k < this.arrows.length; k++) this.arrows[k]!.setVisible(false);
+    // 사라진 NPC 정리
+    for (const [npc, v] of this.views) {
+      if (seen.has(npc)) continue;
+      v.sprite.destroy(); v.mark.destroy(); v.bubble.destroy(); v.bubbleBg.destroy();
+      this.views.delete(npc);
+      this.sayLeft.delete(npc);
     }
 
-    if (sim.outcome !== 'playing' && !this.endText) {
-      const msg = sim.outcome === 'escaped' ? '퇴근 성공!' : '들킴…';
-      const panel = this.add.rectangle(0, 0, 1, 1, COLOR.panel, 0.9).setScrollFactor(0);
-      this.endText = addPixelText(this, 0, 0,
-        `${msg}\n\n최고 의심 ${Math.round(sim.suspicion.peak * 100)}%\n${sim.time.toFixed(1)}초\n\n탭해서 다시`,
-        { role: 'body', color: COLOR.text, align: 'center', lineSpacing: 2 }).setScrollFactor(0);
-      placeText(this.endText, LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2, 0.5, 0.5);
-      fitPanel(panel, this.endText, 10, 8);
+    // 엄폐 칸 바닥 맥동(cover_tile)
+    const ct = overlay('cover_tile');
+    this.fx.fillStyle(ct.color, pulseAlpha(ct, t));
+    for (const s of this.coverSpots()) this.fx.fillRect(this.offsetX + s.x * TILE + 1, s.y * TILE + 1, TILE - 2, TILE - 2);
+    // 게이트 깜빡임(visualCues gateFail/gateOk)
+    this.gateIcon.setVisible(false);
+    if (this.gateFlash) {
+      const gf = this.gateFlash;
+      const o = overlay(gf.key);
+      const cyc = gf.on + gf.off;
+      if (cyc <= 0 || (gf.left % cyc) > gf.off) {
+        this.cones.fillStyle(o.color, o.alpha);
+        for (const g of this.gateTiles) this.cones.fillRect(this.offsetX + g.x * TILE, g.y * TILE, TILE, TILE);
+      }
+      const gs = sim.content.leave.gate.spot;
+      this.gateIcon.setFrame(gf.icon).setVisible(true).setPosition(this.offsetX + gs.x * TILE + TILE / 2, gs.y * TILE - 6 - (gf.key === 'gate_pass_flash' ? Math.round((1 - gf.left / 0.6) * 4) : 0));
+      gf.left -= dt;
+      if (gf.left <= 0) this.gateFlash = null;
+    }
+
+    this.hud.update(dt, t, stage);
+  }
+
+  /** 위장 포즈 id (rules.disguise.poseByZone, 아트 §11-1) */
+  private poseId(): string {
+    const pz = this.sim.content.poseByZone;
+    const map = this.sim.floor.map;
+    const tt = this.sim.floor.player.tile;
+    const nearKind = (k: string) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => this.sim.floor.kindAt(tt.x + dx!, tt.y + dy!) === k);
+    let key = 'default';
+    if (nearKind('copier')) key = 'near_copier';
+    else if (nearKind('plant')) key = 'near_plant';
+    else {
+      const z = zoneAt(map, tt.x, tt.y) ?? this.sim.content.zones.find((zz) => tt.x >= zz.rect[0] && tt.y >= zz.rect[1] && tt.x < zz.rect[0] + zz.rect[2] && tt.y < zz.rect[1] + zz.rect[3])?.id;
+      if (z === 'pantry') key = 'pantry';
+      else if (z === 'lobby' || z === 'gate_hall') key = 'lobby';
+      else if (z === 'corridor_mid') key = 'corridor';
+    }
+    return pz[key] ?? pz['default'] ?? 'read_document';
+  }
+
+  private dashedPoly(pts: { x: number; y: number }[], col: number, alpha: number, dash: readonly [number, number], phase: number): void {
+    const [on, off] = dash;
+    const period = on + off;
+    let acc = phase % period;
+    const n = pts.length;
+    for (let i = 0; i < n; i++) {
+      const a = pts[i]!, b = pts[(i + 1) % n]!;
+      const len = Math.hypot(b.x - a.x, b.y - a.y);
+      for (let d = 0; d < len; d += 1) {
+        if ((acc + d) % period < on) this.cones.fillStyle(col, alpha).fillRect(Math.round(a.x + ((b.x - a.x) * d) / len), Math.round(a.y + ((b.y - a.y) * d) / len), 1, 1);
+      }
+      acc = (acc + len) % period;
     }
   }
 
-  /** 화면 가장자리 화살표. sx/sy는 화면 좌표(카메라 기준) */
-  private drawEdgeArrow(sx: number, sy: number, threat: Threat, blinkOn: boolean): void {
-    if (threat === 'none') return;
-    const color = threat === 'approaching' ? COLOR.warnApproach : COLOR.boss;
-    if (threat === 'turning' && !blinkOn) return;
-    const cx = LOGICAL_WIDTH / 2, cy = (HUD_H + LOGICAL_HEIGHT) / 2;
-    const ang = Math.atan2(sy - cy, sx - cx);
-    const ex = Math.round(Phaser.Math.Clamp(sx, ARROW_MARGIN, LOGICAL_WIDTH - ARROW_MARGIN));
-    const ey = Math.round(Phaser.Math.Clamp(sy, HUD_H + ARROW_MARGIN, LOGICAL_HEIGHT - ARROW_MARGIN));
-    const s = threat === 'seeing' ? 6 : 5;
-    const tip = { x: ex + Math.cos(ang) * s, y: ey + Math.sin(ang) * s };
-    const l = { x: ex + Math.cos(ang + 2.4) * s, y: ey + Math.sin(ang + 2.4) * s };
-    const r = { x: ex + Math.cos(ang - 2.4) * s, y: ey + Math.sin(ang - 2.4) * s };
-    this.arrows.fillStyle(0xffffff, 0.9);
-    this.arrows.fillCircle(ex, ey, s + 2);
-    this.arrows.fillStyle(color, 1);
-    this.arrows.fillTriangle(tip.x, tip.y, l.x, l.y, r.x, r.y);
-  }
-
-  private drawHud(): void {
-    const sim = this.sim;
-    const g = this.hudGfx;
-    g.clear();
-    g.fillStyle(COLOR.hudBg, 1);
-    g.fillRect(0, 0, LOGICAL_WIDTH, HUD_H);
-    const barX = 30, barY = 5, barW = 90, barH = 8;
-    g.fillStyle(COLOR.barBg, 1);
-    g.fillRect(barX, barY, barW, barH);
-    const v = sim.suspicion.value;
-    g.fillStyle(COLOR.barFill, 1);
-    g.fillRect(barX, barY, Math.round(barW * v), barH);
-    if (sim.seeing.some((s) => s)) {
-      g.lineStyle(1, COLOR.barFill, 1);
-      g.strokeRect(barX - 0.5, barY - 0.5, barW + 1, barH + 1);
-    }
-    setPixelText(this.pctText, `${Math.round(v * 100)}%`);
+  private showResult(): void {
+    const r = this.sim.result;
+    if (!r || this.result) return;
+    const str = getStrings();
+    const panel = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.95).setScrollFactor(0).setDepth(12000).setStrokeStyle(1, color('dark'));
+    const reaction = r.reactionKey ? `${str.t(r.reactionKey, { name: str.t('ui.player_default_name') }, Math.floor(r.timeSec))}\n\n` : '';
+    const lines = [
+      str.t(r.titleKey),
+      str.t('result.stars', { n: r.stars }),
+      '',
+      reaction.trim(),
+      str.t('result.peak_suspicion', { n: Math.round(r.peakSuspicion * 100) }),
+      str.t('result.missions', { n: r.missionsDone, total: r.missionsTotal }),
+      `${str.t('hud.work')} ${Math.round(r.work * 100)}% / ${Math.round(r.quota * 100)}%`,
+      str.t('result.slack_points', { n: r.slackPoints }),
+      str.t('result.salary', { n: r.salary }),
+      str.t('result.play_time', { n: r.timeSec.toFixed(1) }),
+      '',
+      str.t(r.stars >= 1 ? 'ui.next_day' : 'ui.tap_to_retry'),
+    ].filter((l, i, a) => !(l === '' && a[i - 1] === ''));
+    this.result = addPixelText(this, 0, 0, lines.join('\n'), { role: 'label', color: color('outline'), align: 'center', lineSpacing: 3 })
+      .setScrollFactor(0).setDepth(12001);
+    setWrap(this.result, LOGICAL_WIDTH - 30);
+    placeText(this.result, LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2, 0.5, 0.5);
+    fitPanel(panel, this.result, 10, 8);
   }
 }

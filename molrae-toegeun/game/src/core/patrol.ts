@@ -169,6 +169,8 @@ export interface NpcDef {
   readonly phone?: PhoneDef;
   /** 이 순찰이 끝나면 전환할 순찰 id */
   readonly thenPatrol?: string;
+  /** 플레이어 길막 판정에서 제외(배경 동료 blocksPlayer:false) */
+  readonly passable?: boolean;
 }
 
 export type NpcMode = 'spawn' | 'walk' | 'wait' | 'tell' | 'look' | 'return' | 'fake' | 'talk' | 'phone' | 'hold' | 'done';
@@ -360,6 +362,12 @@ export class PatrolNpc {
     if (this.def.seated) {
       // X1: 대기 먼저, 대기가 끝날 때 돌아볼지 정한다
       this.seatLookPending = true;
+      // 돌아보지도 않고 대기도 0인 자리(공범 동료 등)는 계속 앉아 있음(매 스텝 walk↔wait 반복 방지)
+      if (waitSec <= 0 && (wp.lookChance ?? this.def.lookChance) <= 0 && !this.def.phone && this.def.waypoints.length === 1) {
+        this.waitLeft = Infinity;
+        this.setMode('wait');
+        return;
+      }
       if (waitSec > 0) this.setMode('wait');
       else this.endSeatWait(rng);
       return;
