@@ -582,7 +582,9 @@ section('8. T-133 추가: 순시·INT-11·공범·H1');
         if (sim.floor.player.paused) w += H;
         const t = sim.floor.player.tile; if (!path.length || path[path.length - 1]!.x !== t.x || path[path.length - 1]!.y !== t.y) path.push(t);
         if (t.x === goal.x && t.y === goal.y) { ok = true; break; }
+        if (sim.phase !== 'day') break;
       }
+      if (!ok && sim.phase !== 'day') { tried--; continue; } // 걷는 중 퇴근 시작(자리로 복귀) — 길막과 무관
       if (ok) arrived++;
       waitSum += w;
       if (direct && path.length - 1 > direct.length) rerouted++;
