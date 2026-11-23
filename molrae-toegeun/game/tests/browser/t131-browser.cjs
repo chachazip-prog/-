@@ -288,6 +288,40 @@ const DECIDE = () => {
       await s.context.close();
     }
 
+
+    {
+      // 전면광고 예고 → 노출(D-031·D-048): 설치 다음 날 + 마지막 광고 후 2판 상태에서 1판 끝 → 3판째
+      const s = await openPage(browser, DEV + '?day=6', { width: 360, height: 640 }, { fakeRaf: true, clearStorage: true });
+      const { page } = s;
+      await page.evaluate(() => { localStorage.setItem('mt-mock:mt.adCounters.v1', JSON.stringify({ installDate: '2026-11-01', gamesPlayedLifetime: 10, gamesSinceLastInterstitial: 2, interstitialShownToday: 0, lastInterstitialAt: 0, rewardedShownToday: 0, rewardedByPlacementToday: {}, countersDate: '2026-11-01' })); });
+      await waitBoot(s); await tapLogical(page, 90, 200); await step(page, 20); await page.waitForTimeout(200); await step(page, 10);
+      await tapLogical(page, 90, 265); await step(page, 200);
+      await page.evaluate(() => { window.__mtDay.floor.suspicion.value = 1.05; });
+      for (let i = 0; i < 60; i++) { await step(page, 5); await page.waitForTimeout(20); }
+      // 제안 화면 → '그냥 결과 보기'(보상형 안 봄)
+      let st = await page.evaluate(() => ({ ov: window.__mtScene.overlay, btns: window.__mtScene.buttons.map((x) => ({ x: x.b.x + x.b.w / 2, y: x.b.y + x.b.h / 2, t: x.b.label.text })) }));
+      const dec = st.btns.find((b) => b.t === '그냥 결과 보기');
+      if (dec) { await tapLogical(page, dec.x, dec.y); await step(page, 45); }
+      st = await page.evaluate(() => ({ ov: window.__mtScene.overlay, btns: window.__mtScene.buttons.map((x) => ({ x: x.b.x + x.b.w / 2, y: x.b.y + x.b.h / 2, t: x.b.label.text })) }));
+      const nx = st.btns.find((b) => /다음|다시/.test(b.t));
+      const mark = s.logs.length;
+      if (nx) await tapLogical(page, nx.x, nx.y);
+      let noticeSeen = null, noticeBeforeAd = false;
+      for (let i = 0; i < 80; i++) {
+        const tt = await page.evaluate(() => (window.__mtScene && window.__mtScene.toastOv ? window.__mtScene.toastOv.t.text : null));
+        const adNow = s.logs.slice(mark).some((l) => /\[mock ads\] interstitial/.test(l.text));
+        if (tt && !noticeSeen) { noticeSeen = tt; if (!adNow) noticeBeforeAd = true; await shot(page, '16-interstitial-notice'); }
+        await step(page, 3); await page.waitForTimeout(20);
+      }
+      const adLogs = s.logs.slice(mark).filter((l) => /\[mock ads\]|\[ads\]/.test(l.text)).map((l) => l.text);
+      info(`전면광고 흐름 로그: ${JSON.stringify(adLogs)} / 예고 문구: ${noticeSeen}`);
+      check('전면광고: 예고 문구가 먼저 뜨고 그 뒤 노출(3판째, 보상형 안 본 판)', noticeBeforeAd && adLogs.some((t) => /interstitial/.test(t)), `예고 ${noticeSeen}`);
+      const cnt = await page.evaluate(() => JSON.parse(localStorage.getItem('mt-mock:mt.adCounters.v1')));
+      check('전면광고 노출 후 카운터: 오늘 1회·판수 0으로 초기화', cnt.interstitialShownToday === 1 && cnt.gamesSinceLastInterstitial === 0 && cnt.lastInterstitialAt > 0, JSON.stringify(cnt));
+      check('전면광고 흐름 콘솔 에러 0', s.errors.length === 0, s.errors.slice(0, 2).join(' | '));
+      await s.context.close();
+    }
+
     // ── A2. 세로 화면 레이아웃(개발 서버, 3종)
     for (const vp of [{ width: 390, height: 844 }, { width: 412, height: 915 }, { width: 320, height: 568 }]) {
       const s = await openPage(browser, DEV + '?day=6', vp, { fakeRaf: true, clearStorage: true });
