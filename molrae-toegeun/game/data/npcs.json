@@ -328,7 +328,14 @@
         "offerSec": 2.5,
         "maxPerDay": 1,
         "acceptInput": "tap_bubble",
-        "startsInterrupt": "INT-12"
+        "startsInterrupt": "INT-12",
+      "forcedHoldsUntil": "mission_commit",
+      "endsAtMissionCommit": true,
+      "missionCommit": {
+        "awayFromDesk": "activity_start",
+        "atDesk": "first_input"
+      },
+      "_t136Note": "T-136 확정: 제안은 '미션 확정(commit)' 순간 끝남. 원정 미션(커피)은 장소에 도착해 활동이 시작될 때, 자리 미션(간식)은 첫 입(첫 탭)을 할 때. forced(수작업 날 scripted)는 시간 제한 없이 commit까지 유지, 일반 제안은 offerSec 2.5초와 commit 중 먼저 오는 쪽. 간식은 칩 탭 즉시 활동이 시작되므로 '활동 시작'을 기준으로 하면 제안이 활동 중에도 남아 첫 입 전후가 모호해짐 → 첫 입 전까지만 수락 가능하게 해서 events.snack.accompliceEffect(한 입 수 ×1.5)를 수락 순간 남은 입 수에 깔끔히 적용(첫 입 전이라 bites 0). 수락하면 그 미션의 accompliceEffect를 수락 시점에 적용"
       },
       "effects": {
         "rewardMultiplier": 2.0,

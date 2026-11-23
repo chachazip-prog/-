@@ -673,6 +673,8 @@
           "chance": 0.35,
           "capChance": 0.35,
           "tellSec": 0.5,
+          "asRealLookAtRecheckWaypoint": true,
+          "_t136Note": "T-136 확정: 재확인은 '전조 후 시선 없음' 페이크가 아니라 진짜 시선. 그래서 페이크 런타임(연속 페이크 금지 포함)에는 넣지 않음(개발 해석 승인). 대신 patrols.p_ceo_visit의 lookIsRecheck 웨이포인트에서 ① 시선 확률 = 이 chance(직급 보간 후: 과장 초반 0.30 → 0.35), 웨이포인트 lookChance 0.35는 보간이 없을 때의 기본값 ② 전조 길이 = 이 tellSec 0.5(GDD §8-3 ⑤ '어깨 들썩 0.5초', sim.tellSec 1.0 아님) ③ 전조 연출 = visual·sfx(stop_and_shoulder, sfx_footstep_stop) ④ 시선 길이 = sim.lookSec 1.0. 0.5초 ≥ rules.tell.minSec 0.4. 생존율 추정(≈0.60, GDD §8-3)이 이 값 기준이라 1.0초 전조를 쓰면 목표 상단을 넘을 수 있음",
           "visual": "stop_and_shoulder",
           "sfx": "sfx_footstep_stop"
         },
@@ -688,6 +690,8 @@
           "global": true,
           "untilStop": "stop_ceo_greet",
           "maxSec": 5.0,
+          "safetyExtraSec": 3.0,
+          "_safetyNote": "T-136 확정(개발 해석 승인): 대표님이 maxSec + safetyExtraSec(8초) 안에 stop_ceo_greet에 못 오면(얼어 있는 캐릭터가 길을 막는 등 경로 지연) 그 자리에서 인사 QTE를 강제로 시작. 정상 입장은 4.6초라 평소에는 작동하지 않음. 3초 = 길막 대기(movement.blockedWaitSec 0.5) + 우회 재탐색(rerouteRecheckSec 0.5) + 우회로 +4타일 ÷ 2.4 ≈ 1.7초의 합 2.7초 + 여유. 얼음 중 앉아 있으면 의심이 오르지 않으므로 길어져도 억울한 실패는 없음. 🧪 QA: 얼음 구간 길이 분포에서 5초 초과 비율 < 1%, 8초 도달 0(경로가 정상일 때)",
           "moveStartInstantSuspicion": 0.2,
           "gainWhile": [
             "moving",

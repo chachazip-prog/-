@@ -49,6 +49,7 @@
     "disguiseStaleExemptNearCover": true,
     "anyStopIsDisguised": true,
     "_deprecated": {
+      "continueResetTo": "T-136: rules.continueAd.resumeSuspicion으로 대체(같은 값 0.6 유지, 검사기가 일치 확인). 런타임은 읽지 않음. 다음 schemaVersion에서 삭제",
       "talkedPerSec": "T-132 폐지(D-043). 런타임은 talked 상태 상승률을 0으로 고정하고 이 값을 읽지 않음. 개발 SuspicionRules 타입 호환을 위해 값 0으로만 남김. 다음 schemaVersion에서 삭제"
     }
   },
@@ -132,6 +133,8 @@
     "dangerBorder": {
       "pairsWith": "bgm_office.stages",
       "followsBgmHysteresis": true,
+      "alertSuspicionMin": 0.4,
+      "_alertNote": "T-136: alert 단계 진입 의심 임계(오디오 매니페스트 bgm_office.stages.alert.when '의심 >= 0.4'의 숫자 필드, BGM·테두리 공용). danger 임계는 visualCues.suspicionHigh.threshold(0.7)를 그대로 씀. 0.4 = 팀장 콘 한 번 완전히 가로지르기(≈0.53)에는 켜지고 짧은 힐끔(0.1~0.3)에는 안 켜짐 → 평소에는 calm이 기본이라 alert가 의미 있는 경고로 남음. danger까지 0.3 여유(팀장 콘 이동 ≈0.57초)가 '멈춰서 위장하라'는 반응 시간. 검사기: suspicion.star3PeakBelow(0.3) ≤ 이 값 < suspicionHigh.threshold, 매니페스트 문장 숫자와 일치",
       "byStage": {
         "calm": {
           "show": false,
@@ -286,8 +289,15 @@
     "max": 3,
     "gainOnSnackSuccess": 1
   },
+  "caughtCutin": {
+    "durationSec": 2.0,
+    "isPlayState": true,
+    "_designNote": "T-136(GDD §6-1 '리액션 컷인 2초'): 의심 100% → 잡은 사람 리액션 컷인 길이. 2.0초 = 리액션 대사 한 줄(12px, 15자 안팎)을 읽는 시간 1.5초 + 여유 0.5초. 이보다 길면 60~90초 판의 템포를 깨고 재도전 의욕을 떨어뜨림(1판의 약 2~3%). 컷인은 ads.global.playStates의 caught_cutin이라 이 동안 광고·광고 제안 없음(D-023, D-050 ①). 끝난 뒤 이어하기 제안 화면 또는 결과 화면. 검사기 범위 1.5~3.0"
+  },
   "continueAd": {
     "maxPerDay": 1,
+    "resumeSuspicion": 0.6,
+    "_resumeSuspicionNote": "T-136(D-064): 이어하기 재개 의심. 0.6 = 위험 단계(0.7) 바로 아래 → 재개 직후 BGM은 alert, 테두리 주황. 팀장 콘을 걸어서 한 번 더 가로지르면(≈0.53) 다시 적발되는 수준이라 '공짜 부활'이 아니라 '조심해서 한 번 더'. 0.5 이하면 이어하기가 정상 플레이보다 유리해지고(★3 불가는 같음), 0.7 이상이면 재개 즉시 danger 단계라 체감 보상이 없음. 기존 rules.suspicion.continueResetTo와 같은 값이어야 함(검사기), 런타임은 이 필드를 읽음",
     "restorePlayerTo": "last_checkpoint",
     "checkpoints": [
       "player_seat",

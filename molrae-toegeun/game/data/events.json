@@ -175,6 +175,8 @@
         "minIntervalSec": 0.55,
         "perfectWindowSec": [0.55, 1.1],
         "maxPressSec": 0.35,
+        "judgeOn": "release",
+        "_judgeNote": "T-136 확정(개발 해석 승인): 한 입 판정은 손을 뗄 때. 간격 = 직전 입을 뗀 순간부터 이번에 뗀 순간까지, 누름 길이 > maxPressSec(0.35)이면 바스락. 누르는 동안에는 판정·행동 중 상태 없음(길게 누름을 알려면 뗄 때 판정할 수밖에 없음). 인사 QTE(누름 길이 판정)와 같은 방식이라 학습이 이어짐",
         "noiseSuspicion": 0.08,
         "noiseAlertsRadiusTiles": 5,
         "noiseShortensBossIdleTo": 0.0,

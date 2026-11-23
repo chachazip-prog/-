@@ -470,6 +470,124 @@ section('7. 전면광고 decideInterstitial (D-031·D-048)');
   check('rules.input.resultInputGuardSec = 0.6 (BUG-006) → DayContent에 반영', contentFor(tables, 1).resultInputGuardSec === 0.6);
 }
 
+
+// ═══ 8. T-133 추가 항목(대표님 순시·엘리베이터 대표님·공범·위계 연쇄)
+section('8. T-133 추가: 순시·INT-11·공범·H1');
+{
+  type Any = Record<string, unknown> & { [k: string]: any };
+  const ceoDay = 28;
+  // 8-1 CEO 패스: 순시 0회
+  {
+    let visits = 0, n = 0;
+    for (let k = 0; k < 30; k++) {
+      const sim = new DaySim(contentFor(tables, ceoDay), { view: VIEW, skipCeoVisit: true } as never, `pass-${k}`);
+      const bot = new Bot(BOTS['disguise']!, sim, `pass-${k}`);
+      for (let i = 0; i < 60 * 200 && sim.phase !== 'ended'; i++) {
+        bot.act(); sim.step();
+        for (const e of sim.drainEvents()) if (e.type === 'ceo' && e.stage === 'tell') visits++;
+        sim.drainFloorEvents();
+      }
+      n++;
+      if ((sim.result as Any | null)?.['ceoVisit'] !== 'skipped') visits += 1000;
+    }
+    check(`CEO 패스(skipCeoVisit) 선택 시 순시 0회·결과 ceoVisit 'skipped' (${ceoDay}일차 ${n}판)`, visits === 0, `${visits}`);
+  }
+  // 8-2 순시 중 시계·미션 제한시간 정지(집계는 balance), 얼음 중 대표님 외 시선 0(집계는 balance)
+  // 8-3 INT-11 엘리베이터 대표님: QTE를 놓치거나 일찍 눌러도 적발로 이어지지 않음
+  for (const mode of ['miss', 'early', 'success'] as const) {
+    const day = 30;
+    let started = 0, caught = 0, results: Record<string, number> = {};
+    for (let k = 0; k < 20; k++) {
+      const sim = new DaySim(contentFor(tables, day), { view: VIEW }, `elev-${mode}-${k}`);
+      for (let i = 0; i < 60 * 120 && sim.phase !== 'leave'; i++) { sim.floor.suspicion.value = 0; sim.step(); }
+      (sim as Any).work = 1;
+      for (const m of sim.missions) m.state = 'done';
+      for (let i = 0; i < 60 * 60 && sim.phase !== 'ended'; i++) {
+        for (const n of sim.floor.npcs) if (n.def.actorId !== 'ceo') n.suppressed = true;
+        if (sim.elevatorCeo === 'none') sim.floor.suspicion.value = 0;
+        if (sim.leaveStage === 'walk' && sim.floor.player.mode !== 'moving') sim.floor.moveTo(sim.content.leave.gate.spot);
+        if (sim.leaveStage === 'gate' && Math.abs(sim.gateMarker - 0.5) < 0.02) { const t = sim.floor.player.tile; sim.tapWorld(t.x, t.y); }
+        if (sim.qteActive && sim.qteSource === 'elevator') {
+          sim.floor.suspicion.value = Math.max(sim.floor.suspicion.value, 0.97);
+          const q = sim.qte!;
+          if (mode === 'early' && q.phase === 'precue') sim.tapQte(0.1);
+          if (mode === 'success' && q.phase === 'window') sim.tapQte(0.1);
+        }
+        sim.step();
+        for (const e of sim.drainEvents()) {
+          if (e.type === 'interrupt' && e.id === 'INT-11') started++;
+          if (e.type === 'qte' && e.source === 'elevator' && e.stage === 'result') results[e.result ?? '?'] = (results[e.result ?? '?'] ?? 0) + 1;
+        }
+        sim.drainFloorEvents();
+      }
+      if (sim.result?.outcome === 'caught') caught++;
+    }
+    info(`INT-11(${day}일차) ${mode}: 등장 ${started}/20, QTE ${JSON.stringify(results)}, 적발 ${caught}`);
+    check(`INT-11 엘리베이터 대표님(${mode}, 의심 0.97에서 QTE): 적발로 이어지지 않음`, started > 0 && caught === 0, `등장 ${started}, 적발 ${caught}`);
+  }
+  // 8-4 공범: 합류 시 의심 상승률 ×1.25, 같이 한 미션 보상 ×2
+  {
+    const sim = new DaySim(contentFor(tables, 7), { view: VIEW }, 'acc');
+    toDay(sim);
+    const m = sim.missions.find((x) => x.def.id === 'coffee')!;
+    for (let i = 0; i < 60 * 20 && m.state === 'locked'; i++) { sim.floor.suspicion.value = 0; sim.step(); }
+    sim.tapMission('coffee');
+    let offered = false, joined = false, points = -1;
+    let rateWith = NaN;
+    for (let i = 0; i < 60 * 40 && sim.phase === 'day' && m.state !== 'done' && m.state !== 'failed'; i++) {
+      for (const n of sim.floor.npcs) n.suppressed = true;
+      sim.floor.suspicion.value = 0;
+      if (sim.offer && !joined) { offered = true; joined = sim.acceptOffer(); if (joined && Number.isNaN(rateWith)) rateWith = (sim as Any).playerRate(0.45); }
+      const v = sim.activityView();
+      if (v?.kind === 'pour' && !v.paused && v.level >= 0.83) sim.tapWorld(0, 0);
+      if (m.state === 'carry' && sim.floor.player.mode !== 'moving' && !sim.playerAtSeat) sim.tapMission('coffee');
+      sim.step();
+      for (const e of sim.drainEvents()) if (e.type === 'missionDone' && e.id === 'coffee') points = e.points;
+      sim.drainFloorEvents();
+    }
+    const base = m.def.reward.slackPoints;
+    const sim2 = new DaySim(contentFor(tables, 7), { view: VIEW }, 'acc2');
+    const rateWithout = (sim2 as Any).playerRate(0.45);
+    info(`공범(7일차 커피 강제 제안): 제안 ${offered}, 합류 ${joined}, 이동 상승률 합류 ${rateWith} / 단독 ${rateWithout}, 완료 점수 ${points} (기본 ${base})`);
+    check('공범 합류 중 의심 상승률 ×1.25', joined && Math.abs(rateWith / rateWithout - 1.25) < 1e-9, `${rateWith}/${rateWithout}`);
+    check('공범과 같이 한 미션 보상 ×2', points === base * 2, `${points} vs ${base}`);
+  }
+  // 8-5 H1: 본부장이 팀 구역에 오면 팀장이 통로(4,31)로 나와 인사 → 최단 경로 길막. 플레이어는 우회하거나 기다렸다 지나감(교착 없음)
+  {
+    let tried = 0, arrived = 0, blockedEv = 0, waitSum = 0, rerouted = 0;
+    for (let k = 0; k < 40; k++) {
+      const sim = new DaySim(contentFor(tables, 19), { view: VIEW }, `h1-${k}`);
+      let greet = false;
+      for (let i = 0; i < 60 * 60 && sim.phase === 'day' && !greet; i++) {
+        sim.floor.suspicion.value = 0; sim.step(); sim.drainEvents(); sim.drainFloorEvents();
+        greet = !!sim.floor.findNpc((n) => (n.def.patrolId ?? '').endsWith('_greet') && n.mode === 'hold');
+      }
+      if (!greet) continue;
+      tried++;
+      teleport(sim, sim.content.playerSeat);
+      const goal = sim.content.spots['restroom_stall']!.tile;
+      const direct = findPath(sim.floor.map, sim.content.playerSeat, goal);
+      sim.floor.moveTo(goal);
+      let w = 0, t0 = sim.time, ok = false, path: Tile[] = [];
+      for (let i = 0; i < 60 * 20; i++) {
+        for (const n of sim.floor.npcs) n.suppressed = true;
+        sim.floor.suspicion.value = 0;
+        sim.step(); sim.drainEvents();
+        for (const e of sim.drainFloorEvents()) if (e.type === 'blocked') blockedEv++;
+        if (sim.floor.player.paused) w += H;
+        const t = sim.floor.player.tile; if (!path.length || path[path.length - 1]!.x !== t.x || path[path.length - 1]!.y !== t.y) path.push(t);
+        if (t.x === goal.x && t.y === goal.y) { ok = true; break; }
+      }
+      if (ok) arrived++;
+      waitSum += w;
+      if (direct && path.length - 1 > direct.length) rerouted++;
+      void t0;
+    }
+    info(`H1(19일차): 팀장 인사 길막 상황 ${tried}회, 도착 ${arrived}, 길막 이벤트 ${blockedEv}, 우회 ${rerouted}, 평균 대기 ${(waitSum / Math.max(1, tried)).toFixed(2)}초`);
+    check('H1 팀장 인사 길막: 자리→화장실 이동이 교착 없이 도착(우회 또는 대기)', tried > 0 && arrived === tried, `${arrived}/${tried}`);
+  }
+}
+
 writeFileSync('tests/.out/t131-rules.json', JSON.stringify(report, null, 1));
 const failed = summary();
 process.exitCode = failed > 0 ? 1 : 0;

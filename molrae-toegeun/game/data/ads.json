@@ -25,6 +25,8 @@
   "rewarded": {
     "enabled": true,
     "maxPerDay": 12,
+    "dailyCapReachedKey": "ad.today_done",
+    "_dailyCapNote": "T-136(D-031): 오늘 보상형 12회를 다 쓰면 결과 화면에서 토스트 1회(ad.today_done) 후 보상형 버튼을 숨김. 더 보라고 권하거나 아쉬움을 자극하지 않는 중립 문구. 이어하기 제안 화면은 상한이면 생략(onAdUnavailable와 같은 처리)",
     "placements": [
       {
         "id": "ceo_pass",
@@ -34,6 +36,10 @@
         "condition": "today_has_ceo_visit",
         "maxPerDay": 3,
         "effect": "skip_ceo_visit_no_eye_contact",
+        "notCompletedKey": "ad.ceo_pass_not_completed",
+        "unavailableKey": "ad.continue_unavailable",
+        "onNotEarned": "keep_visit_button_reenabled",
+        "_t136Note": "T-136(D-050 ⑦ 취지): 중도 종료 시 중립 안내 후 순시는 그대로, 버튼은 다시 누를 수 있음(하루 3회 상한 안). 불러오기 실패 문구는 이어하기와 같은 일반 문구(ad.continue_unavailable, 내용이 범용)",
         "_comment": "D-027. 출근 준비 화면에서만. 판 시작 전에 고름"
       },
       {

@@ -937,7 +937,15 @@
         "인사팀(INT-05·06)은 대표님 순시 중 없음",
         "INT-08(회의) 중엔 nap 미션 잠김 → nap unlockAt을 회의 종료 이후로 밀거나 INT-08을 다른 시각으로",
         "층 전체 동시 인원 ≤ 12(rules.characters.maxOnFloor, 배경 동료 포함)·화면 안 ≤ 8(maxOnScreen) (D-049)"
-      ]
+      ],
+      "h7": {
+        "ceoDirectorMinGapSec": 25,
+        "onPlanConflict": "drop_director_patrol",
+        "ceoStartWaitsWhileDirectorOnFloor": true,
+        "directorStartWaitsWhileCeoOnFloor": true,
+        "hrInterruptsOnCeoDay": "none",
+        "_designNote": "T-136(H7, GDD §8-4): 대표님 순시와 본부장 순찰은 층에 동시에 있지 않음. ① 생성 단계: INT-10의 atSec가 대표님 예정 시각(ceoAtSec) ±ceoDirectorMinGapSec(25초) 안이면 그 INT-10을 뺌(다른 시각으로 옮기지 않음 → 계획이 단순하고 시드 재현 쉬움). 25초 = 순시 전체 길이(전조 1.0 + 얼음 입장 ≤5 + QTE ≤1.8 + 대화 4 + 재확인 1.5 + 퇴장 걷기 14타일 ÷ 2.4 ≈ 5.8 + 복귀 1.0 ≈ 20초) + 여유 5초. ② 런타임 보조: 대표님 순시는 예정 시각 뒤 '내가 앉은 첫 순간'에 시작해 늦어질 수 있으므로, 본부장이 층에 있으면 순시 시작을 본부장이 퇴장할 때까지 미룸(ceoStartWaitsWhileDirectorOnFloor). 반대로 대표님이 층에 있는 동안(전조~퇴장 디스폰) INT-10 시각이 와도 본부장 등장은 대표님 디스폰 뒤로 미룸(directorStartWaitsWhileCeoOnFloor — 퇴장 구간은 시계가 흐르므로 필요). ③ 대표님 날에는 인사팀 방해(INT-05·06)를 하루 종일 넣지 않음(검사기 인원 계산과 같음). 퇴근 구간 INT-10(구역 진입형)은 순시가 근무 구간에만 있으므로 대상 아님. 🧪 QA: 대표님 날 전수 로그에서 director·ceo 동시 존재 틱 0"
+      }
     },
     "leaveInterrupts": {
       "stream": "leave",

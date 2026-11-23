@@ -4,9 +4,10 @@
 
 - 작성: mt-sound-designer / 2026-11-22
 - 방식: 전부 코드로 합성한 오리지널 사운드입니다(오실레이터, 노이즈, 엔벨로프, 포먼트 가산 합성). **외부 에셋은 0건**이라 `compliance/asset-license-ledger.md`에 추가할 항목이 없습니다.
-- 재생성: `python3 -I molrae-toegeun/audio/tools/build.py` (약 6초). 시드를 고정하고 ffmpeg `-bitexact`로 인코딩하므로 WAV, OGG, MP3, 이 문서까지 바이트 단위로 같게 나옵니다(2회 빌드 해시 비교로 확인).
-- 의존성: Python 3 표준 라이브러리, ffmpeg(libvorbis, libmp3lame). ffmpeg가 없으면 WAV만 만들고 경고를 냅니다(`audio/build/wav/`).
-- 형식: 모노 22,050Hz. 효과음은 OGG Vorbis q2와 MP3 48kbps, BGM은 OGG q0와 MP3 32kbps입니다. 엔진은 `[ogg, mp3]` 순서로 로드합니다(iOS WebView는 MP3를 씀).
+- 재생성: `python3 -I molrae-toegeun/audio/tools/build.py` (약 6초). 시드를 고정하고 ffmpeg `-bitexact`로 인코딩하므로 WAV, MP3, 이 문서까지 바이트 단위로 같게 나옵니다(2회 빌드 해시 비교로 확인).
+- 의존성: Python 3 표준 라이브러리, ffmpeg(libmp3lame). ffmpeg가 없으면 WAV만 만들고 경고를 냅니다(`audio/build/wav/`).
+- 형식(D-063, T-137): **MP3 단일 포맷**, 모노 22,050Hz, LAME VBR입니다. 효과음은 `-q:a 7`, BGM `main`은 `-q:a 8`, `tension`은 `-q:a 9`입니다. OGG는 만들지 않으며, iOS와 안드로이드 WebView 모두 MP3를 재생합니다. 빌드할 때 매니페스트에 없는 오디오 파일(예전 OGG 등)은 자동으로 지웁니다.
+- 오디오 전체 용량: {{TOTAL_LINE}}. 빌드 스크립트가 효과음 개당 20KB, BGM 합계 300KB, 전체 200KB를 넘으면 실패로 끝냅니다.
 - 엔진용 메타데이터: `game/assets/audio/audio-manifest.json` (키, 파일, 길이, 루프, 재생 조건, 시각 신호, BGM 단계)
 
 ## 1. 효과음
@@ -31,7 +32,8 @@
 
 - 구성: `main`(살금살금 스타카토 리드, 계단 삼각파 베이스, 엇박 화음 스탭, 가벼운 하이햇)과 `tension`(16분 하이햇, 16분 아르페지오, 백비트 스네어, 4박 킥)입니다. 둘은 샘플 단위로 길이가 같습니다.
 - 꼬리 음을 루프 앞쪽에 접어 넣어서(`fold_loop`) 이음새에 끊김이나 클릭이 없습니다(이음새 점프 0.015, 평균 샘플 변화량 0.007 수준).
-- 용량: OGG 두 스템 합계 약 165KB, MP3 합계 약 251KB로 목표 300KB 이하입니다. 실제로는 플랫폼별로 한 포맷만 받습니다.
+- 루프 길이({{BARS}}마디): 전체 200KB 목표(D-063)에 맞추려고 16마디(32초)를 8마디(16초)로 줄였습니다(1~8마디, Am→E로 끝나 다시 Am으로 해결). 16마디를 유지하면 두 스템을 16kbps CBR까지 낮춰야 하고, 그래도 합계가 약 210KB라서 tension의 하이햇과 아르페지오가 뭉개집니다. `audio/src/bgm.json`의 `bars`를 16으로 바꾸면 32초 버전이 다시 만들어집니다(이 경우 전체 200KB 검사에서 실패).
+- 디코딩 길이: 두 스템 모두 MP3를 디코딩한 길이가 원본 WAV와 샘플 단위로 같습니다(LAME/Info 헤더의 지연·패딩 정보 기준, ffmpeg로 측정).
 
 ### 위험 단계 파라미터 (`audio/src/bgm.json` → manifest `bgm.bgm_office.stages`)
 
@@ -121,14 +123,14 @@
 | `sfx_caught` | 적발 컷인 시작 | X | BGM `stopped`(즉시), 의심 루프 정지 |
 | `sfx_clockout_fanfare` | 퇴근 성공 확정 | X | BGM을 0.2초 페이드아웃한 뒤 재생 |
 | `sfx_mission_complete` | 미션 완료 판정 | X | |
-| `bgm_office_main` + `bgm_office_tension` | 근무 시작부터 동시 루프 | O (32초) | 단계 표는 2장 참고. CEO `freeze`는 일시정지 후 같은 위치에서 0.6초 페이드인으로 재개 |
+| `bgm_office_main` + `bgm_office_tension` | 근무 시작부터 동시 루프 | O ({{LOOP_SEC}}초) | 단계 표는 2장 참고. CEO `freeze`는 일시정지 후 같은 위치에서 0.6초 페이드인으로 재개 |
 
-- 로드: `this.load.audio(key, ['audio/sfx/<key>.ogg', 'audio/sfx/<key>.mp3'])`. 경로와 루프 정보는 `audio-manifest.json`에서 읽으면 키를 하드코딩하지 않아도 됩니다.
-- 짧은 루프(발소리, 의심 루프)는 일부 디코더가 OGG 끝에 약 20ms 패딩을 붙입니다(ffmpeg로 측정). 끝부분이 원래 무음이라 들리지는 않습니다. 정확히 맞추려면 manifest의 `durationSec`로 marker 루프(`{start: 0, duration}`)를 쓰세요. BGM은 OGG와 MP3 모두 디코딩 길이가 원본과 샘플 단위로 같습니다(MP3는 LAME 헤더 기준이고, iOS 실기기 확인이 필요합니다).
+- 로드: `this.load.audio(key, ['audio/sfx/<key>.mp3'])`(MP3 단일 포맷). 경로와 루프 정보는 `audio-manifest.json`에서 읽으면 키를 하드코딩하지 않아도 됩니다.
+- 루프 파일(발소리 3종, 의심 루프, BGM 2스템)은 MP3 디코딩 길이가 원본과 샘플 단위로 같습니다(LAME 헤더 기준, ffmpeg로 측정). 브라우저가 이 헤더를 무시하면 앞뒤에 무음 수십 ms가 생길 수 있으니 iOS·안드로이드 실기기에서 이음새를 확인해야 합니다. 그때는 manifest의 `durationSec`로 marker 루프(`{start: 0, duration}`)를 쓰면 됩니다.
 - 모바일 자동재생 정책 때문에 첫 터치 뒤에 오디오 컨텍스트를 깨워야 합니다(Phaser `sound.unlock`).
 - 볼륨: 효과음은 피크 -1dBFS 기준으로 정규화되어 있고, 탭은 -9dB, 위장 전환은 -3dB로 일부러 작게 만들었습니다. 마스터 기준으로 BGM 0.6, 효과음 1.0을 권장합니다.
 - 설정: 무음과 진동 토글은 개발 범위입니다(GDD §15).
 
 ## 6. 변환 계획과 남은 일
-- 웹 압축 포맷 변환은 완료했습니다(ffmpeg를 쓸 수 있음). ffmpeg가 없는 환경에서는 WAV만 만들어지므로 ffmpeg가 있는 곳에서 같은 스크립트를 다시 돌리면 됩니다.
+- 웹 압축 포맷(MP3) 변환은 완료했습니다(ffmpeg를 쓸 수 있음). ffmpeg가 없는 환경에서는 WAV만 만들어지므로 ffmpeg가 있는 곳에서 같은 스크립트를 다시 돌리면 됩니다.
 - 2차 후보(데이터에 키가 없어 이번에는 만들지 않음): 간식 '바삭'과 '바스락!!', 커피 따르기, 낮잠 '쿵', 쇼핑 결제, 가방 챙기기, 인사 QTE '?'와 '!', 공범 경고 헛기침(지금은 `sfx_cough`를 재사용 가능), 출근 징글, 메뉴 BGM.

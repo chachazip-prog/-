@@ -10,6 +10,7 @@
       문자열 이모지(D-047)·내부 ID 노출, 수작업 날 공범 제안 고정,
       sfx 키 ⊂ 오디오 매니페스트(T-113), 무음 대응 시각 신호,
       T-134: spriteKey ⊂ 아트 anims.json(idle·walk 4방향).
+      T-136: 이어하기 재개 의심·컷인 길이·alert 임계·H7 간격·대표님 재확인·얼음 안전장치·공범 제안 종료·간식 판정 시점·광고 문구 키.
 """
 import itertools
 import json
@@ -492,6 +493,51 @@ if os.path.exists(ANIMS):
             err(f"{where} '{sk}': anims.json에 없는 애니 {', '.join(miss)}")
 else:
     warns.append("assets/sprites/anims.json 없음: spriteKey 검사 생략")
+
+# T-136) 개발 임시 상수 → 데이터(필드 추가만)
+ca = rules["continueAd"]
+rs = ca.get("resumeSuspicion")
+if not isinstance(rs, (int, float)) or not (0 < rs < VC.get("suspicionHigh", {}).get("threshold", 1)):
+    err("rules.continueAd.resumeSuspicion 없음 또는 danger 임계 이상(T-136)")
+elif rules["suspicion"].get("continueResetTo", rs) != rs:
+    err("rules.suspicion.continueResetTo != continueAd.resumeSuspicion (T-136, 구 필드와 값 일치)")
+cs = rules.get("caughtCutin", {}).get("durationSec")
+if not isinstance(cs, (int, float)) or not (1.5 <= cs <= 3.0):
+    err("rules.caughtCutin.durationSec 없음 또는 1.5~3.0 밖(T-136)")
+if "caught_cutin" not in T["ads"]["global"]["playStates"]:
+    err("ads.global.playStates에 caught_cutin 없음(컷인 중 광고 금지)")
+am_ = VC.get("dangerBorder", {}).get("alertSuspicionMin")
+hi_ = VC.get("suspicionHigh", {}).get("threshold", 1)
+if not isinstance(am_, (int, float)) or not (rules["suspicion"]["star3PeakBelow"] <= am_ < hi_):
+    err("rules.visualCues.dangerBorder.alertSuspicionMin 없음 또는 star3PeakBelow ≤ x < suspicionHigh.threshold 위반(T-136)")
+elif os.path.exists(AUDIO):
+    mm = re.search(r"의심\s*>=\s*([0-9.]+)", am["bgm"]["bgm_office"]["stages"].get("alert", {}).get("when", ""))
+    if mm and abs(float(mm.group(1)) - am_) > 1e-9:
+        err(f"alertSuspicionMin {am_} != 오디오 매니페스트 alert.when {mm.group(1)}")
+h7 = T["days"]["generator"]["dayInterrupts"].get("h7", {})
+if not isinstance(h7.get("ceoDirectorMinGapSec"), (int, float)) or h7["ceoDirectorMinGapSec"] < 20:
+    err("days.generator.dayInterrupts.h7.ceoDirectorMinGapSec 없음 또는 < 20(순시 전체 ≈20초, T-136)")
+ceo_ = next(b for b in T["bosses"]["bosses"] if b["id"] == "ceo")
+fk = ceo_["sim"].get("fake", {})
+if fk.get("type") == "recheck":
+    if fk.get("asRealLookAtRecheckWaypoint") is not True:
+        err("bosses.ceo.sim.fake: recheck는 asRealLookAtRecheckWaypoint true 필요(T-136)")
+    if fk.get("tellSec", 0) < MIN_TELL:
+        err("bosses.ceo.sim.fake.tellSec < rules.tell.minSec")
+    if not any(w.get("lookIsRecheck") for w in patrols[ceo_["visit"]["patrolId"]]["waypoints"]):
+        err("bosses.ceo 재확인 웨이포인트(lookIsRecheck) 없음")
+fz = ceo_["visit"]["freeze"]
+if not (0 < fz.get("safetyExtraSec", -1) <= 5):
+    err("bosses.ceo.visit.freeze.safetyExtraSec 없음 또는 0~5 밖(T-136)")
+acc_ = next(n for n in T["npcs"]["npcs"] if n["id"] == "accomplice")["offer"]
+if acc_.get("forcedHoldsUntil") != "mission_commit" or set(acc_.get("missionCommit", {})) != {"awayFromDesk", "atDesk"}:
+    err("npcs.accomplice.offer.forcedHoldsUntil·missionCommit 필요(T-136)")
+for e_ in T["events"]["events"]:
+    if e_["mechanic"] == "rhythm_tap" and e_["params"].get("judgeOn") != "release":
+        err(f"events.{e_['id']}.params.judgeOn != release (T-136)")
+for k_ in ("ad.today_done", "ad.ceo_pass_not_completed"):
+    if k_ not in S:
+        err(f"strings: {k_} 없음(T-136)")
 
 print(f"tables: {', '.join(T)}")
 print("화면 안 최악 인원(직급별, 플레이어 포함): " + ", ".join(f"{k} {v[0]}" for k, v in RANK_SCREEN.items()))

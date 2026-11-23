@@ -101,6 +101,8 @@
     "ad.salary_double": "광고 보고 오늘 월급 2배 (게임 속 월급)",
     "ad.ceo_pass": "광고 보고 대표님 순시 건너뛰기",
     "ad.ceo_pass_desc": "오늘 순시를 건너뛰어요. 대표님 눈도장 보너스는 받을 수 없어요.",
+    "ad.ceo_pass_not_completed": "광고를 끝까지 보지 않아 순시 건너뛰기가 적용되지 않았어요.",
+    "ad.today_done": "오늘 광고는 여기까지예요. 내일 다시 볼 수 있어요.",
     "ad.interstitial_notice": "잠시 후 광고가 나와요",
     "ad.remove_ads": "광고 제거",
     "rank.intern.name": "인턴",

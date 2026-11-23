@@ -1,11 +1,13 @@
 {
-  "_doc": "자동 생성(audio/tools/build.py). 수정은 audio/src/*.json에서. 경로는 game/assets/audio 기준. Phaser: this.load.audio(key, [ogg, mp3]) 순서로 넣으면 지원 포맷을 자동 선택.",
+  "_doc": "자동 생성(audio/tools/build.py). 수정은 audio/src/*.json에서. 경로는 game/assets/audio 기준. MP3 단일 포맷(D-063): files에는 mp3만 있음. Phaser: this.load.audio(key, [mp3]).",
   "sampleRate": 22050,
   "sfx": [
     {
       "key": "sfx_chair_creak",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_chair_creak.mp3"
+      },
       "durationSec": 0.49,
       "loop": false,
       "play": "팀장(앉은 상사) tell 시작 순간 1회. INT-08 회의 출발(stand_up_notebook)에도 사용",
@@ -18,7 +20,9 @@
     {
       "key": "sfx_footsteps_1",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_footsteps_1.mp3"
+      },
       "durationSec": 0.8,
       "loop": true,
       "play": "본부장/대표님이 approaching 단계(경로 7~12타일 또는 넓은 콘)일 때 루프",
@@ -30,7 +34,9 @@
     {
       "key": "sfx_footsteps_2",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_footsteps_2.mp3"
+      },
       "durationSec": 0.8,
       "loop": true,
       "play": "approaching 단계 중간 거리(경로 4~6타일)일 때 루프. 1단계와 교차 전환",
@@ -42,7 +48,9 @@
     {
       "key": "sfx_footsteps_3",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_footsteps_3.mp3"
+      },
       "durationSec": 0.8,
       "loop": true,
       "play": "경로 3타일 이하 또는 화면 안 진입 직전. 화면 안에서 걷는 동안은 루프 유지 가능",
@@ -54,7 +62,9 @@
     {
       "key": "sfx_footsteps_crescendo",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_footsteps_crescendo.mp3"
+      },
       "durationSec": 1.43,
       "loop": false,
       "play": "본부장 순찰(INT-10) 등장 tell 1.5초 시작에 1회",
@@ -67,7 +77,9 @@
     {
       "key": "sfx_footstep_stop",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_footstep_stop.mp3"
+      },
       "durationSec": 0.45,
       "loop": false,
       "play": "대표님 재확인(stop_and_shoulder) 전조 시작에 1회. 본부장 웨이포인트 정지 후 둘러보기 전조에도 사용 권장",
@@ -79,7 +91,9 @@
     {
       "key": "sfx_elevator_ding",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_elevator_ding.mp3"
+      },
       "durationSec": 1.3,
       "loop": false,
       "play": "대표님 순시(INT-09) 전조 시작 + BGM 정지(동시). INT-11 엘리베이터 대표님에도 사용(BGM 정지 없음)",
@@ -93,7 +107,9 @@
     {
       "key": "sfx_gate_beep",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_gate_beep.mp3"
+      },
       "durationSec": 0.225,
       "loop": false,
       "play": "게이트 태그 실패마다 1회(+0.10 의심, 경비가 돌아봄)",
@@ -106,7 +122,9 @@
     {
       "key": "sfx_gate_ok",
       "category": "feedback",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_gate_ok.mp3"
+      },
       "durationSec": 0.09,
       "loop": false,
       "play": "게이트 태그 성공 시 1회",
@@ -118,7 +136,9 @@
     {
       "key": "sfx_hey",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_hey.mp3"
+      },
       "durationSec": 0.37,
       "loop": false,
       "play": "말걸기형 tell(말풍선 '!') 시작 1회: 팀장 INT-01, 경비 INT-07",
@@ -131,7 +151,9 @@
     {
       "key": "sfx_chatter",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_chatter.mp3"
+      },
       "durationSec": 0.966,
       "loop": false,
       "play": "INT-04 복도 수다 tell 시작 1회(막고 있는 동안 반복 원하면 1.0초 간격 재생)",
@@ -143,7 +165,9 @@
     {
       "key": "sfx_meeting_end",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_meeting_end.mp3"
+      },
       "durationSec": 0.98,
       "loop": false,
       "play": "INT-08 팀장 회의 끝(회의실 문 열림) tell 1.0초 시작에 1회",
@@ -155,7 +179,9 @@
     {
       "key": "sfx_senior_hmm",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_senior_hmm.mp3"
+      },
       "durationSec": 0.42,
       "loop": false,
       "play": "선배 tell('…') 시작, INT-02 스몰토크 tell 시작에 1회",
@@ -168,7 +194,9 @@
     {
       "key": "sfx_cough",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_cough.mp3"
+      },
       "durationSec": 0.27,
       "loop": false,
       "play": "팀장 tell 뒤 페이크로 판정된 순간 1회(시선 없음)",
@@ -180,7 +208,9 @@
     {
       "key": "sfx_gasp",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_gasp.mp3"
+      },
       "durationSec": 0.22,
       "loop": false,
       "play": "INT-03 정의로운 동료가 나를 발견한 tell 시작 1회",
@@ -192,7 +222,9 @@
     {
       "key": "sfx_door_clipboard",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_door_clipboard.mp3"
+      },
       "durationSec": 0.43,
       "loop": false,
       "play": "INT-05 근태 점검 방송, INT-06 인사팀 등장 tell 시작에 1회",
@@ -205,7 +237,9 @@
     {
       "key": "sfx_look_swish",
       "category": "tell",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_look_swish.mp3"
+      },
       "durationSec": 0.32,
       "loop": false,
       "play": "걷는 NPC(본부장·인사팀·경비·회의 복귀 팀장)의 stopLookTell / glanceBack / cornerTurnTell(조건부, D-044) 시작에 1회. 화면 안일 때만(화면 밖은 화살표 깜빡임 + 진동)",
@@ -219,7 +253,9 @@
     {
       "key": "sfx_tap",
       "category": "feedback",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_tap.mp3"
+      },
       "durationSec": 0.04,
       "loop": false,
       "play": "바닥/미션 칩을 탭해 목적지가 확정될 때 1회. 연타 시 60ms 이내 중복 재생 생략",
@@ -229,7 +265,9 @@
     {
       "key": "sfx_pop",
       "category": "feedback",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_pop.mp3"
+      },
       "durationSec": 0.08,
       "loop": false,
       "play": "이동 중 탭 -> 정지·위장 전환 순간 1회, 위장 해제(재이동)도 동일. INT-12 공범 제안 말풍선에도 사용",
@@ -241,7 +279,9 @@
     {
       "key": "sfx_suspicion_loop",
       "category": "feedback",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_suspicion_loop.mp3"
+      },
       "durationSec": 0.6,
       "loop": true,
       "play": "의심이 오르는 동안 루프. 의심 0.5 이상부터 재생, rate = 1.0 + (의심-0.5)*0.8 (최대 1.4), 오름이 멈추면 0.3초 페이드아웃",
@@ -251,7 +291,9 @@
     {
       "key": "sfx_caught",
       "category": "feedback",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_caught.mp3"
+      },
       "durationSec": 0.9,
       "loop": false,
       "play": "의심 100% 적발 컷인 시작에 1회(BGM 즉시 정지)",
@@ -261,7 +303,9 @@
     {
       "key": "sfx_clockout_fanfare",
       "category": "feedback",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_clockout_fanfare.mp3"
+      },
       "durationSec": 1.37,
       "loop": false,
       "play": "퇴근 성공(엘리베이터 탑승 확정) 시 1회. 재생 전에 BGM 0.2초 페이드아웃",
@@ -271,7 +315,9 @@
     {
       "key": "sfx_mission_complete",
       "category": "feedback",
-      "files": {},
+      "files": {
+        "mp3": "sfx/sfx_mission_complete.mp3"
+      },
       "durationSec": 0.38,
       "loop": false,
       "play": "미션 완료 판정(자리 복귀 후 완료 포함) 시 1회",
@@ -286,13 +332,17 @@
       "stems": {
         "main": {
           "key": "bgm_office_main",
-          "files": {},
+          "files": {
+            "mp3": "bgm/bgm_office_main.mp3"
+          },
           "durationSec": 16.0,
           "loop": true
         },
         "tension": {
           "key": "bgm_office_tension",
-          "files": {},
+          "files": {
+            "mp3": "bgm/bgm_office_tension.mp3"
+          },
           "durationSec": 16.0,
           "loop": true
         }
