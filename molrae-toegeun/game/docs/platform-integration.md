@@ -45,3 +45,20 @@
 2. 실기기에서 브리지 감지·Storage 영속성·광고 이벤트 순서 확인.
 3. 세로 고정을 위한 `Screen.setOrientation` 호출 필요 여부(콘솔 설정으로 되는지) 확인.
 4. `ait deploy` 스크립트는 외부 제출 행위이므로 일부러 추가하지 않음(오너 승인 사항).
+
+## 광고 흐름 (T-133, `src/ads/adFlow.ts`)
+| 화면 | 배치 | 규칙 |
+|---|---|---|
+| 출근 준비(`PrepScene`) | `ceo_pass` | 그날 순시가 있고 `isSupported()` + 하루 상한이 남았을 때만 버튼. 보상 수령 시 `skipCeoVisit` |
+| 적발 컷인 2초 뒤 | `continue` | 컷인(플레이 상태) 동안은 제안 없음. 지원·상한이 안 되면 제안 화면 생략(⑥). 두 버튼 같은 크기·같은 스타일(②), 카운트다운 없음(③). 버튼을 누른 뒤에만 로드·노출(①). 보상 수령 때만 재개, 중도 종료·실패 = 결과 + 안내(⑤) |
+| 결과 | `salary_double` | 버튼만(팝업 없음, ⑧). 보상 수령 시 이번 판 월급 2배(게임 속 재화) |
+| 결과 → 다음 날 | 전면 | `decideInterstitial` → 노출 대상이면 `ad.interstitial_notice`를 `noticeSec` 동안 예고 후 노출. 이 판에 보상형을 봤으면 건너뜀 |
+- 카운터(`AdCounters.rewardedShownToday`, `rewardedByPlacementToday`)는 보상 수령 때만 올림.
+- 로컬 검증: `?ads=off`(미지원), `?adResult=dismiss`(중도 종료), `?adResult=fail`(노출 실패).
+- 리더보드: 결과 → 다음 날 때 `continued`가 아니면 `submitScore(땡땡이 점수)`.
+- '오늘 광고 끝' 토스트는 문구 키 `ad.today_done`이 데이터에 생기면 표시(현재 키 없음).
+
+## 사운드 (T-133, `src/audio/`)
+- `AudioScene`(상주)이 첫 터치 뒤 `audio-manifest.json`의 파일을 ogg → mp3 순 URL로 지연 로드. 초기 번들·첫 판 진입 시간에 포함되지 않음.
+- BGM 2스템 단계는 `DangerStageTracker`(올릴 때 즉시, 내릴 때 `hysteresis.downgradeDelaySec`)가 정하고, 화면 테두리도 같은 단계를 씀.
+- `?sound=off`로 음소거(시각 신호는 그대로).

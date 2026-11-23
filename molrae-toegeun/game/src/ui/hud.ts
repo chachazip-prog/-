@@ -33,6 +33,9 @@ export class Hud {
   private readonly hintText: UIText;
   private readonly hintBg: Phaser.GameObjects.Rectangle;
   private readonly hasAtlas: boolean;
+  private readonly offerText: UIText;
+  private readonly offerIcon: Phaser.GameObjects.Image | null;
+  private offerBox: { x: number; y: number; w: number; h: number } | null = null;
   private hintQueue: string[] = [];
   private hintLeft = 0;
   private flash: { color: number; alpha: number; left: number; on: number; off: number } | null = null;
@@ -64,11 +67,23 @@ export class Hud {
     this.hintText = fixed(addPixelText(scene, 0, 0, '', { role: 'label', color: ink, lineSpacing: 2 }));
     setWrap(this.hintText, LOGICAL_WIDTH - 20);
     this.hintBg.setDepth(DEPTH + 1); this.hintText.setDepth(DEPTH + 2);
+    this.offerText = fixed(addPixelText(scene, 0, 0, '', { role: 'label', color: ink }));
+    setWrap(this.offerText, LOGICAL_WIDTH - 40);
+    this.offerIcon = this.hasAtlas ? fixed(scene.add.image(0, 0, ATLAS_KEY, 'hud/offer')).setVisible(false) : null;
   }
+
+  /** 지금 떠 있는 안내를 닫음(모든 안내는 건너뛸 수 있음, GDD §13) */
+  dismissHint(): void { this.hintLeft = 0; }
 
   /** HUD가 가로챌 탭인가(칩 id, 'hud', null = 지도 탭) */
   hitTest(x: number, y: number): string | null {
     if (y < HUD_TOP_PX) return 'hud';
+    const ob = this.offerBox;
+    if (ob && x >= ob.x && x < ob.x + ob.w && y >= ob.y && y < ob.y + ob.h) return 'offer';
+    if (this.hintLeft > 0 && this.hintBg.visible) {
+      const hb = this.hintBg.getBounds();
+      if (hb.contains(x, y)) return 'hint';
+    }
     if (y >= LOGICAL_HEIGHT - HUD_BOTTOM_PX) {
       const i = Math.floor((x - 4) / (CHIP + CHIP_GAP));
       const m = this.sim.missions[i];
@@ -156,12 +171,14 @@ export class Hud {
     let stageKey = '';
     if (sim.phase === 'leave') stageKey = sim.leaveStage === 'pack' ? 'event.leave.pack' : sim.leaveStage === 'gate' ? 'event.leave.gate' : sim.leaveStage === 'elevator' ? 'event.leave.elevator' : 'event.leave.name';
     else if (sim.hrCountdown !== null) stageKey = 'hud.seat_countdown';
+    else if (sim.ceoState === 'tell' || sim.ceoState === 'freeze') stageKey = 'hud.ceo_freeze';
     const stageStr = stageKey ? this.str.t(stageKey, { n: Math.ceil(sim.hrCountdown ?? 0) }) : '';
     setPixelText(this.stageText, stageStr);
     const chipsRight = leaving ? 4 + CHIP + 6 : 4 + sim.missions.length * (CHIP + CHIP_GAP) + 2;
     placeText(this.stageText, chipsRight, by + HUD_BOTTOM_PX / 2, 0, 0.5);
 
     if (sim.phase !== 'ended') this.drawPanel(t); else setPixelText(this.panelText, '');
+    this.drawOffer();
     this.drawHint(dt);
     this.drawBorder(t, stage, dt);
   }
@@ -210,9 +227,33 @@ export class Hud {
     } else if (sim.leaveStage === 'pack') bar(sim.packProgress / sim.content.leave.packSec, color('green_sh'));
     else if (sim.leaveStage === 'gate') {
       const wnd = sim.gateWindow;
-      bar(0, color('mid'), [0.5 - wnd / 2, 0.5 + wnd / 2], sim.gateMarker);
+      const wc = sim.content.leave.gate.windowCenter ?? 0.5;
+      bar(0, color('mid'), [wc - wnd / 2, wc + wnd / 2], sim.gateMarker);
       void t;
     }
+  }
+
+  /** 공범 제안 말풍선(INT-12): 칩 위에 고정 패널로 띄우고, 패널 탭 = 수락(HUD 입력) */
+  private drawOffer(): void {
+    const o = this.sim.offer;
+    const show = !!o && this.sim.phase === 'day';
+    this.offerText.setVisible(show);
+    this.offerIcon?.setVisible(show);
+    if (!show || !o) { this.offerBox = null; return; }
+    setPixelText(this.offerText, this.str.t(o.textKey));
+    const x0 = 6, w = LOGICAL_WIDTH - 12;
+    const y0 = LOGICAL_HEIGHT - HUD_BOTTOM_PX - 22 - 26;
+    const g = this.g;
+    g.fillStyle(0xffffff, 0.96).fillRect(x0, y0, w, 22);
+    g.lineStyle(2, color('green_sh'), 1).strokeRect(x0 + 1, y0 + 1, w - 2, 20);
+    this.offerIcon?.setPosition(x0 + 12, y0 + 11);
+    placeText(this.offerText, x0 + 24, y0 + 11, 0, 0.5);
+    // 남은 시간 막대(강제 제안이면 없음)
+    if (Number.isFinite(o.left)) {
+      const k = Math.max(0, o.left / (this.sim.content.accomplice?.offerSec ?? 2.5));
+      g.fillStyle(color('green'), 1).fillRect(x0 + 3, y0 + 18, Math.round((w - 6) * k), 1);
+    }
+    this.offerBox = { x: x0, y: y0, w, h: 22 };
   }
 
   private drawHint(dt: number): void {

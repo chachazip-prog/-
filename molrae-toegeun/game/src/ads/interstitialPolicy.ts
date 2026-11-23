@@ -95,3 +95,65 @@ export function onInterstitialShown(c: AdCounters, nowMs: number): AdCounters {
   const r = rollDay(c, nowMs);
   return { ...r, interstitialShownToday: r.interstitialShownToday + 1, lastInterstitialAt: nowMs, gamesSinceLastInterstitial: 0 };
 }
+
+// ── 보상형(ads.json rewarded, D-031 하루 최대 12회 + 배치별 maxPerDay) ─────────────
+
+export interface RewardedPlacement {
+  readonly id: string;
+  readonly screen: string;
+  readonly labelKey: string;
+  readonly descKey?: string;
+  readonly maxPerDay: number;
+  readonly declineLabelKey?: string;
+  readonly notCompletedKey?: string;
+  readonly unavailableKey?: string;
+  readonly declineButtonSameSize?: boolean;
+  readonly autoCountdown?: boolean;
+  readonly buttonOnlyNoPopup?: boolean;
+}
+
+export interface RewardedRules {
+  readonly enabled: boolean;
+  readonly maxPerDay: number;
+  readonly placements: Readonly<Record<string, RewardedPlacement>>;
+}
+
+export function parseRewardedRules(ads: Readonly<Record<string, unknown>>): RewardedRules {
+  const r = (ads['rewarded'] ?? {}) as Record<string, unknown>;
+  const placements: Record<string, RewardedPlacement> = {};
+  for (const p of (Array.isArray(r['placements']) ? r['placements'] : []) as Record<string, unknown>[]) {
+    const id = typeof p['id'] === 'string' ? p['id'] : '';
+    if (!id) continue;
+    const s = (k: string) => (typeof p[k] === 'string' ? { [k]: p[k] as string } : {});
+    const b = (k: string) => (typeof p[k] === 'boolean' ? { [k]: p[k] as boolean } : {});
+    placements[id] = {
+      id, screen: typeof p['screen'] === 'string' ? p['screen'] : '', labelKey: typeof p['labelKey'] === 'string' ? p['labelKey'] : id,
+      maxPerDay: typeof p['maxPerDay'] === 'number' ? p['maxPerDay'] : 1,
+      ...s('descKey'), ...s('declineLabelKey'), ...s('notCompletedKey'), ...s('unavailableKey'),
+      ...b('declineButtonSameSize'), ...b('autoCountdown'), ...b('buttonOnlyNoPopup'),
+    } as RewardedPlacement;
+  }
+  return { enabled: r['enabled'] === true, maxPerDay: typeof r['maxPerDay'] === 'number' ? r['maxPerDay'] : 12, placements };
+}
+
+export type RewardedSkip = 'disabled' | 'unknown_placement' | 'daily_cap' | 'placement_cap';
+
+/** 보상형 제안 가능 여부(하루 총량·배치별 상한). 광고 SDK 지원 여부는 호출 측이 isSupported()로 따로 본다(D-050 ⑥) */
+export function canOfferRewarded(rules: RewardedRules, c0: AdCounters, placementId: string, nowMs: number): { ok: true } | { ok: false; reason: RewardedSkip } {
+  const c = rollDay(c0, nowMs);
+  if (!rules.enabled) return { ok: false, reason: 'disabled' };
+  const p = rules.placements[placementId];
+  if (!p) return { ok: false, reason: 'unknown_placement' };
+  if (c.rewardedShownToday >= rules.maxPerDay) return { ok: false, reason: 'daily_cap' };
+  if ((c.rewardedByPlacementToday[placementId] ?? 0) >= p.maxPerDay) return { ok: false, reason: 'placement_cap' };
+  return { ok: true };
+}
+
+/** 보상 수령(userEarnedReward)했을 때만 호출 */
+export function onRewardedShown(c: AdCounters, placementId: string, nowMs: number): AdCounters {
+  const r = rollDay(c, nowMs);
+  return {
+    ...r, rewardedShownToday: r.rewardedShownToday + 1,
+    rewardedByPlacementToday: { ...r.rewardedByPlacementToday, [placementId]: (r.rewardedByPlacementToday[placementId] ?? 0) + 1 },
+  };
+}

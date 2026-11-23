@@ -28,6 +28,7 @@ export class BootScene extends Phaser.Scene {
     const anims = this.cache.json.get(ANIMS_KEY) as Phaser.Types.Animations.JSONAnimations | undefined;
     if (anims && this.textures.exists(ATLAS_KEY)) this.anims.fromJSON(anims);
     console.info(`[boot] data tables: ${listTables().join(', ') || '(없음)'}`);
+    this.scene.launch(SceneKey.Audio); // 상주(첫 터치 뒤 오디오 지연 로드)
     this.scene.start(SceneKey.Title);
   }
 }

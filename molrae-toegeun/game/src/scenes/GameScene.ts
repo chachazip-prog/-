@@ -1,7 +1,15 @@
 import Phaser from 'phaser';
+import { AdFlow } from '../ads/adFlow';
+import { audio, bgmHysteresisSec } from '../audio/audio';
+import { buildSoundCues, tellSfxFor, type SoundCues } from '../audio/cues';
+import { DangerStageTracker, type DangerStage } from '../audio/dangerStage';
 import { CAMERA_VIEW, HUD_BOTTOM_PX, HUD_TOP_PX, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
 import { getStrings, lastAuthoredDay, loadDayContent } from '../content';
 import { DaySim, conePolygon, isGateOnly, zoneAt, type DayEvent, type PatrolNpc, type SimEvent, type Threat } from '../core';
+import { getDataTables } from '../data/loader';
+import { getPlatform } from '../platform';
+import { applyDayResult, loadProgress, saveProgress } from '../state/progress';
+import { UiButton } from '../ui/button';
 import { color, overlay, pulseAlpha } from '../render/palette';
 import { ATLAS_KEY, coneOverlayKeys, edgeArrowKey, facing4, spriteKeyFor, type Facing4 } from '../render/sprites';
 import { TILE, buildTileLayout } from '../render/tilemap';
@@ -18,8 +26,21 @@ const TALK_LEAN_PX = 2;
 const ARROW_MARGIN = 9;
 const TOAST_SEC = 1.4;
 const D = { ground: -1000, cover: -950, shadow: -900, cone: -800, path: -700, overhead: 5000 } as const;
+/** 오버레이(컷인·이어하기 제안·결과) 깊이 */
+const OV = 12000;
+/**
+ * 적발 컷인 길이(초, GDD §6-1 '리액션 컷인 2초', ads.global.playStates caught_cutin). 데이터 숫자 필드 없음 [데이터 요청]
+ * 컷인 동안은 플레이 상태라 광고·광고 제안 없음(D-023, D-050 ①)
+ */
+const CUTIN_SEC = 2.0;
+/** BGM alert 단계 의심 임계(매니페스트 stages.alert.when 문장 '의심 >= 0.4', 숫자 필드 없음) [데이터 요청] */
+const ALERT_SUSPICION = 0.4;
+/** 의심 루프 시작 임계·rate 식(sound-list: 0.5부터, rate = 1 + (의심 − 0.5) × 0.8, 최대 1.4) */
+const SUSP_LOOP_FROM = 0.5;
 
-export interface GameSceneData { day?: number }
+export interface GameSceneData { day?: number; skipCeo?: boolean; seenHints?: readonly string[] }
+
+type Overlay = 'none' | 'cutin' | 'offer' | 'result' | 'busy';
 
 interface ActorView {
   sprite: Phaser.GameObjects.Sprite;
@@ -68,18 +89,65 @@ export class GameScene extends Phaser.Scene {
   private gateIcon!: Phaser.GameObjects.Image;
   private unreachableLeft = 0;
   private hasAtlas = false;
+  // ── T-133 ──
+  private skipCeo = false;
+  private seenHints = new Set<string>();
+  private cues!: SoundCues;
+  private stage!: DangerStageTracker;
+  private ads!: AdFlow;
+  private rewardedThisGame = false;
+  private salaryDoubled = false;
+  private overlay: Overlay = 'none';
+  private overlayAge = 0;
+  private cutinLeft = 0;
+  private ovObjects: Phaser.GameObjects.GameObject[] = [];
+  private buttons: { b: UiButton; act: () => void }[] = [];
+  private vignette!: Phaser.GameObjects.Graphics;
+  private centerText!: UIText;
+  private centerBg!: Phaser.GameObjects.Rectangle;
+  private follower: Phaser.GameObjects.Sprite | null = null;
+  private routeDots: { img: Phaser.GameObjects.Image }[] = [];
+  private routeLeft = 0;
+  private demo: { actor: string; left: number } | null = null;
+  private missionArrows: Phaser.GameObjects.Image[] = [];
+  private qteDownAt: number | null = null;
+  private snackDown: { at: number; tx: number; ty: number } | null = null;
+  private prevMode = new Map<PatrolNpc, string>();
+
+  private salaryText: UIText | null = null;
+  private centerLeft = 0;
 
   constructor() { super(SceneKey.Game); }
 
   init(data: GameSceneData): void {
     const q = Number(urlParam('day'));
     this.day = Math.max(1, Math.floor(data.day ?? (Number.isFinite(q) && q > 0 ? q : 1)));
+    this.skipCeo = data.skipCeo === true;
+    this.seenHints = new Set(data.seenHints ?? []);
   }
 
   create(): void {
     const str = getStrings();
     const content = loadDayContent(this.day);
-    this.sim = new DaySim(content, { view: CAMERA_VIEW }, urlParam('seed') ?? content.seed);
+    this.sim = new DaySim(content, { view: CAMERA_VIEW, skipCeoVisit: this.skipCeo, seenHints: this.seenHints }, urlParam('seed') ?? content.seed);
+    this.cues = buildSoundCues(getDataTables());
+    const sh = (content.visualCues['suspicionHigh'] ?? {}) as Record<string, unknown>;
+    this.stage = new DangerStageTracker({ dangerSuspicion: typeof sh['threshold'] === 'number' ? sh['threshold'] as number : 0.7, alertSuspicion: ALERT_SUSPICION }, bgmHysteresisSec());
+    this.ads = new AdFlow(getPlatform());
+    this.rewardedThisGame = false;
+    this.salaryDoubled = false;
+    this.overlay = 'none';
+    this.ovObjects = [];
+    this.buttons = [];
+    this.routeDots = [];
+    this.missionArrows = [];
+    this.follower = null;
+    this.demo = null;
+    this.qteDownAt = null;
+    this.snackDown = null;
+    this.prevMode = new Map();
+    this.sayLeft = new Map();
+    this.salaryText = null;
     this.hasAtlas = this.textures.exists(ATLAS_KEY);
     this.views = new Map();
     this.pathDots = [];
@@ -102,12 +170,18 @@ export class GameScene extends Phaser.Scene {
     this.dest = this.add.sprite(0, 0, ATLAS_KEY, 'fx/dest_0').setDepth(D.path + 1).setVisible(false);
     if (this.anims.exists('fx/dest')) this.dest.play('fx/dest');
 
-    this.player = this.add.sprite(0, 0, ATLAS_KEY, 'player/idle_up').setOrigin(0.5, 1);
+    this.playerKey = content.playerSpriteKey ?? 'player';
+    this.player = this.add.sprite(0, 0, ATLAS_KEY, `${this.playerKey}/idle_up`).setOrigin(0.5, 1);
+    for (let i = 0; i < 96; i++) this.routeDots.push({ img: this.img(0, 0, 'dot/hint').setDepth(D.path).setVisible(false) });
+    for (let i = 0; i < 4; i++) this.missionArrows.push(this.img(0, 0, 'ui/edge_down').setScrollFactor(0).setDepth(9000).setVisible(false));
     this.playerLabelBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.85).setDepth(D.overhead);
     this.playerLabel = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 1);
     this.toastBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.9).setDepth(D.overhead + 2);
     this.toast = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 3);
     this.gateIcon = this.img(0, 0, 'ui/gate_fail').setDepth(D.overhead + 4).setVisible(false);
+    this.followerBubbleBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.92).setDepth(D.overhead + 1).setStrokeStyle(1, color('dark')).setVisible(false);
+    this.followerBubble = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 2).setVisible(false);
+    this.followerSay = 0;
     for (let i = 0; i < 8; i++) this.arrows.push(this.img(0, 0, 'edge_boss/down_2').setScrollFactor(0).setDepth(9000).setVisible(false));
 
     this.hud = new Hud(this, this.sim, str);
@@ -119,7 +193,14 @@ export class GameScene extends Phaser.Scene {
     placeText(this.banner, LOGICAL_WIDTH / 2, LOGICAL_HEIGHT * 0.42, 0.5, 0.5);
     fitPanel(this.bannerBg, this.banner, 10, 7);
 
+    this.vignette = this.add.graphics().setScrollFactor(0).setDepth(9500);
+    this.centerBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.92).setScrollFactor(0).setDepth(9600).setStrokeStyle(1, color('point')).setVisible(false);
+    this.centerText = addPixelText(this, 0, 0, '', { role: 'body', color: color('point'), align: 'center', scale: 2 }).setScrollFactor(0).setDepth(9601).setVisible(false);
+
     this.input.on(Phaser.Input.Events.POINTER_DOWN, this.onPointerDown, this);
+    this.input.on(Phaser.Input.Events.POINTER_UP, this.onPointerUp, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { audio.stopBgm(); });
+    audio.startBgm();
     // 개발 빌드 전용: 자동화(스크린샷·수동 디버그) 훅. 프로덕션 번들에서는 제거됨
     if (import.meta.env.DEV) (window as unknown as { __mtDay?: DaySim; __mtScene?: GameScene }).__mtDay = this.sim;
     if (import.meta.env.DEV) (window as unknown as { __mtScene?: GameScene }).__mtScene = this;
@@ -149,16 +230,7 @@ export class GameScene extends Phaser.Scene {
       if (o.frame === 'tall/stall' && o.tile) this.stalls.push({ img: im, x: o.tile.x, y: o.tile.y });
     }
     for (let y = 0; y < map.height; y++) for (let x = 0; x < map.width; x++) if (isGateOnly(map, x, y)) this.gateTiles.push({ x, y });
-    // 유리벽(세로, D-053: 이동 차단·시선 통과) — 세로 유리 스프라이트가 없어 코드로 그림
-    const gl = this.add.graphics();
-    for (const p of layout.glass) {
-      const x = this.offsetX + p.x * TILE + TILE / 2, y = p.y * TILE;
-      gl.fillStyle(color('cool'), p.door ? 0.12 : 0.22).fillRect(x - 3, y - 8, 6, TILE + 8);
-      gl.fillStyle(color('outline'), 1).fillRect(x - 3, y - 8, 1, TILE + 8).fillRect(x + 2, y - 8, 1, TILE + 8);
-      if (!p.door) gl.fillStyle(0xffffff, 0.8).fillRect(x - 1, y - 4, 1, 5);
-      else gl.fillStyle(color('mid'), 1).fillRect(x - 2, y + 4, 4, 1);
-    }
-    gl.setDepth((layout.glass[0]?.y ?? 0) * TILE + TILE);
+    // 세로 유리벽(D-053: 이동 차단·시선 통과)은 아트 T-135 스프라이트(tilemap.ts objects)로 그림
     // 엄폐 칸(maps.coverSpots): 바닥 반짝임
     for (const s of this.coverSpots()) {
       const sp = this.add.sprite(this.offsetX + s.x * TILE + TILE / 2, s.y * TILE + TILE / 2, ATLAS_KEY, 'fx/cover_glint_0').setDepth(D.cover + 2);
@@ -172,52 +244,91 @@ export class GameScene extends Phaser.Scene {
 
   private onPointerDown(pointer: Phaser.Input.Pointer): void {
     const sim = this.sim;
-    if (sim.phase === 'ended') {
-      // 연타하던 탭으로 결과를 못 보고 넘어가지 않도록 보호 시간(rules.input.resultInputGuardSec, BUG-006)
-      if (this.result && this.resultAge >= sim.content.resultInputGuardSec) this.onResultTap();
+    if (this.overlay !== 'none') {
+      // 오버레이 버튼만 받음. 결과·제안 화면이 뜬 직후 보호 시간(rules.input.resultInputGuardSec, BUG-006)
+      if (this.overlay === 'cutin' || this.overlay === 'busy' || this.overlayAge < sim.content.resultInputGuardSec) return;
+      const hit = this.buttons.find((x) => x.b.contains(pointer.x, pointer.y));
+      if (hit) { audio.sfx('sfx_tap'); hit.act(); }
       return;
     }
+    if (sim.phase === 'ended') return;
+    // 인사 QTE: 누름·뗌으로 판정(길게 누름 감지)
+    if (sim.qteActive) { sim.pressQte(); this.qteDownAt = this.time.now; return; }
     const hit = this.hud.hitTest(pointer.x, pointer.y);
-    if (hit?.startsWith('chip:')) { sim.tapMission(hit.slice(5)); return; }
+    if (hit === 'offer') { if (sim.acceptOffer()) audio.sfx('sfx_pop'); return; }
+    if (hit === 'hint') { this.hud.dismissHint(); return; }
+    if (hit?.startsWith('chip:')) { if (sim.tapMission(hit.slice(5))) audio.sfx('sfx_tap'); return; }
     if (hit === 'hud') return; // HUD 탭은 화면 탭이 아님(rules.input.hudTapDoesNotStop)
     const tx = Math.floor((pointer.worldX - this.offsetX) / TILE);
     const ty = Math.floor(pointer.worldY / TILE);
-    const r = sim.tapWorld(tx, ty);
-    if (r === 'unreachable') this.unreachableLeft = 0.8;
+    // 간식: 뗄 때 판정(길게 누름 = '바스락', events.snack.params.maxPressSec)
+    if (sim.activityView()?.kind === 'snack') { this.snackDown = { at: this.time.now, tx, ty }; return; }
+    this.afterTap(sim.tapWorld(tx, ty));
   }
 
-  private onResultTap(): void {
-    const r = this.sim.result;
-    const next = r && r.stars >= 1 ? Math.min(this.day + 1, Math.max(lastAuthoredDay() + 50, this.day + 1)) : this.day;
-    this.events.emit('day-finished', { day: this.day, result: r });
-    this.game.events.emit('mt-day-finished', { day: this.day, result: r });
-    this.scene.restart({ day: next } satisfies GameSceneData);
+  private onPointerUp(): void {
+    if (this.qteDownAt !== null) { this.sim.releaseQte((this.time.now - this.qteDownAt) / 1000); this.qteDownAt = null; }
+    if (this.snackDown) {
+      const d = this.snackDown; this.snackDown = null;
+      this.afterTap(this.sim.tapWorld(d.tx, d.ty, (this.time.now - d.at) / 1000));
+    }
+  }
+
+  private afterTap(r: string): void {
+    if (r === 'unreachable') this.unreachableLeft = 0.8;
+    else if (r === 'moving') audio.sfx('sfx_tap', 0.6);
+    else if (r === 'stopped') audio.sfx('sfx_pop', 0.7);
   }
 
   override update(_time: number, delta: number): void {
     const dt = Math.min(delta / 1000, 0.1);
     this.t += dt;
-    this.sim.advance(dt);
+    // 튜토리얼 슬로모(표시 시간만 늦춤, 판정은 같은 고정 스텝)
+    if (this.overlay === 'none') this.sim.advance(dt * this.sim.timeScale);
     for (const e of this.sim.drainEvents()) this.onDayEvent(e);
     for (const e of this.sim.drainFloorEvents()) this.onFloorEvent(e);
     if (this.result) this.resultAge += dt;
+    this.overlayAge += dt;
+    if (this.overlay === 'cutin') { this.cutinLeft -= dt; if (this.cutinLeft <= 0) void this.afterCutin(); }
     this.syncView(dt);
   }
 
   private onDayEvent(e: DayEvent): void {
     const str = getStrings();
     switch (e.type) {
-      case 'hint': this.hud.hint(e.key); break;
+      case 'hint':
+        this.hud.hint(e.key);
+        if (e.key.startsWith('tutorial.') && !this.seenHints.has(e.key)) { this.seenHints.add(e.key); this.saveSeenHints(); }
+        break;
       case 'toast': this.showToast(str.t(e.key)); break;
       case 'closeCall': this.showToast(str.t('hud.close_call')); break;
-      case 'missionDone': this.showToast(str.t('hud.mission_done')); break;
+      case 'missionDone': this.showToast(str.t('hud.mission_done')); audio.sfx('sfx_mission_complete'); break;
+      case 'ceo':
+        if (e.stage === 'tell') this.showCenter(str.t('hud.ceo_freeze'), 2.2);
+        break;
+      case 'qte':
+        if (e.stage === 'cue') audio.sfx('sfx_pop');
+        if (e.stage === 'result' && e.result === 'success') this.showToast(str.t(e.source === 'ceo' ? 'hud.mission_done' : 'hud.gate_ok'));
+        break;
+      case 'eyeContact': audio.sfx('sfx_mission_complete'); break;
+      case 'offer': audio.sfx(this.cues.interrupt['INT-12'] ?? 'sfx_pop'); break;
+      case 'accomplice':
+        if (e.action === 'cough') { audio.sfx('sfx_cough'); this.npcSayFollower(str.t('npc.accomplice.cough')); }
+        break;
+      case 'say': this.npcSay(this.sim.floor.findNpc((n) => n.def.id === e.npc), str.t(e.key, { name: str.t('ui.player_default_name') }), e.sec); break;
+      case 'routeHint': this.showRoutes(e.routes, e.sec); break;
+      case 'offscreenDemo': this.demo = { actor: e.actor, left: e.sec }; break;
+      case 'continued': this.stage.update(0, { stopped: false, freeze: false, turningOrSeeing: false, suspicion: 0, leavePhase: false, offscreenApproaching: 0 }); break;
       case 'missionFail': {
         const m = this.sim.content.missions.find((x) => x.id === e.id);
         this.showToast(str.t(e.reason === 'timeout' ? 'event.result.timeout' : 'event.result.fail', undefined, Math.floor(this.t)));
         void m;
         break;
       }
-      case 'interrupt': if (e.textKey) this.showToast(str.t(e.textKey, { name: str.t('ui.player_default_name') })); break;
+      case 'interrupt':
+        if (e.textKey) this.showToast(str.t(e.textKey, { name: str.t('ui.player_default_name') }));
+        if (e.id !== 'INT-12') audio.sfx(this.cues.interrupt[e.id]);
+        break;
       case 'gate': {
         const cue = (this.sim.content.visualCues[e.result === 'pass' ? 'gateOk' : 'gateFail'] ?? {}) as Record<string, unknown>;
         const n = (k: string, d: number) => (typeof cue[k] === 'number' ? cue[k] as number : d);
@@ -226,21 +337,38 @@ export class GameScene extends Phaser.Scene {
         this.gateFlash = { key: e.result === 'pass' ? 'gate_pass_flash' : 'gate_fail_flash', left: dur, flashes, on: dur / (flashes * 2), off: dur / (flashes * 2), icon: typeof cue['overlayIcon'] === 'string' ? cue['overlayIcon'] as string : 'ui/gate_fail' };
         if (e.result === 'pass') this.showToast(str.t(typeof cue['textKey'] === 'string' ? cue['textKey'] as string : 'hud.gate_ok'));
         else this.showToast(str.t('hud.gate_attempts_left', { n: this.sim.content.leave.gate.maxAttempts - this.sim.gateAttempts }));
+        audio.sfx(typeof cue['pairsWith'] === 'string' ? cue['pairsWith'] as string : undefined);
         break;
       }
       case 'hrAbsent': this.showToast(str.t('react.hr_inspector.absent')); break;
       case 'phase': if (e.phase === 'day') { this.banner.setVisible(false); this.bannerBg.setVisible(false); } break;
-      case 'result': this.showResult(); break;
+      case 'result': this.onResult(); break;
       default: break;
     }
   }
 
   private onFloorEvent(e: SimEvent): void {
     const str = getStrings();
-    if (e.type === 'talkCancel') {
+    if (e.type === 'tell') {
+      // 전조 효과음: 앉은 상사 고유음 / 걷는 사람 walkTellSfx(화면 안일 때만, 화면 밖은 화살표 깜빡임)
+      const npc = this.sim.floor.findNpc((n) => n.def.id === e.npc);
+      if (npc && npc.gazeMultiplier > 0 && npc.tellKind !== 'talk' && npc.def.actorId) {
+        const actor = npc.def.actorId ?? '';
+        const onlyOn = this.cues.walkTellOnScreenOnly[actor] !== false;
+        const recheck = npc.def.waypoints[npc.waypointIndex]?.lookIsRecheck === true;
+        if (npc.def.seated || !onlyOn || this.sim.floor.isOnScreen(npc)) audio.sfx(tellSfxFor(this.cues, actor, !!npc.def.seated, npc.tellKind === 'turn' ? 'turn' : 'look', recheck));
+      }
+    } else if (e.type === 'talkWarn') {
+      const npc = this.sim.floor.findNpc((n) => n.def.id === e.npc);
+      const intId = npc?.def.actorId ? this.sim.content.actors[npc.def.actorId]?.talkEnabledBy : undefined;
+      if (intId) audio.sfx(this.cues.interrupt[intId]);
+    } else if (e.type === 'caught') {
+      audio.sfx('sfx_caught');
+    } else if (e.type === 'talkCancel') {
       const npc = this.sim.floor.findNpc((n) => n.def.id === e.npc);
       const actor = npc?.def.actorId ? this.sim.content.actors[npc.def.actorId] : undefined;
-      if (e.reason === 'disguised' || e.reason === 'escaped') this.npcSay(npc, str.t(actor?.dodgedLineKey ?? 'talk.dodged_default'), 1.4);
+      // T-134 ④: 혼잣말은 조용한 취소(위장·그냥 지나감)에만. 들어왔다 피하면 돌아보기만 함
+      if (e.reason === 'disguised' || e.reason === 'missed') this.npcSay(npc, str.t(actor?.dodgedLineKey ?? 'talk.dodged_default'), 1.4);
     } else if (e.type === 'talk') {
       const npc = this.sim.floor.findNpc((n) => n.def.id === e.npc);
       const actor = npc?.def.actorId ? this.sim.content.actors[npc.def.actorId] : undefined;
@@ -251,6 +379,10 @@ export class GameScene extends Phaser.Scene {
   }
 
   private sayLeft = new Map<PatrolNpc, number>();
+  private playerKey = 'player';
+  private followerSay = 0;
+  private followerBubble!: UIText;
+  private followerBubbleBg!: Phaser.GameObjects.Rectangle;
   private npcSay(npc: PatrolNpc | undefined, text: string, sec: number): void {
     if (!npc) return;
     const v = this.views.get(npc);
@@ -308,14 +440,20 @@ export class GameScene extends Phaser.Scene {
     const str = getStrings();
     this.cameras.main.scrollY = this.cameraTop();
 
-    // 퇴근 중 의심 0.7 이상 = danger, 전조·접근 = alert, 퇴근 = finale (visualCues.dangerBorder)
-    let stage: BorderStage = sim.phase === 'leave' ? 'finale' : 'calm';
+    // 위험 단계: BGM 2스템과 화면 테두리가 같은 단계·같은 히스테리시스(visualCues.dangerBorder.followsBgmHysteresis)
     const threats = new Map<PatrolNpc, Threat>();
     for (const n of floor.npcs) threats.set(n, floor.threatOfNpc(n));
-    const anyTurning = [...threats.entries()].some(([n, th]) => (th === 'turning' || th === 'approaching') && n.gazeMultiplier > 0 && !floor.isOnScreen(n));
-    if (anyTurning || [...threats.entries()].some(([n, th]) => th === 'turning' && n.gazeMultiplier > 0)) stage = 'alert';
-    if (sim.suspicion >= 0.7 || floor.gazeNow > 0) stage = 'danger';
-    if (sim.phase === 'intro' || sim.phase === 'ended') stage = 'calm';
+    const offApproach = [...threats.entries()].filter(([n, th]) => (th === 'turning' || th === 'approaching') && n.gazeMultiplier > 0 && !floor.isOnScreen(n)).length;
+    const turnSee = floor.gazeNow > 0 || [...threats.entries()].some(([n, th]) => th === 'turning' && n.gazeMultiplier > 0);
+    const ds: DangerStage = this.stage.update(dt, {
+      stopped: sim.phase === 'ended' || this.overlay !== 'none', freeze: sim.frozen, turningOrSeeing: turnSee,
+      suspicion: sim.suspicion, leavePhase: sim.phase === 'leave', offscreenApproaching: offApproach,
+    });
+    audio.setStage(ds);
+    const stage: BorderStage = sim.phase === 'intro' || ds === 'stopped' || ds === 'freeze' ? 'calm' : ds;
+    // 의심 루프(보는 중 + 의심 0.5 이상)
+    const loopOn = floor.gazeNow > 0 && sim.suspicion >= SUSP_LOOP_FROM && sim.phase !== 'ended';
+    audio.loop('sfx_suspicion_loop', loopOn, Math.min(1.4, 1 + (sim.suspicion - SUSP_LOOP_FROM) * 0.8));
 
     // ── 플레이어 ──
     const p = floor.player;
@@ -324,16 +462,17 @@ export class GameScene extends Phaser.Scene {
     this.player.setPosition(Math.round(pw.x), Math.round(pw.y) + FOOT_PX).setDepth(Math.round(pw.y) + FOOT_PX).setVisible(!hidden);
     const pdir = facing4(p.facing);
     let label = '';
-    if (sim.phase === 'ended' && sim.result?.outcome === 'caught') this.playAnim(this.player, 'player/caught', 'player/caught');
-    else if (p.mode === 'moving') this.playAnim(this.player, `player/walk_${pdir}`);
-    else if (p.mode === 'talked') { this.playAnim(this.player, `player/idle_${pdir}`); label = str.t('player.mode.talked'); }
-    else if (sim.activity || sim.seatedWorking || (sim.phase === 'leave' && sim.leaveStage === 'pack' && sim.playerAtSeat)) this.playAnim(this.player, 'player/idle_up');
+    const pk = this.playerKey;
+    if (sim.phase === 'ended' && sim.result?.outcome === 'caught') this.playAnim(this.player, `${pk}/caught`, `${pk}/caught`);
+    else if (p.mode === 'moving') this.playAnim(this.player, `${pk}/walk_${pdir}`);
+    else if (p.mode === 'talked') { this.playAnim(this.player, `${pk}/idle_${pdir}`); label = str.t('player.mode.talked'); }
+    else if (sim.activity || sim.seatedWorking || (sim.phase === 'leave' && sim.leaveStage === 'pack' && sim.playerAtSeat)) this.playAnim(this.player, `${pk}/idle_up`);
     else if (floor.playerStill && !(sim.gateOpen)) {
       const pose = this.poseId();
       const d2 = pdir === 'up' ? 'down' : pdir;
-      this.playAnim(this.player, `player/pose_${pose}_${d2}`, 'player/disguise');
+      this.playAnim(this.player, `${pk}/pose_${pose}_${d2}`, `${pk}/disguise`);
       if (p.mode === 'disguised') label = str.t('player.mode.disguised');
-    } else this.playAnim(this.player, `player/idle_${pdir}`);
+    } else this.playAnim(this.player, `${pk}/idle_${pdir}`);
     if (this.unreachableLeft > 0) { this.unreachableLeft -= dt; label = str.t('hud.unreachable'); }
     setPixelText(this.playerLabel, label).setVisible(label !== '' && !hidden);
     placeText(this.playerLabel, pw.x, Math.round(pw.y) + FOOT_PX - 22, 0.5, 1);
@@ -381,20 +520,38 @@ export class GameScene extends Phaser.Scene {
       const sx = Math.round(w.x + lx), sy = Math.round(w.y + ly) + FOOT_PX;
       v.sprite.setPosition(sx, sy).setDepth(sy).setVisible(npc.mode !== 'spawn');
       const dir: Facing4 = npc.tellKind === 'turn' && npc.pendingFacing !== null ? facing4(npc.pendingFacing) : facing4(npc.facing);
-      if (v.bgIdle && npc.mode !== 'walk') {
+      const isFrozen = sim.frozen && npc !== sim.ceoOnFloor;
+      if (isFrozen) {
+        // 얼음(H3·H4): 모두 멈추고 고개 듦(정면). 배경 동료도 연출로 얼음
+        v.sprite.anims.stop();
+        const f = `${v.base}/idle_down`;
+        if (this.textures.get(ATLAS_KEY).has(f)) v.sprite.setFrame(f);
+      } else if (v.bgIdle && npc.mode !== 'walk') {
         if (t >= v.bgIdle.next) {
           const k = v.bgIdle.anims[Math.floor(t) % v.bgIdle.anims.length]!;
           const key = `${v.base}/${k.replace(/_\d+$/, '')}`;
           this.playAnim(v.sprite, key, `${v.base}/${k}`);
+          // 1회 재생 애니(sit_stretch 등, repeat 0)는 끝나면 첫 번째 반복 애니(sit_type)로 복귀 (art §12)
+          const a = this.anims.get(key);
+          if (a && a.repeat === 0) {
+            const loopKey = `${v.base}/${v.bgIdle.anims[0]!.replace(/_\d+$/, '')}`;
+            v.sprite.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => { if (loopKey !== key) this.playAnim(v.sprite, loopKey); });
+          }
           v.bgIdle.next = t + v.bgIdle.range[0] + ((Math.floor(t * 7) % 10) / 10) * (v.bgIdle.range[1] - v.bgIdle.range[0]);
         }
       } else if (npc.mode === 'walk') this.playAnim(v.sprite, `${v.base}/walk_${dir}`);
       else this.playAnim(v.sprite, `${v.base}/idle_${dir}`);
+      // 페이크(헛기침) 효과음: tell → fake 전환
+      const pm = this.prevMode.get(npc);
+      if (pm === 'tell' && npc.mode === 'fake' && npc.def.actorId) audio.sfx(this.cues.fake[npc.def.actorId] ?? 'sfx_cough');
+      this.prevMode.set(npc, npc.mode);
       if (npc.mode !== 'spawn') this.shadows.fillEllipse(sx, sy - 1, 11, 4);
 
       const seeing = floor.seeing[i] === true && npc.gazeMultiplier > 0;
       const keys = coneOverlayKeys(v.lanyard);
-      if (npc.coneActive) {
+      // 얼음 중 대표님 콘은 판정에 들어가지 않으므로 그리지 않음(보이는 콘 = 판정, 전역 규칙은 비네트로 표시)
+      const ceoGlobal = npc === sim.ceoOnFloor && (sim.ceoState === 'tell' || sim.ceoState === 'freeze' || sim.ceoState === 'qte');
+      if (npc.coneActive && !ceoGlobal) {
         const o = overlay(seeing ? 'cone_alert' : keys.normal);
         const a = seeing && !blink ? o.alpha * 0.6 : o.alpha;
         const poly = conePolygon(floor.map, npc.pos, npc.facing, npc.cone, CONE_RAYS).map((q) => new Phaser.Math.Vector2(this.offsetX + q.x * TILE, q.y * TILE));
@@ -410,7 +567,15 @@ export class GameScene extends Phaser.Scene {
       }
       // 머리 위 표시: 말걸기 전조 = 말풍선(hud/talk) + 문구, 돌아보기 전조 = '!'(hud.tell_mark 대신 아트 ui/suspect), 보는 중 = ui/alert
       const headY = sy - 21;
-      if (talkWarn) {
+      const qteHere = sim.qteActive && npc === sim.ceoOnFloor;
+      if (qteHere) {
+        // 인사 QTE: '?'(예고) → '!'(지금 톡)
+        const cue = sim.qte!.phase === 'window';
+        v.mark.anims.stop(); v.mark.setFrame(cue ? 'ui/alert' : 'ui/suspect').setVisible(true).setPosition(sx, headY);
+        if (!this.sayLeft.has(npc)) setPixelText(v.bubble, str.t(cue ? 'boss.ceo.cue' : 'boss.ceo.question'));
+      } else if (isFrozen) {
+        v.mark.setVisible(false);
+      } else if (talkWarn) {
         this.playAnim(v.mark, 'hud/talk', 'hud/talk_0');
         v.mark.setVisible(true).setPosition(sx, headY);
         const actor = npc.def.actorId ? this.sim.content.actors[npc.def.actorId] : undefined;
@@ -425,7 +590,7 @@ export class GameScene extends Phaser.Scene {
       // 대사 말풍선
       const say = this.sayLeft.get(npc);
       if (say !== undefined) { const left = say - dt; if (left <= 0) this.sayLeft.delete(npc); else this.sayLeft.set(npc, left); }
-      const bubbleOn = this.sayLeft.has(npc) || talkWarn;
+      const bubbleOn = this.sayLeft.has(npc) || talkWarn || qteHere;
       v.bubble.setVisible(bubbleOn);
       if (bubbleOn) {
         placeText(v.bubble, Math.min(LOGICAL_WIDTH - 58, Math.max(58, sx)), headY - 13, 0.5, 1);
@@ -435,8 +600,9 @@ export class GameScene extends Phaser.Scene {
       // 화면 밖 경고 화살표(D-034, 색 = 사원증 줄, 크기 = 거리 3단계)
       const th = threats.get(npc) ?? 'none';
       const ak = edgeArrowKey(v.lanyard);
-      if (ak && !floor.isOnScreen(npc) && (th === 'turning' || th === 'approaching') && npc.gazeMultiplier >= 0 && arrowIdx < this.arrows.length) {
-        if (th === 'turning' && !blink) continue;
+      const demo = this.demo && npc.def.actorId === this.demo.actor;
+      if (ak && !floor.isOnScreen(npc) && (demo || th === 'turning' || th === 'approaching') && npc.gazeMultiplier >= 0 && arrowIdx < this.arrows.length) {
+        if ((th === 'turning' || demo) && !blink) continue;
         const above = npc.y < (floor.camera?.visibleTop ?? 0);
         const edgeTiles = above ? (floor.camera?.visibleTop ?? 0) - npc.y : npc.y - (floor.camera?.visibleBottom ?? 0);
         const size = edgeTiles < 3 ? 3 : edgeTiles < 7 ? 2 : 1;
@@ -448,6 +614,8 @@ export class GameScene extends Phaser.Scene {
       void camTop;
     }
     for (let k = arrowIdx; k < this.arrows.length; k++) this.arrows[k]!.setVisible(false);
+    if (this.demo) { this.demo.left -= dt; if (this.demo.left <= 0) this.demo = null; }
+    this.syncExtras(dt, pw);
     // 사라진 NPC 정리
     for (const [npc, v] of this.views) {
       if (seen.has(npc)) continue;
@@ -477,6 +645,105 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.hud.update(dt, t, stage);
+  }
+
+  /** T-133 표시: 공범, 얼음 비네트, 중앙 문구, 경로 힌트, 화면 밖 미션 장소 화살표 */
+  private syncExtras(dt: number, pw: { x: number; y: number }): void {
+    const sim = this.sim, floor = sim.floor;
+    // 공범 동료(따라오기)
+    const f = sim.follower;
+    if (f && !this.follower) this.follower = this.add.sprite(0, 0, ATLAS_KEY, 'accomplice/idle_down').setOrigin(0.5, 1);
+    if (!f && this.follower) { this.follower.destroy(); this.follower = null; }
+    if (f && this.follower) {
+      const w = this.toWorld(f.x, f.y);
+      const sy = Math.round(w.y) + FOOT_PX;
+      this.follower.setPosition(Math.round(w.x), sy).setDepth(sy);
+      const d = facing4(f.facing);
+      this.playAnim(this.follower, f.moving ? `accomplice/walk_${d}` : `accomplice/idle_${d}`, `accomplice/idle_${d}`);
+      this.shadows.fillEllipse(Math.round(w.x), sy - 1, 11, 4);
+      if (this.followerSay > 0) {
+        this.followerSay -= dt;
+        placeText(this.followerBubble, Math.min(LOGICAL_WIDTH - 50, Math.max(50, w.x)), sy - 34, 0.5, 1);
+        this.followerBubble.setVisible(this.followerSay > 0);
+        fitPanel(this.followerBubbleBg, this.followerBubble, 3, 2);
+      }
+    }
+    if (!f || this.followerSay <= 0) { this.followerBubble.setVisible(false); this.followerBubbleBg.setVisible(false); }
+    // 대표님 순시 비네트(all_heads_up_vignette, 무음에서도 BGM 정지와 같은 정보). 색은 팔레트 dark
+    const vg = this.vignette;
+    vg.clear();
+    if (sim.frozen) {
+      const top = HUD_TOP_PX, bot = LOGICAL_HEIGHT - HUD_BOTTOM_PX, h = bot - top;
+      // 화면 전체를 살짝 어둡게 + 가장자리 4단 띠(바깥일수록 진함). 깜빡임 없음
+      vg.fillStyle(color('dark'), 0.16).fillRect(0, top, LOGICAL_WIDTH, h);
+      for (let i = 0; i < 4; i++) {
+        const e = 10 * (i + 1);
+        vg.fillStyle(color('dark'), 0.16);
+        vg.fillRect(0, top, LOGICAL_WIDTH, e).fillRect(0, bot - e, LOGICAL_WIDTH, e);
+        vg.fillRect(0, top + e, e, h - 2 * e).fillRect(LOGICAL_WIDTH - e, top + e, e, h - 2 * e);
+      }
+    }
+    // 중앙 큰 문구('얼음!', QTE '!')
+    if (sim.qteActive && sim.qte!.phase === 'window') this.showCenter(getStrings().t('hud.tell_mark'), 0.05);
+    if (this.centerLeft > 0) this.centerLeft -= dt;
+    const showC = this.centerLeft > 0 && this.overlay === 'none';
+    this.centerText.setVisible(showC);
+    if (showC) { placeText(this.centerText, LOGICAL_WIDTH / 2, HUD_TOP_PX + 64, 0.5, 0.5); fitPanel(this.centerBg, this.centerText, 6, 4); }
+    else this.centerBg.setVisible(false);
+    // 경로 힌트 점선(dot/hint = 우회, dot/caution = 지름길)
+    if (this.routeLeft > 0) { this.routeLeft -= dt; if (this.routeLeft <= 0) for (const d of this.routeDots) d.img.setVisible(false); }
+    // 화면 밖 미션 장소(흰 화살표, offscreenWarning.missionMarkerArrows)
+    let ai = 0;
+    const cam = floor.camera;
+    if (cam && sim.phase === 'day') {
+      const targets: { x: number; y: number }[] = [];
+      for (const m of sim.missions) {
+        if (m.state === 'carry') targets.push(sim.content.playerSeat);
+        else if ((m.state === 'open' && !m.blocked && m.def.startsAt === 'arrive_spot') || sim.pendingMission === m) targets.push(m.def.spot);
+      }
+      for (const tg of targets) {
+        if (ai >= this.missionArrows.length) break;
+        const cy = tg.y + 0.5;
+        if (cy >= cam.visibleTop && cy <= cam.visibleBottom) continue;
+        const above = cy < cam.visibleTop;
+        const ar = this.missionArrows[ai++]!;
+        const x = Phaser.Math.Clamp(this.offsetX + tg.x * TILE + TILE / 2, ARROW_MARGIN, LOGICAL_WIDTH - ARROW_MARGIN);
+        ar.setVisible(true).setAngle(above ? 180 : 0).setPosition(Math.round(x), above ? HUD_TOP_PX + ARROW_MARGIN + 10 : LOGICAL_HEIGHT - HUD_BOTTOM_PX - ARROW_MARGIN - 10);
+      }
+    }
+    for (let k = ai; k < this.missionArrows.length; k++) this.missionArrows[k]!.setVisible(false);
+    void pw;
+  }
+
+  private showRoutes(routes: readonly { kind: 'hint' | 'caution'; tiles: readonly { x: number; y: number }[] }[], sec: number): void {
+    let i = 0;
+    for (const r of routes) {
+      for (let k = 0; k < r.tiles.length; k += 1) {
+        const d = this.routeDots[i++];
+        if (!d) break;
+        const tt = r.tiles[k]!;
+        d.img.setFrame(r.kind === 'hint' ? 'dot/hint' : 'dot/caution').setVisible(true)
+          .setPosition(this.offsetX + tt.x * TILE + TILE / 2, tt.y * TILE + TILE / 2);
+      }
+    }
+    for (; i < this.routeDots.length; i++) this.routeDots[i]!.img.setVisible(false);
+    this.routeLeft = sec;
+  }
+
+  private showCenter(text: string, sec: number): void {
+    setPixelText(this.centerText, text);
+    this.centerLeft = Math.max(this.centerLeft, sec);
+  }
+
+  private npcSayFollower(text: string): void {
+    setPixelText(this.followerBubble, text);
+    this.followerSay = 1.2;
+  }
+
+  private saveSeenHints(): void {
+    const st = getPlatform().storage;
+    const keys = [...this.seenHints];
+    void loadProgress(st).then((p) => saveProgress(st, { ...p, seenHints: keys }));
   }
 
   /** 위장 포즈 id (rules.disguise.poseByZone, 아트 §11-1) */
@@ -512,30 +779,200 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  // ── 판 종료: 적발 컷인(플레이 상태) → 이어하기 제안(D-050) → 결과(월급·2배 버튼) → 전면광고 예고(D-031) → 다음 날 ──
+
+  private onResult(): void {
+    const r = this.sim.result;
+    if (!r) return;
+    audio.loop('sfx_suspicion_loop', false);
+    if (r.outcome === 'caught') {
+      // 컷인 2초: 잡은 사람의 리액션. 이 동안은 광고·광고 제안 없음(ads.global.playStates caught_cutin)
+      this.overlay = 'cutin';
+      this.overlayAge = 0;
+      this.cutinLeft = CUTIN_SEC;
+      const str = getStrings();
+      const react = r.reactionKey ? str.t(r.reactionKey, { name: str.t('ui.player_default_name') }, Math.floor(r.timeSec)) : '';
+      this.panel([str.t('result.title_caught'), react].filter((x) => x).join('\n\n'), LOGICAL_HEIGHT * 0.4);
+      return;
+    }
+    audio.sfx('sfx_clockout_fanfare');
+    this.showResult();
+  }
+
+  private async afterCutin(): Promise<void> {
+    if (this.overlay !== 'cutin') return;
+    this.overlay = 'busy';
+    const sim = this.sim;
+    // ⑥ 광고 미지원·하루 상한이면 제안 화면을 건너뜀(누를 수 없는 버튼 금지)
+    const can = sim.canContinue && (await this.ads.canOffer('continue'));
+    if (!this.scene.isActive()) return;
+    this.clearOverlay();
+    if (can) this.showContinueOffer(); else this.showResult();
+  }
+
+  private clearOverlay(): void {
+    for (const o of this.ovObjects) o.destroy();
+    for (const b of this.buttons) b.b.destroy();
+    this.ovObjects = [];
+    this.buttons = [];
+    this.salaryText = null;
+  }
+
+  /** 중앙 패널 + 여러 줄 글자. 반환: 글자 아래 y */
+  private panel(text: string, cy: number, extraBottom = 0): number {
+    const bg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.96).setScrollFactor(0).setDepth(OV).setStrokeStyle(1, color('dark'));
+    const t = addPixelText(this, 0, 0, text, { role: 'label', color: color('outline'), align: 'center', lineSpacing: 3 }).setScrollFactor(0).setDepth(OV + 1);
+    setWrap(t, LOGICAL_WIDTH - 36);
+    placeText(t, LOGICAL_WIDTH / 2, cy, 0.5, 0.5);
+    fitPanel(bg, t, 10, 8);
+    bg.setSize(bg.width, bg.height + extraBottom);
+    this.ovObjects.push(bg, t);
+    const b = t.getBounds();
+    return Math.round(b.bottom);
+  }
+
+  private addButton(y: number, text: string, act: () => void): UiButton {
+    // D-050 ②: 제안 화면의 두 버튼은 같은 크기·같은 스타일(normal)
+    const b = new UiButton(this, 22, y, LOGICAL_WIDTH - 44, 26, text, { depth: OV + 2, style: 'normal', role: 'label' });
+    this.buttons.push({ b, act });
+    return b;
+  }
+
+  /**
+   * 이어하기 제안(D-050 ①~⑦): 탭 전 광고 없음, 같은 크기 거절 버튼, 카운트다운 없음, 광고·보상 명시,
+   * 보상 수령 때만 재개(실패·중도 종료 = 결과 + 안내, 자동 재시도 없음), 중립적 거절 문구.
+   */
+  private showContinueOffer(): void {
+    const str = getStrings();
+    const pl = this.ads.placement('continue');
+    this.overlay = 'offer';
+    this.overlayAge = 0;
+    const lines = [str.t('result.title_caught'), '', str.t(pl?.descKey ?? 'ad.continue_desc'), '', str.t('ad.continue_leaderboard_note')];
+    const bottom = this.panel(lines.join('\n'), LOGICAL_HEIGHT * 0.32, 72);
+    const y1 = bottom + 14;
+    const yes = this.addButton(y1, str.t(pl?.labelKey ?? 'ad.continue'), () => { void this.watchContinue(); });
+    this.addButton(y1 + yes.h + 8, str.t(pl?.declineLabelKey ?? 'ad.continue_decline'), () => { this.clearOverlay(); this.showResult(); });
+  }
+
+  private async watchContinue(): Promise<void> {
+    const str = getStrings();
+    const pl = this.ads.placement('continue');
+    this.overlay = 'busy';
+    for (const b of this.buttons) b.b.setEnabled(false);
+    const r = await this.ads.showRewarded('continue');
+    if (!this.scene.isActive()) return;
+    this.clearOverlay();
+    if (r === 'rewarded' && this.sim.continueFromCheckpoint()) {
+      this.rewardedThisGame = true;
+      this.overlay = 'none';
+      this.result = null;
+      return;
+    }
+    // ⑤ 중도 종료·실패: 결과 화면 + 안내(자동 재시도·다른 광고 없음)
+    this.showResult();
+    this.showOverlayToast(str.t(r === 'not_completed' ? (pl?.notCompletedKey ?? 'ad.continue_not_completed') : (pl?.unavailableKey ?? 'ad.continue_unavailable')));
+  }
+
+  private salaryNow(): number {
+    const r = this.sim.result;
+    return r ? r.salary * (this.salaryDoubled ? 2 : 1) : 0;
+  }
+
   private showResult(): void {
     const r = this.sim.result;
-    if (!r || this.result) return;
+    if (!r) return;
     const str = getStrings();
-    const panel = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.95).setScrollFactor(0).setDepth(12000).setStrokeStyle(1, color('dark'));
-    const reaction = r.reactionKey ? `${str.t(r.reactionKey, { name: str.t('ui.player_default_name') }, Math.floor(r.timeSec))}\n\n` : '';
+    this.overlay = 'result';
+    this.overlayAge = 0;
+    this.result = this.result ?? addPixelText(this, -100, -100, '', { role: 'label' }).setVisible(false);
+    this.resultAge = 0;
+    const reaction = r.outcome !== 'caught' && r.reactionKey ? str.t(r.reactionKey, { name: str.t('ui.player_default_name') }, Math.floor(r.timeSec)) : '';
     const lines = [
       str.t(r.titleKey),
       str.t('result.stars', { n: r.stars }),
-      '',
-      reaction.trim(),
+      reaction,
+      r.eyeContact ? str.t('boss.ceo.eye_contact') : '',
       str.t('result.peak_suspicion', { n: Math.round(r.peakSuspicion * 100) }),
       str.t('result.missions', { n: r.missionsDone, total: r.missionsTotal }),
       `${str.t('hud.work')} ${Math.round(r.work * 100)}% / ${Math.round(r.quota * 100)}%`,
       str.t('result.slack_points', { n: r.slackPoints }),
-      str.t('result.salary', { n: r.salary }),
       str.t('result.play_time', { n: r.timeSec.toFixed(1) }),
-      '',
-      str.t(r.stars >= 1 ? 'ui.next_day' : 'ui.tap_to_retry'),
-    ].filter((l, i, a) => !(l === '' && a[i - 1] === ''));
-    this.result = addPixelText(this, 0, 0, lines.join('\n'), { role: 'label', color: color('outline'), align: 'center', lineSpacing: 3 })
-      .setScrollFactor(0).setDepth(12001);
-    setWrap(this.result, LOGICAL_WIDTH - 30);
-    placeText(this.result, LOGICAL_WIDTH / 2, LOGICAL_HEIGHT / 2, 0.5, 0.5);
-    fitPanel(panel, this.result, 10, 8);
+      r.continued ? str.t('result.leaderboard_skipped_continue') : '',
+    ].filter((l) => l !== '');
+    const bottom = this.panel(lines.join('\n'), LOGICAL_HEIGHT * 0.36, 86);
+    // 월급(닢, D-061)은 따로 크게
+    const sal = addPixelText(this, 0, 0, str.t('result.salary', { n: this.salaryNow() }), { role: 'body', color: color('outline') }).setScrollFactor(0).setDepth(OV + 1);
+    placeText(sal, LOGICAL_WIDTH / 2, bottom + 12, 0.5, 0.5);
+    this.ovObjects.push(sal);
+    this.salaryText = sal;
+    let y = bottom + 24;
+    // ⑧ 월급 2배는 버튼으로만(팝업 자동 제안 없음). 이어하기를 본 판에도 버튼은 둘 수 있음(전면만 생략)
+    const pl = this.ads.placement('salary_double');
+    const nextLabel = str.t(r.stars >= 1 ? 'ui.next_day' : 'ui.retry');
+    const next = this.addButton(y + 32, nextLabel, () => { void this.finishDay(); });
+    void (async () => {
+      const ok = r.salary > 0 && (await this.ads.canOffer('salary_double'));
+      if (!ok || !this.scene.isActive() || this.overlay !== 'result') return;
+      this.addButton(y, str.t(pl?.labelKey ?? 'ad.salary_double'), () => { void this.watchSalaryDouble(); });
+    })();
+    void next;
+    void (async () => {
+      // '오늘 광고 끝' 안내(D-031): 하루 보상형 상한에 닿았으면 알림. 문구 키(ad.today_done)가 데이터에 생기면 표시 [문구 키 요청]
+      if (str.has('ad.today_done') && (await this.ads.rewardedDailyCapReached())) this.showOverlayToast(str.t('ad.today_done'));
+    })();
+    y += 0;
+  }
+
+  private async watchSalaryDouble(): Promise<void> {
+    const str = getStrings();
+    const btn = this.buttons.find((x) => x.b.label.text === str.t(this.ads.placement('salary_double')?.labelKey ?? 'ad.salary_double'));
+    this.overlay = 'busy';
+    btn?.b.setEnabled(false);
+    const r = await this.ads.showRewarded('salary_double');
+    if (!this.scene.isActive()) return;
+    this.overlay = 'result';
+    if (r === 'rewarded') {
+      this.salaryDoubled = true;
+      this.rewardedThisGame = true;
+      if (btn) { btn.b.setVisible(false); btn.b.enabled = false; }
+      if (this.salaryText) { setPixelText(this.salaryText, str.t('result.salary', { n: this.salaryNow() })); placeText(this.salaryText, LOGICAL_WIDTH / 2, this.salaryText.y + 6, 0.5, 0.5); }
+    } else {
+      btn?.b.setEnabled(true);
+      if (r === 'unavailable') this.showOverlayToast(str.t('ad.continue_unavailable'));
+    }
+  }
+
+  private toastOv: { t: UIText; bg: Phaser.GameObjects.Rectangle; left: number } | null = null;
+  private showOverlayToast(text: string, sec = 2.2): void {
+    if (this.toastOv) { this.toastOv.t.destroy(); this.toastOv.bg.destroy(); }
+    const bg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.97).setScrollFactor(0).setDepth(OV + 10).setStrokeStyle(1, color('point2'));
+    const t = addPixelText(this, 0, 0, text, { role: 'label', color: color('outline'), align: 'center' }).setScrollFactor(0).setDepth(OV + 11);
+    setWrap(t, LOGICAL_WIDTH - 40);
+    placeText(t, LOGICAL_WIDTH / 2, HUD_TOP_PX + 14, 0.5, 0);
+    fitPanel(bg, t, 5, 4);
+    this.toastOv = { t, bg, left: sec };
+    this.time.delayedCall(sec * 1000, () => { if (this.toastOv?.t === t) { t.destroy(); bg.destroy(); this.toastOv = null; } });
+  }
+
+  /** 다음 날(또는 다시): 진행·월급 저장 → 리더보드(이어간 판 제외, D-056) → 전면광고 판정·예고 → 출근 준비 */
+  private async finishDay(): Promise<void> {
+    const r = this.sim.result;
+    if (!r) return;
+    this.overlay = 'busy';
+    for (const b of this.buttons) b.b.setEnabled(false);
+    const platform = getPlatform();
+    const prog = await loadProgress(platform.storage);
+    await saveProgress(platform.storage, { ...applyDayResult(prog, this.day, r.stars), wallet: prog.wallet + this.salaryNow(), seenHints: [...this.seenHints] });
+    const submit = !r.continued || this.sim.content.continueAd?.submitScoreToLeaderboard === true;
+    if (submit && platform.leaderboard.isSupported() && r.slackPoints > 0) void platform.leaderboard.submitScore(r.slackPoints);
+    this.events.emit('day-finished', { day: this.day, result: r });
+    this.game.events.emit('mt-day-finished', { day: this.day, result: r });
+    // ⑧: 이 판에 보상형(이어하기·월급 2배)을 봤으면 전면광고 없음(interstitial.skipIfRewardedWatchedThisGame)
+    await this.ads.afterGame(this.rewardedThisGame, (key, sec) => new Promise<void>((res) => {
+      this.showOverlayToast(getStrings().t(key), sec);
+      this.time.delayedCall(sec * 1000, () => res());
+    }));
+    const next = r.stars >= 1 ? Math.min(this.day + 1, Math.max(lastAuthoredDay() + 50, this.day + 1)) : this.day;
+    this.scene.start(SceneKey.Prep, { day: next });
   }
 }

@@ -7,7 +7,8 @@
  *  - 벽(#): 남쪽이 열려 있으면 앞면(wall_face, 창·시계 변형), 좌우 끝은 cap_l/r, 세로 내벽은 cap_v, 나머지 cap
  *  - 엘리베이터(E): 북쪽 = 메인(elev_l/m/r, 벽 앞면 변형), 남쪽 = 화물(freight_l/m/r, 벽 윗면 변형)
  *  - 가구: desk/seat/partition/plant/copier/counter/meeting_table/exec_desk/guard_booth/gate/restroom_stall → 스프라이트
- *  - 유리벽(glass): 세로 유리 스프라이트가 없어 코드로 그림(아트 요청 목록)
+ *  - 세로 유리벽(glass·유리 문): 아트 T-135 tall/glass_v_top|mid|bot|door|one(16×24, 원점 (0.5,1), y = 칸 아래 변, depth = y).
+ *    door 칸 → door, 위·아래 모두 유리 → mid, 아래만 → top, 위만 → bot, 둘 다 아님 → one (art/style-guide.md §12)
  */
 import type { DayContent } from '../core/day/types';
 
@@ -68,7 +69,10 @@ export function buildTileLayout(c: DayContent): TileLayout {
 
   const ground: string[] = [];
   const objects: Placement[] = [];
+  /** 코드로 그리던 유리 조각(T-135 이후 항상 빈 배열, 호환용) */
   const glass: GlassPiece[] = [];
+  const isGlassy = (x: number, y: number): boolean =>
+    kind(x, y) === 'glass' || (kind(x, y) === 'door' && (kind(x, y - 1) === 'glass' || kind(x, y + 1) === 'glass'));
   const bottom = (y: number) => (y + 1) * TILE;
   const cx = (x: number) => x * TILE + TILE / 2;
   let faceCount = 0;
@@ -143,7 +147,7 @@ export function buildTileLayout(c: DayContent): TileLayout {
         }
         case 'meeting_table':
           // 2×2 블록의 오른쪽 아래 칸에서 한 번(48×32, 블록 가운데 정렬)
-          if (kind(x + 1, y) !== 'meeting_table' && kind(x, y + 1) !== 'meeting_table') objects.push({ frame: 'big/meet_table', x: x * TILE, y: bottom(y) });
+          if (kind(x + 1, y) !== 'meeting_table' && kind(x, y + 1) !== 'meeting_table') objects.push({ frame: 'big32/meet_table', x: x * TILE, y: bottom(y) });
           break;
         case 'exec_desk': objects.push({ frame: 'wide/exec_desk', x: cx(x), y: bottom(y) }); break;
         case 'guard_booth':
@@ -158,11 +162,14 @@ export function buildTileLayout(c: DayContent): TileLayout {
         case 'restroom_stall':
           objects.push({ frame: 'tall/stall', x: cx(x), y: bottom(y) + 1, tile: { x, y } });
           break;
-        case 'glass':
-          glass.push({ x, y, door: false });
+        case 'glass': {
+          const up = isGlassy(x, y - 1), down = isGlassy(x, y + 1);
+          const frame = up && down ? 'tall/glass_v_mid' : down ? 'tall/glass_v_top' : up ? 'tall/glass_v_bot' : 'tall/glass_v_one';
+          objects.push({ frame, x: cx(x), y: bottom(y) });
           break;
+        }
         case 'door':
-          if (kind(x, y - 1) === 'glass' || kind(x, y + 1) === 'glass') glass.push({ x, y, door: true });
+          if (kind(x, y - 1) === 'glass' || kind(x, y + 1) === 'glass') objects.push({ frame: 'tall/glass_v_door', x: cx(x), y: bottom(y) });
           break;
         default:
           break;

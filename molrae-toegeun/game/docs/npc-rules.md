@@ -100,3 +100,46 @@
 
 - `advance()`는 잔여가 `h - 1e-9`초 이상이면 스텝을 진행합니다.
 - 결과 화면이 뜬 뒤 `rules.input.resultInputGuardSec` 동안 탭을 무시합니다.
+
+## 10. T-133 추가 규칙 (구현 기준)
+
+### 10-1. 대표님 순시(INT-09, `DaySim.ceoState`)
+- 날짜 결정: `generateDay` → `ceoForDay()`. 직급 cast에 ceo가 있고 `generator.ceo.debutDay`(28) 이후. 수요일(`occurrence.scheduledWeekday`) 정기, 그 외는 시드 `day-{n}-boss`로 `randomChancePerDay`. 예정 시각 = 근무 구간 × [0.4, 0.7](같은 스트림).
+- 순시 날: 미션 −1·필수 −1(최소 2), 근무 구간 −`ceoDayPhaseReductionSec`, 퇴근 방해 최대 2, 인사팀(INT-05·06) 제외, ±25초 안의 INT-10 제외(H7, 재배치 없음). 비순시 날의 plan 스트림 추첨은 바뀌지 않음.
+- 단계: `pending`(예정 시각 이후 자리에 멈춰 있는 첫 순간, 본부장이 층에 있으면 대기) → `tell`(화물 엘리베이터 등장 전조 1.0초) → `freeze`(걸어옴, 전역 규칙) → `qte`(인사) → `talk`(대화 지점) → `exit` → `resume`(`exitResumeDelaySec`) → `done`. 끝까지 안 앉으면 퇴근 시작 때 `cancelled`. CEO 패스는 `skipped`.
+- 시계 정지: tell~talk 동안 근무 구간 시계·방해 타이머·미션 제한 시간 정지.
+- 얼음 전역 규칙: 움직이기 시작하는 순간 `moveStartInstantSuspicion`, 이동·행동 중 `movingPerSec × 대표님 gazeMultiplier`/초. 이때 대표님 콘은 판정·표시 모두 하지 않음(비네트가 대신).
+- 얼음(H3·H4): 대표님 외 모든 NPC(배경 동료 포함)는 갱신·시선·말걸기·경고가 멈춤(`FloorHooks.npcFrozen`). 해제할 때 전조·돌아보기 중이던 사람은 `interruptLook()`으로 끊어서 다음 시선이 반드시 전조부터 시작.
+- QTE(`core/day/qte.ts`): '?' 예고(`preCueSecRange`) 중 누르면 early, '!' 창(`windowSec × qteWindowScale`) 안에서 누르고 `maxPressSec` 이하로 떼면 success, 길게 누르면 long, 놓치면 miss. 씬은 누름·뗌(`pressQte`/`releaseQte`), 봇은 `tapQte()`.
+- 대화 구간: 대표님이 대화 지점에 서 있는 동안 점수 × `slackMultiplier`(`addPoints`).
+- 눈도장: 전조~퇴장 동안 의심 증가 합 < `survival.maxSuspicionGain` 그리고 QTE 성공 → `rewardSlackPoints`.
+- 재확인: `p_ceo_visit` 대화 지점 `lookChance`(진짜 시선). `bosses.ceo.sim.fake`(type 'recheck')는 페이크로 쓰지 않음.
+
+### 10-2. 엘리베이터 대표님(INT-11)
+- 발생은 `buildDayContent`에서 확정: 과장 이상·`unlockDay` 이후·순시 없는 날에 시드 `day-{n}-event`로 `trigger.chance`, 30일차 데뷔는 확정.
+- 엘리베이터 대기 진입 시 `p_ceo_elevator` 등장 → hold에서 QTE → 성공 +`successPoints`, 실패 +`failSuspicion`(적발 상한 바로 아래까지만). QTE가 끝날 때까지 엘리베이터 대기 시간 정지.
+
+### 10-3. 공범(INT-12)
+- 제안 대상: 1~15일차는 `days.scripted accomplice_offer`만, 16일차~는 시드 `day-{n}-npc`로 미션마다 `offerProb`(제안 여부만 확률, 보상은 결정적).
+- 미션 칩을 누를 때 제안(`DaySim.offer`). `forced: true`는 시간 제한 없이 그 미션이 시작될 때까지 떠 있음 [해석]. 수락 = `acceptOffer()`(HUD 입력).
+- 합류: 공범 자리 NPC를 빼고 `Follower`(트레일 추종, `followGapTiles`)로 따라옴. 공범을 보는 시선도 나로 계산(`FloorHooks.extraGaze`), 상승률 × `suspicionGainMultiplier`, 그 미션 보상 × `rewardMultiplier`.
+- 망보기: 반경 `lookoutRadiusTiles` 안 앉은 상사의 다음 전조까지 `lookoutCoughLeadSec` 이하면 헛기침 이벤트(`PatrolNpc.upcomingTellSec`). 걷는 사람은 예측하지 않음.
+- 미션 완료·실패·퇴근 시작·이어하기 때 자리로 걸어 돌아가 앉음(시선·길막 없음).
+
+### 10-4. 위계 연쇄 H1·H2(본부장 → 팀장 인사)
+- INT-10이 켜진 날 `effect.teamLeadGreeting`: 본부장이 `team` 구역 안이면 앉은 팀장을 인사 순찰(자리 → `tl_greet_spot` hold → 자리, 시선·말걸기 없음)로 교체. 몸이 통로를 막음(길막).
+- 본부장이 구역을 떠나고 `team_lead.hierarchy.resumeDelaySec` 뒤 자리로 돌아가 앉고, 새 대기 주기부터(다음 시선은 전조부터).
+
+### 10-5. 말걸기 회피 돌아보기(T-134 ④)
+- 전조 중 반경에 들어왔다가 피하면 `rules.sight.cornerTurnTellSec` 전조(고개 먼저 + 점선 콘) 뒤 그 액터 `lookSec` 돌아보기. `releaseSec` 없음, 혼잣말 없음. 혼잣말은 위장·그냥 지나감(조용한 취소)에만.
+
+### 10-6. 스크립트
+- `boss_look`·`boss_look_when`: `slowMo`는 `DaySim.timeScale`(표시만 느리게, 판정은 같은 고정 스텝).
+- `boss_look_when`(player_moving_in_cone_path): 걷는 중이고 선배가 돌아볼 방향의 실제 콘이 나를 덮을 수 있을 때.
+- `route_hint`: 칩을 누를 때 via가 없는 경로 = 지름길(dot/caution), via가 있으면 우회(dot/hint), 4초.
+- `offscreen_demo`: 구역에 들어가고 그 액터가 화면 밖이면 화살표 2.5초 시연.
+- `cover_hint`: 전조가 시작될 때 엄폐 칸 `radiusTiles` 안이면 안내.
+- `snitch_spot`: 첫 미션 행동 순간 체류 없이 보고 시작, 없으면 `fallbackAtSec`.
+
+### 10-7. 이어하기(D-050)
+- `DaySim.canContinue` → 광고 보상 수령 시에만 `continueFromCheckpoint()`. 의심 `continueResumeSuspicion`(데이터 숫자 필드 없음 → 0.6), 자리(퇴근 중 가방을 챙긴 뒤면 게이트 앞)로 이동, 진행 중 미션은 다시 열림, 순시는 눈도장 없이 종료. 결과 `continued: true` → 리더보드 미제출(D-056). 같은 판에서 한 번만.

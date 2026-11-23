@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH, integerZoomFor } from './config/display';
-import { decideInterstitial, onGameFinished, parseInterstitialRules } from './ads/interstitialPolicy';
-import { getAdsTable } from './content';
-import type { DayResult } from './core';
-import { initPlatform, type Platform } from './platform';
-import { applyDayResult, loadAdCounters, loadProgress, saveAdCounters, saveProgress } from './state/progress';
+import { audio } from './audio/audio';
+import { initPlatform } from './platform';
+import { loadProgress } from './state/progress';
+import { AudioScene } from './scenes/AudioScene';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
+import { PrepScene } from './scenes/PrepScene';
 import { TitleScene } from './scenes/TitleScene';
 
 const PARENT_ID = 'game';
@@ -33,10 +33,10 @@ async function start(): Promise<void> {
       autoCenter: Phaser.Scale.CENTER_BOTH,
       zoom: integerZoomFor(parent.clientWidth || window.innerWidth, parent.clientHeight || window.innerHeight),
     },
-    scene: [BootScene, TitleScene, GameScene],
+    scene: [BootScene, AudioScene, TitleScene, PrepScene, GameScene],
   });
-
-  game.events.on('mt-day-finished', (e: { day: number; result: DayResult | null }) => { void onDayFinished(platform, e); });
+  // 소리 설정(꺼도 시각 신호는 그대로, rules.visualCues.alwaysOn)
+  void loadProgress(platform.storage).then((p) => audio.setMuted(!p.soundOn || new URLSearchParams(location.search).get('sound') === 'off'));
 
   // 정수 배율 유지: 리사이즈(회전·주소창 변화) 시 배율 재계산
   const applyZoom = () => {
@@ -48,21 +48,4 @@ async function start(): Promise<void> {
 
 void start();
 
-/**
- * 결과 화면 → 다음 날 전환 시점(ads.json interstitial.placement 'result_to_next_day').
- * 진행 저장 + 전면광고 빈도 판정(D-048). 실제 광고 예고 UI·노출은 다음 작업 → 지금은 판정 결과만 기록.
- * 광고 미지원 환경(isSupported false)에서는 판정하지 않음.
- */
-async function onDayFinished(platform: Platform, e: { day: number; result: DayResult | null }): Promise<void> {
-  const now = Date.now();
-  const prog = await loadProgress(platform.storage);
-  if (e.result) await saveProgress(platform.storage, applyDayResult(prog, e.day, e.result.stars));
-  const counters = onGameFinished(await loadAdCounters(platform.storage, now), now);
-  if (platform.ads.isSupported()) {
-    const rules = parseInterstitialRules(getAdsTable());
-    const d = decideInterstitial(rules, counters, now, { iapRemoveAds: false, duringPlay: false, rewardedWatchedThisGame: false });
-    console.info(`[ads] 전면광고 판정: ${d.show ? '노출 대상' : `건너뜀(${d.reason})`}`);
-    // TODO(다음 작업): d.show면 noticeKey 예고(noticeSec) 후 platform.ads.show('interstitial'), 성공 시 onInterstitialShown
-  }
-  await saveAdCounters(platform.storage, counters);
-}
+// 진행 저장·전면광고(결과 → 다음 날)는 GameScene.finishDay → ads/adFlow.ts(AdFlow.afterGame)에서 처리한다(T-133).

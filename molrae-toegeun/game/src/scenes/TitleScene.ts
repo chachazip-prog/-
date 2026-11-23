@@ -6,7 +6,7 @@ import { color } from '../render/palette';
 import { loadProgress } from '../state/progress';
 import { addPixelText, placeText, setPixelText } from '../ui/pixelText';
 import { SceneKey } from './keys';
-import type { GameSceneData } from './GameScene';
+import type { PrepSceneData } from './PrepScene';
 
 export class TitleScene extends Phaser.Scene {
   private day = 1;
@@ -30,6 +30,6 @@ export class TitleScene extends Phaser.Scene {
         placeText(start, cx, LOGICAL_HEIGHT * 0.65, 0.5, 0.5);
       }
     });
-    this.input.once('pointerup', () => this.scene.start(SceneKey.Game, { day: this.day } satisfies GameSceneData));
+    this.input.once('pointerup', () => this.scene.start(SceneKey.Prep, { day: this.day } satisfies PrepSceneData));
   }
 }

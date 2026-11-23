@@ -20,7 +20,7 @@ class MockStorage implements StorageAdapter {
 
 class MockAds implements AdsAdapter {
   private loaded = new Set<AdKind>();
-  constructor(private readonly supported: boolean) {}
+  constructor(private readonly supported: boolean, private readonly outcome: 'reward' | 'dismiss' | 'fail' = 'reward') {}
   isSupported() { return this.supported; }
   async preload(kind: AdKind) {
     if (!this.supported) return false;
@@ -31,7 +31,9 @@ class MockAds implements AdsAdapter {
   async show(kind: AdKind): Promise<AdResult> {
     if (!this.supported) return { status: 'unsupported' };
     if (!this.loaded.delete(kind)) return { status: 'not_loaded' };
-    console.info(`[mock ads] ${kind} 광고 노출(가상)`);
+    console.info(`[mock ads] ${kind} 광고 노출(가상, 결과 ${this.outcome})`);
+    if (this.outcome === 'fail') return { status: 'failed', reason: 'mock' };
+    if (kind === 'rewarded' && this.outcome === 'dismiss') return { status: 'dismissed_without_reward' };
     return kind === 'rewarded' ? { status: 'rewarded', unitType: 'mock', unitAmount: 1 } : { status: 'shown' };
   }
 }
@@ -60,13 +62,15 @@ class MockShare implements ShareAdapter {
 export interface MockOptions {
   /** 광고 미지원 기기 시뮬레이션: URL에 ?ads=off */
   adsSupported?: boolean;
+  /** 가상 광고 결과(QA): URL ?adResult=dismiss(중도 종료) | fail(노출 실패). 기본 reward */
+  adResult?: 'reward' | 'dismiss' | 'fail';
 }
 
 export function createMockPlatform(opts: MockOptions = {}): Platform {
   return {
     name: 'mock',
     storage: new MockStorage(),
-    ads: new MockAds(opts.adsSupported ?? true),
+    ads: new MockAds(opts.adsSupported ?? true, opts.adResult ?? 'reward'),
     leaderboard: new MockLeaderboard(),
     share: new MockShare(),
   };

@@ -29,18 +29,26 @@ function check(name: string, ok: boolean, detail = ''): void {
 }
 
 /** 단순 봇: 미션을 순서대로 하고, 전조·시선이 보이면 멈추고, 끝나면 자리로, 퇴근은 게이트까지 */
-function play(day: number, seed?: string): { sim: DaySim; log: string[] } {
+function play(day: number, seed?: string, opts: { continueOnce?: boolean; skipCeo?: boolean } = {}): { sim: DaySim; log: string[] } {
   const warnings: string[] = [];
   const content = buildDayContent(tables as Tables, day, warnings);
-  const sim = new DaySim(content, { view: VIEW }, seed);
+  const sim = new DaySim(content, { view: VIEW, ...(opts.skipCeo ? { skipCeoVisit: true } : {}) }, seed);
   const log: string[] = [...warnings.map((w) => `warn ${w}`)];
   const f = sim.floor;
   let stoppedAt = -1;
-  for (let i = 0; i < 60 * 200 && sim.phase !== 'ended'; i++) {
+  for (let i = 0; i < 60 * 260; i++) {
+    if (sim.phase === 'ended') {
+      if (opts.continueOnce && sim.canContinue) { sim.continueFromCheckpoint(); continue; }
+      break;
+    }
     sim.step();
     for (const e of sim.drainEvents()) log.push(fmt(e));
     sim.drainFloorEvents();
     const p = f.player;
+    // T-133: 인사 QTE는 '!' 창에서 짧게 톡, 얼음 중에는 움직이지 않음, 공범 제안은 수락
+    if (sim.qteActive) { if (sim.qte!.phase === 'window') sim.tapQte(0.1); continue; }
+    if (sim.frozen) continue;
+    if (sim.offer) sim.acceptOffer();
     if (sim.leaveStage === 'gate' && Math.abs(sim.gateMarker - 0.5) < sim.gateWindow / 4) { sim.tapWorld(p.tile.x, p.tile.y); continue; }
     if (sim.phase === 'intro' || i % 6 !== 0) continue;
     const threatened = f.npcs.some((n) => { const th = f.threatOfNpc(n); return (th === 'seeing' || th === 'turning') && n.gazeMultiplier > 0; });
@@ -75,6 +83,44 @@ function fmt(e: DayEvent): string {
   return `${t.toFixed(2)} ${type} ${JSON.stringify(rest)}`;
 }
 
+/** T-133 기능 점검: 대표님 순시(28·31일차 등), 엘리베이터 대표님(30), 공범(7), 이어하기, CEO 패스 */
+function featureChecks(): void {
+  const ceoDays: number[] = [];
+  for (let d = 28; d <= 60 && ceoDays.length < 4; d++) if (buildDayContent(tables as Tables, d).ceoVisit) ceoDays.push(d);
+  check('대표님 순시 날 생성(28~60일차)', ceoDays.length > 0 && ceoDays[0] === 28, ceoDays.join(','));
+  for (const d of ceoDays) {
+    const r = play(d);
+    const stages = r.log.filter((l) => l.includes(' ceo ')).map((l) => JSON.parse(l.slice(l.indexOf('{'))).stage as string);
+    const qte = r.log.find((l) => l.includes(' qte ') && l.includes('result'));
+    check(`${d}일차 순시 진행`, stages.includes('tell') && stages.includes('freeze') && (stages.includes('done') || r.sim.result?.outcome === 'caught'),
+      `${stages.join('>')} ${qte ? qte.slice(qte.indexOf('{')) : 'QTE 없음'} 눈도장=${r.sim.eyeContact} 결과=${r.sim.result?.outcome}`);
+    const again = play(d);
+    check(`${d}일차 순시 결정성`, JSON.stringify(again.sim.result) === JSON.stringify(r.sim.result));
+    const skip = play(d, undefined, { skipCeo: true });
+    check(`${d}일차 CEO 패스`, !skip.log.some((l) => l.includes(' ceo ')) && skip.sim.result?.ceoVisit === 'skipped');
+  }
+  const c30 = buildDayContent(tables as Tables, 30);
+  check('30일차 엘리베이터 대표님 확정(데뷔)', !!c30.ceoElevator && !c30.ceoVisit);
+  const r30 = play(30);
+  const elev = r30.log.filter((l) => l.includes('INT-11') || (l.includes(' qte ') && l.includes('elevator')));
+  check('30일차 엘리베이터 QTE 발생', r30.sim.result?.outcome !== 'leave' || elev.some((l) => l.includes('result')), elev.map((l) => l.slice(l.indexOf('{'))).join(' '));
+  const r7 = play(7);
+  const join = r7.log.some((l) => l.includes('"action":"join"'));
+  check('7일차 공범 제안·합류', r7.log.some((l) => l.includes(' offer ')) && join, `결과 ${r7.sim.result?.outcome} 점수 ${r7.sim.result?.slackPoints}`);
+  // 이어하기: 적발로 끝나는 날을 찾아 이어 감
+  for (let d = 1; d <= 40; d++) {
+    const base = play(d);
+    if (base.sim.result?.outcome !== 'caught') continue;
+    const c = play(d, undefined, { continueOnce: true });
+    check(`${d}일차 이어하기`, c.log.some((l) => l.includes(' continued ')) && c.sim.result?.continued === true, `재개 후 결과 ${c.sim.result?.outcome}`);
+    break;
+  }
+  // 위계 연쇄 H1: 본부장이 우리 팀 구역에 오면 팀장 인사(say boss.team_lead.greeting)
+  let greetSeen = false;
+  for (let d = 16; d <= 27 && !greetSeen; d++) greetSeen = play(d).log.some((l) => l.includes('boss.team_lead.greeting'));
+  check('위계 연쇄 H1 팀장 인사(16~27일차 중)', greetSeen);
+}
+
 const maxDay = Number(process.argv[2] ?? 20);
 const verbose = process.argv.includes('-v');
 for (let d = 1; d <= maxDay; d++) {
@@ -87,5 +133,6 @@ for (let d = 1; d <= maxDay; d++) {
   const again = play(d);
   check(`${d}일차 결정성(같은 시드 같은 결과)`, again.sim.floor.fingerprint() === res.sim.floor.fingerprint() && JSON.stringify(again.sim.result) === JSON.stringify(r));
 }
+featureChecks();
 if (failures > 0) { console.error(`실패 ${failures}건`); process.exit(1); }
 console.log('smoke-day OK');

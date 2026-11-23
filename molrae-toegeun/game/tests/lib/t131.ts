@@ -302,11 +302,12 @@ export class Bot {
       const m = open[0];
       if (!m) return;
       const R = c.dayPhaseSec - sim.dayTime;
-      const W = Math.max(0, c.work.quota - sim.work) / c.work.fillPerSec + 1.0;
-      let E = ACTION_EST[m.def.mechanic] ?? 6;
+      // 기획 시간 예산(§12-2)과 같은 방식: 왕복 이동 + 행동 예상 + 여유 0.5초, 할당량은 남은 업무 시간 + 0.3초
+      const W = Math.max(0, c.work.quota - sim.work) / c.work.fillPerSec + 0.3;
+      let E = m.def.mechanic === 'trip_safe_zone' ? 3.3 + this.p.restroomBonusSec : (ACTION_EST[m.def.mechanic] ?? 6);
       if (m.def.startsAt === 'arrive_spot') {
         const path = findPath(f.map, c.playerSeat, m.def.spot);
-        E += ((path?.length ?? 15) * 2) / f.rules.playerSpeedTilesPerSec + 2;
+        E += ((path?.length ?? 15) * 2) / f.rules.playerSpeedTilesPerSec + 0.5;
       }
       if (E > R) return;
       if (sim.work >= c.work.quota || R - E >= W) sim.tapMission(m.def.id);
@@ -388,7 +389,7 @@ export interface RunResult {
   day: number; bot: string; seed: string; rank: string;
   outcome: string; stars: number; timeSec: number; peak: number; work: number; quota: number;
   missionsDone: number; missionsTotal: number; missionsRequired: number;
-  missions: { id: string; state: string; reason?: string; sec?: number }[];
+  missions: { id: string; started: boolean; state: string; reason?: string; sec?: number }[];
   caughtBy: string | null; caughtCause: string | null;
   leaveStart: number; leaveSec: number | null; leaveIntsStarted: string[]; leaveTalkSec: number; leaveBlockedSec: number;
   gateAttempts: number; gateFails: number; earlyBonus: boolean; slack: number;
@@ -422,7 +423,8 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
   const qcam = new QaCamera(content, f.map.height, f.player.y);
   const fair = newFairness();
   const snaps = new Map<PatrolNpc, Snap>();
-  const hist = new Map<string, boolean[]>(); // 키(actorId) → 최근 틱 '화면 안 또는 화살표'
+  const hist = new Map<PatrolNpc, boolean[]>(); // NPC 객체 → 최근 틱 '화면 안 또는 화살표'. 교체(replaceNpc)된 객체는 같은 액터의 사라진 객체 이력을 이어받음
+  let prevNpcs: PatrolNpc[] = [];
   const LEAD = Math.round(0.4 / H);
   const talk: Record<string, TalkStat> = {};
   const ts = (a: string): TalkStat => (talk[a] ??= { warn: 0, armed: 0, talk: 0, cancel: {}, releaseGainTicks: 0, postHoldViol: 0, talkSec: 0 });
@@ -435,7 +437,6 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
   let gateRise = 0, gateNonStale = 0, gateSec = 0, int08Rise = 0, int08Ticks = 0;
   let int04Wait: number | null = null; let int04Active = false;
   let caughtCause: string | null = null;
-  let lastInstant = '';
   const talkWarnAt = new Map<PatrolNpc, { t: number; armed: boolean }>();
   let postTalkUntil = -1;
   const keyOf = (n: PatrolNpc) => `${n.def.actorId ?? n.def.id}`;
@@ -499,7 +500,6 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
     if (sim.phase === 'leave' && f.player.paused) leaveBlockedSec += H;
     if (int04Active && int04Wait === null) int04Wait = 0;
     if (int04Active && sim.phase === 'leave' && f.player.paused && zoneTileNear(f.player.tile, 5, 23, 2)) int04Wait = (int04Wait ?? 0) + H;
-    if (instant) lastInstant = instant;
 
     // 인원
     let on = 1, full = 1;
@@ -508,6 +508,12 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
 
     // 시선·공정성
     let anySee = false;
+    const gone = prevNpcs.filter((n) => !f.npcs.includes(n));
+    for (const n of f.npcs) if (!hist.has(n)) {
+      const pre = gone.find((g) => g.def.actorId === n.def.actorId && Math.hypot(g.x - n.x, g.y - n.y) < 1.01);
+      hist.set(n, pre ? (hist.get(pre) ?? []).slice() : []);
+    }
+    prevNpcs = f.npcs.slice();
     f.npcs.forEach((n, k) => {
       const s = snaps.get(n) ?? { mode: n.mode, tellKind: n.tellKind, tellStart: n.mode === 'tell' ? now : -1, facing: n.facing, x: n.x, y: n.y, lastLookFake: null };
       const key = keyOf(n);
@@ -524,7 +530,7 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
       const lan = lanyardOf(sim, n);
       const arrow = !coreOn && ARROW_LANYARDS.has(lan) && (th === 'turning' || th === 'approaching');
       if (lan === 'background' && !coreOn && (th === 'turning' || th === 'approaching')) bgArrow++;
-      const h = hist.get(key) ?? [];
+      const h = hist.get(n) ?? [];
       // 시선 시작(onset)
       const wasSeeing = snapsSeeing.get(n) === true;
       if (f.seeing[k] && !wasSeeing) {
@@ -544,7 +550,6 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
       }
       h.push(coreOn || arrow);
       if (h.length > LEAD + 2) h.shift();
-      hist.set(key, h);
       // 전조·페이크
       if (n.mode === 'tell' && s.mode !== 'tell') { s.tellStart = now - H; s.tellKind = n.tellKind; }
       if (n.mode === 'look' && s.mode !== 'look') {
@@ -588,15 +593,15 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
       if (delta > 1e-12 && instant !== 'gate_beep') gateRise += delta;
       if (delta > 1e-12 && instant !== 'gate_beep' && delta / H > (content.floor.rules.suspicion.disguiseStalePerSec ?? 0) * 2.0 + 1e-9) gateNonStale += delta;
     }
-    if (sim.phase === 'ended' && sim.result?.outcome === 'caught') caughtCause = instant || `gaze:${sim.result.caughtBy ?? '?'}:${lastPostureSee(sim)}`;
+    if ((sim.phase as string) === 'ended' && sim.result?.outcome === 'caught') caughtCause = instant || `gaze:${sim.result.caughtBy ?? '?'}:${lastPostureSee(sim)}`;
   }
   const r = sim.result;
-  const snapsMissions = sim.missions.map((m) => ({ id: m.def.id, ...(mres.get(m.def.id) ?? { state: m.state }) }));
+  const snapsMissions = sim.missions.map((m) => ({ id: m.def.id, started: missionStart.has(m.def.id), ...(mres.get(m.def.id) ?? { state: m.state }) }));
   const leaveEnd = r && (r.outcome === 'leave' || r.outcome === 'leave_short') ? r.timeSec : null;
   // 게이트 단계 상승 중 정체 규칙 외(위장 정체 0.03×배율이 아닌 상승) — 단계 내 상승률로 판정
   return {
     day: content.day, bot: botP.name, seed, rank: content.rankId,
-    outcome: r?.outcome ?? 'timeout', stars: r?.stars ?? -1, timeSec: r?.timeSec ?? f.time, peak: f.suspicion.peak,
+    outcome: r?.outcome ?? 'timeout', stars: r?.stars ?? -1, timeSec: (r?.timeSec ?? f.time) + content.introSec, peak: f.suspicion.peak,
     work: sim.work, quota: content.work.quota, missionsDone: sim.missionsDone(), missionsTotal: sim.missions.length, missionsRequired: content.missionsRequired,
     missions: snapsMissions, caughtBy: r?.caughtBy ?? null, caughtCause,
     leaveStart, leaveSec: leaveEnd !== null && leaveStart >= 0 ? leaveEnd - leaveStart : null,

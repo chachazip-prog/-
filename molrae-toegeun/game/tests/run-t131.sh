@@ -11,6 +11,7 @@ case "$what" in
   rules) entry=t131-rules.test.ts ;;
   balance) entry=sim/t131-balance.ts ;;
   core) entry=t124-core.test.ts ;;
+  trace) entry=sim/t131-trace.ts ;;
   *) echo "unknown $what"; exit 2 ;;
 esac
 out=tests/.out/t131-$what.mjs

@@ -10,7 +10,7 @@
  *  - tapMission(id): HUD 미션 칩. 화면 탭이 아니므로 이동 중에도 멈추지 않고 목적지만 바꾼다(rules.input.hudTapDoesNotStop)
  */
 import { FloorSim, type SimEvent } from '../floorSim';
-import { tileCenter, tileOf, zoneAt, type Tile } from '../grid';
+import { tileOf, zoneAt, type Tile } from '../grid';
 import { DIR_ANGLE, canSee, type Dir } from '../vision';
 import { Follower } from './follower';
 import { GreetQte, type QteResult } from './qte';
@@ -251,15 +251,109 @@ export class DaySim {
 
   drainEvents(): DayEvent[] { const e = this.events; this.events = []; return e; }
 
+  /** 표시 시간 배율(튜토리얼 슬로모 days.scripted slowMo, 첫 순시 전조 slowMoTell). 씬이 advance(dt × timeScale)로 쓴다. 판정 무관 */
+  get timeScale(): number { return this.slowMoLeft > 0 ? this.slowMoScale : 1; }
+
+  /** 근무 구간 시계가 멈춰 있는가(대표님 순시 ①~⑤) */
+  get clockPaused(): boolean {
+    return this.ceoState === 'tell' || this.ceoState === 'freeze' || this.ceoState === 'qte' || this.ceoState === 'talk';
+  }
+
+  /** 대표님 얼음(전조~퇴장 후 복귀 전): 하위 상사·NPC 정지 */
+  get frozen(): boolean { return this.frozenAll; }
+
+  /** 지금 대표님이 층에 있는가(표시용) */
+  get ceoOnFloor(): PatrolNpc | null { return this.ceoNpc ?? this.elevNpc; }
+
+  get qteActive(): boolean { return this.qte !== null && this.qte.phase !== 'done'; }
+
+  /** QTE 누름(씬: pointerdown). 헤드리스는 tapQte() */
+  pressQte(): void {
+    if (!this.qteActive) return;
+    const r = this.qte!.press();
+    if (r) this.resolveQte(r);
+  }
+
+  /** QTE 뗌(씬: pointerup, 실제 누른 시간) */
+  releaseQte(pressSec: number): void {
+    if (!this.qteActive) return;
+    const r = this.qte!.release(pressSec);
+    if (r) this.resolveQte(r);
+  }
+
+  /** 짧은 탭 한 번(QA 봇용) */
+  tapQte(pressSec = 0.1): void { this.pressQte(); this.releaseQte(pressSec); }
+
+  /** 공범 제안 수락(말풍선 탭 — HUD 입력이라 화면 탭으로 치지 않음) */
+  acceptOffer(): boolean {
+    const o = this.offer;
+    const acc = this.content.accomplice;
+    if (!o || !acc || this.phase !== 'day' || this.frozenAll) return false;
+    const m = this.missions.find((x) => x.def.id === o.missionId);
+    const seat = this.floor.findNpc((n) => n.def.actorId === 'accomplice' && !!n.def.seated);
+    this.offer = null;
+    this.push({ t: this.time, type: 'offerEnd', missionId: o.missionId, accepted: !!(m && seat) });
+    if (!m || !seat || m.state === 'done' || m.state === 'failed') return false;
+    const start = tileOf(seat);
+    this.floor.removeNpc(seat);
+    this.follower = new Follower(start, this.floor.player.tile, this.floor.map, acc.followGapTiles, acc.speedTilesPerSec);
+    this.joinedMission = m;
+    this.push({ t: this.time, type: 'accomplice', action: 'join' });
+    this.push({ t: this.time, type: 'toast', key: 'npc.accomplice.accept' });
+    return true;
+  }
+
+  /** 이어하기 가능 상태(적발로 끝났고 이 판에서 아직 안 씀). 광고 가능 여부·하루 횟수는 광고 계층이 판단 */
+  get canContinue(): boolean {
+    return this.phase === 'ended' && this.result?.outcome === 'caught' && !this.continued && !!this.endedFrom;
+  }
+
+  /**
+   * 이어하기(D-050 ⑤: 보상 수령 시에만 호출). 의심 rules.continueAd 값으로 자리(퇴근 중 가방을 챙긴 뒤면 게이트 앞)에서 재개.
+   * 진행 중이던 미션은 다시 열림(제한 시간 초기화), 대표님 순시는 종료(눈도장 없음).
+   */
+  continueFromCheckpoint(): boolean {
+    if (!this.canContinue || !this.endedFrom) return false;
+    const c = this.content;
+    const from = this.endedFrom;
+    const atGate = from.phase === 'leave' && from.leaveStage !== 'pack';
+    const tile = atGate ? c.leave.gate.spot : c.playerSeat;
+    this.floor.revive();
+    this.floor.suspicion.value = c.continueAd?.resumeSuspicion ?? 0.6;
+    this.floor.player.teleport(tile);
+    this.floor.camera?.snap(this.floor.player.y);
+    for (const n of this.floor.npcs) if (n.mode === 'talk' || n.mode === 'tell' || n.mode === 'look') n.interruptLook(this.floor.rng);
+    if (this.activeMission) { this.activeMission.state = 'open'; this.activeMission.startedAt = null; }
+    for (const m of this.missions) if (m.state === 'carry' || m.state === 'active') { m.state = 'open'; m.startedAt = null; }
+    this.activity = null; this.activeMission = null; this.pendingMission = null;
+    this.dismissAccomplice();
+    this.endCeoVisit(false);
+    this.qte = null; this.qteSource = null;
+    this.phase = from.phase;
+    this.phaseTime = 0;
+    if (atGate) { this.leaveStage = 'walk'; this.gateTime = 0; }
+    else if (from.phase === 'leave') this.leaveStage = 'pack';
+    this.wasAtSeat = !atGate;
+    this.result = null;
+    this.caughtBy = null;
+    this.continued = true;
+    this.endedFrom = null;
+    this.push({ t: this.time, type: 'continued' });
+    this.push({ t: this.time, type: 'phase', phase: this.phase });
+    return true;
+  }
+
   // ── 입력 ─────────────────────────────────────────────
 
-  tapWorld(tx: number, ty: number): string {
+  tapWorld(tx: number, ty: number, pressSec?: number): string {
     if (this.phase === 'intro' || this.phase === 'ended' || this.floor.outcome !== 'playing') return 'ignored';
+    if (this.qteActive) { this.tapQte(pressSec ?? 0.1); return 'qte'; }
     const p = this.floor.player;
     if (p.mode === 'talked') return this.floor.tap(tx, ty);
     if (this.activity && this.activeMission) {
       const fx = emptyEffects();
-      const st = this.activity.tap(this.activityCtx(), fx);
+      const ctx = pressSec !== undefined ? { ...this.activityCtx(), pressSec } : this.activityCtx();
+      const st = this.activity.tap(ctx, fx);
       this.applyEffects(fx);
       this.resolveActivity(st);
       return 'mission';
@@ -284,6 +378,8 @@ export class DaySim {
     if (m.state === 'carry') return this.floor.moveTo(this.content.playerSeat);
     if (m.state !== 'open' || m.blocked) return false;
     this.pendingMission = m;
+    this.maybeOffer(m);
+    this.routeHintFor(m);
     if (m.def.startsAt === 'chip_tap_at_seat') {
       if (this.playerAtSeat && this.floor.player.mode !== 'moving') { this.startActivity(m); return true; }
       return this.floor.moveTo(this.content.playerSeat);
@@ -315,14 +411,23 @@ export class DaySim {
       if (this.phaseTime >= this.content.introSec) this.setPhase('day');
       return;
     }
+    if (this.slowMoLeft > 0) this.slowMoLeft = Math.max(0, this.slowMoLeft - dt);
     if (this.phase === 'day') {
-      this.dayTime += dt;
-      this.unlockMissions();
-      this.runScheduledInterrupts();
-      this.runScripted();
-      if (this.dayTime >= this.content.dayPhaseSec) this.startLeave();
+      this.ceoPreStep();
+      if (!this.clockPaused) {
+        this.dayTime += dt;
+        this.unlockMissions();
+        this.runScheduledInterrupts();
+        this.runScripted();
+        if (this.dayTime >= this.content.dayPhaseSec) this.startLeave();
+      } else {
+        // 시계 정지(①~⑤): 미션 제한 시간도 멈춤
+        for (const m of this.missions) if (m.startedAt !== null) m.startedAt += dt;
+      }
     } else this.leaveTime += dt;
 
+    const s0 = this.floor.suspicion.value;
+    const wasMoving = this.floor.player.mode === 'moving';
     this.floor.step();
     this.collectFloorEvents();
     if (this.floor.outcome === 'caught') { this.end('caught'); return; }
@@ -330,7 +435,19 @@ export class DaySim {
     this.trackSeat();
     if (this.phase === 'day') this.dayAfterStep(dt);
     else if (this.phase === 'leave') this.leaveAfterStep(dt);
+    if ((this.phase as DayPhase) === 'ended') return;
     this.afterInterrupts(dt);
+    this.ceoPostStep(dt, wasMoving);
+    this.elevatorCeoStep();
+    this.accompliceStep(dt);
+    this.greetingStep(dt);
+    this.scriptWatchers();
+    if (this.ceoState !== 'none' && this.ceoState !== 'pending' && this.ceoState !== 'skipped' && this.ceoState !== 'done' && this.ceoState !== 'cancelled') {
+      this.ceoGain += Math.max(0, this.floor.suspicion.value - s0);
+    }
+    if (this.floor.suspicion.value >= this.content.floor.rules.suspicion.max && this.caughtBy === null) {
+      if (this.ceoState === 'freeze' || this.ceoState === 'qte' || this.ceoState === 'tell') this.caughtBy = 'ceo';
+    }
     // 즉시 가산(미션 실패·보고·게이트 삐빅 등)으로 100%가 된 경우
     if ((this.phase as DayPhase) !== 'ended' && this.floor.suspicion.value >= this.content.floor.rules.suspicion.max) this.end('caught');
   }
@@ -338,6 +455,12 @@ export class DaySim {
   // ── FloorSim 훅 ──────────────────────────────────────
 
   private playerRate(base: number): number {
+    // 공범 합류 중: 둘이라 더 눈에 띔(npcs.accomplice.effects.suspicionGainMultiplier)
+    const k = this.follower ? (this.content.accomplice?.suspicionGainMultiplier ?? 1) : 1;
+    return this.postureRate(base) * k;
+  }
+
+  private postureRate(base: number): number {
     const s = this.content.floor.rules.suspicion;
     switch (this.posture) {
       case 'lobby': return 0;
@@ -351,6 +474,8 @@ export class DaySim {
 
   private gazeAllowed(npc: PatrolNpc): boolean {
     if (this.gateOpen && this.content.leave.safeAfterGate) return false;
+    // 얼음 중 대표님 시선은 전역 규칙(ceoPostStep)이 대신함. 대화 구간 팀장·본부장 OFF(H5)는 얼음이 덮음
+    if (npc === this.ceoNpc && (this.ceoState === 'tell' || this.ceoState === 'freeze' || this.ceoState === 'qte')) return false;
     const actor = npc.def.actorId;
     if (actor && this.content.ambientActors.includes(actor)) return false;
     return true;
@@ -365,6 +490,7 @@ export class DaySim {
     if (!int) return false;
     if (this.activity) return false;
     if (this.gateOpen) return false;
+    if (this.frozenAll || this.qteActive) return false;
     if (actor.talkOnlyWhilePlayerAway && this.playerAtSeat) return false;
     const cond = actor.talkOnlyWhen ?? (typeof int.triggerDef['condition'] === 'string' ? int.triggerDef['condition'] as string : undefined);
     if (cond === 'leave_phase_before_1800' && !(this.phase === 'leave' && this.clockMin < this.content.clock.earlyLeaveBeforeMin)) return false;
@@ -390,6 +516,12 @@ export class DaySim {
     return null;
   }
 
+  /** 점수 가산(대표님 대화 구간 ×slackMultiplier, GDD §6-3) */
+  private addPoints(n: number): void {
+    const k = this.ceoTalkWindow ? (this.content.ceoVisit?.talkSlackMultiplier ?? 1) : 1;
+    this.points += n * k;
+  }
+
   // ── 단계 ─────────────────────────────────────────────
 
   private setPhase(p: DayPhase): void {
@@ -404,6 +536,10 @@ export class DaySim {
     if (this.activeMission) { this.activeMission.state = 'failed'; this.activeMission = null; this.activity = null; }
     for (const m of this.missions) if (m.state === 'carry' || m.state === 'active') m.state = 'failed';
     this.pendingMission = null;
+    this.offer = null;
+    this.dismissAccomplice();
+    if (this.ceoState === 'pending') { this.ceoState = 'cancelled'; this.push({ t: this.time, type: 'ceo', stage: 'cancelled' }); }
+    else if (this.ceoState === 'exit' || this.ceoState === 'resume') this.endCeoVisit(true);
     this.setPhase('leave');
     this.leaveStage = 'pack';
     this.push({ t: this.time, type: 'leaveStage', stage: 'pack' });
@@ -420,6 +556,7 @@ export class DaySim {
 
   private end(outcome: DayOutcome): void {
     if (this.phase === 'ended') return;
+    this.endedFrom = { phase: this.phase, leaveStage: this.leaveStage };
     const c = this.content;
     const peak = this.floor.suspicion.peak;
     const done = this.missionsDone();
@@ -437,12 +574,16 @@ export class DaySim {
     const points = Math.floor(this.points);
     const salary = Math.round(c.scoring.salaryBase * mul) + Math.floor(points / c.scoring.slackPointsPerWon);
     const by = this.caughtBy;
-    const reaction = outcome === 'caught' && by ? (c.actors[by]?.reactionKeys[0] ?? null)
+    let reaction = outcome === 'caught' && by ? (c.actors[by]?.reactionKeys[0] ?? null)
       : outcome === 'overtime' ? 'react.leave.overtime' : null;
+    if (outcome === 'caught' && this.follower && c.accomplice?.reactionKey) reaction = c.accomplice.reactionKey;
+    const ceoVisit: DayResult['ceoVisit'] = this.ceoState === 'none' ? 'none' : this.ceoState === 'skipped' ? 'skipped'
+      : this.ceoState === 'cancelled' || this.ceoState === 'pending' ? 'cancelled' : 'done';
     this.result = {
       outcome: outc, stars, titleKey, peakSuspicion: peak, work: this.work, quota: c.work.quota,
       missionsDone: done, missionsTotal: this.missions.length, missionsRequired: c.missionsRequired,
       slackPoints: points, salary, timeSec: this.time, clockMin: this.clockMin, caughtBy: by, reactionKey: reaction,
+      continued: this.continued, eyeContact: this.eyeContact, ceoVisit,
     };
     this.phase = 'ended';
     this.push({ t: this.time, type: 'phase', phase: 'ended' });
@@ -538,7 +679,7 @@ export class DaySim {
 
   private applyEffects(fx: ActivityEffects): void {
     if (fx.suspicion !== 0) addSuspicion(this.floor.suspicion, this.content.floor.rules.suspicion, fx.suspicion);
-    if (fx.points !== 0) this.points += fx.points;
+    if (fx.points !== 0) this.addPoints(fx.points);
     if (fx.toastKey) this.push({ t: this.time, type: 'toast', key: fx.toastKey });
     if (fx.noise) {
       const p = this.floor.player.pos;
@@ -561,15 +702,19 @@ export class DaySim {
 
   private completeMission(m: MissionRuntime): void {
     m.state = 'done';
-    this.points += m.def.reward.slackPoints;
+    const mul = m === this.joinedMission ? (this.content.accomplice?.rewardMultiplier ?? 1) : 1;
+    this.addPoints(m.def.reward.slackPoints * mul);
     if (m.def.reward.snackStock) this.snackStock = Math.min(this.content.scoring.snackStockMax, this.snackStock + m.def.reward.snackStock);
-    this.push({ t: this.time, type: 'missionDone', id: m.def.id, points: m.def.reward.slackPoints });
+    this.push({ t: this.time, type: 'missionDone', id: m.def.id, points: m.def.reward.slackPoints * mul });
+    if (m === this.joinedMission) this.dismissAccomplice();
   }
 
   private failMission(m: MissionRuntime, reason: 'fail' | 'timeout'): void {
     if (this.activeMission === m) { this.activity = null; this.activeMission = null; }
     if (this.pendingMission === m) this.pendingMission = null;
     m.state = 'failed';
+    if (m === this.joinedMission) this.dismissAccomplice();
+    if (this.offer?.missionId === m.def.id) this.offer = null;
     const pen = reason === 'fail' ? m.def.failPenalty : m.def.timeoutPenalty;
     if (pen > 0) addSuspicion(this.floor.suspicion, this.content.floor.rules.suspicion, pen);
     this.push({ t: this.time, type: 'missionFail', id: m.def.id, reason });
@@ -611,10 +756,12 @@ export class DaySim {
         break;
       }
       case 'elevator':
+        if (this.content.ceoElevator && this.elevatorCeo === 'none') this.startElevatorCeo();
+        if (this.elevatorCeo === 'tell' || this.elevatorCeo === 'qte') break; // 대표님 인사가 끝날 때까지 엘리베이터 대기
         this.elevatorLeft -= dt;
         if (this.elevatorLeft <= 0) {
-          this.points += L.reward;
-          if (this.clockMin < c.clock.earlyLeaveBeforeMin) { this.points += L.earlyLeaveBonusPoints; this.push({ t: this.time, type: 'toast', key: 'event.leave.early_bonus' }); }
+          this.addPoints(L.reward);
+          if (this.clockMin < c.clock.earlyLeaveBeforeMin) { this.addPoints(L.earlyLeaveBonusPoints); this.push({ t: this.time, type: 'toast', key: 'event.leave.early_bonus' }); }
           this.setLeaveStage('done');
           this.end('leave');
         }
@@ -637,7 +784,7 @@ export class DaySim {
 
   private gateTap(): void {
     const g = this.content.leave.gate;
-    const hit = Math.abs(this.gateMarker - 0.5) <= this.gateWindow / 2;
+    const hit = Math.abs(this.gateMarker - (g.windowCenter ?? 0.5)) <= this.gateWindow / 2;
     this.gateAttempts++;
     if (hit) {
       this.gateOpen = true;
@@ -704,7 +851,7 @@ export class DaySim {
         const cur = actor ? this.floor.findNpc((n) => n.def.actorId === actor && !!n.def.seated) : undefined;
         if (def && cur) {
           let d = def;
-          if (int.phase === 'leave' && typeof e['leaveStartsAt'] === 'string') d = sliceFromStop(def, e['leaveStartsAt'] as string, numOr(e['letoutTellSec'], 1));
+          if (int.phase === 'leave' && typeof e['leaveStartsAt'] === 'string') d = sliceFromStop(def, e['leaveStartsAt'] as string, numOr(e['leaveStopWaitSec'], numOr(e['letoutTellSec'], 1)));
           this.floor.replaceNpc(cur, d);
         } else started = false;
         break;
@@ -724,7 +871,7 @@ export class DaySim {
         for (const id of ids) {
           let def = pat[id];
           if (!def) continue;
-          if (int.phase === 'leave' && e['leavePrePositioned']) def = sliceFromStop(def, 'stop_gossip', numOr(e['leaveBlockSec'], def.waypoints[1]?.waitSec ?? 4), true);
+          if (int.phase === 'leave' && e['leavePrePositioned']) def = sliceFromStop(def, numStr(e['leaveStartsAt']) || 'stop_gossip', numOr(e['leaveBlockSec'], def.waypoints[1]?.waitSec ?? 4), true);
           const cur = this.floor.findNpc((n) => n.def.actorId === def!.actorId && !!n.def.seated);
           if (cur) this.floor.replaceNpc(cur, def); else this.floor.addNpc(def);
           any = true;
@@ -744,7 +891,7 @@ export class DaySim {
         started = false; // 근접형: 말걸기 훅이 처리(talkAllowed)
         break;
       default:
-        // freeze(INT-09)·qte(INT-11)·assist(INT-12)는 이번 1차 플레이어블 범위 밖 [미구현]
+        // freeze(INT-09)·qte(INT-11)·assist(INT-12)는 일정 시각 방해가 아니라 전용 런타임이 처리(ceoPreStep·startElevatorCeo·maybeOffer)
         started = false;
     }
     if (!this.intState.has(int.id)) this.intState.set(int.id, { started: this.time, count: 0, lastAt: -Infinity });
@@ -861,12 +1008,407 @@ export class DaySim {
         if (npc.forceLook(ang, this.floor.rng, o)) {
           this.scriptDone.add(i);
           if (typeof b['hintKey'] === 'string') this.hint(b['hintKey'] as string);
+          this.slowMo(b['slowMo'], o.tellSec);
         }
       } else if (b.type === 'boss_opportunity' && b['opportunity'] === 'phone_call') {
         const npc = this.floor.findNpc((n) => n.def.actorId === b['actor']);
         if (npc && npc.mode === 'wait') { npc.startPhone(numOr(b['durationSec'], 3)); this.scriptDone.add(i); }
       } else this.scriptDone.add(i);
     });
+  }
+
+  /** 조건형 스크립트(atSec 없음): 매 스텝 조건 검사, maxTimes까지 */
+  private scriptWatchers(): void {
+    const c = this.content, f = this.floor, p = f.player;
+    c.scripted.forEach((b, i) => {
+      const used = this.scriptCount.get(i) ?? 0;
+      const max = typeof b['maxTimes'] === 'number' ? b['maxTimes'] as number : 1;
+      if (used >= max) return;
+      const fire = () => this.scriptCount.set(i, used + 1);
+      switch (b.type) {
+        case 'boss_look_when': {
+          // day1: 걷는 중 선배가 돌아볼 방향의 콘이 나를 덮을 수 있으면 스크립트 시선(전조 tellSec, 상승 배율, 슬로모)
+          if (this.phase !== 'day' || b['condition'] !== 'player_moving_in_cone_path' || p.mode !== 'moving') return;
+          const npc = f.findNpc((n) => n.def.actorId === b['actor']);
+          if (!npc || npc.mode !== 'wait' || f.hooks.npcFrozen?.(npc)) return;
+          const dir: Dir = npc.def.waypoints[0]?.lookDirs?.[0] ?? 'down';
+          if (!canSee(f.map, npc.pos, DIR_ANGLE[dir], npc.cone, p.pos)) return;
+          const o: { tellSec: number; lookSec: number; gazeScale?: number } = { tellSec: numOr(b['tellSec'], npc.def.tellSec), lookSec: npc.def.lookSec };
+          if (typeof b['gazeMultiplierScale'] === 'number') o.gazeScale = b['gazeMultiplierScale'] as number;
+          if (npc.forceLook(DIR_ANGLE[dir], f.rng, o)) {
+            fire();
+            if (typeof b['hintKey'] === 'string') this.hint(b['hintKey'] as string);
+            this.slowMo(b['slowMo'], o.tellSec);
+          }
+          return;
+        }
+        case 'offscreen_demo': {
+          if (b['when'] !== 'player_in_zone') return;
+          const z = zoneAt(f.map, p.tile.x, p.tile.y);
+          if (!inZone(c, b['zone'], p.tile, z)) return;
+          const npc = f.findNpc((n) => n.def.actorId === b['actor']);
+          if (!npc || f.isOnScreen(npc)) return;
+          fire();
+          if (typeof b['hintKey'] === 'string') this.hint(b['hintKey'] as string);
+          this.push({ t: this.time, type: 'offscreenDemo', actor: numStr(b['actor']), sec: 2.5 });
+          return;
+        }
+        case 'snitch_spot': {
+          // day8: 첫 행동 중 반드시 발견(시선 체류 없이), 없으면 fallbackAtSec에 발견
+          if (this.phase !== 'day' || this.reportActive || this.frozenAll) return;
+          const rep = c.interrupts.find((x) => x.category === 'report_run' && x.phase === 'day');
+          if (!rep) { fire(); return; }
+          const trig = this.posture === 'activity' || (typeof b['fallbackAtSec'] === 'number' && this.dayTime >= (b['fallbackAtSec'] as number));
+          if (!trig) return;
+          fire();
+          if (typeof b['hintKey'] === 'string') this.hint(b['hintKey'] as string);
+          this.startInterrupt(rep);
+          return;
+        }
+        default: return;
+      }
+    });
+  }
+
+  /** day3 cover_hint: 전조가 시작될 때 엄폐 칸 radiusTiles 안이면 안내 */
+  private coverHintOnTell(npcId: string): void {
+    const c = this.content;
+    const npc = this.floor.findNpc((n) => n.def.id === npcId);
+    if (!npc || npc.gazeMultiplier <= 0 || npc.tellKind === 'talk') return;
+    c.scripted.forEach((b, i) => {
+      if (b.type !== 'cover_hint' || b['when'] !== 'tell_starts_near_cover') return;
+      const used = this.scriptCount.get(i) ?? 0;
+      if (used >= numOr(b['maxTimes'], 1)) return;
+      const r = numOr(b['radiusTiles'], 3);
+      const t = this.floor.player.tile;
+      if (!c.coverSpots.some((cs) => Math.abs(cs.x - t.x) + Math.abs(cs.y - t.y) <= r)) return;
+      this.scriptCount.set(i, used + 1);
+      if (typeof b['hintKey'] === 'string') this.hint(b['hintKey'] as string);
+    });
+  }
+
+  /** day2 route_hint: 미션 칩을 누르면 지름길(주의)과 우회로(힌트)를 점선으로 보여 줌(maps.playerRoutes via) */
+  private routeHintFor(m: MissionRuntime): void {
+    const c = this.content;
+    c.scripted.forEach((b, i) => {
+      if (b.type !== 'route_hint' || b['missionId'] !== m.def.id || this.scriptCount.has(i)) return;
+      this.scriptCount.set(i, 1);
+      const goal = m.def.startsAt === 'chip_tap_at_seat' ? c.playerSeat : m.def.spot;
+      const ids = Array.isArray(b['showRoutes']) ? (b['showRoutes'] as unknown[]).map(String) : [];
+      const routes: { id: string; kind: 'hint' | 'caution'; tiles: Tile[] }[] = [];
+      for (const id of ids) {
+        const r = c.routes?.find((x) => x.id === id);
+        const pts: Tile[] = [this.floor.player.tile, ...(r?.via ?? []), goal];
+        const tiles: Tile[] = [];
+        let ok = true;
+        for (let k = 0; k < pts.length - 1 && ok; k++) {
+          const seg = findPath(this.floor.map, pts[k]!, pts[k + 1]!, this.floor.blockedForPlayer);
+          if (!seg) ok = false; else tiles.push(...seg);
+        }
+        if (ok) routes.push({ id, kind: (r?.via.length ?? 0) === 0 ? 'caution' : 'hint', tiles });
+      }
+      if (typeof b['hintKey'] === 'string') this.hint(b['hintKey'] as string);
+      if (routes.length > 0) this.push({ t: this.time, type: 'routeHint', routes, sec: 4 });
+    });
+  }
+
+  private slowMo(scale: unknown, sec: number): void {
+    if (typeof scale !== 'number' || scale <= 0 || scale >= 1) return;
+    this.slowMoScale = scale;
+    this.slowMoLeft = sec;
+  }
+
+  // ── 대표님 순시(INT-09, bosses.ceo.visit, GDD §8-3) ─────────────────
+
+  /** 시작 판정: 예정 시각 이후 '내가 자리에 앉아 있는 첫 순간'. H7: 본부장이 층에 있으면 기다림 */
+  private ceoPreStep(): void {
+    const v = this.content.ceoVisit;
+    if (!v || this.ceoState !== 'pending' || this.dayTime < v.atSec) return;
+    const p = this.floor.player;
+    if (!this.playerAtSeat || p.mode === 'moving' || p.mode === 'talked' || this.reportActive) return;
+    if (this.floor.findNpc((n) => n.def.actorId === 'director')) return;
+    const def = this.content.patrols[v.patrolId];
+    if (!def) { this.ceoState = 'cancelled'; return; }
+    this.ceoNpc = this.floor.addNpc(def);
+    this.frozenAll = true;
+    this.ceoStarted = true;
+    this.ceoGain = 0;
+    this.ceoQteOk = false;
+    this.ceoTimer = 0;
+    this.setCeo('tell');
+    const int = this.content.interrupts.find((x) => x.id === 'INT-09');
+    this.push(v.tellTextKey ? { t: this.time, type: 'interrupt', id: 'INT-09', textKey: v.tellTextKey } : { t: this.time, type: 'interrupt', id: 'INT-09' });
+    void int;
+    this.tutorial('ceoTell');
+    if (v.slowMoTell > 0 && v.slowMoTell < 1) this.slowMo(v.slowMoTell, v.tellSec);
+    // 대화 중이던 사람·미션 제안 정리
+    this.offer = null;
+  }
+
+  private setCeo(st: CeoVisitState): void {
+    this.ceoState = st;
+    this.ceoTimer = 0;
+    this.push({ t: this.time, type: 'ceo', stage: st });
+  }
+
+  private ceoPostStep(dt: number, wasMoving: boolean): void {
+    const v = this.content.ceoVisit;
+    if (!v) return;
+    const st = this.ceoState;
+    if (st === 'none' || st === 'pending' || st === 'skipped' || st === 'done' || st === 'cancelled') return;
+    this.ceoTimer += dt;
+    const npc = this.ceoNpc && this.floor.npcs.includes(this.ceoNpc) ? this.ceoNpc : null;
+    switch (st) {
+      case 'tell':
+        if (npc && npc.mode !== 'spawn') { this.setCeo('freeze'); this.wasMovingInFreeze = wasMoving; }
+        break;
+      case 'freeze': {
+        // 얼음 전역 규칙: 움직이기 시작하는 순간 +moveStartInstant, 이동·행동 중 movingPerSec × 대표님 배율
+        const sr = this.content.floor.rules.suspicion;
+        const moving = this.floor.player.mode === 'moving';
+        if (moving && !this.wasMovingInFreeze) addSuspicion(this.floor.suspicion, sr, v.moveStartInstantSuspicion);
+        this.wasMovingInFreeze = moving;
+        const pos = this.posture;
+        if (pos === 'moving' || pos === 'activity') addSuspicion(this.floor.suspicion, sr, sr.movingPerSec * v.freezeGazeMultiplier * dt);
+        const atGreet = npc && npc.mode === 'hold' && npc.stopId === v.greetStop;
+        if (atGreet || !npc || this.ceoTimer >= v.freezeMaxSec + 3) this.startCeoQte(); // freezeMaxSec 초과는 경로 지연 안전장치
+        break;
+      }
+      case 'qte':
+        this.stepQte(dt);
+        break;
+      case 'talk': {
+        // 대화 구간: 대화 지점 도착 ~ 떠날 때. 시계는 대표님이 대화 지점을 떠날 때까지 멈춤
+        const atTalk = !!npc && npc.stopId === v.talkStop && npc.mode !== 'walk';
+        if (atTalk && !this.ceoTalkWindow) { this.ceoTalkWindow = true; this.tutorial('ceoTalk'); }
+        if (!npc || (this.ceoTalkWindow && !atTalk)) { this.ceoTalkWindow = false; this.setCeo('exit'); }
+        break;
+      }
+      case 'exit':
+        if (!npc) { this.ceoNpc = null; this.setCeo('resume'); }
+        break;
+      case 'resume':
+        if (this.ceoTimer >= v.exitResumeDelaySec) this.endCeoVisit(true);
+        break;
+      default: break;
+    }
+  }
+
+  private startCeoQte(): void {
+    const v = this.content.ceoVisit!;
+    this.setCeo('qte');
+    this.qte = new GreetQte(v.qte, this.floor.rng, v.qteWindowScale);
+    this.qteSource = 'ceo';
+    this.push({ t: this.time, type: 'qte', source: 'ceo', stage: 'precue' });
+  }
+
+  private stepQte(dt: number): void {
+    const q = this.qte;
+    if (!q || q.phase === 'done') return;
+    const before = q.phase;
+    const r = q.step(dt);
+    if (before === 'precue' && q.phase === 'window') this.push({ t: this.time, type: 'qte', source: this.qteSource ?? 'ceo', stage: 'cue' });
+    if (r) this.resolveQte(r);
+  }
+
+  private resolveQte(r: QteResult): void {
+    const q = this.qte;
+    const src = this.qteSource;
+    if (!q || !src) return;
+    this.push({ t: this.time, type: 'qte', source: src, stage: 'result', result: r });
+    const sr = this.content.floor.rules.suspicion;
+    if (src === 'ceo') {
+      const v = this.content.ceoVisit!;
+      const pen = q.penaltyOf(r);
+      if (pen > 0) addSuspicion(this.floor.suspicion, sr, pen);
+      this.ceoQteOk = r === 'success';
+      const npc = this.ceoNpc;
+      if (npc) {
+        const key = r === 'success' ? 'boss.ceo.talk' : r === 'early' ? v.reactionEarly : r === 'long' ? v.reactionLong : 'boss.ceo.question';
+        if (key) this.push({ t: this.time, type: 'say', npc: npc.def.id, key, sec: 1.6 });
+        npc.release();
+      }
+      if (this.floor.suspicion.value >= sr.max) this.caughtBy = 'ceo';
+      this.setCeo('talk');
+    } else {
+      const e = this.content.ceoElevator!;
+      const npc = this.elevNpc;
+      if (r === 'success') this.addPoints(e.successPoints);
+      else {
+        // 실패해도 적발로는 이어지지 않음(INT-11 _designNote): 상한 바로 아래까지만
+        const room = Math.max(0, sr.max - this.floor.suspicion.value - 1e-6);
+        addSuspicion(this.floor.suspicion, sr, Math.min(e.failSuspicion, room));
+      }
+      const key = r === 'success' ? e.successLineKey : e.failLineKey;
+      if (npc && key) this.push({ t: this.time, type: 'say', npc: npc.def.id, key, sec: 1.8 });
+      npc?.release();
+      this.elevatorCeo = 'done';
+    }
+    this.qte = null;
+    this.qteSource = null;
+  }
+
+  /** 순시 종료: 하위 상사·NPC 복귀(다음 시선은 전조부터), 눈도장 판정 */
+  private endCeoVisit(evaluate: boolean): void {
+    if (!this.ceoStarted) return;
+    const v = this.content.ceoVisit;
+    if (this.ceoNpc && this.floor.npcs.includes(this.ceoNpc)) this.floor.removeNpc(this.ceoNpc);
+    this.ceoNpc = null;
+    if (this.frozenAll) {
+      this.frozenAll = false;
+      for (const n of this.floor.npcs) n.interruptLook(this.floor.rng);
+    }
+    this.ceoTalkWindow = false;
+    if (this.qteSource === 'ceo') { this.qte = null; this.qteSource = null; }
+    this.ceoStarted = false;
+    if (evaluate && v) {
+      const ok = this.ceoGain < v.survivalMaxGain && (!v.survivalRequiresQte || this.ceoQteOk);
+      if (ok) {
+        this.eyeContact = true;
+        this.points += v.eyeContactPoints;
+        this.push({ t: this.time, type: 'eyeContact', points: v.eyeContactPoints });
+        this.push({ t: this.time, type: 'toast', key: 'boss.ceo.eye_contact' });
+      }
+    }
+    this.ceoState = 'done';
+    this.push({ t: this.time, type: 'ceo', stage: 'done' });
+  }
+
+  // ── 엘리베이터 대표님(INT-11) ─────────────────────────
+
+  private startElevatorCeo(): void {
+    const e = this.content.ceoElevator!;
+    const def = this.content.patrols[e.patrolId];
+    if (!def) { this.elevatorCeo = 'done'; return; }
+    this.elevNpc = this.floor.addNpc(def);
+    this.elevatorCeo = 'tell';
+    this.push(e.tellTextKey ? { t: this.time, type: 'interrupt', id: 'INT-11', textKey: e.tellTextKey } : { t: this.time, type: 'interrupt', id: 'INT-11' });
+    this.tutorial('int:INT-11');
+  }
+
+  private elevatorCeoStep(): void {
+    if (this.elevatorCeo === 'none' || this.elevatorCeo === 'done') return;
+    const npc = this.elevNpc;
+    if (!npc || !this.floor.npcs.includes(npc)) { this.elevatorCeo = 'done'; return; }
+    if (this.elevatorCeo === 'tell' && npc.mode === 'hold') {
+      this.elevatorCeo = 'qte';
+      this.qte = new GreetQte(this.content.ceoElevator!.qte, this.floor.rng, 1);
+      this.qteSource = 'elevator';
+      this.push({ t: this.time, type: 'qte', source: 'elevator', stage: 'precue' });
+    } else if (this.elevatorCeo === 'qte') this.stepQte(this.content.floor.rules.fixedStepSec);
+  }
+
+  // ── 공범 동료(INT-12) ────────────────────────────────
+
+  private maybeOffer(m: MissionRuntime): void {
+    const acc = this.content.accomplice;
+    if (!acc || this.offer || this.follower || this.offered.has(m.def.id) || this.frozenAll) return;
+    const o = acc.offers.find((x) => x.eventId === m.def.id);
+    if (!o) return;
+    const seat = this.floor.findNpc((n) => n.def.actorId === 'accomplice' && !!n.def.seated);
+    if (!seat || seat.mode === 'talk') return;
+    this.offered.add(m.def.id);
+    const textKey = acc.offerTextKeys[m.def.id] ?? 'npc.accomplice.offer';
+    this.offer = { missionId: m.def.id, left: o.forced ? Infinity : acc.offerSec, forced: o.forced, textKey };
+    this.push({ t: this.time, type: 'offer', missionId: m.def.id, textKey, forced: o.forced });
+    this.push({ t: this.time, type: 'interrupt', id: 'INT-12' });
+    this.tutorial('offer');
+  }
+
+  private accompliceStep(dt: number): void {
+    const acc = this.content.accomplice;
+    if (this.offer) {
+      const m = this.missions.find((x) => x.def.id === this.offer!.missionId);
+      this.offer.left -= dt;
+      const gone = !m || m.state === 'done' || m.state === 'failed' || (this.offer.forced && m.state === 'active' && m.def.awayFromDesk);
+      if (this.offer.left <= 0 || gone || this.phase !== 'day') {
+        this.push({ t: this.time, type: 'offerEnd', missionId: this.offer.missionId, accepted: false });
+        this.offer = null;
+      }
+    }
+    const f = this.follower;
+    if (!f || !acc) return;
+    f.step(dt, this.floor.player.pos, this.frozenAll);
+    // 망보기: 반경 안 앉은 상사의 전조 lookoutCoughLeadSec 전에 헛기침
+    const pp = this.floor.player.pos;
+    for (const n of this.floor.npcs) {
+      if (n.def.role !== BOSS_ROLE) continue;
+      const left = n.upcomingTellSec;
+      if (left === null) { this.coughed.delete(n); continue; }
+      if (left <= acc.lookoutCoughLeadSec && !this.coughed.has(n) && Math.hypot(n.x - pp.x, n.y - pp.y) <= acc.lookoutRadiusTiles) {
+        this.coughed.add(n);
+        this.push({ t: this.time, type: 'accomplice', action: 'cough' });
+      }
+    }
+  }
+
+  /** 공범이 걸려도 나로 계산(hitboxIncludesAccomplice): 공범 위치를 보는 시선 배율 */
+  private followerGaze(): number {
+    const f = this.follower;
+    if (!f || !this.content.accomplice?.hitboxIncludesAccomplice) return 0;
+    let m = 0;
+    for (const n of this.floor.npcs) if (n.gazeMultiplier > m && this.floor.npcSees(n, f.pos)) m = n.gazeMultiplier;
+    return m;
+  }
+
+  /** 공범 복귀: 지금 위치에서 자리로 걸어가 앉음(시선·길막 없음) */
+  private dismissAccomplice(): void {
+    const f = this.follower, acc = this.content.accomplice;
+    if (!f || !acc) { this.follower = null; this.joinedMission = null; return; }
+    this.follower = null;
+    this.joinedMission = null;
+    const seatDef = this.content.patrols[acc.seatPatrolId];
+    if (seatDef) {
+      const seat = seatDef.waypoints[0]!;
+      const from = tileOf(f.pos);
+      const ok = !!findPath(this.floor.map, from, seat);
+      const back: NpcDef = {
+        ...seatDef, id: `${seatDef.id}_return`, patrolId: `${acc.seatPatrolId}_return`, seated: false, loop: false, coneOff: true, passable: true,
+        speedTilesPerSec: acc.speedTilesPerSec, thenPatrol: acc.seatPatrolId,
+        waypoints: [{ x: from.x, y: from.y, waitSec: 0 }, { x: seat.x, y: seat.y, waitSec: 0 }],
+      };
+      const { phone: _p, talk: _t, ...rest } = back;
+      this.floor.addNpc(ok ? rest : seatDef);
+    }
+    this.push({ t: this.time, type: 'accomplice', action: 'leave' });
+  }
+
+  // ── 위계 연쇄 H1·H2(본부장 → 팀장 인사·길막) ─────────────────
+
+  private greetingStep(dt: number): void {
+    const g = this.content.greeting;
+    if (!g || this.frozenAll) return;
+    const boss = this.floor.findNpc((n) => n.def.actorId === g.bossActorId && n.mode !== 'spawn');
+    const z = this.content.zones.find((zz) => zz.id === g.zoneId);
+    const inZ = !!boss && !!z && (() => { const t = tileOf(boss); const [x, y, w, h] = z.rect; return t.x >= x && t.y >= y && t.x < x + w && t.y < y + h; })();
+    if (this.greetState === 'idle') {
+      if (!inZ) return;
+      const tl = this.floor.findNpc((n) => n.def.actorId === g.greeterActorId && !!n.def.seated && n.def.patrolId === this.content.patrols['p_tl_seat']?.patrolId);
+      if (!tl || tl.mode === 'talk' || (tl.mode === 'tell' && tl.tellKind === 'talk')) return;
+      const seat = tl.def.waypoints[0]!;
+      const def: NpcDef = {
+        ...tl.def, id: `${tl.def.id}_greet`, patrolId: `${tl.def.patrolId ?? 'tl'}_greet`, seated: false, loop: false, coneOff: true,
+        thenPatrol: tl.def.patrolId ?? 'p_tl_seat',
+        waypoints: [
+          { x: seat.x, y: seat.y, waitSec: 0 },
+          { x: g.greetSpot.x, y: g.greetSpot.y, waitSec: 0, stopId: 'stop_tl_greet', holdForReport: true, facing: 'down', coneOff: true },
+          { x: seat.x, y: seat.y, waitSec: 0 },
+        ],
+      };
+      const { talk: _t, phone: _p, fake: _f, doubleLook: _d, ...rest } = def;
+      const n = this.floor.replaceNpc(tl, rest);
+      this.greetState = 'greeting';
+      this.greetTimer = 0;
+      if (g.lineKey) this.push({ t: this.time, type: 'say', npc: n.def.id, key: g.lineKey, sec: 1.8 });
+      return;
+    }
+    const greeter = this.floor.findNpc((n) => n.def.actorId === g.greeterActorId);
+    if (!greeter || greeter.def.seated) { this.greetState = 'idle'; return; }
+    if (this.greetState === 'greeting') {
+      if (inZ) { this.greetTimer = 0; return; }
+      this.greetTimer += dt;
+      if (this.greetTimer >= g.resumeDelaySec && greeter.mode === 'hold') { greeter.release(); this.greetState = 'returning'; }
+    }
   }
 
   private scriptHint(type: string, interruptId: string): void {
@@ -896,7 +1438,7 @@ export class DaySim {
     for (const e of this.floor.drainEvents()) {
       this.floorEvents.push(e);
       if (e.type === 'closeCall') {
-        this.points += this.content.scoring.closeCallBonusPoints;
+        this.addPoints(this.content.scoring.closeCallBonusPoints);
         this.push({ t: this.time, type: 'closeCall', points: this.content.scoring.closeCallBonusPoints });
       } else if (e.type === 'talkWarn') {
         const npc = this.floor.findNpc((n) => n.def.id === e.npc);
@@ -909,8 +1451,10 @@ export class DaySim {
           this.noteInterrupt(intId);
           const int = this.content.interrupts.find((i) => i.id === intId);
           const pts = int ? numOr(int.effect['earlyLeavePoints'], 0) : 0;
-          if (pts > 0) this.points += pts;
+          if (pts > 0) this.addPoints(pts);
         }
+      } else if (e.type === 'tell') {
+        this.coverHintOnTell(e.npc);
       } else if (e.type === 'caught') {
         let best: PatrolNpc | null = null;
         this.floor.npcs.forEach((n, i) => { if (this.floor.seeing[i] && (!best || n.gazeMultiplier > best.gazeMultiplier)) best = n; });

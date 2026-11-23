@@ -27,7 +27,8 @@ export async function initPlatform(units: AdUnitConfig = {}): Promise<Platform> 
       console.warn('[platform] 토스 SDK 로드 실패 → mock 사용', e);
     }
   }
-  current = createMockPlatform({ adsSupported: params.get('ads') !== 'off' });
+  const ar = params.get('adResult');
+  current = createMockPlatform({ adsSupported: params.get('ads') !== 'off', ...(ar === 'dismiss' || ar === 'fail' ? { adResult: ar } : {}) });
   return current;
 }
 

@@ -10,7 +10,8 @@ import type { LegendEntry, Tile } from '../core/grid';
 import type { ConeState, NpcDef, TalkDef, WaypointDef } from '../core/patrol';
 import type { Dir } from '../core/vision';
 import type {
-  ActorInfo, BackgroundDef, DayContent, DayInterruptDef, LeaveDef, Mechanic, MissionDef, ScriptedBeat,
+  AccompliceDef, ActorInfo, BackgroundDef, CeoElevatorDef, CeoVisitDef, DayContent, DayInterruptDef, GreetingDef, LeaveDef, Mechanic,
+  MissionDef, QteDef, RouteDef, ScriptedBeat,
 } from '../core/day/types';
 import { applyInterpScaling, applyOverrideScaling, rankProgress } from './scaling';
 
@@ -23,6 +24,10 @@ export const DEFAULTS = {
   talkDodgedKey: 'talk.dodged_default',
   /** 말걸기 전조 최소(rules.talk.tellSecMin이 있으면 그 값) */
   talkWarnSec: 0.5,
+  /** 이어하기 재개 의심(rules.continueAd에 숫자 필드가 없음: ads.json effect 'resume_suspicion_0_6_at_checkpoint'·GDD §6-1 값) [데이터 요청: rules.continueAd.resumeSuspicion] */
+  continueResumeSuspicion: 0.6,
+  /** 대표님 순시 예정 시각 비율(생성기가 ceoAtSec를 주지 않은 경우) */
+  ceoAtFrac: 0.55,
 } as const;
 
 type O = Record<string, unknown>;
@@ -139,7 +144,9 @@ export function generateDay(tables: Tables, day: number): O {
   }
   return {
     day, rankId: rank['id'], weekday: (day - 1) % 5, seed: `day-${day}`, mapId: 'office_floor_1',
-    titleKey: 'day.generated.title', tutorialIds: [], dayPhaseSec, missions, missionsRequired: required,
+    titleKey: 'day.generated.title',
+    tutorialIds: arr(obj(obj(tables['days'])['generator'])['debuts']).map(obj).filter((d) => d['day'] === day && typeof d['tutorialId'] === 'string').map((d) => d['tutorialId']),
+    dayPhaseSec, missions, missionsRequired: required,
     castPatrols, dayInterrupts: dayInts, leaveInterrupts, scripted: [], ceo: ceoPlan.kind, generated: true,
     ...(ceoDay ? { ceoAtSec } : {}),
   };
@@ -445,6 +452,108 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     reward: num(lreward['slackPoints'], 0), earlyLeaveBonusPoints: num(lreward['earlyLeaveBonusPoints'], 0),
   };
 
+  // ── T-133: 대표님 순시·엘리베이터 대표님·공범·위계 연쇄 ──
+  const debuts = arr(obj(obj(tables['days'])['generator'])['debuts']).map(obj).filter((d) => d['day'] === day);
+  const ceoA = actorRaw.get('ceo');
+  const qteOf = (q: O): QteDef => ({
+    preCueSecRange: range2(q['preCueSecRange']) ?? [0.6, 1.2], windowSec: num(q['windowSec'], 0.6), maxPressSec: num(q['maxPressSec'], 0.4),
+    earlyPenalty: num(q['earlyPenalty'], 0), missPenalty: num(q['missPenalty'], 0), longPressPenalty: num(q['longPressPenalty'], 0),
+  });
+  const ceoKind = str(plan['ceo'], 'none');
+  let ceoVisit: CeoVisitDef | undefined;
+  if ((ceoKind === 'scheduled' || ceoKind === 'random') && ceoA) {
+    const visit = obj(ceoA['visit']), freeze = obj(visit['freeze']), tw = obj(visit['talkWindow']), surv = obj(ceoA['survival']);
+    const i09 = intTable.find((x) => x['id'] === 'INT-09') ?? {};
+    const tell09 = obj(i09['tell']);
+    const force = obj(debuts.find((d) => d['bossId'] === 'ceo')?.['force']);
+    const reacts = arr(ceoA['reactionKeys']).map((x) => str(x));
+    const dps = num(plan['dayPhaseSec'], num(rank['dayPhaseSec'], 50));
+    ceoVisit = {
+      kind: ceoKind, atSec: num(plan['ceoAtSec'], dps * DEFAULTS.ceoAtFrac), patrolId: str(visit['patrolId'], 'p_ceo_visit'),
+      tellSec: num(tell09['sec'], 1), ...(typeof tell09['textKey'] === 'string' ? { tellTextKey: tell09['textKey'] as string } : {}),
+      greetStop: str(freeze['untilStop'], 'stop_ceo_greet'), talkStop: str(tw['atStop'], 'stop_ceo_talk'),
+      freezeMaxSec: num(freeze['maxSec'], 5), moveStartInstantSuspicion: num(freeze['moveStartInstantSuspicion'], 0),
+      freezeGazeMultiplier: num(obj(ceoA['sim'])['gazeMultiplier'], 1),
+      talkWindowSec: num(tw['durationSec'], 4), talkSlackMultiplier: num(tw['slackMultiplier'], 1),
+      exitResumeDelaySec: num(visit['exitResumeDelaySec'], num(obj(ceoA['hierarchy'])['resumeDelaySec'], 1)),
+      qte: qteOf(obj(ceoA['greetingQte'])), qteWindowScale: num(force['qteWindowScale'], 1), slowMoTell: num(force['slowMoTell'], 1),
+      survivalMaxGain: num(surv['maxSuspicionGain'], 0.15), survivalRequiresQte: surv['requireQteSuccess'] !== false,
+      eyeContactPoints: num(surv['rewardSlackPoints'], 0),
+      ...(reacts.find((k) => k.endsWith('early_bow')) ? { reactionEarly: reacts.find((k) => k.endsWith('early_bow'))! } : {}),
+      ...(reacts.find((k) => k.endsWith('long_bow')) ? { reactionLong: reacts.find((k) => k.endsWith('long_bow'))! } : {}),
+    };
+  }
+  let ceoElevator: CeoElevatorDef | undefined;
+  const i11 = intTable.find((x) => x['id'] === 'INT-11');
+  if (i11 && ceoA && !ceoVisit && num(obj(obj(rank['cast'])['bosses'])['ceo'], 0) >= 1 && day >= num(i11['unlockDay'], 999)) {
+    const trig = obj(i11['trigger']), eff = obj(i11['effect']), tell = obj(i11['tell']);
+    const forced = debuts.some((d) => d['interruptId'] === 'INT-11');
+    // 난이도·연출 확률(🔶 P4): 시드 스트림 day-{n}-event로 미리 결정 → 같은 날 = 모든 플레이어 같은 결과
+    const hit = forced || createRng(`day-${day}-event`).chance(num(trig['chance'], 0));
+    if (hit) {
+      ceoElevator = {
+        patrolId: str(eff['patrolId'], 'p_ceo_elevator'), tellSec: num(tell['sec'], 0.8),
+        ...(typeof tell['textKey'] === 'string' ? { tellTextKey: tell['textKey'] as string } : {}),
+        qte: qteOf(obj(ceoA['greetingQte'])), successPoints: num(eff['successPoints'], 0), failSuspicion: num(eff['failSuspicion'], 0),
+        ...(typeof eff['successLineKey'] === 'string' ? { successLineKey: eff['successLineKey'] as string } : {}),
+        ...(typeof eff['failLineKey'] === 'string' ? { failLineKey: eff['failLineKey'] as string } : {}),
+      };
+    }
+  }
+  let accomplice: AccompliceDef | undefined;
+  const accA = actorRaw.get('accomplice');
+  const i12 = intTable.find((x) => x['id'] === 'INT-12');
+  const castIds = arr(plan['castPatrols']).map((x) => str(x));
+  if (accA && i12 && !ambient.includes('accomplice') && day >= Math.max(num(accA['firstDay'], 1), num(i12['unlockDay'], 1))
+    && castIds.includes(str(accA['defaultPatrol'], 'p_accomplice_seat'))) {
+    const offer = obj(accA['offer']), eff = obj(accA['effects']);
+    const ids = arr(offer['eventIds']).map((x) => str(x));
+    const offers: { eventId: string; forced: boolean }[] = [];
+    if (plan['generated'] === true || offer['authoredDaysScriptedOnly'] !== true) {
+      const rng = createRng(`day-${day}-${str(offer['offerRollStream'], 'npc')}`);
+      for (const m of arr(plan['missions']).map(obj)) {
+        const id = str(m['eventId']);
+        if (ids.includes(id) && rng.chance(num(offer['offerProb'], 0))) offers.push({ eventId: id, forced: false });
+      }
+    } else {
+      for (const b of arr(plan['scripted']).map(obj)) if (b['type'] === 'accomplice_offer') offers.push({ eventId: str(b['eventId']), forced: b['forced'] === true });
+    }
+    const follow = patrolTable.find((p) => p['kind'] === 'follow' && p['actorId'] === 'accomplice') ?? {};
+    const tellKey = str(obj(i12['tell'])['textKey'], 'npc.accomplice.offer');
+    // 미션별 제안 문구: '<tellKey>_<미션id>' 키가 있으면 그것(간식 = npc.accomplice.offer_snack), 없으면 tellKey
+    const offerTextKeys: Record<string, string> = {};
+    for (const id of ids) offerTextKeys[id] = strings[`${tellKey}_${id}`] !== undefined ? `${tellKey}_${id}` : tellKey;
+    if (offers.length > 0) {
+      accomplice = {
+        offers, offerSec: num(offer['offerSec'], 2.5), offerTextKeys,
+        rewardMultiplier: num(eff['rewardMultiplier'], 1), suspicionGainMultiplier: num(eff['suspicionGainMultiplier'], 1),
+        hitboxIncludesAccomplice: eff['hitboxIncludesAccomplice'] === true,
+        lookoutCoughLeadSec: num(eff['lookoutCoughLeadSec'], 0), lookoutRadiusTiles: num(eff['lookoutRadiusTiles'], 0),
+        followGapTiles: num(follow['followGapTiles'], 1), seatPatrolId: str(accA['defaultPatrol'], 'p_accomplice_seat'),
+        speedTilesPerSec: num(obj(accA['sim'])['speedTilesPerSec'], 3),
+        ...(arr(accA['reactionKeys'])[0] ? { reactionKey: str(arr(accA['reactionKeys'])[0]) } : {}),
+      };
+    }
+  }
+  let greeting: GreetingDef | undefined;
+  const i10 = interrupts.find((x) => x.id === 'INT-10');
+  const tg = i10 ? obj(i10.effect['teamLeadGreeting']) : {};
+  if (i10 && tg['whenDirectorInZone']) {
+    const tl = actorRaw.get('team_lead');
+    const sp = spots[str(tg['moveTo'], 'tl_greet_spot')]?.tile;
+    if (sp) {
+      greeting = {
+        bossActorId: 'director', greeterActorId: 'team_lead', zoneId: str(tg['whenDirectorInZone'], 'team'), greetSpot: sp,
+        ...(typeof tg['lineKey'] === 'string' ? { lineKey: tg['lineKey'] as string } : {}),
+        resumeDelaySec: num(obj(tl?.['hierarchy'])['resumeDelaySec'], 1),
+      };
+    }
+  }
+  const routes: RouteDef[] = arr(map['playerRoutes']).map(obj).map((r) => ({
+    id: str(r['id']), from: str(r['from']), to: str(r['to']), via: arr(r['via']).map(tile2),
+  }));
+  const contAd = obj(rules['continueAd']);
+
   const dayCfg = obj(rules['day']);
   const camera = obj(map['camera']);
   const salary = obj(rules['salary']);
@@ -496,5 +605,16 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     poseByZone: obj(disguise['poseByZone']) as Record<string, string>,
     resultInputGuardSec: num(obj(rules['input'])['resultInputGuardSec'], DEFAULTS.resultInputGuardSec),
     visualCues: obj(rules['visualCues']),
+    ...(ceoVisit ? { ceoVisit } : {}),
+    ...(ceoElevator ? { ceoElevator } : {}),
+    ...(accomplice ? { accomplice } : {}),
+    ...(greeting ? { greeting } : {}),
+    routes,
+    prep: { ceoPassAvailable: !!ceoVisit && obj(ceoA?.['occurrence'])['skippableByAd'] === true },
+    continueAd: {
+      resumeSuspicion: num(contAd['resumeSuspicion'], DEFAULTS.continueResumeSuspicion),
+      submitScoreToLeaderboard: contAd['submitScoreToLeaderboard'] === true,
+    },
+    playerSpriteKey: str(obj(rules['characters'])['playerSpriteKey'], 'player'),
   };
 }
