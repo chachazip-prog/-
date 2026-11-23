@@ -444,6 +444,9 @@ interface EventDef {
 
 ```ts
 interface RanksTable { schemaVersion: 2; budgetModel: {...}; ranks: RankDef[] }
+// budgetModel: { introSec; leaveBaseSec; perLeaveInterruptSec; detourSec; ceoVisitPausedSec;
+//   missionExpectedSec: Record<EventId(퇴근 제외), Sec>;
+//   dayInterruptReserveSec?: Partial<Record<InterruptId, Sec>> }   // 🔧 T-139: 생성기 budgetCheck 전용(근무 방해 예약분)
 interface RankDef {
   id: RankId; order; nameKey; dayRange: [number, number | null]; contentTier: 'authored'|'generated'|'endless'; mvp;
   starsToPromote: number | null; maxStars: number | null;
@@ -526,7 +529,7 @@ interface AdsTable {
 ---
 
 ## 10. 검사기 `design/tools/validate_data.py`
-`python3 -I molrae-toegeun/design/tools/validate_data.py` → `OK` 또는 오류 목록(종료 코드 1). 검사 항목: schemaVersion, `*Key`·`reactionKeys` 문자열 존재, 전조 최소·페이크 상한(보간 값 포함), 맵 크기·legend·스폿/웨이포인트 통행·도달, 테이블 간 ID 참조, 방해 phase·unlockDay, 하루 예상 길이 범위, D-037 사원증 색. **T-132 추가**: 층 인원 ≤ 12·화면 안 ≤ 8(수작업 날은 그날 구성, 생성 날은 직급별 방해 countRange 최대 개수의 모든 조합 중 최악, 대표님 날 H7 반영. 각 캐릭터가 있을 수 있는 y 범위로 보수적 계산), 배경 동료(2~3명·메카닉 전부 false·회색 줄·자리/경로 유효), 말걸기 `warnSec`·`catchRadius`·`releaseSec`·문구 키, `talkedPerSec = 0`, `resultInputGuardSec ≥ 0.4`, 유리벽 walkable=false·blocksSight=false(D-053), 플레이어 줄 하늘색(D-052), `exemptFirstGamesLifetime` 없음(D-048), 이어하기 조건(D-050·D-056), 문자열 이모지·내부 ID·`{n}원`, 수작업 날 공범 제안 미션 존재, sfx 키 ⊂ `game/assets/audio/audio-manifest.json`(읽기 전용), 걷는 NPC `walkTellSfx`, 게이트 sfx, `visualCues` 6종·깜빡임 ≤ 3Hz. **T-134 추가**: `spriteKey`·`playerSpriteKey`·배경 `sprite` ⊂ `game/assets/sprites/anims.json`(idle·walk 4방향). **T-136 추가**: 이어하기 재개 의심(구 필드와 일치)·컷인 길이·alert 임계(매니페스트 숫자 일치)·H7 간격·대표님 재확인 플래그와 전조·얼음 안전장치·공범 제안 종료 규칙·간식 판정 시점·광고 문구 키. 실행 끝에 직급별 화면 안 최악 인원을 출력합니다. 데이터를 고칠 때마다 실행하세요. CI 편입은 개발·QA 판단입니다.
+`python3 -I molrae-toegeun/design/tools/validate_data.py` → `OK` 또는 오류 목록(종료 코드 1). 검사 항목: schemaVersion, `*Key`·`reactionKeys` 문자열 존재, 전조 최소·페이크 상한(보간 값 포함), 맵 크기·legend·스폿/웨이포인트 통행·도달, 테이블 간 ID 참조, 방해 phase·unlockDay, 하루 예상 길이 범위, D-037 사원증 색. **T-132 추가**: 층 인원 ≤ 12·화면 안 ≤ 8(수작업 날은 그날 구성, 생성 날은 직급별 방해 countRange 최대 개수의 모든 조합 중 최악, 대표님 날 H7 반영. 각 캐릭터가 있을 수 있는 y 범위로 보수적 계산), 배경 동료(2~3명·메카닉 전부 false·회색 줄·자리/경로 유효), 말걸기 `warnSec`·`catchRadius`·`releaseSec`·문구 키, `talkedPerSec = 0`, `resultInputGuardSec ≥ 0.4`, 유리벽 walkable=false·blocksSight=false(D-053), 플레이어 줄 하늘색(D-052), `exemptFirstGamesLifetime` 없음(D-048), 이어하기 조건(D-050·D-056), 문자열 이모지·내부 ID·`{n}원`, 수작업 날 공범 제안 미션 존재, sfx 키 ⊂ `game/assets/audio/audio-manifest.json`(읽기 전용), 걷는 NPC `walkTellSfx`, 게이트 sfx, `visualCues` 6종·깜빡임 ≤ 3Hz. **T-134 추가**: `spriteKey`·`playerSpriteKey`·배경 `sprite` ⊂ `game/assets/sprites/anims.json`(idle·walk 4방향). **T-136 추가**: 이어하기 재개 의심(구 필드와 일치)·컷인 길이·alert 임계(매니페스트 숫자 일치)·H7 간격·대표님 재확인 플래그와 전조·얼음 안전장치·공범 제안 종료 규칙·간식 판정 시점·광고 문구 키. **T-139 추가**: 예산 모델 키(`missionExpectedSec`·`dayInterruptReserveSec`·`perLeaveInterruptSec`), `budgetCheck` 형식, 인사 QTE 창 ≥ 0.4(보간 포함), 생존 상승 범위, 대표님 `coneActiveIn`, 탈출 보너스 시각 범위, `star3PeakBelow` 0.1~0.3, INT-05 `cancelOnLeaveStart`. 실행 끝에 직급별 화면 안 최악 인원을 출력합니다. 데이터를 고칠 때마다 실행하세요. CI 편입은 개발·QA 판단입니다.
 
 ---
 
@@ -539,6 +542,7 @@ interface AdsTable {
 | 2 (T-132) | 2026-11-22 | 개발 T-127·아트 T-125·사운드 T-113·컴플라이언스 리뷰 반영. **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
 | 2 (T-134) | 2026-11-23 | 개발 T-129 해석 6건 확정(`design/gdd.md` §19-3) + spriteKey 데이터 요청. **필드 추가·값 수정 1건만, 구조 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
 | 2 (T-136) | 2026-11-23 | 개발 T-133 코드 상수 → 데이터(숫자 4, 문구 키 2), T-133 해석 6건 확정(`design/gdd.md` §19-4). **필드 추가만, 값·키 이름·계층 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
+| 2 (T-139) | 2026-11-23 | QA T-131 밸런스 제안 10건 + D-070 반영(`design/gdd.md` §19-5). **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
 
 ### v1 → v2 상세
 - **신규 테이블**: `maps`, `patrols`, `interrupts`, `ads`.
@@ -606,3 +610,51 @@ interface AdsTable {
   - events `snack.params.judgeOn` `release`.
 - **검사기**: 위 항목 전부(§10 T-136). 음성 테스트(값을 일부러 틀리게 한 복사본)로 오류 검출 확인.
 - 개발 영향: 동작이 바뀌는 것은 ① 공범 제안이 자리 미션(간식)에서 첫 입 때 끝남 ② 대표님 재확인 확률이 직급 보간(과장 초반 0.30)·전조 0.5초 ③ 대표님이 층에 있는 동안 본부장 등장 연기 ④ 하루 보상형 상한일 때 보상형 버튼 숨김. 나머지는 현재 구현과 같은 값을 데이터로 옮긴 것입니다.
+
+### T-139 상세 (v2 유지)
+- **추가(🔧 개발 구현 필요)**
+  - days `generator.missions.budgetCheck`: `{enabled: true, minRequired: 2, minSlackSec: 0, onOver: "drop_required", expectedSecFrom, reserveSecFrom, rule, order}`.
+    - 규칙: need = (이 날 미션의 `missionExpectedSec` 큰 순서로 required개 합) + rank.workQuota ÷ rules.work.fillPerSec + Σ `dayInterruptReserveSec`[H7 필터 뒤 dayInterrupts의 id].
+    - need > dayPhaseSec − minSlackSec이고 required > minRequired이면 required −1 후 다시 계산합니다(반복).
+    - 미션 목록·해금 시각은 바꾸지 않습니다. 모든 추첨 뒤에 적용하므로 RNG 소비는 바뀌지 않습니다. 대표님 날 −1을 먼저 적용한 값에서 시작합니다.
+  - ranks `budgetModel.dayInterruptReserveSec`: INT-04 2.0, INT-05 3.0, INT-06 1.5, INT-08 2.0, INT-10 3.0.
+  - bosses `ceo.visit.missionTimersPausedWhileFrozen` true: 미션 제한 시간을 얼음 표시 내내 멈춥니다(전조~퇴장 뒤 복귀 전, `frozenAll`). 근무 시계는 지금처럼 ①~⑤만 멈춥니다.
+  - interrupts `INT-05.effect.cancelOnLeaveStart` true(D-070): 퇴근 단계가 시작되면 카운트다운·점검을 취소합니다.
+- **추가(메모만, 런타임 무시)**: `_t139*Note`(days 2·4, ranks budgetModel, events shopping params, npcs security_guard, bosses team_lead talk·ceo sim/greetingQte/survival/visit, rules suspicion/day), INT-05 `_cancelNote`.
+- **값 수정**
+
+  | 위치 | 이전 | 이후 |
+  |---|---|---|
+  | `days[2].dayPhaseSec` / `expectedDurationSec` | 40 / 63.3 | 44 / 67.3 |
+  | `days[4].missionsRequired` | 2 | 1 |
+  | `ranks.budgetModel.perLeaveInterruptSec` | 2.0 | 1.7 |
+  | `ranks.budgetModel.missionExpectedSec` | 13/16/15/9/7 | 12.5/17.5/14/10/7.5 (커피/화장실/낮잠/쇼핑/간식) |
+  | `ranks[manager·deputy].ceoDayPhaseReductionSec` | 6 | 12 |
+  | `ranks[general_manager·executive].ceoDayPhaseReductionSec` | 7 | 13 |
+  | `events.shopping.timeLimitSec` | 13 | 15 |
+  | `npcs.security_guard.sim.talk.catchRadius` | 1.25 | 1.6 |
+  | `npcs.security_guard.rankScaling gate.windowRatio` | 과장 0.18→0.16, 차장 0.16→0.15, 부장 0.15→0.14, 임원 0.14 | 0.20→0.19, 0.19→0.18, 0.18→0.17, 0.17 (기본 0.22 유지) |
+  | `bosses.team_lead.sim.talk.catchRadius` | 1.8 | 2.5 |
+  | `bosses.ceo.greetingQte.windowSec`(기본·과장) | 0.6 | 0.42 |
+  | `bosses.ceo.rankScaling greetingQte.windowSec` | 차장 0.55→0.5, 부장·임원 0.5 | 차장 0.42→0.40, 부장·임원 0.40 |
+  | `bosses.ceo.survival.maxSuspicionGain` | 0.15 | 0.10 |
+  | `bosses.ceo.sim.coneActiveIn` | [walk, look] | [look] |
+  | `rules.suspicion.star3PeakBelow` | 0.30 | 0.15 |
+  | `rules.day.earlyLeaveBefore` | "18:00" | "18:05" |
+  | strings `event.leave.early_bonus` | "18시 전 탈출 보너스!" | "칼같은 퇴근 보너스!" |
+  | strings `react.security_guard.early` | "아직 18시 전인데… 외근이세요?" | "벌써요? 아직 해가 쨍쨍한데… 외근이세요?" |
+
+- **검사기(§10 T-139)**: 다음 항목을 확인합니다.
+  - `missionExpectedSec` 키 = 미션 이벤트 전부.
+  - `dayInterruptReserveSec` id 존재, 0~10.
+  - `perLeaveInterruptSec` 1~3.
+  - `budgetCheck` 형식.
+  - 인사 QTE 창 최솟값 ≥ 0.4(보간 값 포함).
+  - 생존 상승 0~0.2, 대표님 `coneActiveIn` 비어 있지 않음.
+  - `leaveClockStart` < `earlyLeaveBefore` < `overtimeAt`.
+  - `star3PeakBelow` 0.1~0.3.
+  - INT-05 `cancelOnLeaveStart` true.
+- **개발 영향**
+  - 데이터만으로 동작이 바뀌는 것: 위 값 수정 전부. 특히 대표님 날 근무 44초, 18:05 기준(보너스와 INT-07 조건이 함께 바뀜), 대표님 퇴장 중 시선 없음.
+  - 코드 구현이 필요한 것: `budgetCheck`, `missionTimersPausedWhileFrozen`, `cancelOnLeaveStart` 3건. 구현 전에는 무시돼도 크래시가 없는 추가 필드입니다.
+- **QA 테스트 기대값 영향**: `t131-rules` '쇼핑 방치 → 시간초과(13초)'를 15초로 바꿔야 합니다. '18:00 전 탈출 보너스' 항목명은 18:05로 바꿔야 합니다.
