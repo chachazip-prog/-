@@ -4,10 +4,10 @@
 사용:  python3 -I molrae-toegeun/audio/tools/build.py [--no-encode]
 입력:  audio/src/sfx.json, audio/src/bgm.json, audio/src/sound-list.template.md
 출력:  audio/build/wav/*.wav (중간물, 커밋 불필요)
-       game/assets/audio/sfx/*.ogg|mp3, game/assets/audio/bgm/*.ogg|mp3
+       game/assets/audio/sfx/*.mp3, game/assets/audio/bgm/*.mp3 (D-063: MP3 단일 포맷)
        game/assets/audio/audio-manifest.json (엔진용 키·루프·재생 조건·BGM 단계)
        audio/sound-list.md (산출물 표, 자동 생성)
-의존성: Python 3 표준 라이브러리 + ffmpeg(libvorbis, libmp3lame). ffmpeg가 없으면 WAV만 만들고 경고.
+의존성: Python 3 표준 라이브러리 + ffmpeg(libmp3lame). ffmpeg가 없으면 WAV만 만들고 경고.
 결정성: 모든 난수는 시드 고정, ffmpeg는 -bitexact + 메타데이터 제거.
 """
 import copy
@@ -34,11 +34,15 @@ SRC = os.path.join(AUDIO, "src")
 WAV_DIR = os.path.join(AUDIO, "build", "wav")
 OUT = os.path.join(ROOT, "game", "assets", "audio")
 
+# D-063(T-137): MP3 단일 포맷, 모노 22,050Hz, LAME VBR. 같은 용량에서 CBR보다 SNR이 높음(sound-list.md 참고).
+# VBR도 LAME/Info 헤더에 인코더 지연·패딩이 기록되어 디코딩 길이가 원본과 같음(루프 이음새 유지).
+FMT = "mp3"
 ENCODE = {
-    "sfx": {"ogg": ["-c:a", "libvorbis", "-q:a", "2"], "mp3": ["-c:a", "libmp3lame", "-b:a", "48k"]},
-    "bgm": {"ogg": ["-c:a", "libvorbis", "-q:a", "0"], "mp3": ["-c:a", "libmp3lame", "-b:a", "32k"]},
+    "sfx": ["-c:a", "libmp3lame", "-q:a", "7"],
+    "bgm_main": ["-c:a", "libmp3lame", "-q:a", "8"],
+    "bgm_tension": ["-c:a", "libmp3lame", "-q:a", "9"],
 }
-LIMITS = {"sfx": 20 * 1024, "bgm": 300 * 1024}
+LIMITS = {"sfx": 20 * 1024, "bgm": 300 * 1024, "total": 200 * 1024}
 
 
 def resolve_refs(obj, shared):
@@ -115,14 +119,17 @@ def build_bgm(spec):
     loop_sec = total_steps * step
     n_loop = ns(loop_sec)
     tones = spec["chordTones"]
-    chords = spec["chords"]
+    # 앞에서부터 bars 마디만 사용(8마디 = 1~8마디, Am..E로 끝나 루프 시작 Am으로 해결됨). 16으로 바꾸면 원래 32초 버전
+    chords = spec["chords"][:spec["bars"]]
+    lead = spec["lead"][:spec["bars"]]
+    assert len(chords) == spec["bars"] and len(lead) == spec["bars"]
     stems = spec["stems"]
 
     # ---- main ----
     m = stems["main"]
     main = [0.0] * (n_loop + ns(1.0))
     L = m["lead"]
-    for (st, ln, nm) in parse_track(spec["lead"], spec["stepsPerBar"]):
+    for (st, ln, nm) in parse_track(lead, spec["stepsPerBar"]):
         dur = ln * step * (m["lead"]["staccato"] if ln == 1 else 0.92)
         x = chip_note(L["wave"], note_freq(nm), dur, g=L["gain"], duty=L["duty"], d=L["decay"], s=L["sustain"], r=0.03,
                       vibrato=(5.5, 0.18, 0.18) if ln > 1 else None)
@@ -295,6 +302,9 @@ def main():
         sfx_spec = json.load(f)
     with open(os.path.join(SRC, "bgm.json"), encoding="utf-8") as f:
         bgm_spec = json.load(f)
+    for a in sys.argv:  # 실험용: --bars=16 (원본 json은 그대로)
+        if a.startswith("--bars="):
+            bgm_spec["bars"] = int(a.split("=")[1])
     assert sfx_spec["sampleRate"] == SR
 
     print("[1/4] 효과음 렌더")
@@ -306,21 +316,20 @@ def main():
     if encode_on and not ff:
         print("경고: ffmpeg 없음 -> WAV만 생성. 변환 계획은 sound-list.md 참고")
     print("[3/4] 인코딩" if ff else "[3/4] 인코딩 생략")
-    manifest = {"_doc": "자동 생성(audio/tools/build.py). 수정은 audio/src/*.json에서. 경로는 game/assets/audio 기준. Phaser: this.load.audio(key, [ogg, mp3]) 순서로 넣으면 지원 포맷을 자동 선택.",
+    manifest = {"_doc": "자동 생성(audio/tools/build.py). 수정은 audio/src/*.json에서. 경로는 game/assets/audio 기준. MP3 단일 포맷(D-063): files에는 mp3만 있음. Phaser: this.load.audio(key, [mp3]).",
                 "sampleRate": SR, "sfx": [], "bgm": {}}
     rows = []
     over = []
     for item in sfx:
         c = item["cfg"]
         files, sizes = {}, {}
-        for fmt in ("ogg", "mp3"):
-            rel = "sfx/%s.%s" % (c["key"], fmt)
-            if ff:
-                os.makedirs(os.path.join(OUT, "sfx"), exist_ok=True)
-                sizes[fmt] = encode(item["wav"], os.path.join(OUT, rel), ENCODE["sfx"][fmt])
-                files[fmt] = rel
-                if sizes[fmt] > LIMITS["sfx"]:
-                    over.append((c["key"], fmt, sizes[fmt]))
+        rel = "sfx/%s.%s" % (c["key"], FMT)
+        if ff:
+            os.makedirs(os.path.join(OUT, "sfx"), exist_ok=True)
+            sizes[FMT] = encode(item["wav"], os.path.join(OUT, rel), ENCODE["sfx"])
+            files[FMT] = rel
+            if sizes[FMT] > LIMITS["sfx"]:
+                over.append((c["key"], FMT, sizes[FMT]))
         a = analyze(item)
         item["analysis"] = a
         manifest["sfx"].append({
@@ -337,18 +346,30 @@ def main():
     }
     for item in bgm:
         files, sizes = {}, {}
-        for fmt in ("ogg", "mp3"):
-            rel = "bgm/%s.%s" % (item["key"], fmt)
-            if ff:
-                os.makedirs(os.path.join(OUT, "bgm"), exist_ok=True)
-                sizes[fmt] = encode(item["wav"], os.path.join(OUT, rel), ENCODE["bgm"][fmt])
-                files[fmt] = rel
+        rel = "bgm/%s.%s" % (item["key"], FMT)
+        if ff:
+            os.makedirs(os.path.join(OUT, "bgm"), exist_ok=True)
+            sizes[FMT] = encode(item["wav"], os.path.join(OUT, rel), ENCODE["bgm_" + item["stem"]])
+            files[FMT] = rel
         manifest["bgm"][bgm_spec["key"]]["stems"][item["stem"]] = {"key": item["key"], "files": files, "durationSec": round(item["dur"], 3), "loop": True}
         bgm_rows.append((item, sizes))
-    for fmt in ("ogg", "mp3"):
-        tot = sum(s.get(fmt, 0) for _, s in bgm_rows)
-        if tot > LIMITS["bgm"]:
-            over.append(("bgm_office(합계)", fmt, tot))
+    bgm_tot = sum(s.get(FMT, 0) for _, s in bgm_rows)
+    if bgm_tot > LIMITS["bgm"]:
+        over.append(("bgm_office(합계)", FMT, bgm_tot))
+    all_tot = bgm_tot + sum(s.get(FMT, 0) for _, _, s in rows)
+    if all_tot > LIMITS["total"]:
+        over.append(("오디오 전체(합계)", FMT, all_tot))
+    if ff:
+        # 이전 포맷(OGG 등) 잔여 파일 정리: 매니페스트에 없는 오디오 파일은 삭제
+        keep = {os.path.normpath(os.path.join(OUT, r["files"][FMT])) for r in manifest["sfx"] if FMT in r["files"]}
+        keep |= {os.path.normpath(os.path.join(OUT, st["files"][FMT])) for st in manifest["bgm"][bgm_spec["key"]]["stems"].values() if FMT in st["files"]}
+        for sub in ("sfx", "bgm"):
+            d = os.path.join(OUT, sub)
+            for fn in sorted(os.listdir(d)):
+                fp = os.path.normpath(os.path.join(d, fn))
+                if fn.endswith((".ogg", ".mp3", ".wav", ".m4a")) and fp not in keep:
+                    os.remove(fp)
+                    print("  삭제(매니페스트 밖):", os.path.relpath(fp, ROOT))
 
     os.makedirs(OUT, exist_ok=True)
     with open(os.path.join(OUT, "audio-manifest.json"), "w", encoding="utf-8") as f:
@@ -356,7 +377,7 @@ def main():
         f.write("\n")
 
     print("[4/4] 분석·문서")
-    write_doc(rows, bgm_rows, bgm_spec, loop_sec)
+    write_doc(rows, bgm_rows, bgm_spec, loop_sec, all_tot)
     if over:
         print("용량 초과:", over)
         sys.exit(1)
@@ -367,22 +388,26 @@ def kb(n):
     return "%.1f" % (n / 1024.0) if n else "-"
 
 
-def write_doc(rows, bgm_rows, bgm_spec, loop_sec):
-    lines = ["| 키 | 분류 | 내용 | 길이(초) | 루프 | OGG(KB) | MP3(KB) |", "|---|---|---|---|---|---|---|"]
+def write_doc(rows, bgm_rows, bgm_spec, loop_sec, all_tot):
+    lines = ["| 키 | 분류 | 내용 | 길이(초) | 루프 | MP3(KB) |", "|---|---|---|---|---|---|"]
+    ts = 0
     for c, item, sizes in rows:
-        lines.append("| `%s` | %s | %s | %.2f | %s | %s | %s |" % (
+        lines.append("| `%s` | %s | %s | %.2f | %s | %s |" % (
             c["key"], {"tell": "전조", "feedback": "피드백"}[c["category"]], c["desc"], item["dur"],
-            "O" if c["loop"] else "-", kb(sizes.get("ogg")), kb(sizes.get("mp3"))))
+            "O" if c["loop"] else "-", kb(sizes.get(FMT))))
+        ts += sizes.get(FMT, 0)
+    lines.append("| 합계 (%d개) | | | | | %s |" % (len(rows), kb(ts)))
     sfx_table = "\n".join(lines)
 
-    lines = ["| 키 | 스템 | 길이(초) | 루프 | OGG(KB) | MP3(KB) |", "|---|---|---|---|---|---|"]
-    to, tm = 0, 0
+    lines = ["| 키 | 스템 | 길이(초) | 루프 | 인코딩 | MP3(KB) |", "|---|---|---|---|---|---|"]
+    tm = 0
     for item, sizes in bgm_rows:
-        lines.append("| `%s` | %s | %.2f | O | %s | %s |" % (item["key"], item["stem"], item["dur"], kb(sizes.get("ogg")), kb(sizes.get("mp3"))))
-        to += sizes.get("ogg", 0)
-        tm += sizes.get("mp3", 0)
-    lines.append("| 합계 | | | | %s | %s |" % (kb(to), kb(tm)))
+        q = ENCODE["bgm_" + item["stem"]]
+        lines.append("| `%s` | %s | %.2f | O | VBR q%s | %s |" % (item["key"], item["stem"], item["dur"], q[q.index("-q:a") + 1], kb(sizes.get(FMT))))
+        tm += sizes.get(FMT, 0)
+    lines.append("| 합계 | | | | | %s |" % kb(tm))
     bgm_table = "\n".join(lines)
+    total_line = "효과음 %s KB + BGM %s KB = **%s KB** (목표 %d KB 이하, 1KB = 1,024바이트)" % (kb(ts), kb(tm), kb(all_tot), LIMITS["total"] // 1024)
 
     lines = ["| 단계 | rate | main 볼륨 | tension 볼륨 | 전환(초) | 조건 |", "|---|---|---|---|---|---|"]
     for name in bgm_spec["stagePriority"][::-1]:
@@ -419,7 +444,8 @@ def write_doc(rows, bgm_rows, bgm_spec, loop_sec):
     with open(os.path.join(SRC, "sound-list.template.md"), encoding="utf-8") as f:
         tpl = f.read()
     doc = (tpl.replace("{{SFX_TABLE}}", sfx_table).replace("{{BGM_TABLE}}", bgm_table)
-           .replace("{{STAGE_TABLE}}", stage_table).replace("{{ANALYSIS}}", analysis)
+           .replace("{{STAGE_TABLE}}", stage_table).replace("{{TOTAL_LINE}}", total_line)
+           .replace("{{BARS}}", str(bgm_spec["bars"])).replace("{{ANALYSIS}}", analysis)
            .replace("{{LOOP_SEC}}", "%.1f" % loop_sec).replace("{{BPM}}", str(bgm_spec["bpm"])))
     with open(os.path.join(AUDIO, "sound-list.md"), "w", encoding="utf-8") as f:
         f.write(doc)

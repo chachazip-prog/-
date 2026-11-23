@@ -11,6 +11,13 @@ import { createHash } from 'node:crypto';
 import { readdirSync } from 'node:fs';
 import { join, resolve, dirname } from 'node:path';
 import { BOTS, contentFor, loadTables, runDay, type RunResult } from '../lib/t131';
+import type { Tables } from '../../src/content/buildDay';
+
+function ceoDays(t: Tables): Set<number> {
+  const out = new Set<number>();
+  for (const d of GENERATED) if ((contentFor(t, d) as unknown as { ceoVisit?: unknown }).ceoVisit) out.add(d);
+  return out;
+}
 
 const DATA = process.env['QA_DATA_DIR'] ?? 'data';
 const OUT = resolve('tests/.out');
@@ -18,14 +25,16 @@ const args = process.argv.slice(2);
 const wi = args.indexOf('--worker');
 
 const AUTHORED = Array.from({ length: 15 }, (_, i) => i + 1);
-const GENERATED = Array.from({ length: 15 }, (_, i) => i + 16);
+const GENERATED = Array.from({ length: 45 }, (_, i) => i + 16);
+/** 대표님 순시가 있는 날(시드를 더 돌림). 데이터에서 계산 */
+let CEO_DAYS = new Set<number>();
 
 interface Job { day: number; bot: string; seed: string; strip: boolean }
 
-function jobs(nA: number, nG: number): Job[] {
+function jobs(nA: number, nG: number, nC: number): Job[] {
   const out: Job[] = [];
   for (const day of [...AUTHORED, ...GENERATED]) {
-    const n = day <= 15 ? nA : nG;
+    const n = day <= 15 ? nA : CEO_DAYS.has(day) ? nC : nG;
     for (let s = 0; s < n; s++) for (const bot of Object.keys(BOTS)) {
       const seed = `qa-${day}-${s}`;
       out.push({ day, bot, seed, strip: false });
@@ -36,11 +45,12 @@ function jobs(nA: number, nG: number): Job[] {
 }
 
 if (wi >= 0) {
-  const k = Number(args[wi + 1]), of = Number(args[wi + 2]), nA = Number(args[wi + 3]), nG = Number(args[wi + 4]);
+  const k = Number(args[wi + 1]), of = Number(args[wi + 2]), nA = Number(args[wi + 3]), nG = Number(args[wi + 4]), nC = Number(args[wi + 5]);
   const tables = loadTables(DATA);
+  CEO_DAYS = ceoDays(tables);
   const cache = new Map<number, ReturnType<typeof contentFor>>();
   const file = join(OUT, `t131-bal-${k}.jsonl`);
-  const all = jobs(nA, nG);
+  const all = jobs(nA, nG, nC);
   let buf: string[] = [];
   for (let j = k; j < all.length; j += of) {
     const jb = all[j]!;
@@ -55,14 +65,14 @@ if (wi >= 0) {
   if (buf.length) appendFileSync(file, buf.join('\n') + '\n');
   process.exit(0);
 } else {
-  const nA = Number(args[0] ?? 300), nG = Number(args[1] ?? 100), W = Number(args[2] ?? 4);
+  const nA = Number(args[0] ?? 300), nG = Number(args[1] ?? 100), W = Number(args[2] ?? 4), nC = Number(args[3] ?? nG);
   mkdirSync(OUT, { recursive: true });
   for (let k = 0; k < W; k++) { const f = join(OUT, `t131-bal-${k}.jsonl`); if (existsSync(f)) rmSync(f); }
   const t0 = Date.now();
   const self = fileURLToPath(import.meta.url);
   let left = W;
   for (let k = 0; k < W; k++) {
-    const cp = fork(self, ['--worker', String(k), String(W), String(nA), String(nG)], { env: process.env });
+    const cp = fork(self, ['--worker', String(k), String(W), String(nA), String(nG), String(nC)], { env: process.env });
     cp.on('exit', () => { if (--left === 0) aggregate(W, nA, nG, (Date.now() - t0) / 1000); });
   }
 }
@@ -142,12 +152,36 @@ function aggregate(W: number, nA: number, nG: number, sec: number): void {
     const shopSec = rs.flatMap((r) => r.missions.filter((m) => m.id === 'shopping' && m.state === 'done' && m.sec !== undefined).map((m) => m.sec!));
     by[bot] = {
       all: groupStats(rs), d1_5: groupStats(rs.filter((r) => r.day <= 5)), d1_10: groupStats(rs.filter((r) => r.day <= 10)), d6_15: groupStats(rs.filter((r) => r.day >= 6 && r.day <= 15)),
-      d16_30: groupStats(rs.filter((r) => r.day >= 16)), staff: groupStats(rs.filter((r) => r.day >= 6 && r.day <= 15)), perDay, causes, gain, mis,
+      d16_30: groupStats(rs.filter((r) => r.day >= 16 && r.day <= 30)), d31_60: groupStats(rs.filter((r) => r.day >= 31)),
+      ceoDays: groupStats(rs.filter((r) => r.ceo.visit !== 'none')), staff: groupStats(rs.filter((r) => r.day >= 6 && r.day <= 15)), perDay, causes, gain, mis,
       shopSec: { n: shopSec.length, mean: mean(shopSec), min: Math.min(...shopSec), p90: q(shopSec, 0.9) },
       gate: { stageSecMean: mean(rs.filter((r) => r.gateStageSec > 0).map((r) => r.gateStageSec)), riseSum: rs.reduce((a, r) => a + r.gateStageRise, 0), nonStaleRise: rs.reduce((a, r) => a + r.gateStageNonStaleRise, 0), quickPassRise: rs.filter((r) => r.gateStageSec > 0 && r.gateStageSec <= 3).reduce((a, r) => a + r.gateStageRise, 0) },
       int08: { ticks: rs.reduce((a, r) => a + r.int08TellTicks, 0), rise: rs.reduce((a, r) => a + r.int08TellRise, 0) },
       int04Wait: { n: rs.filter((r) => r.int04BlockWaitSec !== null).length, mean: mean(rs.filter((r) => r.int04BlockWaitSec !== null).map((r) => r.int04BlockWaitSec!)) },
       closeCallsMean: mean(rs.map((r) => r.closeCalls)),
+      ceo: (() => {
+        const v = rs.filter((r) => r.ceo.visit !== 'none');
+        const st = v.filter((r) => r.ceo.started);
+        const qte: Record<string, number> = {};
+        for (const r of st) qte[r.ceo.qte ?? 'none'] = (qte[r.ceo.qte ?? 'none'] ?? 0) + 1;
+        return {
+          days: v.length, started: st.length, cancelled: v.filter((r) => r.ceo.visit === 'cancelled').length,
+          eyeContactPct: pct(st.filter((r) => r.ceo.eyeContact).length, st.length),
+          caughtDuringPct: pct(st.filter((r) => r.ceo.caughtDuring).length, st.length),
+          caughtAllPct: pct(st.filter((r) => r.outcome === 'caught').length, st.length),
+          caughtDuringShareOfCaught: pct(st.filter((r) => r.ceo.caughtDuring).length, st.filter((r) => r.outcome === 'caught').length),
+          gainMean: mean(st.map((r) => r.ceo.gainDuring)), gainUnder015Pct: pct(st.filter((r) => r.ceo.gainDuring < 0.15).length, st.length),
+          qte, freezeOtherGazeTicks: v.reduce((a, r) => a + r.ceo.freezeOtherGazeTicks, 0), clockViol: rs.reduce((a, r) => a + r.ceo.clockViol, 0),
+          missionClockViol: rs.reduce((a, r) => a + r.ceo.missionClockViol, 0), resumeOnsets: rs.reduce((a, r) => a + r.ceo.resumeOnsets, 0), resumeNoTell: rs.reduce((a, r) => a + r.ceo.resumeNoTell, 0),
+        };
+      })(),
+      elevCeo: (() => {
+        const e = rs.filter((r) => r.elevCeo.started);
+        const qte: Record<string, number> = {};
+        for (const r of e) qte[r.elevCeo.qte ?? 'none'] = (qte[r.elevCeo.qte ?? 'none'] ?? 0) + 1;
+        return { started: e.length, qte, caughtAfter: e.filter((r) => r.elevCeo.caughtAfter).length };
+      })(),
+      acc: { joined: rs.reduce((a, r) => a + r.acc.joined, 0), done: rs.reduce((a, r) => a + r.acc.doneWithAcc, 0), points: rs.reduce((a, r) => a + r.acc.pointsWithAcc, 0), base: rs.reduce((a, r) => a + r.acc.basePointsWithAcc, 0) },
     };
   }
   out['byBot'] = by;

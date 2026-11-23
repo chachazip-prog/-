@@ -47,12 +47,19 @@ export interface BotParams {
   readonly talkReact: 'none' | 'stop' | 'evade';
   /** 말걸기 반응 지연을 고정(초). 없으면 reactMu/Sd */
   readonly talkReactSec?: number;
+  /** 인사 QTE 반응(단순 반응시간, '!' 표시 후) */
+  readonly qteMu: number;
+  readonly qteSd: number;
+  /** QTE '?' 단계에서 성급히 누를 확률 */
+  readonly qteEarly: number;
+  /** 공범 제안 수락 확률 */
+  readonly acceptOffer: number;
 }
 
 export const BOTS: Record<string, BotParams> = {
-  straight: { name: '직진', disguise: false, reactMu: 0, reactSd: 0, missRate: 1, timingSd: 0.10, resumeDelay: 0, extraMissionProb: 1, restroomBonusSec: 2, talkReact: 'none' },
-  disguise: { name: '위장(캐주얼 기준)', disguise: true, reactMu: 0.38, reactSd: 0.10, missRate: 0.05, timingSd: 0.10, resumeDelay: 0.2, extraMissionProb: 0.5, restroomBonusSec: 2, talkReact: 'stop' },
-  novice: { name: '초보(반응 느림)', disguise: true, reactMu: 0.65, reactSd: 0.15, missRate: 0.2, timingSd: 0.15, resumeDelay: 0.1, extraMissionProb: 0, restroomBonusSec: 0, talkReact: 'stop' },
+  straight: { name: '직진', disguise: false, reactMu: 0, reactSd: 0, missRate: 1, timingSd: 0.10, resumeDelay: 0, extraMissionProb: 1, restroomBonusSec: 2, talkReact: 'none', qteMu: 0.38, qteSd: 0.10, qteEarly: 0.02, acceptOffer: 1 },
+  disguise: { name: '위장(캐주얼 기준)', disguise: true, reactMu: 0.38, reactSd: 0.10, missRate: 0.05, timingSd: 0.10, resumeDelay: 0.2, extraMissionProb: 0.5, restroomBonusSec: 2, talkReact: 'stop', qteMu: 0.38, qteSd: 0.10, qteEarly: 0.02, acceptOffer: 0.6 },
+  novice: { name: '초보(반응 느림)', disguise: true, reactMu: 0.65, reactSd: 0.15, missRate: 0.2, timingSd: 0.15, resumeDelay: 0.1, extraMissionProb: 0, restroomBonusSec: 0, talkReact: 'stop', qteMu: 0.55, qteSd: 0.15, qteEarly: 0.06, acceptOffer: 0.3 },
 };
 
 const ACTION_EST: Record<string, number> = { pour_tap_stop: 2.5, trip_safe_zone: 5.5, nap_tap_toggle: 6, screen_swap_tap: 8.5, rhythm_tap: 6 };
@@ -88,6 +95,11 @@ export class Bot {
   private doExtra: boolean;
   private lastRetarget = -1;
   private evadeTarget: { x: number; y: number } | null = null;
+  private freezeAt = Infinity;
+  private qteObj: unknown = null;
+  private qteAt = Infinity;
+  private qteEarlyAt = Infinity;
+  private offerSeen: unknown = null;
   /** 말걸기 반응 로그: 전조 시작마다 반응했는가 */
   readonly talkReactions: { npc: string; t: number }[] = [];
 
@@ -152,6 +164,29 @@ export class Bot {
     const talkFire = now >= this.reactTalkAt;
     if (talkFire) this.reactTalkAt = Infinity;
     const clearFor = now - this.clearSince;
+
+    // 1-2) 인사 QTE('?' → '!' 후 짧게 탭). QTE 중 다른 탭은 모두 QTE 입력이 되므로 다른 행동 금지
+    if (sim.qteActive && sim.qte) {
+      const q = sim.qte;
+      if (this.qteObj !== q) {
+        this.qteObj = q; this.qteAt = Infinity;
+        this.qteEarlyAt = this.r.chance(P.qteEarly) ? now + this.r.range(0, q.preCueSec) : Infinity;
+      }
+      if (q.phase === 'precue' && now >= this.qteEarlyAt) { sim.tapQte(0.1); return; }
+      if (q.phase === 'window' && this.qteAt === Infinity) this.qteAt = now + Math.max(0.12, P.qteMu + P.qteSd * gauss(this.r));
+      if (q.phase === 'window' && now >= this.qteAt) sim.tapQte(0.1);
+      return;
+    }
+    // 1-3) 대표님 얼음(전조 1.0초: 비네트·BGM 정지·모두 고개 듦) → 이동·행동 멈춤(모든 봇 공통, GDD §16 '얼음 중 이동 금지')
+    if (sim.frozen) { if (this.freezeAt === Infinity) this.freezeAt = now + this.delay(); } else this.freezeAt = Infinity;
+    if (sim.frozen && now >= this.freezeAt) {
+      if (p.mode === 'moving') { this.stop(); return; }
+      if (sim.activity) { this.playActivity(true); return; }
+      return;
+    }
+    if (sim.frozen) { this.plan(); return; }
+    // 1-4) 공범 제안
+    if (sim.offer && this.offerSeen !== sim.offer) { this.offerSeen = sim.offer; if (this.r.chance(P.acceptOffer)) sim.acceptOffer(); }
 
     // 2) 게이트
     if (sim.phase === 'leave' && sim.leaveStage === 'gate') { this.gate(); return; }
@@ -399,6 +434,10 @@ export interface RunResult {
   gateStageRise: number; gateStageNonStaleRise: number; gateStageSec: number;
   int08TellRise: number; int08TellTicks: number;
   int04BlockWaitSec: number | null;
+  ceo: { visit: string; started: boolean; eyeContact: boolean; qte: string | null; caughtDuring: boolean; gainDuring: number; freezeOtherGazeTicks: number; clockViol: number; missionClockViol: number; resumeNoTell: number; resumeOnsets: number };
+  elevCeo: { started: boolean; qte: string | null; caughtAfter: boolean };
+  acc: { joined: number; doneWithAcc: number; pointsWithAcc: number; basePointsWithAcc: number };
+  continued: boolean;
   suspGain: Record<string, number>;
   talk: Record<string, TalkStat>;
   fair: Fairness;
@@ -437,6 +476,11 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
   let gateRise = 0, gateNonStale = 0, gateSec = 0, int08Rise = 0, int08Ticks = 0;
   let int04Wait: number | null = null; let int04Active = false;
   let caughtCause: string | null = null;
+  const ceo = { visit: 'none', started: false, eyeContact: false, qte: null as string | null, caughtDuring: false, gainDuring: 0, freezeOtherGazeTicks: 0, clockViol: 0, missionClockViol: 0, resumeNoTell: 0, resumeOnsets: 0 };
+  const elevCeo = { started: false, qte: null as string | null, caughtAfter: false };
+  const acc = { joined: 0, doneWithAcc: 0, pointsWithAcc: 0, basePointsWithAcc: 0 };
+  let freezeEndAt = -1, wasFrozen = false;
+  let accJoinedMission: string | null = null;
   const talkWarnAt = new Map<PatrolNpc, { t: number; armed: boolean }>();
   let postTalkUntil = -1;
   const keyOf = (n: PatrolNpc) => `${n.def.actorId ?? n.def.id}`;
@@ -446,7 +490,19 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
     bot.act();
     const before = f.suspicion.value;
     const stageBefore = sim.leaveStage, phaseBefore = sim.phase;
+    const clockPausedBefore = sim.clockPaused, dayTimeBefore = sim.dayTime;
+    const mElapsed = sim.missions.map((m) => (m.startedAt !== null ? f.time - m.startedAt : null));
+    const ceoActiveBefore = !['none', 'pending', 'skipped', 'done', 'cancelled'].includes(sim.ceoState);
     sim.step();
+    if (clockPausedBefore && sim.clockPaused && sim.phase === 'day') {
+      if (Math.abs(sim.dayTime - dayTimeBefore) > 1e-12) ceo.clockViol++;
+      sim.missions.forEach((m, k) => { const e0 = mElapsed[k]; if (e0 !== null && e0 !== undefined && m.startedAt !== null && Math.abs((f.time - m.startedAt) - e0) > 1e-9) ceo.missionClockViol++; });
+    }
+    if (ceoActiveBefore && f.suspicion.value > before) ceo.gainDuring += f.suspicion.value - before;
+    if (ceoActiveBefore && (sim.phase as string) === 'ended' && sim.result?.outcome === 'caught') ceo.caughtDuring = true;
+    if (sim.frozen) f.npcs.forEach((n, k) => { if (f.seeing[k] && n.def.actorId !== 'ceo') ceo.freezeOtherGazeTicks++; });
+    if (wasFrozen && !sim.frozen) freezeEndAt = f.time;
+    wasFrozen = sim.frozen;
     qcam.step(f.player.y);
     const dayEv: DayEvent[] = sim.drainEvents();
     const flEv: SimEvent[] = sim.drainFloorEvents();
@@ -466,6 +522,13 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
       if (e.type === 'interrupt' && e.id === 'INT-04' && sim.phase === 'leave') int04Active = true;
       if (e.type === 'toast' && e.key === 'event.leave.early_bonus') earlyBonus = true;
       if (e.type === 'closeCall') closeCalls++;
+      if (e.type === 'ceo' && e.stage === 'tell') ceo.started = true;
+      if (e.type === 'qte' && e.stage === 'result') { if (e.source === 'ceo') ceo.qte = e.result ?? null; else elevCeo.qte = e.result ?? null; }
+      if (e.type === 'interrupt' && e.id === 'INT-11') elevCeo.started = true;
+      if (e.type === 'offerEnd' && e.accepted) accJoinedMission = e.missionId;
+      if (e.type === 'accomplice' && e.action === 'join') acc.joined++;
+      if (e.type === 'accomplice' && e.action === 'leave') accJoinedMission = null;
+      if (e.type === 'missionDone' && accJoinedMission === e.id) { acc.doneWithAcc++; acc.pointsWithAcc += e.points; acc.basePointsWithAcc += content.missions.find((m) => m.id === e.id)?.reward.slackPoints ?? 0; }
       void INSTANT_DAY_EVENTS;
     }
     if (activitySnackNoise(flEv, dayEv)) instant ||= 'snack_noise';
@@ -541,6 +604,7 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
         else if (canSee(f.map, { x: s.x, y: s.y }, s.facing, n.cone, f.player.pos)) cause = 'playerEnter';
         else cause = 'npcAdvance';
         fair.onsetCauses[cause] = (fair.onsetCauses[cause] ?? 0) + 1;
+        if (freezeEndAt >= 0 && now - freezeEndAt <= 3) { ceo.resumeOnsets++; if (cause !== 'tellLook' && cause !== 'playerEnter') ceo.resumeNoTell++; }
         const window = h.slice(-LEAD);
         const ok = window.length >= LEAD && window.every(Boolean);
         if (!ok) {
@@ -584,6 +648,11 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
       ts('postTalk').postHoldViol++;
     }
     if (delta > 1e-12) {
+      if (!instant && !anySee) {
+        if (ceoActiveBefore || sim.frozen) instant = 'ceo_freeze_rule';
+        else if (sim.follower) instant = 'accomplice_seen';
+        else if (dayEv.some((e) => e.type === 'qte' && e.stage === 'result')) instant = 'qte_penalty';
+      }
       if (!anySee && !instant) fair.unexplainedRiseTicks++;
       const cat = instant ? instant.split(':')[0]! : `gaze_${sim.posture}`;
       suspGain[cat] = (suspGain[cat] ?? 0) + delta;
@@ -612,6 +681,9 @@ export function runDay(content0: DayContent, botP: BotParams, seed: string, opts
     gateStageRise: gateRise, gateStageNonStaleRise: gateNonStale, gateStageSec: gateSec,
     int08TellRise: int08Rise, int08TellTicks: int08Ticks, int04BlockWaitSec: int04Wait,
     suspGain, talk, fair,
+    ceo: { ...ceo, visit: r?.ceoVisit ?? 'none', eyeContact: r?.eyeContact ?? false },
+    elevCeo: { ...elevCeo, caughtAfter: elevCeo.started && r?.outcome === 'caught' },
+    acc, continued: r?.continued ?? false,
   };
 }
 
