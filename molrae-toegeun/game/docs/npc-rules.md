@@ -1,54 +1,102 @@
-# NPC 전조·말걸기·입력 규칙 (구현 기준, T-127)
+# NPC·하루 규칙 (구현 기준, T-127 → T-129 데이터 v2)
 
-코드 위치: `src/core/patrol.ts`, `src/core/floorSim.ts`, `src/core/player.ts`, `src/core/suspicion.ts`.
+코드 위치: `src/core/patrol.ts`(NPC), `src/core/floorSim.ts`(이동·시선·의심), `src/core/player.ts`, `src/core/suspicion.ts`, `src/core/camera.ts`, `src/core/day/`(하루 규칙), `src/content/buildDay.ts`(데이터 조립).
+
+## 0. 데이터 흐름 (T-129)
+
+- `game/data/*.json` v2 → `buildDayContent(tables, day)`(순수 함수) → `DayContent` → `new DaySim(content, { view })`.
+- 씬은 `src/content/index.ts`의 `loadDayContent(day)`를 쓰고, QA는 fs로 읽은 테이블을 같은 함수에 넘기면 됩니다(`scripts/smoke-day.ts`가 예시).
+- 16일차 이후는 `generateDay()`(days.generator 요약 구현).
+- `src/dev/protoFloor.ts`는 QA 코어 테스트(T-124) 호환용으로만 남겨 둡니다. 앱은 쓰지 않습니다.
+- 데이터에 값이 없을 때만 쓰는 기본값: `TALK_DEFAULTS`(patrol.ts), `DEFAULTS`(buildDay.ts). 현재 데이터(T-132)에는 모두 값이 있습니다.
 
 ## 1. 방향 전환 전조 (BUG-001, D-038 → D-044 조건부)
 
-대상 전환: 경로 모퉁이(노드), 대기·돌아보기 후 재출발, 말걸기 종료 후 원래 방향 복귀.
+- 대상: 경로 모퉁이, 대기·돌아보기 후 재출발, 말걸기 종료 후 원래 방향 복귀.
+- 판정(`FloorSim.turnNeedsTell`): 새 방향의 경고 콘(거리 + `threat.approachExtraRange`, 반각 + `approachExtraAngleDeg`, 가림 무시) 안에 플레이어가 있으면 전조.
+- v2: 전환 후 상태에서 콘이 꺼져 있으면(`coneActiveIn`에 그 상태가 없음) 전조 없이 회전합니다. 전조 길이는 `rules.sight.cornerTurnTellSec`.
 
-판정(`FloorSim.turnNeedsTell`):
-- 새 방향의 **경고 콘** 안에 플레이어가 있으면 전조를 붙입니다.
-  - 경고 콘 = 실제 콘 거리 + `rules.threat.approachExtraRange`, 반각 + `rules.threat.approachExtraAngleDeg`
-  - 가림(벽·엄폐물)은 무시합니다(보수적).
-- 전조가 필요하면 NPC가 그 자리에 멈춰 `tell`(길이 `tellSec`, 새 방향을 점선으로 표시) → 회전(`look`, 유지 0초 = 1스텝) → 원래 동작을 재개합니다.
-- 필요 없으면 즉시 회전합니다.
-- 경고 콘은 실제 콘을 항상 포함합니다. 따라서 전조 없이 회전한 직후 실제 시선에 플레이어가 들어오는 경우는 없습니다.
-- 화면 밖 경고의 `turning`(빨강 화살표)도 같은 콘을 씁니다.
+## 2. 앉은 모드·범위 추첨·페이크 (X1, X2)
 
-측정(무작위 탭 300판, 300분):
-- 방향 전환 전조 분당 5.45회
-- 돌아보기 전조는 기존과 같이 분당 11.2회
-- 전환마다 무조건 전조를 붙였다면 분당 약 32회
+- `patrols.kind = seated` → 대기(`waitSec` 또는 `useActorIdle` → `sim.idleSecRange`) → (통화 기회 `opportunities.phone_call.probPerCycle`) → 전조(`tellSecRange`) → 돌아보기(`lookSecRange`) → 복귀(`rules.sight.returnSec`, 웨이포인트 `facing`) → 대기 ….
+- 콘은 `sim.coneActiveIn`에 있는 상태에서만 켜집니다(선배·팀장 = `look`만).
+- 페이크: 전조 후 시선 없이 `afterFakeSec` 멈춤. 확률 = min(`chance`, `capChance`, `rules.fake.absoluteCapProb`), `noConsecutiveFakes`면 직전이 페이크일 때 반드시 진짜.
+- 연속 두 번 보기: 첫 look 뒤 `gapSec` 쉬고 `secondTellSec` 전조 → 두 번째 look.
+- 걷는 사람의 정지 둘러보기·뒤돌아보기 전조는 `stopLookTellSec`(있으면).
+- 대기 0초·돌아보기 없음·웨이포인트 1개인 자리(공범 동료 등)는 계속 앉아 있습니다.
 
-## 2. 말걸기 (BUG-002 / D-043, BUG-003 / D-039)
+## 3. 말걸기 (D-043, D-054, X3)
 
-1. 플레이어가 `talk.radius` 안에 들어오면 말걸기 **전조**가 시작됩니다(`tell`, `tellKind='talk'`, `talkWarn` 이벤트).
-   - 길이 = max(`talk.warnSec`(0.5), `tellSec`)
-   - NPC는 멈추고 콘 방향은 그대로입니다.
-   - 화면에 말풍선 '저기요?'가 뜨고, 플레이어 쪽으로 2px 다가서는 동작을 보여 줍니다(표시 전용).
-   - 플레이어는 계속 조작할 수 있습니다.
-2. 전조가 끝날 때 결과가 갈립니다.
-   - 플레이어가 `talk.catchRadius` 안에 있으면 `talk`가 성립합니다. NPC가 플레이어를 보고, 플레이어는 강제 정지(`talked`)합니다.
-   - 밖에 있으면 취소됩니다. NPC는 그쪽을 돌아보고(`look`), 쿨다운 `cooldownSec`이 적용됩니다.
-3. 말걸기 중에는 의심이 오르지 않습니다(`exposureRate('talked') = 0`, 코드로 고정). 말 거는 NPC의 시선도 판정에서 빠집니다.
-4. 말걸기가 끝나면 이동 중이던 경로와 목적지를 그대로 재개합니다(D-039).
-   - 이동 중이 아니었다면 `idle`이 됩니다.
-   - NPC는 원래 방향으로 돌아갑니다(1의 전환 규칙 적용).
-   - `talk.releaseSec` 동안 그 NPC의 시선은 의심에 반영하지 않습니다. 보내 준 직후 바로 다시 들키지 않게 하기 위해서입니다.
+1. 플레이어가 `talk.noticeRadius` 안에 들어오면 전조(말풍선 `warnLineKey`, 길이 `talk.tellSec`, 최소 0.5초)가 시작됩니다. 단 다음이면 시작하지 않습니다.
+   - 플레이어가 멈춤·위장 중(`skipIfPlayerDisguised` + `anyStopIsDisguised`)
+   - 그 말걸기의 방해(`enabledBy`)가 그날 그 단계(근무/퇴근)에 없음
+   - `onlyWhilePlayerAway`인데 플레이어가 자리에 있음
+   - `onlyWhen`/조건(`leave_phase_before_1800` 등) 불충족, `maxPerDay`·`cooldownSec` 초과
+   - 미션 행동 중이거나 게이트를 통과한 뒤
+2. 전조가 끝날 때 다음을 모두 만족하면 말걸기가 성립합니다(플레이어 강제 정지).
+   - 전조 중 한 번이라도 `talk.radius` 안에 들어왔음
+   - 지금 `catchRadius` 안에 있음
+   - 위장 중이 아님
+3. 성립하지 않으면 취소됩니다.
+   - 위장했거나 발동 반경에 들어오지 않았으면 조용히 원래 상태로 돌아가고 `dodgedLineKey`를 말합니다.
+   - 반경 안에 들어왔다가 피해 나갔으면 그쪽을 돌아봅니다(전조 → look, D-054).
+4. 말걸기 중 의심 상승은 0입니다(코드 고정, `talkedPerSec` 폐지). 탭하면 맞장구로 `nodShortenSec`만큼 줄어듭니다(최소 `minDurationSec`).
+5. 끝나면 경로를 재개합니다(D-039). 재개 시점에 누군가의 콘 안이면 `movement.postTalkHoldSec` 동안 위장 상태로 기다렸다 출발합니다. 말을 건 NPC의 시선은 `releaseSec` 동안 의심에 반영하지 않습니다.
 
-## 3. 탭 결과 (BUG-004)
+## 4. 멈춤 = 위장, 위장 정체 (X5)
+
+- `suspicion.anyStopIsDisguised`: idle도 위장으로 계산합니다(도착 직후 `disguiseSettleSec` 동안은 이동 상승률).
+- 연속 노출이 `disguiseStaleAfterSec`를 넘으면 `disguiseStalePerSec` × 배율. 엄폐물(legend `cover`) 옆이면 면제.
+- 멈춘 상태에서 내 캐릭터를 탭하면 원래 목적지로 이어 갑니다(`input.tapOnSelfWhileStopped`).
+
+## 5. 경고 단계·화면 밖 판정 (X6, X10)
+
+- 카메라는 코어(`CameraModel`, maps.camera)가 소유하고, 씬은 그 값을 스크롤로 씁니다. 화면 안 = HUD가 가리지 않는 지도 행(`config/display.ts` `CAMERA_VIEW`).
+- `offscreenSourceNoGain`: 콘 주인이 화면 밖이면 의심 판정에서 빠집니다(`seeing=false`).
+- `threatOfNpc`:
+  - `turning` = 전조 중이고 돌아볼 방향의 실제 콘이 가림을 반영해 플레이어를 덮음
+  - `approaching` = (넓은 콘 안 + 가림 없음) 또는 (통행 경로 ≤ `approachPathTilesWithin`이고 줄어드는 중)
+
+## 6. 순찰 종료·등장·길막 (X7, X8)
+
+- `loop:false`면 마지막 웨이포인트에서 끝납니다. 이후 `despawnAtEnd`면 제거하고, `thenPatrol`이 있으면 같은 자리에서 그 순찰로 교체합니다.
+- `spawnTellSec` 동안은 'spawn'(정지, 시선 없음)입니다.
+- `holdForReport`/`holdForQte` 웨이포인트에서는 'hold' 상태로 `release()`를 기다립니다.
+- 플레이어 통행:
+  - 사람이 서 있거나 앉은 칸(배경 동료 `blocksPlayer:false` 제외)과 게이트(`gateOnly`, 태그 성공 전)는 막힙니다.
+  - 다음 칸이 막히면 `blockedWaitSec` 기다립니다. 그다음 `rerouteMaxExtraTiles` 안의 우회로가 있으면 우회하고, 없으면 `rerouteRecheckSec`마다 다시 봅니다. 기다리는 동안은 위장으로 계산합니다.
+
+## 7. 하루 (X9, `DaySim`)
+
+- 단계: 인트로(`day.introSec`) → 근무(`dayPhaseSec`, 시계 09:00→17:48) → 퇴근(1초 = 1분, 18:18 = 야근) → 결과.
+- 업무 게이지: 자리에 앉아 멈춰 있고 미션이 없을 때 `work.fillPerSec`.
+- 미션은 `unlockAtSec`에 열립니다. 칩을 탭하면 이동하고, 도착하면 행동을 시작합니다(장소를 직접 탭해 도착해도 시작).
+  - 제한 시간은 자리를 뜬 순간부터 셉니다.
+  - `return_to_seat` 미션은 자리로 돌아와야 완료됩니다.
+- 상태별 상승률: 자리 업무 `seatedWorkingPerSec`, 행동 `activityPerSec`(낮잠 고개 반쯤이면 ×`headDownVisibleStateMultiplier`), 일시정지 `activityPausedPerSec`, 화장실 칸 0, 게이트 통과 후 0.
+- 퇴근 순서:
+  1. 가방: 자리에서 `pack.sec`, 탭하면 멈춤.
+  2. 게이트 사용 칸에 서면 막대가 나타납니다. 창 안에서 탭하면 통과합니다.
+     - 실패하면 `beepSuspicion`이 오르고 경비가 전조 후 돌아봅니다.
+     - `maxAttempts`번 실패하면 야근입니다.
+  3. 엘리베이터 앞에서 `waitSecRange` 동안 기다립니다.
+- 별:
+  - 적발: ★0
+  - 야근: ★1
+  - 업무 미달: ★1(야근 제목)
+  - 필수 미션 미달: ★1(찝찝한 칼퇴)
+  - 칼퇴: ★2
+  - 최고 의심이 `star3PeakBelow` 미만인 칼퇴: ★3
+
+## 8. 탭 결과 (BUG-004)
 
 | 결과 | 의미 |
 |---|---|
-| `here` | 탭한 타일(보정 결과 포함)이 지금 서 있는 타일 중심. 상태 변화 없음(위장은 위장 유지). '못 가요' 피드백 대상 아님 |
-| `unreachable` | 보정 반경 안에 통행 타일이 없거나 경로가 없음 |
+| `here` | 탭한 타일이 지금 서 있는 타일 중심. 상태 변화 없음 |
+| `unreachable` | 보정 반경 안에 통행 타일이 없거나 경로가 없음 → '거긴 못 가요'(`hud.unreachable`) |
+| `nod` | 말걸기 중 맞장구 |
 
-## 4. 고정 스텝 (BUG-005)
+## 9. 고정 스텝 (BUG-005) · 결과 입력 보호 (BUG-006)
 
-- `advance()`는 잔여 시간이 `h - 1e-9`초 이상이면 스텝을 진행합니다.
-- 잔여가 최대 -1e-9초까지 음수가 되는 것을 허용해 시간 총합을 보존합니다.
-
-## 5. 결과 화면 입력 보호 (BUG-006)
-
-- 결과 화면이 뜬 뒤 `resultInputGuardSec`(0.6초) 동안 탭을 무시합니다.
-- 값은 임시로 `src/dev/protoFloor.ts`에 있습니다.
+- `advance()`는 잔여가 `h - 1e-9`초 이상이면 스텝을 진행합니다.
+- 결과 화면이 뜬 뒤 `rules.input.resultInputGuardSec` 동안 탭을 무시합니다.
