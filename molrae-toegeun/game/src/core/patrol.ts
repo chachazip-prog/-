@@ -55,6 +55,8 @@ export interface WaypointDef {
   readonly holdForQte?: boolean;
   readonly holdForReport?: boolean;
   readonly lookIsRecheck?: boolean;
+  /** 이 지점 돌아보기 전조 길이(초). 없으면 stopLookTellSec·tellSec(범위). 대표님 재확인 = sim.fake.tellSec(T-136 ③) */
+  readonly lookTellSec?: number;
 }
 
 export interface TalkDef {
@@ -379,7 +381,7 @@ export class PatrolNpc {
     }
     const chance = wp.lookChance ?? this.def.lookChance;
     if (waitSec > 0 && rng.chance(chance)) {
-      this.startLook(DIR_ANGLE[this.pickDir(wp, rng)], 'wait', rng, {}, true);
+      this.startLook(DIR_ANGLE[this.pickDir(wp, rng)], 'wait', rng, wp.lookTellSec !== undefined ? { tellSec: wp.lookTellSec } : {}, true);
     } else if (waitSec > 0) {
       this.setMode('wait');
     } else {
@@ -404,7 +406,7 @@ export class PatrolNpc {
     }
     const wp = this.def.waypoints[this.wpIndex]!;
     const chance = wp.lookChance ?? this.def.lookChance;
-    if (rng.chance(chance)) this.startLook(DIR_ANGLE[this.pickDir(wp, rng)], 'next', rng);
+    if (rng.chance(chance)) this.startLook(DIR_ANGLE[this.pickDir(wp, rng)], 'next', rng, wp.lookTellSec !== undefined ? { tellSec: wp.lookTellSec } : {});
     else this.proceed();
   }
 

@@ -7,11 +7,14 @@ import { getAdsTable } from '../content';
 import type { Platform } from '../platform';
 import { loadAdCounters, saveAdCounters } from '../state/progress';
 import {
-  canOfferRewarded, decideInterstitial, onGameFinished, onInterstitialShown, onRewardedShown, parseInterstitialRules, parseRewardedRules,
+  canOfferRewarded, decideInterstitial, onGameFinished, onInterstitialShown, onRewardedShown, parseInterstitialRules, parseRewardedRules, rollDay,
   type RewardedPlacement,
 } from './interstitialPolicy';
 
 export type RewardedOutcome = 'rewarded' | 'not_completed' | 'unavailable';
+
+/** '오늘 광고 끝' 안내를 이미 띄운 날(광고 카운터 날짜). 앱 실행 동안 하루 1회(D-066) — 저장하지 않음 */
+let capNoticeDate: string | null = null;
 
 export class AdFlow {
   private readonly rewarded = parseRewardedRules(getAdsTable());
@@ -31,8 +34,22 @@ export class AdFlow {
   async rewardedDailyCapReached(): Promise<boolean> {
     if (!this.platform.ads.isSupported()) return false;
     const now = Date.now();
-    const c = await loadAdCounters(this.platform.storage, now);
+    const c = rollDay(await loadAdCounters(this.platform.storage, now), now);
     return c.rewardedShownToday >= this.rewarded.maxPerDay;
+  }
+
+  /**
+   * D-066: 하루 보상형 상한에 닿았으면 안내 문구 키(ads.rewarded.dailyCapReachedKey)를 돌려준다. 같은 날 두 번째부터는 null(토스트 1회).
+   * 보상형 버튼 자체는 canOffer가 false라 숨겨진다.
+   */
+  async dailyCapNoticeKey(): Promise<string | null> {
+    const key = this.rewarded.dailyCapReachedKey;
+    if (!key || !this.platform.ads.isSupported()) return null;
+    const now = Date.now();
+    const c = rollDay(await loadAdCounters(this.platform.storage, now), now);
+    if (c.rewardedShownToday < this.rewarded.maxPerDay || capNoticeDate === c.countersDate) return null;
+    capNoticeDate = c.countersDate;
+    return key;
   }
 
   /** 보상형 노출(사용자가 버튼을 누른 뒤). 보상 수령 시에만 'rewarded' */

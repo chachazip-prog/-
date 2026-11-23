@@ -24,8 +24,6 @@ export const DEFAULTS = {
   talkDodgedKey: 'talk.dodged_default',
   /** 말걸기 전조 최소(rules.talk.tellSecMin이 있으면 그 값) */
   talkWarnSec: 0.5,
-  /** 이어하기 재개 의심(rules.continueAd에 숫자 필드가 없음: ads.json effect 'resume_suspicion_0_6_at_checkpoint'·GDD §6-1 값) [데이터 요청: rules.continueAd.resumeSuspicion] */
-  continueResumeSuspicion: 0.6,
   /** 대표님 순시 예정 시각 비율(생성기가 ceoAtSec를 주지 않은 경우) */
   ceoAtFrac: 0.55,
 } as const;
@@ -38,6 +36,14 @@ const str = (v: unknown, d = ''): string => (typeof v === 'string' ? v : d);
 const range2 = (v: unknown): [number, number] | undefined =>
   Array.isArray(v) && v.length === 2 && typeof v[0] === 'number' && typeof v[1] === 'number' ? [v[0], v[1]] : undefined;
 const tile2 = (v: unknown): Tile => (Array.isArray(v) ? { x: num(v[0], 0), y: num(v[1], 0) } : { x: num(obj(v)['x'], 0), y: num(obj(v)['y'], 0) });
+
+const commitRule = (v: unknown): 'activity_start' | 'first_input' => (v === 'first_input' ? 'first_input' : 'activity_start');
+function accompliceEffectOf(e: O): NonNullable<MissionDef['accompliceEffect']> {
+  return {
+    ...(typeof e['cupsRequired'] === 'number' ? { cupsRequired: e['cupsRequired'] as number } : {}),
+    ...(typeof e['bitesRequiredMultiplier'] === 'number' ? { bitesRequiredMultiplier: e['bitesRequiredMultiplier'] as number } : {}),
+  };
+}
 
 export function hhmm(s: string): number {
   const m = /^(\d+):(\d+)$/.exec(s);
@@ -126,10 +132,13 @@ export function generateDay(tables: Tables, day: number): O {
     dayInterrupts.push({ id, atSec: Math.round(lastAt * 10) / 10 });
   }
   for (const id of proximity) if (unlocked(id) && !dayInterrupts.some((d) => d['id'] === id) && id !== 'INT-02') dayInterrupts.push({ id, atSec: 0 });
-  // H7: 대표님 순시 ±25초 안의 본부장 순찰 금지, 순시 날 인사팀(INT-05·06) 없음. 충돌하면 그 방해를 뺀다(재배치는 하지 않음)
-  const H7_GAP_SEC = 25; // days.generator.dayInterrupts.constraints 문장의 값(데이터 필드 없음 → 스키마 v3 요청)
+  // H7(days.generator.dayInterrupts.h7, T-136 ④): 대표님 순시 ±ceoDirectorMinGapSec 안의 본부장 순찰(INT-10) 제외(onPlanConflict 'drop_director_patrol', 재배치 없음),
+  // hrInterruptsOnCeoDay 'none'이면 순시 날 인사팀(INT-05·06) 없음
+  const h7 = obj(obj(obj(obj(tables['days'])['generator'])['dayInterrupts'])['h7']);
+  const h7Gap = num(h7['ceoDirectorMinGapSec'], 0);
+  const dropHr = h7['hrInterruptsOnCeoDay'] === 'none';
   const dayInts = ceoDay
-    ? dayInterrupts.filter((d) => !['INT-05', 'INT-06'].includes(str(d['id'])) && !(d['id'] === 'INT-10' && Math.abs(num(d['atSec'], 0) - ceoAtSec) < H7_GAP_SEC))
+    ? dayInterrupts.filter((d) => !(dropHr && ['INT-05', 'INT-06'].includes(str(d['id']))) && !(d['id'] === 'INT-10' && Math.abs(num(d['atSec'], 0) - ceoAtSec) < h7Gap))
     : dayInterrupts;
   const li = obj(rank['leaveInterrupts']);
   const lcount0 = leaveRng.int(num(arr(li['countRange'])[0], 0), num(arr(li['countRange'])[1], 0));
@@ -337,8 +346,17 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       // T-134 ④: 들어왔다 피하면 cornerTurnTellSec 전조 후 그 액터 lookSec 돌아보기
       if (talkRules['dodgeAfterEnterLooksAtPlayer'] === true) d['escapeLookTellSec'] = num(sight['cornerTurnTellSec'], tellMin);
     }
-    // 대표님 재확인(fake.type 'recheck')은 '전조 후 헛기침'이 아니라 웨이포인트 lookChance로 표현된 진짜 시선이다 → 페이크로 쓰지 않음
-    if (obj(sim['fake'])['type'] === 'recheck') delete d['fake'];
+    // 대표님 재확인(fake.type 'recheck', T-136 ③): '전조 후 헛기침' 페이크가 아니라 진짜 시선 → 페이크 런타임에서 뺀다.
+    // asRealLookAtRecheckWaypoint면 lookIsRecheck 웨이포인트의 시선 확률 = 직급 보간된 fake.chance, 전조 = fake.tellSec(시선 길이는 sim.lookSec)
+    if (fake['type'] === 'recheck') {
+      delete d['fake'];
+      if (fake['asRealLookAtRecheckWaypoint'] === true) {
+        const rc = typeof fake['chance'] === 'number' ? fake['chance'] as number : undefined;
+        const rt = typeof fake['tellSec'] === 'number' ? Math.max(tellMin, fake['tellSec'] as number) : undefined;
+        d['waypoints'] = (d['waypoints'] as WaypointDef[]).map((w) => (w.lookIsRecheck
+          ? { ...w, ...(rc !== undefined ? { lookChance: rc } : {}), ...(rt !== undefined ? { lookTellSec: rt } : {}) } : w));
+      }
+    }
     return d as unknown as NpcDef;
   };
   const patrols: Record<string, NpcDef> = {};
@@ -419,6 +437,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       reward: { slackPoints: num(reward['slackPoints'], 0), ...(typeof reward['snackStock'] === 'number' ? { snackStock: reward['snackStock'] as number } : {}) },
       failPenalty: num(obj(e['failPenalty'])['suspicion'], 0), timeoutPenalty: num(obj(e['timeoutPenalty'])['suspicion'], 0),
       params, ...(typeof e['tutorialId'] === 'string' ? { tutorialId: e['tutorialId'] as string } : {}),
+      ...(e['accompliceAllowed'] === true && e['accompliceEffect'] ? { accompliceEffect: accompliceEffectOf(obj(e['accompliceEffect'])) } : {}),
     });
   }
 
@@ -532,6 +551,10 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
         followGapTiles: num(follow['followGapTiles'], 1), seatPatrolId: str(accA['defaultPatrol'], 'p_accomplice_seat'),
         speedTilesPerSec: num(obj(accA['sim'])['speedTilesPerSec'], 3),
         ...(arr(accA['reactionKeys'])[0] ? { reactionKey: str(arr(accA['reactionKeys'])[0]) } : {}),
+        ...(offer['missionCommit'] ? { missionCommit: {
+          awayFromDesk: commitRule(obj(offer['missionCommit'])['awayFromDesk']), atDesk: commitRule(obj(offer['missionCommit'])['atDesk']),
+        } } : {}),
+        ...(offer['endsAtMissionCommit'] === true || offer['forcedHoldsUntil'] === 'mission_commit' ? { endsAtMissionCommit: true } : {}),
       };
     }
   }
@@ -553,6 +576,13 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     id: str(r['id']), from: str(r['from']), to: str(r['to']), via: arr(r['via']).map(tile2),
   }));
   const contAd = obj(rules['continueAd']);
+  // 이어하기 재개 의심(T-136): rules.continueAd.resumeSuspicion. 구 필드 suspicion.continueResetTo(v3 삭제 예정)는 보조로만
+  const resume = typeof contAd['resumeSuspicion'] === 'number' ? contAd['resumeSuspicion'] as number
+    : typeof obj(rules['suspicion'])['continueResetTo'] === 'number' ? obj(rules['suspicion'])['continueResetTo'] as number : undefined;
+  if (resume === undefined) warn.push('rules.continueAd.resumeSuspicion 없음 → 이어하기 비활성');
+  const cutin = obj(rules['caughtCutin']);
+  if (typeof cutin['durationSec'] !== 'number') warn.push('rules.caughtCutin.durationSec 없음');
+  const h7 = obj(obj(obj(obj(tables['days'])['generator'])['dayInterrupts'])['h7']);
 
   const dayCfg = obj(rules['day']);
   const camera = obj(map['camera']);
@@ -611,9 +641,11 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     ...(greeting ? { greeting } : {}),
     routes,
     prep: { ceoPassAvailable: !!ceoVisit && obj(ceoA?.['occurrence'])['skippableByAd'] === true },
-    continueAd: {
-      resumeSuspicion: num(contAd['resumeSuspicion'], DEFAULTS.continueResumeSuspicion),
-      submitScoreToLeaderboard: contAd['submitScoreToLeaderboard'] === true,
+    ...(resume !== undefined ? { continueAd: { resumeSuspicion: resume, submitScoreToLeaderboard: contAd['submitScoreToLeaderboard'] === true } } : {}),
+    ...(typeof cutin['durationSec'] === 'number' ? { caughtCutinSec: cutin['durationSec'] as number } : {}),
+    h7: {
+      ceoStartWaitsWhileDirectorOnFloor: h7['ceoStartWaitsWhileDirectorOnFloor'] !== false,
+      directorStartWaitsWhileCeoOnFloor: h7['directorStartWaitsWhileCeoOnFloor'] === true,
     },
     playerSpriteKey: str(obj(rules['characters'])['playerSpriteKey'], 'player'),
   };

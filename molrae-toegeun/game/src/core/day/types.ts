@@ -30,6 +30,8 @@ export interface MissionDef {
   /** mechanic별 params (직급 덮어쓰기 적용 후) */
   readonly params: Readonly<Record<string, unknown>>;
   readonly tutorialId?: string;
+  /** 공범 합류 시 적용(events[].accompliceEffect, T-136: 제안 수락 순간 적용). cupsRequired = 덮어쓰기, bitesRequiredMultiplier = 한 입 수 배율 */
+  readonly accompliceEffect?: { readonly cupsRequired?: number; readonly bitesRequiredMultiplier?: number };
 }
 
 export interface GateDef {
@@ -177,6 +179,13 @@ export interface AccompliceDef {
   readonly seatPatrolId: string;
   readonly speedTilesPerSec: number;
   readonly reactionKey?: string;
+  /**
+   * 제안이 끝나는 '미션 확정' 시점(npcs.accomplice.offer.missionCommit, T-136 ①).
+   * 원정 미션(awayFromDesk) = activity_start, 자리 미션 = first_input(간식 첫 입). 없으면 둘 다 activity_start
+   */
+  readonly missionCommit?: { readonly awayFromDesk: 'activity_start' | 'first_input'; readonly atDesk: 'activity_start' | 'first_input' };
+  /** 확정 순간 제안 종료(forced 포함). false면 forced는 활동 시작(원정)·완료/실패까지 유지(T-133 동작) */
+  readonly endsAtMissionCommit?: boolean;
 }
 
 /** 위계 연쇄 H1·H2: 본부장이 구역에 들어오면 팀장이 나와 인사(INT-10 effect.teamLeadGreeting) */
@@ -259,6 +268,10 @@ export interface DayContent {
   readonly playerSpriteKey?: string;
   /** 이어하기(rules.continueAd) */
   readonly continueAd?: { readonly resumeSuspicion: number; readonly submitScoreToLeaderboard: boolean };
+  /** 적발 컷인 길이(초, rules.caughtCutin.durationSec, T-136). 플레이 상태라 광고 없음 */
+  readonly caughtCutinSec?: number;
+  /** H7 런타임 보조(days.generator.dayInterrupts.h7, T-136 ④) */
+  readonly h7?: { readonly ceoStartWaitsWhileDirectorOnFloor: boolean; readonly directorStartWaitsWhileCeoOnFloor: boolean };
 }
 
 export type DayPhase = 'intro' | 'day' | 'leave' | 'ended';

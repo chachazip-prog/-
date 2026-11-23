@@ -77,8 +77,14 @@ export class PrepScene extends Phaser.Scene {
     let pass: UiButton | null = null;
     let passDesc: UIText | null = null;
     if (c.prep?.ceoPassAvailable) {
-      void flow.canOffer('ceo_pass').then((ok) => {
-        if (!ok || !this.scene.isActive()) return;
+      void flow.canOffer('ceo_pass').then(async (ok) => {
+        if (!this.scene.isActive()) return;
+        if (!ok) {
+          // D-066: 하루 보상형 상한이면 버튼을 숨기고 '오늘 광고 끝' 토스트(하루 1회)
+          const key = await flow.dailyCapNoticeKey();
+          if (key && str.has(key) && this.scene.isActive()) this.showToast(str.t(key));
+          return;
+        }
         const p = flow.placement('ceo_pass');
         pass = new UiButton(this, 16, y, LOGICAL_WIDTH - 32, 26, str.t(p?.labelKey ?? 'ad.ceo_pass'), { depth: 10, style: 'normal', role: 'label' });
         this.buttons.push(pass);
@@ -107,9 +113,12 @@ export class PrepScene extends Phaser.Scene {
             pb.setVisible(false); passDesc?.setVisible(false);
             setPixelText(ceoLine, str.t('prep.ceo_none'));
           } else {
-            pb.setEnabled(true);
-            // 중도 종료는 안내 문구 키가 CEO 패스용으로 따로 없음(ad.continue_not_completed는 이어하기 전용) → 버튼만 복구 [문구 키 요청]
-            if (r === 'unavailable') this.showToast(str.t('ad.continue_unavailable'));
+            // T-136: 중도 종료·실패 = 중립 안내, 순시는 그대로. onNotEarned 'keep_visit_button_reenabled'면 버튼 다시 누를 수 있음(하루 상한 안)
+            const p = flow.placement('ceo_pass');
+            if (p?.onNotEarned === 'keep_visit_button_reenabled') pb.setEnabled(true);
+            else { pb.setVisible(false); passDesc?.setVisible(false); pass = null; }
+            const key = r === 'not_completed' ? p?.notCompletedKey : p?.unavailableKey;
+            if (key && str.has(key)) this.showToast(str.t(key));
           }
         });
       }

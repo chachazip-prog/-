@@ -174,6 +174,8 @@ export class DaySim {
   follower: Follower | null = null;
   private joinedMission: MissionRuntime | null = null;
   private offered = new Set<string>();
+  /** 공범 제안 기준으로 확정된 미션(T-136 ①) */
+  private committed = new Set<string>();
   private coughed = new Set<PatrolNpc>();
   // ── 위계 연쇄 H1·H2 ──
   private greetState: 'idle' | 'greeting' | 'returning' = 'idle';
@@ -298,6 +300,8 @@ export class DaySim {
     this.floor.removeNpc(seat);
     this.follower = new Follower(start, this.floor.player.tile, this.floor.map, acc.followGapTiles, acc.speedTilesPerSec);
     this.joinedMission = m;
+    // T-136 ①: accompliceEffect는 수락 순간 적용. 이미 시작했지만 확정 전인 활동(간식 첫 입 전)은 효과를 넣어 다시 만든다
+    if (this.activeMission === m && this.activity && !this.committed.has(m.def.id)) this.activity = this.makeActivity(m);
     this.push({ t: this.time, type: 'accomplice', action: 'join' });
     this.push({ t: this.time, type: 'toast', key: 'npc.accomplice.accept' });
     return true;
@@ -313,13 +317,14 @@ export class DaySim {
    * 진행 중이던 미션은 다시 열림(제한 시간 초기화), 대표님 순시는 종료(눈도장 없음).
    */
   continueFromCheckpoint(): boolean {
-    if (!this.canContinue || !this.endedFrom) return false;
     const c = this.content;
+    const cont = c.continueAd;
+    if (!this.canContinue || !this.endedFrom || !cont) return false;
     const from = this.endedFrom;
     const atGate = from.phase === 'leave' && from.leaveStage !== 'pack';
     const tile = atGate ? c.leave.gate.spot : c.playerSeat;
     this.floor.revive();
-    this.floor.suspicion.value = c.continueAd?.resumeSuspicion ?? 0.6;
+    this.floor.suspicion.value = cont.resumeSuspicion;
     this.floor.player.teleport(tile);
     this.floor.camera?.snap(this.floor.player.y);
     for (const n of this.floor.npcs) if (n.mode === 'talk' || n.mode === 'tell' || n.mode === 'look') n.interruptLook(this.floor.rng);
@@ -353,6 +358,7 @@ export class DaySim {
     if (this.activity && this.activeMission) {
       const fx = emptyEffects();
       const ctx = pressSec !== undefined ? { ...this.activityCtx(), pressSec } : this.activityCtx();
+      if (this.commitRule(this.activeMission) === 'first_input') this.commitMission(this.activeMission);
       const st = this.activity.tap(ctx, fx);
       this.applyEffects(fx);
       this.resolveActivity(st);
@@ -671,10 +677,36 @@ export class DaySim {
     if (m.startedAt === null) m.startedAt = this.time;
     this.activeMission = m;
     this.pendingMission = null;
-    this.activity = createActivity(m.def.mechanic, m.def.params);
+    this.activity = this.makeActivity(m);
     this.push({ t: this.time, type: 'missionStart', id: m.def.id });
+    if (this.commitRule(m) === 'activity_start') this.commitMission(m);
     this.tutorial(`start:${m.def.id}`);
     if (m.def.mechanic === 'trip_safe_zone') this.fireTrigger('restroom_inside_rest_start');
+  }
+
+  /** 미션 행동 생성. 공범 합류 미션이면 accompliceEffect(커피 cupsRequired 덮어쓰기, 간식 한 입 수 배율) 적용 */
+  private makeActivity(m: MissionRuntime): ReturnType<typeof createActivity> {
+    const fx = m === this.joinedMission ? m.def.accompliceEffect : undefined;
+    if (!fx) return createActivity(m.def.mechanic, m.def.params);
+    const params = fx.cupsRequired !== undefined ? { ...m.def.params, cupsRequired: fx.cupsRequired } : m.def.params;
+    return createActivity(m.def.mechanic, params, fx.bitesRequiredMultiplier !== undefined ? { snackBiteMul: fx.bitesRequiredMultiplier } : {});
+  }
+
+  /** 공범 제안 기준 '미션 확정' 시점(npcs.accomplice.offer.missionCommit) */
+  private commitRule(m: MissionRuntime): 'activity_start' | 'first_input' {
+    const mc = this.content.accomplice?.missionCommit;
+    if (!mc) return 'activity_start';
+    return m.def.awayFromDesk ? mc.awayFromDesk : mc.atDesk;
+  }
+
+  /** 미션 확정: 이 미션에 걸린 제안은 끝(endsAtMissionCommit — forced 포함, 일반은 offerSec와 먼저 오는 쪽) */
+  private commitMission(m: MissionRuntime): void {
+    if (this.committed.has(m.def.id)) return;
+    this.committed.add(m.def.id);
+    if (this.offer && this.offer.missionId === m.def.id && this.content.accomplice?.endsAtMissionCommit) {
+      this.push({ t: this.time, type: 'offerEnd', missionId: m.def.id, accepted: false });
+      this.offer = null;
+    }
   }
 
   private applyEffects(fx: ActivityEffects): void {
@@ -812,8 +844,25 @@ export class DaySim {
     for (const int of this.content.interrupts) {
       if (int.phase !== 'day' || int.atSec <= 0) continue;
       if (this.intState.has(int.id)) continue;
-      if (this.dayTime >= int.atSec) this.startInterrupt(int);
+      if (this.dayTime < int.atSec) continue;
+      // H7 반대 방향(T-136 ④): 대표님이 층에 있는 동안(전조~퇴장 디스폰) 본부장 등장은 디스폰 뒤로 미룸
+      if (this.content.h7?.directorStartWaitsWhileCeoOnFloor && this.ceoPresent && this.interruptSpawns(int, 'director')) continue;
+      this.startInterrupt(int);
     }
+  }
+
+  /** 대표님 순시 NPC가 층에 있음(전조 시작 ~ 퇴장 디스폰) */
+  private get ceoPresent(): boolean {
+    return !!this.ceoNpc && this.floor.npcs.includes(this.ceoNpc);
+  }
+
+  /** 이 방해가 등장시키는 순찰의 액터 중 actorId가 있는가 */
+  private interruptSpawns(int: DayInterruptDef, actorId: string): boolean {
+    const e = int.effect;
+    const ids: string[] = [];
+    for (const k of ['patrolId', 'leaveVariant']) if (typeof e[k] === 'string') ids.push(e[k] as string);
+    for (const k of ['patrolVariants', 'patrolIds']) if (Array.isArray(e[k])) for (const x of e[k] as unknown[]) if (typeof x === 'string') ids.push(x);
+    return ids.some((id) => this.content.patrols[id]?.actorId === actorId);
   }
 
   /** 하루 계획의 trigger 이름(예: restroom_inside_rest_start)으로 시작하는 방해 */
@@ -1126,7 +1175,7 @@ export class DaySim {
     if (!v || this.ceoState !== 'pending' || this.dayTime < v.atSec) return;
     const p = this.floor.player;
     if (!this.playerAtSeat || p.mode === 'moving' || p.mode === 'talked' || this.reportActive) return;
-    if (this.floor.findNpc((n) => n.def.actorId === 'director')) return;
+    if (this.content.h7?.ceoStartWaitsWhileDirectorOnFloor !== false && this.floor.findNpc((n) => n.def.actorId === 'director')) return;
     const def = this.content.patrols[v.patrolId];
     if (!def) { this.ceoState = 'cancelled'; return; }
     this.ceoNpc = this.floor.addNpc(def);
@@ -1320,7 +1369,9 @@ export class DaySim {
     if (this.offer) {
       const m = this.missions.find((x) => x.def.id === this.offer!.missionId);
       this.offer.left -= dt;
-      const gone = !m || m.state === 'done' || m.state === 'failed' || (this.offer.forced && m.state === 'active' && m.def.awayFromDesk);
+      // 확정(commit)으로 끝나는 경우는 commitMission이 처리. endsAtMissionCommit가 없으면 T-133 동작(forced 원정 미션은 활동 시작에서 종료)
+      const gone = !m || m.state === 'done' || m.state === 'failed'
+        || (!acc?.endsAtMissionCommit && this.offer.forced && m.state === 'active' && m.def.awayFromDesk);
       if (this.offer.left <= 0 || gone || this.phase !== 'day') {
         this.push({ t: this.time, type: 'offerEnd', missionId: this.offer.missionId, accepted: false });
         this.offer = null;

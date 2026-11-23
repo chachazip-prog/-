@@ -17,7 +17,7 @@ print('### 구간별 요약\n')
 print('| 봇 | 구간 | 판 | 1판 길이 평균(최소~최대) | 칼퇴 ★2+ | 적발 | 야근(★1) | 찝찝(★1) | ★0/★1/★2/★3 | 최고 의심 평균 |')
 print('|---|---|---|---|---|---|---|---|---|---|')
 for b in ['straight', 'disguise', 'novice']:
-    for g, lab in [('d1_5', '1~5일(인턴)'), ('d1_10', '1~10일'), ('d6_15', '6~15일(사원)'), ('d16_30', '16~30일(생성)')]:
+    for g, lab in [('d1_5', '1~5일(인턴)'), ('d1_10', '1~10일'), ('d6_15', '6~15일(사원)'), ('d16_30', '16~30일(생성)'), ('d31_60', '31~60일(생성)'), ('ceoDays', '순시 날')]:
         s = B[b][g]
         st = '/'.join(f(x, 0) for x in s['stars'])
         print(f"| {NAMES[b]} | {lab} | {s['n']} | {f(s['lenMean'])} ({f(s['lenMin'])}~{f(s['lenMax'])}) | {f(s['leavePct'])}% | {f(s['caughtPct'])}% | {f(s['overtimePct'])}% | {f(s['shortPct'])}% | {st} | {f(100*s['peakMean'])}% |")
@@ -91,3 +91,14 @@ print('### 기타(§19-3 QA 열)\n')
 for b in ['straight', 'disguise', 'novice']:
     s = B[b]
     print(f"- {NAMES[b]}: 쇼핑 완료 소요 n={s['shopSec']['n']} 평균 {f(s['shopSec']['mean'],2)}초 최소 {f(s['shopSec']['min'],2)} p90 {f(s['shopSec']['p90'],2)} / 게이트 단계 평균 {f(s['gate']['stageSecMean'],2)}초, 단계 중 상승 합 {f(s['gate']['riseSum'],3)}, 정체 규칙 초과 {f(s['gate']['nonStaleRise'],3)}, 3초 이내 통과 판의 상승 {f(s['gate']['quickPassRise'],3)} / INT-08 퇴근 전조 틱 {s['int08']['ticks']} 상승 {f(s['int08']['rise'],3)} / 아슬아슬 평균 {f(s['closeCallsMean'],2)}회")
+
+print()
+print('### 대표님 순시·엘리베이터 대표님·공범\n')
+print('| 봇 | 순시 날 판 | 순시 시작 | 취소(안 앉음) | 눈도장 | 순시 중 적발 | 순시 시작 판 전체 적발 | 적발 중 순시 원인 | 순시 중 상승 평균 | QTE 결과 | 얼음 중 대표님 외 시선 틱 | 시계 정지 위반 | 미션 시계 위반 | 복귀 후 3초 시선 시작 / 전조 없음 |')
+print('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
+for b in ['straight', 'disguise', 'novice']:
+    c = B[b]['ceo']
+    print(f"| {NAMES[b]} | {c['days']} | {c['started']} | {c['cancelled']} | {f(c['eyeContactPct'])}% | {f(c['caughtDuringPct'])}% | {f(c['caughtAllPct'])}% | {f(c['caughtDuringShareOfCaught'])}% | {f(c['gainMean'],3)} | {c['qte']} | {c['freezeOtherGazeTicks']} | {c['clockViol']} | {c['missionClockViol']} | {c['resumeOnsets']} / {c['resumeNoTell']} |")
+for b in ['straight', 'disguise', 'novice']:
+    e = B[b]['elevCeo']; a = B[b]['acc']
+    print(f"- {NAMES[b]}: 엘리베이터 대표님 {e['started']}회 QTE {e['qte']} 그 판 적발 {e['caughtAfter']} / 공범 합류 {a['joined']}회, 같이 끝낸 미션 {a['done']}개 점수 {a['points']} (기본 {a['base']}, 배율 {a['points']/max(1,a['base']):.2f})")

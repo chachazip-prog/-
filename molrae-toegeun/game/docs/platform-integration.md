@@ -59,6 +59,6 @@
 - '오늘 광고 끝' 토스트는 문구 키 `ad.today_done`이 데이터에 생기면 표시(현재 키 없음).
 
 ## 사운드 (T-133, `src/audio/`)
-- `AudioScene`(상주)이 첫 터치 뒤 `audio-manifest.json`의 파일을 ogg → mp3 순 URL로 지연 로드. 초기 번들·첫 판 진입 시간에 포함되지 않음.
+- `AudioScene`(상주)이 첫 터치 뒤 `audio-manifest.json`의 MP3 파일(단일 포맷, D-063·D-065)을 지연 로드. 초기 번들·첫 판 진입 시간에 포함되지 않음.
 - BGM 2스템 단계는 `DangerStageTracker`(올릴 때 즉시, 내릴 때 `hysteresis.downgradeDelaySec`)가 정하고, 화면 테두리도 같은 단계를 씀.
 - `?sound=off`로 음소거(시각 신호는 그대로).

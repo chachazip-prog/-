@@ -1,6 +1,6 @@
 /**
  * 사운드 재생(Phaser 전역 SoundManager). game/assets/audio/audio-manifest.json 기준.
- * - 로드: 첫 터치 뒤(모바일 자동재생 정책, Phaser가 첫 입력에서 오디오 컨텍스트 unlock) AudioScene이 ogg → mp3 순 URL로 지연 로드.
+ * - 로드: 첫 터치 뒤(모바일 자동재생 정책, Phaser가 첫 입력에서 오디오 컨텍스트 unlock) AudioScene이 MP3(단일 포맷, D-063·D-065)로 지연 로드.
  *   초기 번들·첫 판 진입 시간에 포함되지 않음. 로드 전·실패 시 소리만 없고 게임은 그대로(시각 신호는 항상 표시, rules.visualCues.alwaysOn).
  * - BGM: 두 스템(main·tension) 동시 루프, 같은 rate. 단계(stages)마다 rampSec 선형 보간. freeze = 일시정지(위치 유지) 후 재개, stopped = 정지.
  * - 마스터 볼륨: sound-list.md 권장(BGM 0.6은 stages의 mainVol에 이미 반영, 효과음 1.0).
@@ -9,23 +9,23 @@ import Phaser from 'phaser';
 import manifestJson from '../../assets/audio/audio-manifest.json';
 import type { DangerStage } from './dangerStage';
 
-const urls = import.meta.glob('../../assets/audio/**/*.{ogg,mp3}', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
+const urls = import.meta.glob('../../assets/audio/**/*.mp3', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
 
-interface SfxEntry { key: string; files: { ogg?: string; mp3?: string }; loop?: boolean }
+interface AudioFiles { mp3?: string }
+interface SfxEntry { key: string; files: AudioFiles; loop?: boolean }
 interface StageParams { rate?: number; mainVol?: number; tensionVol?: number; rampSec?: number; stop?: boolean; fadeOutSec?: number; resumeFadeInSec?: number; resumeStage?: string }
 interface Manifest {
   sfx: SfxEntry[];
-  bgm: Record<string, { stems: Record<string, { key: string; files: { ogg?: string; mp3?: string } }>; stages: Record<string, StageParams | string>; hysteresis?: { downgradeDelaySec?: number } }>;
+  bgm: Record<string, { stems: Record<string, { key: string; files: AudioFiles }>; stages: Record<string, StageParams | string>; hysteresis?: { downgradeDelaySec?: number } }>;
 }
 const manifest = manifestJson as unknown as Manifest;
 const BGM_ID = 'bgm_office';
 /** 같은 효과음 연타 중복 생략 간격(sound-list: 탭 60ms) */
 const SFX_DEDUP_MS = 60;
 
-function fileUrls(files: { ogg?: string; mp3?: string }): string[] {
-  const out: string[] = [];
-  for (const f of [files.ogg, files.mp3]) if (f) { const u = urls[`../../assets/audio/${f}`]; if (u) out.push(u); }
-  return out;
+function fileUrls(files: AudioFiles): string[] {
+  const u = files.mp3 ? urls[`../../assets/audio/${files.mp3}`] : undefined;
+  return u ? [u] : [];
 }
 
 export function bgmHysteresisSec(): number { return manifest.bgm[BGM_ID]?.hysteresis?.downgradeDelaySec ?? 1.5; }

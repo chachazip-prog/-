@@ -110,12 +110,16 @@ export interface RewardedPlacement {
   readonly declineButtonSameSize?: boolean;
   readonly autoCountdown?: boolean;
   readonly buttonOnlyNoPopup?: boolean;
+  /** 보상 미수령 시 처리(continue = go_to_result_no_retry, ceo_pass = keep_visit_button_reenabled, T-136) */
+  readonly onNotEarned?: string;
 }
 
 export interface RewardedRules {
   readonly enabled: boolean;
   readonly maxPerDay: number;
   readonly placements: Readonly<Record<string, RewardedPlacement>>;
+  /** 하루 상한 도달 안내 문구 키(ads.rewarded.dailyCapReachedKey, T-136·D-066) */
+  readonly dailyCapReachedKey?: string;
 }
 
 export function parseRewardedRules(ads: Readonly<Record<string, unknown>>): RewardedRules {
@@ -129,11 +133,14 @@ export function parseRewardedRules(ads: Readonly<Record<string, unknown>>): Rewa
     placements[id] = {
       id, screen: typeof p['screen'] === 'string' ? p['screen'] : '', labelKey: typeof p['labelKey'] === 'string' ? p['labelKey'] : id,
       maxPerDay: typeof p['maxPerDay'] === 'number' ? p['maxPerDay'] : 1,
-      ...s('descKey'), ...s('declineLabelKey'), ...s('notCompletedKey'), ...s('unavailableKey'),
+      ...s('descKey'), ...s('declineLabelKey'), ...s('notCompletedKey'), ...s('unavailableKey'), ...s('onNotEarned'),
       ...b('declineButtonSameSize'), ...b('autoCountdown'), ...b('buttonOnlyNoPopup'),
     } as RewardedPlacement;
   }
-  return { enabled: r['enabled'] === true, maxPerDay: typeof r['maxPerDay'] === 'number' ? r['maxPerDay'] : 12, placements };
+  return {
+    enabled: r['enabled'] === true, maxPerDay: typeof r['maxPerDay'] === 'number' ? r['maxPerDay'] : 12, placements,
+    ...(typeof r['dailyCapReachedKey'] === 'string' ? { dailyCapReachedKey: r['dailyCapReachedKey'] } : {}),
+  };
 }
 
 export type RewardedSkip = 'disabled' | 'unknown_placement' | 'daily_cap' | 'placement_cap';

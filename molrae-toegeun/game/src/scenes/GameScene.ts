@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { AdFlow } from '../ads/adFlow';
 import { audio, bgmHysteresisSec } from '../audio/audio';
 import { buildSoundCues, tellSfxFor, type SoundCues } from '../audio/cues';
-import { DangerStageTracker, type DangerStage } from '../audio/dangerStage';
+import { DangerStageTracker, stageThresholdsFromCues, type DangerStage } from '../audio/dangerStage';
 import { CAMERA_VIEW, HUD_BOTTOM_PX, HUD_TOP_PX, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
 import { getStrings, lastAuthoredDay, loadDayContent } from '../content';
 import { DaySim, conePolygon, isGateOnly, zoneAt, type DayEvent, type PatrolNpc, type SimEvent, type Threat } from '../core';
@@ -28,13 +28,6 @@ const TOAST_SEC = 1.4;
 const D = { ground: -1000, cover: -950, shadow: -900, cone: -800, path: -700, overhead: 5000 } as const;
 /** 오버레이(컷인·이어하기 제안·결과) 깊이 */
 const OV = 12000;
-/**
- * 적발 컷인 길이(초, GDD §6-1 '리액션 컷인 2초', ads.global.playStates caught_cutin). 데이터 숫자 필드 없음 [데이터 요청]
- * 컷인 동안은 플레이 상태라 광고·광고 제안 없음(D-023, D-050 ①)
- */
-const CUTIN_SEC = 2.0;
-/** BGM alert 단계 의심 임계(매니페스트 stages.alert.when 문장 '의심 >= 0.4', 숫자 필드 없음) [데이터 요청] */
-const ALERT_SUSPICION = 0.4;
 /** 의심 루프 시작 임계·rate 식(sound-list: 0.5부터, rate = 1 + (의심 − 0.5) × 0.8, 최대 1.4) */
 const SUSP_LOOP_FROM = 0.5;
 
@@ -131,8 +124,10 @@ export class GameScene extends Phaser.Scene {
     const content = loadDayContent(this.day);
     this.sim = new DaySim(content, { view: CAMERA_VIEW, skipCeoVisit: this.skipCeo, seenHints: this.seenHints }, urlParam('seed') ?? content.seed);
     this.cues = buildSoundCues(getDataTables());
-    const sh = (content.visualCues['suspicionHigh'] ?? {}) as Record<string, unknown>;
-    this.stage = new DangerStageTracker({ dangerSuspicion: typeof sh['threshold'] === 'number' ? sh['threshold'] as number : 0.7, alertSuspicion: ALERT_SUSPICION }, bgmHysteresisSec());
+    // 위험 단계 임계(rules.visualCues: suspicionHigh.threshold·dangerBorder.alertSuspicionMin, T-136). 없으면 경고 후 단계 상승 없음(적발 1.0만)
+    const th = stageThresholdsFromCues(content.visualCues);
+    if (!th) console.warn('[data] rules.visualCues 임계값 없음(suspicionHigh.threshold / dangerBorder.alertSuspicionMin)');
+    this.stage = new DangerStageTracker(th ?? { dangerSuspicion: 1, alertSuspicion: 1 }, bgmHysteresisSec());
     this.ads = new AdFlow(getPlatform());
     this.rewardedThisGame = false;
     this.salaryDoubled = false;
@@ -355,7 +350,7 @@ export class GameScene extends Phaser.Scene {
       if (npc && npc.gazeMultiplier > 0 && npc.tellKind !== 'talk' && npc.def.actorId) {
         const actor = npc.def.actorId ?? '';
         const onlyOn = this.cues.walkTellOnScreenOnly[actor] !== false;
-        const recheck = npc.def.waypoints[npc.waypointIndex]?.lookIsRecheck === true;
+        const recheck = npc.tellKind === 'look' && npc.def.waypoints[npc.waypointIndex]?.lookIsRecheck === true;
         if (npc.def.seated || !onlyOn || this.sim.floor.isOnScreen(npc)) audio.sfx(tellSfxFor(this.cues, actor, !!npc.def.seated, npc.tellKind === 'turn' ? 'turn' : 'look', recheck));
       }
     } else if (e.type === 'talkWarn') {
@@ -517,7 +512,11 @@ export class GameScene extends Phaser.Scene {
       const lean = talkWarn && npc.pendingFacing !== null ? Math.min(1, npc.modeTime / 0.25) * TALK_LEAN_PX : 0;
       const lx = npc.pendingFacing !== null ? Math.cos(npc.pendingFacing) * lean : 0;
       const ly = npc.pendingFacing !== null ? Math.sin(npc.pendingFacing) * lean : 0;
-      const sx = Math.round(w.x + lx), sy = Math.round(w.y + ly) + FOOT_PX;
+      // 대표님 재확인 전조(bosses.ceo.sim.fake.visual 'stop_and_shoulder', T-136 ③): 멈춘 채 어깨 들썩 = 1px 위아래(약 3Hz).
+      // [임시] 전용 프레임이 아트에 없어 스프라이트 위치로 표현
+      const shrug = npc.mode === 'tell' && npc.tellKind === 'look' && npc.def.waypoints[npc.waypointIndex]?.lookIsRecheck === true
+        && Math.floor(npc.modeTime / 0.17) % 2 === 1 ? -1 : 0;
+      const sx = Math.round(w.x + lx), sy = Math.round(w.y + ly) + FOOT_PX + shrug;
       v.sprite.setPosition(sx, sy).setDepth(sy).setVisible(npc.mode !== 'spawn');
       const dir: Facing4 = npc.tellKind === 'turn' && npc.pendingFacing !== null ? facing4(npc.pendingFacing) : facing4(npc.facing);
       const isFrozen = sim.frozen && npc !== sim.ceoOnFloor;
@@ -786,10 +785,10 @@ export class GameScene extends Phaser.Scene {
     if (!r) return;
     audio.loop('sfx_suspicion_loop', false);
     if (r.outcome === 'caught') {
-      // 컷인 2초: 잡은 사람의 리액션. 이 동안은 광고·광고 제안 없음(ads.global.playStates caught_cutin)
+      // 컷인(rules.caughtCutin.durationSec): 잡은 사람의 리액션. 이 동안은 플레이 상태라 광고·광고 제안 없음(ads.global.playStates caught_cutin, D-023·D-050 ①)
       this.overlay = 'cutin';
       this.overlayAge = 0;
-      this.cutinLeft = CUTIN_SEC;
+      this.cutinLeft = this.sim.content.caughtCutinSec ?? 0;
       const str = getStrings();
       const react = r.reactionKey ? str.t(r.reactionKey, { name: str.t('ui.player_default_name') }, Math.floor(r.timeSec)) : '';
       this.panel([str.t('result.title_caught'), react].filter((x) => x).join('\n\n'), LOGICAL_HEIGHT * 0.4);
@@ -916,10 +915,8 @@ export class GameScene extends Phaser.Scene {
       this.addButton(y, str.t(pl?.labelKey ?? 'ad.salary_double'), () => { void this.watchSalaryDouble(); });
     })();
     void next;
-    void (async () => {
-      // '오늘 광고 끝' 안내(D-031): 하루 보상형 상한에 닿았으면 알림. 문구 키(ad.today_done)가 데이터에 생기면 표시 [문구 키 요청]
-      if (str.has('ad.today_done') && (await this.ads.rewardedDailyCapReached())) this.showOverlayToast(str.t('ad.today_done'));
-    })();
+    // '오늘 광고 끝'(D-031·D-066): 하루 보상형 상한이면 보상형 버튼은 canOffer에서 숨겨지고, 안내 토스트는 하루 1회
+    void this.notifyDailyCap();
     y += 0;
   }
 
@@ -935,11 +932,20 @@ export class GameScene extends Phaser.Scene {
       this.salaryDoubled = true;
       this.rewardedThisGame = true;
       if (btn) { btn.b.setVisible(false); btn.b.enabled = false; }
+      void this.notifyDailyCap();
       if (this.salaryText) { setPixelText(this.salaryText, str.t('result.salary', { n: this.salaryNow() })); placeText(this.salaryText, LOGICAL_WIDTH / 2, this.salaryText.y + 6, 0.5, 0.5); }
     } else {
       btn?.b.setEnabled(true);
       if (r === 'unavailable') this.showOverlayToast(str.t('ad.continue_unavailable'));
     }
+  }
+
+  /** D-066: 하루 보상형 상한 도달 안내(ads.rewarded.dailyCapReachedKey). 같은 날 1회 */
+  private async notifyDailyCap(): Promise<void> {
+    const key = await this.ads.dailyCapNoticeKey();
+    if (!key || !this.scene.isActive() || this.overlay !== 'result') return;
+    const str = getStrings();
+    if (str.has(key)) this.showOverlayToast(str.t(key));
   }
 
   private toastOv: { t: UIText; bg: Phaser.GameObjects.Rectangle; left: number } | null = null;

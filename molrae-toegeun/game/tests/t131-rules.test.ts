@@ -505,7 +505,7 @@ section('8. T-133 추가: 순시·INT-11·공범·H1');
     for (let k = 0; k < 20; k++) {
       const sim = new DaySim(contentFor(tables, day), { view: VIEW }, `elev-${mode}-${k}`);
       for (let i = 0; i < 60 * 120 && sim.phase !== 'leave'; i++) { sim.floor.suspicion.value = 0; sim.step(); }
-      (sim as Any).work = 1;
+      (sim as unknown as Any).work = 1;
       for (const m of sim.missions) m.state = 'done';
       for (let i = 0; i < 60 * 60 && sim.phase !== 'ended'; i++) {
         for (const n of sim.floor.npcs) if (n.def.actorId !== 'ceo') n.suppressed = true;
@@ -542,7 +542,7 @@ section('8. T-133 추가: 순시·INT-11·공범·H1');
     for (let i = 0; i < 60 * 40 && sim.phase === 'day' && m.state !== 'done' && m.state !== 'failed'; i++) {
       for (const n of sim.floor.npcs) n.suppressed = true;
       sim.floor.suspicion.value = 0;
-      if (sim.offer && !joined) { offered = true; joined = sim.acceptOffer(); if (joined && Number.isNaN(rateWith)) rateWith = (sim as Any).playerRate(0.45); }
+      if (sim.offer && !joined) { offered = true; joined = sim.acceptOffer(); if (joined && Number.isNaN(rateWith)) rateWith = (sim as unknown as Any).playerRate(0.45); }
       const v = sim.activityView();
       if (v?.kind === 'pour' && !v.paused && v.level >= 0.83) sim.tapWorld(0, 0);
       if (m.state === 'carry' && sim.floor.player.mode !== 'moving' && !sim.playerAtSeat) sim.tapMission('coffee');
@@ -552,7 +552,7 @@ section('8. T-133 추가: 순시·INT-11·공범·H1');
     }
     const base = m.def.reward.slackPoints;
     const sim2 = new DaySim(contentFor(tables, 7), { view: VIEW }, 'acc2');
-    const rateWithout = (sim2 as Any).playerRate(0.45);
+    const rateWithout = (sim2 as unknown as Any).playerRate(0.45);
     info(`공범(7일차 커피 강제 제안): 제안 ${offered}, 합류 ${joined}, 이동 상승률 합류 ${rateWith} / 단독 ${rateWithout}, 완료 점수 ${points} (기본 ${base})`);
     check('공범 합류 중 의심 상승률 ×1.25', joined && Math.abs(rateWith / rateWithout - 1.25) < 1e-9, `${rateWith}/${rateWithout}`);
     check('공범과 같이 한 미션 보상 ×2', points === base * 2, `${points} vs ${base}`);

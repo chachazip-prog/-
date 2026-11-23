@@ -135,6 +135,10 @@ const DECIDE = () => {
       await shot(page, '01-title');
       await tapLogical(page, 90, 200);
       await step(page, 20);
+      await page.waitForTimeout(200); await step(page, 10);
+      await shot(page, '01b-prep');
+      await tapLogical(page, 90, 265); // 출근 준비 '출근하기'
+      await step(page, 20);
       const started = await page.evaluate(() => !!window.__mtDay && window.__mtDay.content.day);
       check('타이틀 탭 → 1일차 GameScene 시작', started === 1, `day=${started}`);
       const box = await canvasBox(page);
@@ -167,26 +171,30 @@ const DECIDE = () => {
       meta.day1 = r;
       check('플레이 중 광고 호출 0회(mock ads 로그)', adCallsDuringPlay === 0, `${adCallsDuringPlay}회`);
       await shot(page, '07-result');
-      // 결과 화면 입력 보호: 표시 직후 0.5초 동안 5회 연타 → 그대로, 그 뒤 탭 → 다음 날
+      // 결과 화면 입력 보호: 결과 오버레이 표시 직후 0.5초 동안 '다음 날' 버튼 5연타 → 무시, 그 뒤 탭 → 출근 준비(2일차)
+      const btn = async (i) => page.evaluate((k) => { const b = window.__mtScene.buttons[k]; return b ? { x: b.b.x + b.b.w / 2, y: b.b.y + b.b.h / 2, text: b.b.label.text } : null; }, i);
+      const ovl = () => page.evaluate(() => window.__mtScene && window.__mtScene.overlay);
+      for (let i = 0; i < 60 && (await ovl()) !== 'result'; i++) await step(page, 2);
+      const nb = await btn(0);
+      info(`결과 화면 버튼: ${JSON.stringify(nb)}`);
       const dayObj1 = await page.evaluate(() => { window.__qaDayRef = window.__mtDay; return window.__mtDay.content.day; });
-      for (let i = 0; i < 5; i++) { await tapLogical(page, 90, 160); await step(page, 6); }
-      const still = await page.evaluate(() => window.__mtDay === window.__qaDayRef && window.__mtDay.phase === 'ended');
+      for (let i = 0; i < 5 && nb; i++) { await tapLogical(page, nb.x, nb.y); await step(page, 5); }
+      const still = await page.evaluate(() => window.__mtDay === window.__qaDayRef && window.__mtScene.overlay === 'result' && window.__mtScene.scene.isActive());
       check('결과 화면 표시 후 0.5초 안 연타 5회 → 무시(resultInputGuardSec 0.6)', still);
       await step(page, 30);
-      await page.waitForTimeout(300); // 진행 저장(비동기 Storage) 여유
-      await tapLogical(page, 90, 160);
-      await step(page, 20);
-      await page.waitForTimeout(300);
+      if (nb) await tapLogical(page, nb.x, nb.y);
+      for (let i = 0; i < 20; i++) { await step(page, 5); await page.waitForTimeout(50); }
+      const prepActive = await page.evaluate(() => window.__mtScene.scene.manager.isActive('Prep') || window.__mtScene.scene.manager.getScenes(true).map((x) => x.scene.key).join(','));
+      info(`다음 날 버튼 뒤 활성 씬: ${prepActive}`);
+      await shot(page, '08-prep-day2');
+      await tapLogical(page, 90, 265);
+      await step(page, 20); await page.waitForTimeout(100);
       const next = await page.evaluate(() => ({ same: window.__mtDay === window.__qaDayRef, day: window.__mtDay.content.day }));
-      check('보호 시간 뒤 탭 → 다음 날(★1 이상이면 2일차)', !next.same && next.day === (r && r.stars >= 1 ? dayObj1 + 1 : dayObj1), JSON.stringify(next));
-      await step(page, 10);
-      await shot(page, '08-day2-intro');
+      check('보호 시간 뒤 탭 → 출근 준비 → 다음 날(★1 이상이면 2일차)', !next.same && next.day === (r && r.stars >= 1 ? dayObj1 + 1 : dayObj1), JSON.stringify(next));
       // 전면광고 판정 로그(설치 당일 → install_day)
-      const adLog = s.logs.filter((l) => /\[ads\] 전면광고 판정/.test(l.text)).map((l) => l.text);
+      const adLog = s.logs.filter((l) => /\[ads\] 전면광고/.test(l.text)).map((l) => l.text);
       info(`광고 판정 로그: ${JSON.stringify(adLog)}`);
       check('결과→다음 날 전환 시 전면광고 판정: 설치 당일 건너뜀(install_day)', adLog.length >= 1 && adLog.every((t) => /install_day/.test(t)), adLog.join(' | '));
-      info('미실행: 전면광고 예고(noticeKey) → 노출 → 보상 흐름 UI — main.ts onDayFinished가 판정 로그만 남기고 노출은 TODO(T-133 진행 중)');
-      meta.notRun = ['전면광고 예고→노출→보상 UI(미구현)'];
       // 저장·복원
       const saved = await page.evaluate(() => ({ prog: localStorage.getItem('mt-mock:mt.progress.v1'), ads: localStorage.getItem('mt-mock:mt.adCounters.v1') }));
       info(`저장값: progress=${saved.prog} ads=${saved.ads}`);
@@ -199,6 +207,8 @@ const DECIDE = () => {
       await step(page, 10);
       await shot(page, '09-title-continue');
       await tapLogical(page, 90, 200);
+      await step(page, 20); await page.waitForTimeout(200); await step(page, 10);
+      await tapLogical(page, 90, 265);
       await step(page, 20);
       const resumed = await page.evaluate(() => window.__mtDay && window.__mtDay.content.day);
       check('새로고침 후 타이틀 탭 → 저장된 2일차로 시작(복원)', resumed === 2, `day=${resumed}`);
@@ -207,10 +217,81 @@ const DECIDE = () => {
       await s.context.close();
     }
 
+
+    // ── A3. 이어하기(D-050 ①~⑧, D-056) — 개발 서버 ?adResult=dismiss|fail, ?ads=off
+    const caughtFlow = async (query, label) => {
+      const s = await openPage(browser, DEV + `?day=6${query}`, { width: 360, height: 640 }, { fakeRaf: true, clearStorage: true });
+      const { page } = s;
+      await waitBoot(s); await tapLogical(page, 90, 200); await step(page, 20); await page.waitForTimeout(200); await step(page, 10);
+      await tapLogical(page, 90, 265); await step(page, 200);
+      // 하니스 조작(관찰용): 의심 100%로 적발 유도
+      await page.evaluate(() => { window.__mtDay.floor.suspicion.value = 1.05; });
+      await step(page, 3);
+      const mark = s.logs.length;
+      for (let i = 0; i < 200 && (await page.evaluate(() => window.__mtScene.overlay)) === 'cutin'; i++) await step(page, 3);
+      for (let i = 0; i < 10; i++) { await page.waitForTimeout(30); await step(page, 2); }
+      const st = await page.evaluate(() => ({ ov: window.__mtScene.overlay, btns: window.__mtScene.buttons.map((x) => ({ x: x.b.x, y: x.b.y, w: x.b.w, h: x.b.h, text: x.b.label.text, stroke: x.b.bg.lineWidth })) }));
+      return { s, page, st, mark };
+    };
+    {
+      // reward(기본)
+      const { s, page, st, mark } = await caughtFlow('', 'reward');
+      await shot(page, '13-continue-offer');
+      const adBefore = s.logs.slice(mark).filter((l) => /\[mock ads\]/.test(l.text)).length;
+      check('D-050 ① 제안 화면에서 아무것도 안 누르면 광고 호출 0회', st.ov === 'offer' && adBefore === 0, `overlay=${st.ov} 광고 ${adBefore}`);
+      const [yes, no] = st.btns;
+      check('D-050 ② 두 버튼 같은 크기·같은 테두리', yes && no && yes.w === no.w && yes.h === no.h && yes.stroke === no.stroke, JSON.stringify(st.btns));
+      check('D-050 ④⑦ 버튼 문구: 광고·보상 명시 / 중립적 거절', yes && /광고/.test(yes.text) && no && no.text === '그냥 결과 보기', `${yes && yes.text} / ${no && no.text}`);
+      for (let i = 0; i < 20; i++) await step(page, 30); // 10초 방치
+      const ov10 = await page.evaluate(() => window.__mtScene.overlay);
+      const ad10 = s.logs.slice(mark).filter((l) => /\[mock ads\]/.test(l.text)).length;
+      check('D-050 ③ 10초 방치해도 광고 자동 시작 없음(카운트다운 없음)', ov10 === 'offer' && ad10 === 0, `overlay=${ov10} 광고 ${ad10}`);
+      await tapLogical(page, yes.x + yes.w / 2, yes.y + yes.h / 2);
+      for (let i = 0; i < 10; i++) { await page.waitForTimeout(50); await step(page, 3); }
+      const after = await page.evaluate(() => ({ phase: window.__mtDay.phase, continued: window.__mtDay.continued, susp: window.__mtDay.floor.suspicion.value, ov: window.__mtScene.overlay }));
+      check('D-050 ⑤ 보상 수령 → 같은 판 재개, 의심 60%(D-064)', after.continued && after.phase !== 'ended' && Math.abs(after.susp - 0.6) < 0.02 && after.ov === 'none', JSON.stringify(after));
+      await shot(page, '14-continued');
+      // 이어간 판을 끝냄(적발 → 이번엔 제안 없음) → 결과 → 다음 날: 리더보드 0회, 전면 0회
+      await page.evaluate(() => { window.__mtDay.floor.suspicion.value = 1.05; });
+      for (let i = 0; i < 60; i++) { await step(page, 5); await page.waitForTimeout(20); }
+      const ov2 = await page.evaluate(() => window.__mtScene.overlay);
+      check('이어간 판에서 다시 적발 → 제안 없이 결과(하루 1번)', ov2 === 'result', ov2);
+      const m2 = s.logs.length;
+      await step(page, 40);
+      const nb2 = await page.evaluate(() => { const b = window.__mtScene.buttons.find((x) => /다음|다시/.test(x.b.label.text)); return b ? { x: b.b.x + b.b.w / 2, y: b.b.y + b.b.h / 2, t: b.b.label.text } : null; });
+      if (nb2) await tapLogical(page, nb2.x, nb2.y);
+      for (let i = 0; i < 30; i++) { await page.waitForTimeout(50); await step(page, 5); }
+      const lb = s.logs.slice(m2).filter((l) => /\[mock leaderboard\] 점수 제출/.test(l.text)).length;
+      const inter = s.logs.slice(m2).filter((l) => /\[mock ads\] interstitial/.test(l.text)).length;
+      check('D-056 이어간 판 리더보드 제출 0회 / ⑧ 전면광고 0회', nb2 && lb === 0 && inter === 0, `버튼 ${nb2 && nb2.t}, 리더보드 ${lb}, 전면 ${inter}`);
+      check('이어하기 흐름 콘솔 에러 0', s.errors.length === 0, s.errors.slice(0, 2).join(' | '));
+      await s.context.close();
+    }
+    for (const q of ['dismiss', 'fail']) {
+      const { s, page, st, mark } = await caughtFlow(`&adResult=${q}`, q);
+      const [yes] = st.btns;
+      await step(page, 45); // 입력 보호 0.6초 경과
+      if (yes) await tapLogical(page, yes.x + yes.w / 2, yes.y + yes.h / 2);
+      for (let i = 0; i < 10; i++) { await page.waitForTimeout(50); await step(page, 3); }
+      const after = await page.evaluate(() => ({ phase: window.__mtDay.phase, continued: window.__mtDay.continued, ov: window.__mtScene.overlay, toast: window.__mtScene.toastOv ? window.__mtScene.toastOv.t.text : null }));
+      if (q === 'dismiss') await shot(page, '15-continue-dismissed');
+      for (let i = 0; i < 20; i++) await step(page, 30);
+      const ads = s.logs.slice(mark).filter((l) => /\[mock ads\]/.test(l.text)).length;
+      check(`D-050 ⑤ 광고 ${q === 'dismiss' ? '중도 종료' : '실패'} → 결과 화면 + 안내, 재개 없음, 자동 재시도·추가 광고 없음`, st.ov === 'offer' && after.ov === 'result' && !after.continued && after.phase === 'ended' && !!after.toast && ads === 1, `${JSON.stringify(after)} 광고 호출 ${ads}`);
+      await s.context.close();
+    }
+    {
+      const { s, page, st } = await caughtFlow('&ads=off', 'off');
+      const ads = s.logs.filter((l) => /\[mock ads\]/.test(l.text)).length;
+      check('D-050 ⑥ 광고 미지원(?ads=off) → 제안 화면 건너뛰고 바로 결과', st.ov === 'result' && ads === 0, `overlay=${st.ov} 버튼 ${st.btns.map((b) => b.text).join('/')}`);
+      check('광고 미지원: 결과 화면에 월급 2배 버튼 없음', !st.btns.some((b) => /광고/.test(b.text)), st.btns.map((b) => b.text).join('/'));
+      await s.context.close();
+    }
+
     // ── A2. 세로 화면 레이아웃(개발 서버, 3종)
     for (const vp of [{ width: 390, height: 844 }, { width: 412, height: 915 }, { width: 320, height: 568 }]) {
       const s = await openPage(browser, DEV + '?day=6', vp, { fakeRaf: true, clearStorage: true });
-      await waitBoot(s); await tapLogical(s.page, 90, 200); await step(s.page, 200);
+      await waitBoot(s); await tapLogical(s.page, 90, 200); await step(s.page, 20); await s.page.waitForTimeout(200); await step(s.page, 10); await tapLogical(s.page, 90, 265); await step(s.page, 200);
       const b = await canvasBox(s.page);
       const z = b.w / 180;
       const ok = Number.isInteger(z) && b.h === 320 * z && b.x >= 0 && b.y >= 0 && b.x + b.w <= vp.width + 0.5 && b.y + b.h <= vp.height + 0.5;
@@ -226,6 +307,8 @@ const DECIDE = () => {
       let errs = [];
       for (let k = 0; k < 3; k++) {
         const s = await openPage(browser, PROD, { width: 360, height: 640 }, { fakeRaf: false, clearStorage: true });
+        const reqs = [];
+        s.page.on('request', (rq) => reqs.push({ t: Date.now(), url: rq.url() }));
         const t = Date.now();
         await s.page.waitForFunction(() => !!document.querySelector('#game canvas'), null, { timeout: 15000 });
         // 타이틀 씬 진입 = [boot] data tables 로그 이후
@@ -234,8 +317,13 @@ const DECIDE = () => {
         times.push(Date.now() - s.t0);
         await s.page.waitForTimeout(500);
         if (k === 0) await shot(s.page, '11-prod-title-360x640');
+        const audioBeforeTap = reqs.filter((x) => /\.(mp3|ogg)/.test(x.url)).length;
+        if (k === 0) { meta.audioBeforeTap = audioBeforeTap; }
         // 실제 클릭으로 시작해 3초 진행
         await tapLogical(s.page, 90, 200);
+        await s.page.waitForTimeout(400);
+        await tapLogical(s.page, 90, 265);
+        if (k === 0) { await s.page.waitForTimeout(800); meta.audioAfterTap = reqs.filter((x) => /\.(mp3|ogg)/.test(x.url)).length; }
         await s.page.waitForTimeout(3000);
         if (k === 0) await shot(s.page, '12-prod-day1-3s');
         errs = errs.concat(s.errors);
@@ -246,6 +334,7 @@ const DECIDE = () => {
       info(`빌드 미리보기 첫 화면(타이틀) 진입: ${times.join(', ')}ms (로컬 서버, 캐시 없음 새 컨텍스트)`);
       check('빌드 미리보기 첫 화면 진입 ≤ 3000ms(로컬)', Math.max(...times) <= 3000, `최대 ${Math.max(...times)}ms`);
       check('빌드 미리보기 콘솔 에러 0', errs.length === 0, errs.slice(0, 3).join(' | '));
+      check('오디오는 첫 터치 전 로드하지 않음(D-063 지연 로드)', meta.audioBeforeTap === 0, `터치 전 ${meta.audioBeforeTap}개, 터치 뒤 ${meta.audioAfterTap}개 요청`);
     }
   } catch (e) {
     check('브라우저 테스트 예외 없음', false, e && e.stack ? e.stack.split('\n').slice(0, 3).join(' ') : String(e));

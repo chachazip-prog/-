@@ -18,8 +18,20 @@ export interface StageInputs {
 export interface StageThresholds {
   /** danger: 의심 ≥ 이 값 (= rules.visualCues.suspicionHigh.threshold) */
   readonly dangerSuspicion: number;
-  /** alert: 의심 ≥ 이 값 (매니페스트 stages.alert.when 문장의 0.4 — 숫자 필드 없음) */
+  /** alert: 의심 ≥ 이 값 (= rules.visualCues.dangerBorder.alertSuspicionMin, T-136. 매니페스트 stages.alert.when과 같은 값) */
   readonly alertSuspicion: number;
+}
+
+/**
+ * rules.visualCues에서 임계값을 읽는다(T-136). 값이 없으면 null — 데이터 누락은 호출 측이 경고로 처리.
+ * danger = suspicionHigh.threshold, alert = dangerBorder.alertSuspicionMin
+ */
+export function stageThresholdsFromCues(visualCues: Readonly<Record<string, unknown>>): StageThresholds | null {
+  const o = (v: unknown): Record<string, unknown> => (typeof v === 'object' && v !== null ? v as Record<string, unknown> : {});
+  const danger = o(visualCues['suspicionHigh'])['threshold'];
+  const alert = o(visualCues['dangerBorder'])['alertSuspicionMin'];
+  if (typeof danger !== 'number' || typeof alert !== 'number') return null;
+  return { dangerSuspicion: danger, alertSuspicion: alert };
 }
 
 const DEFAULT_PRIORITY: readonly DangerStage[] = ['stopped', 'freeze', 'danger', 'finale', 'alert', 'calm'];
