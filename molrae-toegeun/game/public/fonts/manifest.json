@@ -16,7 +16,7 @@
       "lineHeight": 13,
       "base": 11,
       "pngSha256": "69c15127bfebb7fb2c9c3111e34603b2970c31434dc38ca3785940d1a63acb33",
-      "jsonSha256": "ab106ef3d3fe7eea1d4cce90a4373de7a63064ed0390739cf5a3347d711e7c11",
+      "jsonSha256": "c6e04cb3ceb8193d487a601baf695d678dc95628d552b4d0da59db1b2c591ef4",
       "allowedMissing": []
     },
     {
@@ -30,7 +30,7 @@
       "lineHeight": 10,
       "base": 9,
       "pngSha256": "4ffcd2387d07e8ca62654bb616157ece5e041829da9ffd2077539b63f7bc7fba",
-      "jsonSha256": "a14c8f002fd1e97c4bba0314cdb76bc676c214c8238da65ec57922bd73aa309b",
+      "jsonSha256": "3b25d10c772800c5a7ca90a4a1ca137b5c0f6fd318d59f2a15289d346671e021",
       "allowedMissing": []
     },
     {
@@ -44,7 +44,7 @@
       "lineHeight": 8,
       "base": 7,
       "pngSha256": "72c6e0b2e06a6add65ece15b5e05b78c32c41a11d48ba836d2c14bc624276431",
-      "jsonSha256": "e1ed45ffbce5c51ab5e23172bebf7cf01f46b5138f6264fefb7924a852fa3803",
+      "jsonSha256": "c4e6f66f9a670bdda23fe55f9a1f4c7a131fa97f71f0fb30de6f1f0f41d72d85",
       "allowedMissing": []
     }
   ]

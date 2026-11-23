@@ -33,6 +33,11 @@ export class PlayerMover {
   private talkElapsed = 0;
   /** pauseFor 남은 시간(초). 0이면 일시정지 아님 */
   private pauseLeft = 0;
+  /**
+   * 지금 모드가 '이미 멈춰 있던 상태'에서 이어졌는가(위장 안착 disguiseSettleSec 면제).
+   * 말걸기(talked) 종료 → 대기·정지(BUG-009, D-043), 상위 규칙이 지정한 대기(게이트 앞, BUG-012). 모드가 바뀌면 해제
+   */
+  settled = false;
 
   constructor(start: Tile) {
     const c = tileCenter(start);
@@ -62,7 +67,7 @@ export class PlayerMover {
   get paused(): boolean { return this.pauseLeft > 0 && this.mode === 'disguised'; }
 
   private setMode(m: PlayerMode): void {
-    if (this.mode !== m) { this.mode = m; this.modeTime = 0; }
+    if (this.mode !== m) { this.mode = m; this.modeTime = 0; this.settled = false; }
   }
 
   /** 경로(시작 타일 제외, 목적지 포함)를 따라 이동 시작. 성공 여부 반환 */
@@ -93,14 +98,23 @@ export class PlayerMover {
     return true;
   }
 
-  /** 경로를 보관한 채 sec 동안 위장 상태로 멈춤. 이동 중이 아니면 false */
-  pauseFor(sec: number): boolean {
+  /**
+   * 경로를 보관한 채 sec 동안 위장 상태로 멈춤. 이동 중이 아니면 false.
+   * settled = true: 실제로는 멈춰 있던 상태에서 이어진 대기(말걸기 종료 직후 postTalkHoldSec)라 위장 안착 시간을 두지 않음(BUG-009)
+   */
+  pauseFor(sec: number, settled = false): boolean {
     if (this.mode !== 'moving' || sec <= 0) return false;
     this.savedPath = this.path; this.savedIndex = this.pathIndex;
     this.path = []; this.pathIndex = 0;
     this.pauseLeft = sec;
     this.setMode('disguised');
+    if (settled) this.settled = true;
     return true;
+  }
+
+  /** 지금 정지 상태를 '안착 완료'로 표시(상위 규칙: 게이트 앞 대기 = 위장, BUG-012). 이동·말걸기 중이면 무시 */
+  markSettled(): void {
+    if (this.mode === 'idle' || this.mode === 'disguised') this.settled = true;
   }
 
   /** 일시정지 해제 → 보관 경로 재개 */
@@ -171,7 +185,10 @@ export class PlayerMover {
     if (this.mode === 'talked') {
       this.talkLeft -= dt;
       this.talkElapsed += dt;
-      if (this.talkLeft <= 0 && !this.restoreSaved()) this.setMode('idle');
+      if (this.talkLeft <= 0 && !this.restoreSaved()) {
+        this.setMode('idle');
+        this.settled = true; // BUG-009(D-043): 강제 정지에서 그대로 서 있음 → 안착 시간 없음
+      }
       return;
     }
     if (this.pauseLeft > 0 && this.mode === 'disguised') {

@@ -50,6 +50,19 @@ export function hhmm(s: string): number {
   return m ? Number(m[1]) * 60 + Number(m[2]) : 0;
 }
 
+/** rules.day의 'HH:MM' 시각(분). 없거나 형식이 틀리면 예외(시각 기본값을 코드에 두지 않음, BUG-011) */
+function clockOf(day: O, key: string): number {
+  const v = day[key];
+  if (typeof v !== 'string' || !/^\d+:\d+$/.test(v)) throw new Error(`content: rules.day.${key} 시각('HH:MM') 없음/형식 오류: ${String(v)}`);
+  return hhmm(v);
+}
+
+function requiredNum(o: O, key: string): number {
+  const v = o[key];
+  if (typeof v !== 'number' || !Number.isFinite(v) || v <= 0) throw new Error(`content: rules.day.${key} 양수 필요: ${String(v)}`);
+  return v;
+}
+
 export type Tables = Readonly<Record<string, unknown>>;
 
 export interface BuildWarnings { push(msg: string): void }
@@ -216,6 +229,9 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       closeCallMaxPerDay: num(disguise['closeCallMaxPerDay'], 3),
     },
     offscreenSourceNoGain: obj(rules['offscreenWarning'])['offscreenSourceNoGain'] === true,
+    // BUG-010: 전조 중 '돌아볼 콘' 예측 구간(전조 남은 시간 + 이 값). 데이터가 없으면 예측하지 않음(기존 동작)
+    ...(typeof obj(rules['offscreenWarning'])['minLeadSecBeforeGaze'] === 'number'
+      ? { turnWarnLeadSec: obj(rules['offscreenWarning'])['minLeadSecBeforeGaze'] as number } : {}),
   };
 
   // ── 방해 이벤트(이 날 켜진 것) ──
@@ -464,6 +480,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       firstTryWindowScale: gateScript ? num(gateScript['scale'], 1) : 1,
       firstTryAttempts: gateScript ? num(gateScript['attempts'], 1) : 0,
       windowCenter: num(gate['windowCenter'], 0.5),
+      waitingCountsAsDisguised: gate['waitingCountsAsDisguised'] === true,
     },
     exitSpot: spots[str(obj(leaveEv['location'])['spot'], 'elevator_main_use')]?.tile ?? { x: 5, y: 2 },
     elevatorWaitSecRange: range2(elevPh['waitSecRange']) ?? [1.5, 3],
@@ -605,10 +622,11 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     coverSpots: arr(map['coverSpots']).map(obj).map((c) => tile2(c['tile'])),
     introSec: num(dayCfg['introSec'], 2),
     dayPhaseSec: num(plan['dayPhaseSec'], num(rank['dayPhaseSec'], 50)),
+    // BUG-011: 시계 기준(18시 전 탈출·야근 등)은 데이터(rules.day)에서만 읽는다. 코드 기본 시각 없음 → 빠지면 로드 실패
     clock: {
-      startMin: hhmm(str(dayCfg['clockStart'], '09:00')), dayEndMin: hhmm(str(dayCfg['dayPhaseClockEnd'], '17:48')),
-      leaveStartMin: hhmm(str(dayCfg['leaveClockStart'], '17:48')), leaveMinPerSec: num(dayCfg['leaveGameMinutesPerSec'], 1),
-      earlyLeaveBeforeMin: hhmm(str(dayCfg['earlyLeaveBefore'], '18:00')), overtimeAtMin: hhmm(str(dayCfg['overtimeAt'], '18:18')),
+      startMin: clockOf(dayCfg, 'clockStart'), dayEndMin: clockOf(dayCfg, 'dayPhaseClockEnd'),
+      leaveStartMin: clockOf(dayCfg, 'leaveClockStart'), leaveMinPerSec: requiredNum(dayCfg, 'leaveGameMinutesPerSec'),
+      earlyLeaveBeforeMin: clockOf(dayCfg, 'earlyLeaveBefore'), overtimeAtMin: clockOf(dayCfg, 'overtimeAt'),
     },
     work: {
       fillPerSec: num(obj(rules['work'])['fillPerSec'], 0.04), max: num(obj(rules['work'])['max'], 1),

@@ -46,7 +46,7 @@ export class Hud {
     this.border = scene.add.graphics().setScrollFactor(0).setDepth(DEPTH - 1);
     this.g = scene.add.graphics().setScrollFactor(0).setDepth(DEPTH);
     const fixed = <T extends Phaser.GameObjects.Components.ScrollFactor & Phaser.GameObjects.Components.Depth>(o: T): T => { o.setScrollFactor(0); o.setDepth(DEPTH + 1); return o; };
-    this.clock = fixed(addPixelText(scene, 0, 0, '09:00', { role: 'num', color: ink }));
+    this.clock = fixed(addPixelText(scene, 0, 0, fmtClock(sim.clockMin), { role: 'num', color: ink })); // 데이터 시계(rules.day.clockStart)
     this.rank = fixed(addPixelText(scene, 0, 0, str.t(`rank.${sim.content.rankId}.name`), { role: 'label', color: color('dark') }));
     placeText(fixed(addPixelText(scene, 0, 0, str.t('hud.suspicion'), { role: 'label', color: ink })), 30, 6, 0, 0.5);
     placeText(fixed(addPixelText(scene, 0, 0, str.t('hud.work'), { role: 'label', color: ink })), 30, 18, 0, 0.5);
@@ -110,8 +110,7 @@ export class Hud {
     // 상단
     g.fillStyle(0xffffff, 1).fillRect(0, 0, LOGICAL_WIDTH, HUD_TOP_PX);
     g.fillStyle(color('light'), 1).fillRect(0, HUD_TOP_PX - 1, LOGICAL_WIDTH, 1);
-    const min = Math.floor(sim.clockMin);
-    setPixelText(this.clock, `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`);
+    setPixelText(this.clock, fmtClock(sim.clockMin));
     placeText(this.clock, 3, 6, 0, 0.5);
     placeText(this.rank, 3, 18, 0, 0.5);
     // 의심 게이지 (visualCues.suspicionHigh: 임계 이상이면 빨강 맥동, 아래는 노랑)
@@ -293,4 +292,9 @@ export class Hud {
       if (f.left <= 0) this.flash = null;
     }
   }
+}
+
+function fmtClock(clockMin: number): string {
+  const min = Math.floor(clockMin);
+  return `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
 }

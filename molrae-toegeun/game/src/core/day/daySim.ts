@@ -142,6 +142,11 @@ export class DaySim {
   private gateTime = 0;
   private hintsShown = new Set<string>();
   private intState = new Map<string, { started: number; count: number; lastAt: number }>();
+  /**
+   * 말걸기 성립 횟수(방해 id별, 하루 단위). BUG-007: 순찰 등장(intState)과 분리한다.
+   * walker_talk(INT-06)은 등장이 intState를 1로 만들어 maxPerDay 1이면 말걸기가 영영 막혔다
+   */
+  private talkState = new Map<string, { count: number; lastAt: number }>();
   private scriptDone = new Set<number>();
   private snitchDwell = 0;
   private reportWait = 0;
@@ -197,6 +202,7 @@ export class DaySim {
         playerRate: (base) => this.playerRate(base),
         gazeAllowed: (npc) => this.gazeAllowed(npc),
         talkAllowed: (npc) => this.talkAllowed(npc),
+        settleExempt: () => this.atGateWaiting(),
         blockedForPlayer: (x, y) => this.gateBlocked(x, y),
         onNpcEnded: (npc) => this.onNpcEnded(npc),
         npcFrozen: (npc) => this.frozenAll && npc !== this.ceoNpc,
@@ -499,12 +505,23 @@ export class DaySim {
     if (this.frozenAll || this.qteActive) return false;
     if (actor.talkOnlyWhilePlayerAway && this.playerAtSeat) return false;
     const cond = actor.talkOnlyWhen ?? (typeof int.triggerDef['condition'] === 'string' ? int.triggerDef['condition'] as string : undefined);
-    if (cond === 'leave_phase_before_1800' && !(this.phase === 'leave' && this.clockMin < this.content.clock.earlyLeaveBeforeMin)) return false;
-    if (cond === 'clock_before_1800' && !(this.clockMin < this.content.clock.earlyLeaveBeforeMin)) return false;
-    const st = this.intState.get(intId);
+    // BUG-011: 조건 이름의 '1800'은 데이터 식별자일 뿐이고 기준 시각은 항상 rules.day.earlyLeaveBefore(데이터)
+    const early = cond !== undefined ? EARLY_LEAVE_CONDS[cond] : undefined;
+    if (early === 'leave' && !(this.phase === 'leave' && this.clockMin < this.content.clock.earlyLeaveBeforeMin)) return false;
+    if (early === 'any' && !(this.clockMin < this.content.clock.earlyLeaveBeforeMin)) return false;
+    const st = this.talkState.get(intId);
     if (st && st.count >= int.maxPerDay) return false;
     if (st && this.time - st.lastAt < int.cooldownSec) return false;
     return true;
+  }
+
+  /** BUG-012(§19-3 ③): 퇴근 중 게이트 사용 칸에 멈춰 있음 = 위장(안착 시간 없음). 정체 규칙은 그대로 */
+  private atGateWaiting(): boolean {
+    const L = this.content.leave;
+    if (this.phase !== 'leave' || !L.gate.waitingCountsAsDisguised || this.gateOpen) return false;
+    if (this.leaveStage !== 'walk' && this.leaveStage !== 'gate') return false;
+    const t = this.floor.player.tile, g = L.gate.spot;
+    return t.x === g.x && t.y === g.y;
   }
 
   private gateBlocked(x: number, y: number): boolean {
@@ -588,7 +605,7 @@ export class DaySim {
     this.result = {
       outcome: outc, stars, titleKey, peakSuspicion: peak, work: this.work, quota: c.work.quota,
       missionsDone: done, missionsTotal: this.missions.length, missionsRequired: c.missionsRequired,
-      slackPoints: points, salary, timeSec: this.time, clockMin: this.clockMin, caughtBy: by, reactionKey: reaction,
+      slackPoints: points, salary, timeSec: this.content.introSec + this.time, clockMin: this.clockMin, caughtBy: by, reactionKey: reaction,
       continued: this.continued, eyeContact: this.eyeContact, ceoVisit,
     };
     this.phase = 'ended';
@@ -878,6 +895,16 @@ export class DaySim {
     st.lastAt = this.time;
     this.intState.set(id, st);
   }
+
+  private noteTalk(id: string): void {
+    const st = this.talkState.get(id) ?? { count: 0, lastAt: -Infinity };
+    st.count++;
+    st.lastAt = this.time;
+    this.talkState.set(id, st);
+  }
+
+  /** 오늘 말걸기 성립 횟수(QA·표시용) */
+  talkCount(interruptId: string): number { return this.talkState.get(interruptId)?.count ?? 0; }
 
   private startInterrupt(int: DayInterruptDef): void {
     const pat = this.content.patrols;
@@ -1499,7 +1526,7 @@ export class DaySim {
         const npc = this.floor.findNpc((n) => n.def.id === e.npc);
         const intId = npc?.def.actorId ? this.content.actors[npc.def.actorId]?.talkEnabledBy : undefined;
         if (intId) {
-          this.noteInterrupt(intId);
+          this.noteTalk(intId);
           const int = this.content.interrupts.find((i) => i.id === intId);
           const pts = int ? numOr(int.effect['earlyLeavePoints'], 0) : 0;
           if (pts > 0) this.addPoints(pts);
@@ -1519,6 +1546,12 @@ export class DaySim {
 }
 
 // ── 보조 함수 ─────────────────────────────────────────────
+
+/** 말걸기 시계 조건(데이터 이름 → 범위). 기준 시각 = content.clock.earlyLeaveBeforeMin. *_early_leave는 이름 변경 대비 별칭 */
+const EARLY_LEAVE_CONDS: Readonly<Record<string, 'leave' | 'any'>> = {
+  leave_phase_before_1800: 'leave', clock_before_1800: 'any',
+  leave_phase_before_early_leave: 'leave', clock_before_early_leave: 'any',
+};
 
 function numOr(v: unknown, d: number): number { return typeof v === 'number' ? v : d; }
 function numStr(v: unknown): string { return typeof v === 'string' ? v : ''; }

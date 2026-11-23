@@ -269,6 +269,8 @@ export class PatrolNpc {
 
   get pos(): Vec { return { x: this.x, y: this.y }; }
   get waypointIndex(): number { return this.wpIndex; }
+  /** 전조(tell) 남은 시간(초). 전조 중이 아니면 0 (BUG-010: 경고 판정의 예측 구간) */
+  get tellRemaining(): number { return this.mode === 'tell' ? Math.max(0, this.timer) : 0; }
 
   /** 지금 판정에 쓰는 콘 (강제 시선의 거리 덮어쓰기 반영) */
   get cone(): ConeDef {

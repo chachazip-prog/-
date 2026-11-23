@@ -56,6 +56,12 @@ export interface FloorRules {
   readonly disguise?: { readonly closeCallWindowSec: readonly [number, number]; readonly closeCallMaxPerDay: number };
   /** X10: 콘 주인이 화면 밖이면 의심 상승 없음(카메라 모델 필요) */
   readonly offscreenSourceNoGain?: boolean;
+  /**
+   * BUG-010(rules.offscreenWarning.minLeadSecBeforeGaze): 전조 중 'turning' 판정에 쓰는 예측 구간(초).
+   * 전조가 끝난 뒤 이 시간 안에 플레이어와 NPC가 서로 다가가 실제 콘에 들어올 수 있으면 지금부터 turning.
+   * 없으면 예측하지 않음(실제 콘 = 지금 위치 기준)
+   */
+  readonly turnWarnLeadSec?: number;
 }
 
 /** DaySim 등 상위 규칙이 FloorSim 판정에 끼어드는 지점 (모두 선택) */
@@ -66,6 +72,8 @@ export interface FloorHooks {
   gazeAllowed?(npc: PatrolNpc): boolean;
   /** 이 NPC가 지금 말을 걸 수 있는가(enabledBy·onlyWhilePlayerAway·onlyWhen) */
   talkAllowed?(npc: PatrolNpc): boolean;
+  /** 지금 플레이어의 정지를 위장 안착 없이 바로 위장으로 칠지(BUG-012: 게이트 앞 대기). 시선 판정 직전에 호출 */
+  settleExempt?(): boolean;
   /** 플레이어에게 추가로 막힌 타일(게이트 등) */
   blockedForPlayer?(x: number, y: number): boolean;
   /** 순찰이 끝난 NPC 처리: 새 NpcDef(thenPatrol)를 돌려주면 교체, null이면 제거(despawnAtEnd)·유지 */
@@ -150,6 +158,8 @@ export class FloorSim {
   private acc = 0;
   private events: SimEvent[] = [];
   private lastStopAt = -Infinity;
+  /** 콘 안에서 멈춰(위장) 있던 연속 시간(초). 위장 정체 판정용 */
+  private stillExposedSec = 0;
   private blockTimer = -1;
   private pathDist = new Map<PatrolNpc, { cur: number; prev: number }>();
   private distField: Int32Array | null = null;
@@ -330,7 +340,8 @@ export class FloorSim {
       this.talkingNpc = null;
       // D-039 + postTalkHoldSec: 재개 시점에 콘 안이면 잠깐 위장 상태로 기다렸다 출발
       const hold = this.rules.movement?.postTalkHoldSec ?? 0;
-      if (p.mode === 'moving' && hold > 0 && this.anyConeCoversPlayer()) p.pauseFor(hold);
+      // BUG-009(D-043): 말걸기로 이미 멈춰 있었으므로 대기 첫 disguiseSettleSec도 위장 상승률(안착 면제)
+      if (p.mode === 'moving' && hold > 0 && this.anyConeCoversPlayer()) p.pauseFor(hold, true);
     }
 
     const ctx: StepContext = {
@@ -351,7 +362,8 @@ export class FloorSim {
       if (npc.mode === 'talk' && before !== 'talk' && npc.def.talk && p.forceTalk(npc.def.talk.durationSec)) {
         this.talkingNpc = npc;
         this.events.push({ t: this.time, type: 'talk', npc: npc.def.id });
-      } else if (before === 'tell' && beforeKind === 'talk' && npc.mode !== 'tell' && npc.lastTalkCancel) {
+      } else if (before === 'tell' && beforeKind === 'talk' && npc.tellKind !== 'talk' && npc.lastTalkCancel) {
+        // BUG-015: 회피 취소(escaped)는 곧바로 돌아보기 전조(tell/look)로 넘어가 mode가 계속 tell이므로 tellKind로 판정
         this.events.push({ t: this.time, type: 'talkCancel', npc: npc.def.id, reason: npc.lastTalkCancel });
       }
       if (npc.ended) ended.push(npc);
@@ -392,11 +404,15 @@ export class FloorSim {
     const startedExposure = mult > 0 && this.gazeNow === 0;
     this.gazeNow = mult;
     if (startedExposure) this.checkCloseCallOnExposure();
-    const base = exposureRate(this.rules.suspicion, p.mode, p.modeTime);
+    // 안착 면제(BUG-009 말걸기 종료 직후, BUG-012 상위 규칙이 지정한 대기 칸 도착)
+    if (this.playerStill && this.hooks.settleExempt?.() === true) p.markSettled();
+    const base = exposureRate(this.rules.suspicion, p.mode, p.settled ? Infinity : p.modeTime);
     const rate = this.hooks.playerRate ? this.hooks.playerRate(base) : base;
     const t = p.tile;
     const stale = this.playerStill && !(this.rules.suspicion.disguiseStaleExemptNearCover && nearCover(this.map, t.x, t.y));
-    updateSuspicionRate(this.suspicion, this.rules.suspicion, mult, rate, dt, { decay: p.mode !== 'moving', stale });
+    // 위장 정체(X5)는 '콘 안에서 멈춰 있던 시간'으로 판정(T-140, rules.suspicion._designNote '콘 안에서 3초 넘게 서 있을 때만')
+    this.stillExposedSec = mult > 0 && this.playerStill ? this.stillExposedSec + dt : 0;
+    updateSuspicionRate(this.suspicion, this.rules.suspicion, mult, rate, dt, { decay: p.mode !== 'moving', stale, staleSec: this.stillExposedSec });
 
     this.updatePathDistances();
 
@@ -434,6 +450,7 @@ export class FloorSim {
     this.blockTimer = -1;
     this.suspicion.exposedSec = 0;
     this.gazeNow = 0;
+    this.stillExposedSec = 0;
     this.seeing = this.npcs.map(() => false);
   }
 
@@ -515,6 +532,21 @@ export class FloorSim {
   }
 
   /**
+   * BUG-010: 전조 중 경고(turning)용 콘. 실제 콘 거리에 '전조 남은 시간 + turnWarnLeadSec' 동안
+   * 플레이어와 NPC가 서로 다가갈 수 있는 최대 거리(두 속도의 합 × 시간)를 더한다(넓은 콘 거리를 넘지 않음).
+   * 원인: 화면 밖에서 회전 전조가 시작될 때 플레이어가 실제 콘 거리 바로 밖(예: 6타일 콘, 7.4타일)에서 다가오면
+   * 전조 동안 turning이 거짓이고, 회전 직후 서로 다가가 시선이 시작될 때 화면 안 노출이 0.4초에 못 미쳤다.
+   * 각도는 실제 콘 그대로(가림 반영) — 넓은 콘 전체로 키우면 앉은 상사 돌아보기마다 화살표가 떠 노이즈가 된다.
+   */
+  private turnWarnCone(npc: PatrolNpc, wide: { range: number; halfAngleDeg: number }): { range: number; halfAngleDeg: number } {
+    const lead = this.rules.turnWarnLeadSec;
+    const cone = npc.cone;
+    if (lead === undefined || lead <= 0) return cone;
+    const closing = (this.rules.playerSpeedTilesPerSec + Math.max(0, npc.def.speedTilesPerSec)) * (npc.tellRemaining + lead);
+    return { range: Math.min(wide.range, cone.range + closing), halfAngleDeg: cone.halfAngleDeg };
+  }
+
+  /**
    * D-044 방향 전환 전조 판정 (BUG-001): "새 시선이 플레이어 쪽을 향할 수 있는가"
    * = 새 방향의 경고 콘(wideCone, 가림 무시) 안에 플레이어가 있으면 true → 전조 후 회전.
    * 경고 콘 ⊇ 실제 콘이므로 전조 없이 회전한 직후 실제 시선에 플레이어가 들어오는 경우는 생기지 않는다.
@@ -559,7 +591,7 @@ export class FloorSim {
     const los = th.approachRequiresLineOfSight === true;
     if (npc.mode === 'tell' && npc.pendingFacing !== null) {
       const turning = los
-        ? canSee(this.map, npc.pos, npc.pendingFacing, npc.cone, pp)
+        ? canSee(this.map, npc.pos, npc.pendingFacing, this.turnWarnCone(npc, wide), pp)
         : inCone(npc.pos, npc.pendingFacing, wide, pp);
       if (turning) return 'turning';
     }

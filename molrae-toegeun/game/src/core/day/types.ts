@@ -47,6 +47,8 @@ export interface GateDef {
   readonly firstTryAttempts: number;
   /** 판정 창 중심(T-134 ③, 기본 0.5) */
   readonly windowCenter?: number;
+  /** 게이트 사용 칸 대기 = 위장(T-134 ③ waitingCountsAsDisguised). true면 도착 직후 위장 안착 시간 없음(BUG-012) */
+  readonly waitingCountsAsDisguised?: boolean;
 }
 
 export interface LeaveDef {
@@ -290,6 +292,7 @@ export interface DayResult {
   readonly missionsRequired: number;
   readonly slackPoints: number;
   readonly salary: number;
+  /** 1판 길이(초) = 인트로(introSec) + 플레이 시간(FloorSim). GDD §1 '인트로 시작~결과 화면 진입'(BUG-013). 들킴 컷인·광고 시간은 제외 */
   readonly timeSec: number;
   readonly clockMin: number;
   /** 잡은 사람(적발 리액션) */

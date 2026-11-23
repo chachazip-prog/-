@@ -62,11 +62,19 @@ export function freshCounters(nowMs: number): AdCounters {
   };
 }
 
-/** 날짜가 바뀌었으면 '오늘' 카운터 초기화 */
+/**
+ * 날짜가 바뀌었으면 '오늘' 카운터 초기화.
+ * D-068(BUG-014): 설치 첫날이 끝나는 전환(countersDate = installDate → 다른 날)이면 '3판마다' 카운터도 0으로.
+ * 설치일 판수는 이월하지 않으므로 둘째 날은 0판부터 센다(첫날 사용자 보호 취지를 둘째 날 첫 판까지 유지)
+ */
 export function rollDay(c: AdCounters, nowMs: number): AdCounters {
   const today = localDate(nowMs);
   if (c.countersDate === today) return c;
-  return { ...c, interstitialShownToday: 0, rewardedShownToday: 0, rewardedByPlacementToday: {}, countersDate: today };
+  const leavingInstallDay = c.countersDate === c.installDate;
+  return {
+    ...c, interstitialShownToday: 0, rewardedShownToday: 0, rewardedByPlacementToday: {}, countersDate: today,
+    ...(leavingInstallDay ? { gamesSinceLastInterstitial: 0 } : {}),
+  };
 }
 
 /** 한 판이 끝났을 때(결과 화면 진입) 카운터 갱신 */

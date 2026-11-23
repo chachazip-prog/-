@@ -77,6 +77,11 @@ export interface RateOptions {
   readonly decay: boolean;
   /** 위장 정체 가산 대상인가(위장·멈춤 상태이고 엄폐물 옆이 아님, X5) */
   readonly stale: boolean;
+  /**
+   * 정체 판정에 쓰는 '콘 안에서 멈춰 있던 연속 시간'(초, 이번 스텝 포함). 없으면 연속 노출 시간(exposedSec)으로 판정(기존 동작).
+   * T-140(BUG-012): 걸어서 콘에 들어온 시간까지 세면 게이트에 서자마자 정체 가산이 붙어 '3초 안 통과 시 0'(§19-3 ③)이 깨졌다
+   */
+  readonly staleSec?: number;
 }
 
 /**
@@ -92,7 +97,7 @@ export function updateSuspicionRate(
     const effective = Math.max(0, s.exposedSec - Math.max(prev, rules.graceSec));
     let r = rate;
     if (opts.stale && rules.disguiseStaleAfterSec !== undefined && rules.disguiseStalePerSec !== undefined
-      && s.exposedSec > rules.disguiseStaleAfterSec) r = Math.max(r, rules.disguiseStalePerSec);
+      && (opts.staleSec ?? s.exposedSec) > rules.disguiseStaleAfterSec) r = Math.max(r, rules.disguiseStalePerSec);
     s.value += r * gazeMultiplier * effective;
   } else {
     s.exposedSec = 0;
