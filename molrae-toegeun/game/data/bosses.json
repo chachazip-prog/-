@@ -714,7 +714,9 @@
           ],
           "slackMultiplier": 2.0
         },
-        "exitResumeDelaySec": 1.0
+        "exitResumeDelaySec": 1.0,
+        "missionTimersPausedWhileFrozen": true,
+        "_t139TimerNote": "T-139(필드 추가, 개발 구현 필요): 근무 시계는 지금처럼 ①~⑤만 멈추고, 미션 제한 시간은 '얼음 표시 중(전조~퇴장 뒤 복귀 전, frozenAll)' 내내 멈춤. 지금은 ⑥ 퇴장 약 6초 동안 화면은 얼음인데 미션 시계가 흘러, 자리 미션(쇼핑·간식) 중 순시가 오면 캐주얼 봇 쇼핑 시간 초과 80%(40·59일차). 스크래치 시험: 시간 초과 80 → 2~3%, 1판 길이 변화 없음(근무 시계는 그대로). 🧪 QA: 순시 날 자리 미션 시간 초과율, 1판 최댓값"
       },
       "greetingQte": {
         "preCueSecRange": [
