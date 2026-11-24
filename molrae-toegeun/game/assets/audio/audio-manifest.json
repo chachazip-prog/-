@@ -323,6 +323,63 @@
       "play": "미션 완료 판정(자리 복귀 후 완료 포함) 시 1회",
       "dataRefs": [],
       "visual": "미션 칩 체크 표시"
+    },
+    {
+      "key": "sfx_chair_push",
+      "category": "tell",
+      "files": {
+        "mp3": "sfx/sfx_chair_push.mp3"
+      },
+      "durationSec": 0.4,
+      "loop": false,
+      "play": "팀장 순회 standTell 시작 1회(layout.tour.standTell, 일어나기 1.0초와 같은 프레임). 앉은 자리 tell(sfx_chair_creak)과 별개",
+      "dataRefs": [
+        "layout.tour.standTell.sfxNew"
+      ],
+      "visual": "teamlead/rise_up + 머리 위 목적지 아이콘(화면 밖이면 가장자리 빨강 화살표 깜빡임)"
+    },
+    {
+      "key": "sfx_printer_run",
+      "category": "feedback",
+      "files": {
+        "mp3": "sfx/sfx_printer_run.mp3"
+      },
+      "durationSec": 0.7,
+      "loop": true,
+      "play": "프린트 미션 출력 중 루프(장당 1주기 = params.secPerPage 0.7초, 4장 = 2.8초). tapEarly 일시정지 땐 멈추고 재개 시 다시 재생. 마지막 장이 끝나면 정지",
+      "dataRefs": [
+        "missions.print.params.secPerPage",
+        "missions.print.params.pagesRequired"
+      ],
+      "visual": "쟁반 종이 장수(1장 나올 때마다 +1)"
+    },
+    {
+      "key": "sfx_laugh_burst",
+      "category": "feedback",
+      "files": {
+        "mp3": "sfx/sfx_laugh_burst.mp3"
+      },
+      "durationSec": 0.495,
+      "loop": false,
+      "play": "수다 미션 맞장구 실패(너무 빠르거나 길게 누름) = noiseLabel 'laugh' 순간 1회",
+      "dataRefs": [
+        "missions.chat.params.noiseLabel"
+      ],
+      "visual": "말풍선 '하하!' + 화면 흔들림 1px"
+    },
+    {
+      "key": "sfx_sneeze",
+      "category": "feedback",
+      "files": {
+        "mp3": "sfx/sfx_sneeze.mp3"
+      },
+      "durationSec": 0.41,
+      "loop": false,
+      "play": "창가 미션 숨 링 넘침(overflowLabel 'sneeze') 실패 순간 1회",
+      "dataRefs": [
+        "missions.window.params.overflowLabel"
+      ],
+      "visual": "'에취!' 글자"
     }
   ],
   "bgm": {
@@ -405,5 +462,88 @@
       },
       "_doc": "stems를 동시에 loop 재생, 같은 rate 적용. 단계 전환은 stages[*].rampSec 동안 rate·볼륨 선형 보간."
     }
-  }
+  },
+  "aliasDoc": "aliases: 파일 없이 기존 효과음(of)을 rate(재생 속도 = 피치, 1.0 = 원음)와 volume으로 재생하는 키. durationSec = 원본 길이 / rate. 로드는 하지 않고 재생 시 sound.play(of, {rate, volume})로 해석. dedup(60ms)은 별칭 key 기준",
+  "aliases": [
+    {
+      "key": "sfx_door_close",
+      "of": "sfx_meeting_end",
+      "rate": 1.0,
+      "semitones": 0,
+      "volume": 1.0,
+      "category": "tell",
+      "durationSec": 0.98,
+      "loop": false,
+      "play": "본부장실 보고 끝(복귀 전조) 1회",
+      "dataRefs": [
+        "layout.*.sfxNew sfx_door_close (sfxFallback과 같은 소리)"
+      ],
+      "visual": "말풍선",
+      "note": "GDD 대안 그대로. 회의 끝(INT-08)과 같은 소리라 '안에서 누가 나온다'는 의미가 같음"
+    },
+    {
+      "key": "sfx_cup_ready",
+      "of": "sfx_gate_ok",
+      "rate": 0.7937,
+      "semitones": -4,
+      "volume": 0.9,
+      "category": "tell",
+      "durationSec": 0.113,
+      "loop": false,
+      "play": "카페 '컵 나왔어요'(0.6초 전조 시작) 1회",
+      "dataRefs": [
+        "(GDD v3 §6, 데이터 키 없음)"
+      ],
+      "visual": "fx/cup_ready",
+      "note": "GDD 대안(sfx_elevator_ding +5)에서 변경: 띵은 대표님 순시 전조(BGM 정지)의 고유 신호라 다른 전조에 쓰면 오인 위험. 기계 '삑' 4반음 낮춤"
+    },
+    {
+      "key": "sfx_locker_open",
+      "of": "sfx_door_clipboard",
+      "rate": 1.1225,
+      "semitones": 2,
+      "volume": 0.8,
+      "category": "feedback",
+      "durationSec": 0.383,
+      "loop": false,
+      "play": "택배함 열림 1회",
+      "dataRefs": [
+        "(GDD v3 §6, 데이터 키 없음)"
+      ],
+      "visual": "보관함 문 열림 프레임",
+      "note": "GDD 대안. 인사팀 전조와 같은 원본이라 2반음 올리고 볼륨 0.8. 혼동 보고가 있으면 새 파일(약 1.5KB) 권장"
+    },
+    {
+      "key": "sfx_stamp",
+      "of": "sfx_pop",
+      "rate": 0.7492,
+      "semitones": -5,
+      "volume": 1.0,
+      "category": "feedback",
+      "durationSec": 0.107,
+      "loop": false,
+      "play": "쿠폰 도장 1회",
+      "dataRefs": [
+        "(GDD v3 §6, 데이터 키 없음)"
+      ],
+      "visual": "도장 찍힘 애니메이션",
+      "note": "뽁을 5반음 낮춰 둔탁한 '퐁'"
+    },
+    {
+      "key": "sfx_modifier_reveal",
+      "of": "sfx_mission_complete",
+      "rate": 1.1225,
+      "semitones": 2,
+      "volume": 0.9,
+      "category": "feedback",
+      "durationSec": 0.339,
+      "loop": false,
+      "play": "출근 준비 화면 '오늘의 변형' 공개 1회",
+      "dataRefs": [
+        "(GDD v3 §6, 데이터 키 없음)"
+      ],
+      "visual": "배지 뒤집힘",
+      "note": "GDD는 '짧게'. 2반음 올려 0.34초로 짧아짐(구간 자르기 없이 rate만)"
+    }
+  ]
 }

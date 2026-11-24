@@ -1,20 +1,34 @@
-# 몰래퇴근 사운드 목록 (T-113, 1차 효과음 세트)
+# 몰래퇴근 사운드 목록 (T-113 1차 세트 + T-147 v3 새 효과음)
 
 > 이 파일은 `audio/tools/build.py`가 자동 생성합니다. 직접 고치지 말고 `audio/src/sound-list.template.md` 또는 `audio/src/*.json`을 고친 뒤 다시 빌드하세요.
 
-- 작성: mt-sound-designer / 2026-11-22
+- 작성: mt-sound-designer / 2026-11-22, 갱신 2026-11-24(T-147: v3 효과음 4종 + 별칭 5종, 상한 220KB)
 - 방식: 전부 코드로 합성한 오리지널 사운드입니다(오실레이터, 노이즈, 엔벨로프, 포먼트 가산 합성). **외부 에셋은 0건**이라 `compliance/asset-license-ledger.md`에 추가할 항목이 없습니다.
 - 재생성: `python3 -I molrae-toegeun/audio/tools/build.py` (약 6초). 시드를 고정하고 ffmpeg `-bitexact`로 인코딩하므로 WAV, MP3, 이 문서까지 바이트 단위로 같게 나옵니다(2회 빌드 해시 비교로 확인).
 - 의존성: Python 3 표준 라이브러리, ffmpeg(libmp3lame). ffmpeg가 없으면 WAV만 만들고 경고를 냅니다(`audio/build/wav/`).
-- 형식(D-063, T-137): **MP3 단일 포맷**, 모노 22,050Hz, LAME VBR입니다. 효과음은 `-q:a 7`, BGM `main`은 `-q:a 8`, `tension`은 `-q:a 9`입니다. OGG는 만들지 않으며, iOS와 안드로이드 WebView 모두 MP3를 재생합니다. 빌드할 때 매니페스트에 없는 오디오 파일(예전 OGG 등)은 자동으로 지웁니다.
-- 오디오 전체 용량: {{TOTAL_LINE}}. 빌드 스크립트가 효과음 개당 20KB, BGM 합계 300KB, 전체 200KB를 넘으면 실패로 끝냅니다.
-- 엔진용 메타데이터: `game/assets/audio/audio-manifest.json` (키, 파일, 길이, 루프, 재생 조건, 시각 신호, BGM 단계)
+- 형식(D-063, T-137): **MP3 단일 포맷**, 모노 22,050Hz, LAME VBR입니다. 효과음은 `-q:a 7`(sfx.json `mp3q`로 개별 덮어쓰기 가능, 현재 사용 없음), BGM `main`은 `-q:a 8`, `tension`은 `-q:a 9`입니다. OGG는 만들지 않으며, iOS와 안드로이드 WebView 모두 MP3를 재생합니다. 빌드할 때 매니페스트에 없는 오디오 파일(예전 OGG 등)은 자동으로 지웁니다.
+- 오디오 전체 용량: {{TOTAL_LINE}}. 빌드 스크립트가 효과음 개당 20KB, BGM 합계 300KB, 전체 220KB(D-082, 이전 200KB)를 넘으면 실패로 끝냅니다.
+- 엔진용 메타데이터: `game/assets/audio/audio-manifest.json` (키, 파일, 길이, 루프, 재생 조건, 시각 신호, BGM 단계, 별칭 `aliases`)
 
 ## 1. 효과음
 
 {{SFX_TABLE}}
 
-용량 목표는 개당 20KB 이하이며 전부 충족합니다(최대 약 10KB).
+용량 목표는 개당 20KB 이하이며 전부 충족합니다(최대 7.5KB).
+
+### v3 새 효과음(T-147, GDD v3 §6 A급 4종)
+- `sfx_chair_push`: 팀장 순회 출발 전조(`layout.tour.standTell`). 일어나기 1.0초 시작과 같은 프레임에 1회. 앉은 자리 tell인 `sfx_chair_creak`과 일부러 다르게 만들었습니다(3장 비교 표).
+- `sfx_printer_run`: GDD는 '2.8초 1회'지만 **0.7초(1장) 루프**로 만들었습니다. `secPerPage 0.7` × `pagesRequired 4` = 2.8초와 같고, `tapEarly: pause`(일시정지)와 복사기(장수 다름)에도 그대로 맞습니다. 2.8초 단일 파일보다 용량이 약 1/3입니다. 이음새 점프 0.002(평균 샘플 변화 0.033), MP3 디코딩 길이 = 원본(15,435샘플).
+- `sfx_laugh_burst`: '하하하!' 4음절, 숨 섞인 중간 음역(약 205~270Hz, 특정 성별로 들리지 않게 D-087·D-088).
+- `sfx_sneeze`: 올라가는 '에' + 터지는 '취'.
+
+### 별칭(같은 파일 + rate, 용량 0)
+GDD v3 §6의 B·C급 요청은 새 파일 없이 기존 효과음을 피치만 바꿔 재생합니다(rate = 2^(반음/12), 길이 = 원본 / rate). 매니페스트 `aliases`에 들어 있습니다.
+
+{{ALIAS_TABLE}}
+
+- `sfx_cup_ready`는 GDD 대안(`sfx_elevator_ding` +5)을 쓰지 않았습니다. '띵'은 대표님 순시(BGM 정지)의 고유 신호라 다른 전조에 쓰면 오인할 수 있습니다. 대신 기계 '삑'(`sfx_gate_ok` −4반음)을 씁니다.
+- `sfx_locker_open`은 인사팀 전조(`sfx_door_clipboard`)와 같은 원본입니다. +2반음과 볼륨 0.8로 구분하지만, 혼동 보고가 있으면 새 파일(약 1.5KB)로 바꾸는 것을 권장합니다.
 
 ### 발소리 3단계(본부장·대표님 접근)
 | 단계 | 키 | 피크 | 음색 | 권장 조건 (화살표 크기 3단계와 같게) |
@@ -59,11 +73,13 @@
 | 회의 끝 `sfx_meeting_end` | 문 '딸깍' 1타 뒤 웅성거림이 잦아듦 | 타격 + 목소리 여럿 | 0.5~1kHz | 1.0초 |
 | 멈춤 `sfx_footstep_stop` | 빨라지는 3보 + '끽' | 타격 + 고음 마찰 | 2~4kHz | 0.45초 |
 | 고개 돌림 `sfx_look_swish` | 한 번 쓸고 지나감 + 짧은 '음?' | 바람 노이즈 스윕 | 0.7→3kHz | 0.32초 |
+| 팀장 순회 출발 `sfx_chair_push` | 10~15Hz로 덜컹대다 느려지는 '드르르륵'(어택 5회) + '턱' | 음정 없는 노이즈(음정성 0.20) | 0.6~2kHz | 0.40초 |
 
 폰 스피커 근사(500Hz 이하 급감 + 7kHz 로우패스)를 거친 뒤 측정한 값입니다(`build.py`의 `phone_sim`). 잔존(dB)은 원음 대비 남는 에너지입니다. -6dB 안쪽이면 폰에서도 대부분 들립니다.
 
 {{ANALYSIS}}
 
+- `sfx_chair_push`는 같은 팀장 소리인 `sfx_chair_creak`과 음정성(0.20 대 0.53), 어택 수(5 대 2), 거칠기(6.4 대 2.3dB)가 모두 다릅니다. 의자 삐걱은 '음높이가 미끄러지는 끽'이고 의자 밀기는 '바퀴가 덜컹대는 드르륵'입니다. 가장 가까운 `sfx_footsteps_3`(0.66)과는 타격 간격이 약 70ms 대 400ms로 6배 차이가 나고, 길이도 0.4초 1회 대 0.8초 반복입니다.
 - 가장 가까운 쌍도 리듬이 다릅니다. 예를 들어 `sfx_footstep_stop`(3보 + 끽)과 `sfx_gate_beep`(2연타 전자음)는 대역은 비슷하지만 타격음과 사각파로 음색이 다릅니다. `sfx_chair_creak`과 `sfx_hey`는 대역이 겹치지만 하나는 마찰음이고 하나는 목소리입니다.
 - 대표님 전조는 'BGM이 갑자기 끊기는 것' 자체가 가장 강한 신호입니다. 그래서 `띵`은 BGM과 같은 프레임에 재생하고, BGM은 0.08초 만에 끕니다.
 - 발소리 1단계는 일부러 작게(-11dBFS) 만들어 폰 잔존이 -8dB입니다. 멀리 있다는 뜻이므로 의도한 값이고, 화살표 '소'가 같이 뜹니다.
@@ -88,6 +104,11 @@
 | `sfx_gasp` | `exclaim_stand_up` | INT-03 | 있음 |
 | `sfx_door_clipboard` | 방송 스피커 아이콘 + 카운트다운 / 보라 엘리베이터 | INT-05·06 | 있음 |
 | `sfx_look_swish` | 고개 먼저 + 점선 콘 0.5초 | §5-4 2·3 | 시각은 있음, **데이터에 sfx 키가 없음**(아래 참고) |
+| `sfx_chair_push` | `teamlead/rise_up` + 목적지 아이콘 말풍선, 화면 밖이면 빨강 화살표 깜빡임 | v3 §6, layout.tour.standTell | 있음 |
+| `sfx_printer_run` | 쟁반 종이 장수 | v3 §6, missions.print | 있음 |
+| `sfx_laugh_burst` | 말풍선 '하하!' + 화면 흔들림 1px | v3 §6, missions.chat | 있음 |
+| `sfx_sneeze` | '에취!' 글자 | v3 §6, missions.window | 있음 |
+| 별칭 5종 | 말풍선 / `fx/cup_ready` / 보관함 문 열림 / 도장 애니메이션 / 배지 뒤집힘 | v3 §6 | 있음(GDD 표 기준) |
 | `sfx_tap` | **탭 목적지 마커가 정의되지 않음** | §4 | **누락** |
 | `sfx_pop` | 위장 포즈 전환 | §4-1 | 있음(전환 순간의 짧은 이펙트 권장) |
 | `sfx_suspicion_loop` | 의심 게이지 흔들림 + 콘 진하게(`seeing`) | rules.threat | 부분. **의심이 높을 때(0.7 이상)의 게이지 경고 표시(빨강 맥동 등) 정의 없음** |
@@ -123,6 +144,11 @@
 | `sfx_caught` | 적발 컷인 시작 | X | BGM `stopped`(즉시), 의심 루프 정지 |
 | `sfx_clockout_fanfare` | 퇴근 성공 확정 | X | BGM을 0.2초 페이드아웃한 뒤 재생 |
 | `sfx_mission_complete` | 미션 완료 판정 | X | |
+| `sfx_chair_push` | 팀장 순회 `standTell` 시작(일어나기와 같은 프레임) 1회 | X | 회차마다 재생. 화면 밖이어도 재생(출발 전조이므로) |
+| `sfx_printer_run` | 프린트 미션 출력 중 | O (0.7초 = 1장) | 출력 시작에 loop on, 마지막 장 완료 또는 `tapEarly` 일시정지에 off. 재개 시 다시 on |
+| `sfx_laugh_burst` | 수다 미션 맞장구 실패('빵 터짐', `noiseLabel: laugh`) | X | |
+| `sfx_sneeze` | 창가 미션 넘침 실패(`overflowLabel: sneeze`) | X | |
+| 별칭 5종(`aliases`) | 1장 별칭 표 참고 | X | `sound.play(of, {rate, volume})`로 재생. 아래 로더 요구사항 참고 |
 | `bgm_office_main` + `bgm_office_tension` | 근무 시작부터 동시 루프 | O ({{LOOP_SEC}}초) | 단계 표는 2장 참고. CEO `freeze`는 일시정지 후 같은 위치에서 0.6초 페이드인으로 재개 |
 
 - 로드: `this.load.audio(key, ['audio/sfx/<key>.mp3'])`(MP3 단일 포맷). 경로와 루프 정보는 `audio-manifest.json`에서 읽으면 키를 하드코딩하지 않아도 됩니다.
@@ -130,7 +156,9 @@
 - 모바일 자동재생 정책 때문에 첫 터치 뒤에 오디오 컨텍스트를 깨워야 합니다(Phaser `sound.unlock`).
 - 볼륨: 효과음은 피크 -1dBFS 기준으로 정규화되어 있고, 탭은 -9dB, 위장 전환은 -3dB로 일부러 작게 만들었습니다. 마스터 기준으로 BGM 0.6, 효과음 1.0을 권장합니다.
 - 설정: 무음과 진동 토글은 개발 범위입니다(GDD §15).
+- 별칭 로더 요구사항(T-147): 현재 `game/src/audio/audio.ts`는 `manifest.sfx`만 로드하고 `sfx(key)`는 캐시에 있는 키만 재생하므로, 별칭 키를 부르면 소리가 나지 않습니다(오류는 없음). 별칭은 로드하지 않고, 재생할 때 `aliases`에서 `key`를 찾아 `this.game.sound.play(of, { rate, volume: volume * 인자 })`로 바꾸면 됩니다. 중복 생략(60ms)은 별칭 키 기준입니다. 스키마는 `{ key, of, rate, semitones, volume, category, durationSec, loop: false, play, dataRefs, visual, note }`입니다.
 
 ## 6. 변환 계획과 남은 일
 - 웹 압축 포맷(MP3) 변환은 완료했습니다(ffmpeg를 쓸 수 있음). ffmpeg가 없는 환경에서는 WAV만 만들어지므로 ffmpeg가 있는 곳에서 같은 스크립트를 다시 돌리면 됩니다.
+- 데이터 키 이동: 새 키 4종이 매니페스트에 들어왔으므로 `sfxNew`를 `sfx`로 옮기면 됩니다(기획 담당). 현재 데이터에 `sfxNew`가 있는 곳은 `layout.json`의 `sfx_chair_push`와 `sfx_door_close`(별칭) 두 곳뿐이고, `missions.json`에는 `sfx` 필드가 없습니다(`noiseLabel`·`overflowLabel`·`secPerPage`로만 연결됨).
 - 2차 후보(데이터에 키가 없어 이번에는 만들지 않음): 간식 '바삭'과 '바스락!!', 커피 따르기, 낮잠 '쿵', 쇼핑 결제, 가방 챙기기, 인사 QTE '?'와 '!', 공범 경고 헛기침(지금은 `sfx_cough`를 재사용 가능), 출근 징글, 메뉴 BGM.

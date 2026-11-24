@@ -42,7 +42,10 @@ ENCODE = {
     "bgm_main": ["-c:a", "libmp3lame", "-q:a", "8"],
     "bgm_tension": ["-c:a", "libmp3lame", "-q:a", "9"],
 }
-LIMITS = {"sfx": 20 * 1024, "bgm": 300 * 1024, "total": 200 * 1024}
+# D-082(T-147): 오디오 전체 상한 200KB -> 220KB(v3 새 효과음 4종 수용)
+LIMITS = {"sfx": 20 * 1024, "bgm": 300 * 1024, "total": 220 * 1024}
+# 별칭(aliases) rate 허용 범위: Phaser WebAudio/HTML5 공통으로 안전한 구간
+ALIAS_RATE = (0.5, 2.0)
 
 
 def resolve_refs(obj, shared):
@@ -285,6 +288,17 @@ def analyze(sample):
     }
 
 
+def roughness(x, frame=0.01):
+    """포락선 거칠기: 10ms 프레임 RMS(dB)의 인접 프레임 차 절댓값 평균. 피크 -30dB 아래 프레임은 제외."""
+    f = ns(frame)
+    db = [10 * math.log10(energy(x[i:i + f]) + 1e-12) for i in range(0, len(x) - f, f)]
+    if not db:
+        return 0.0
+    top = max(db)
+    diffs = [abs(b - a) for a, b in zip(db, db[1:]) if a > top - 30 and b > top - 30]
+    return sum(diffs) / max(1, len(diffs))
+
+
 def feature_vec(a, dur):
     return a["bands"] + [math.log(max(dur, 0.05)) / 2.0, min(a["onsets"], 6) / 4.0, a["tonality"]]
 
@@ -326,7 +340,8 @@ def main():
         rel = "sfx/%s.%s" % (c["key"], FMT)
         if ff:
             os.makedirs(os.path.join(OUT, "sfx"), exist_ok=True)
-            sizes[FMT] = encode(item["wav"], os.path.join(OUT, rel), ENCODE["sfx"])
+            args = ENCODE["sfx"] if "mp3q" not in c else ["-c:a", "libmp3lame", "-q:a", str(c["mp3q"])]
+            sizes[FMT] = encode(item["wav"], os.path.join(OUT, rel), args)
             files[FMT] = rel
             if sizes[FMT] > LIMITS["sfx"]:
                 over.append((c["key"], FMT, sizes[FMT]))
@@ -337,6 +352,13 @@ def main():
             "loop": bool(c["loop"]), "play": c["play"], "dataRefs": c["dataRefs"], "visual": c["visual"],
         })
         rows.append((c, item, sizes))
+
+    # 별칭(T-147): 같은 파일 + rate. 파일을 새로 만들지 않으므로 용량 0
+    aliases = build_aliases(sfx_spec, {r["key"]: r for r in manifest["sfx"]})
+    manifest["aliasDoc"] = ("aliases: 파일 없이 기존 효과음(of)을 rate(재생 속도 = 피치, 1.0 = 원음)와 volume으로 재생하는 키. "
+                            "durationSec = 원본 길이 / rate. 로드는 하지 않고 재생 시 sound.play(of, {rate, volume})로 해석. "
+                            "dedup(60ms)은 별칭 key 기준")
+    manifest["aliases"] = aliases
 
     bgm_rows = []
     manifest["bgm"][bgm_spec["key"]] = {
@@ -377,18 +399,35 @@ def main():
         f.write("\n")
 
     print("[4/4] 분석·문서")
-    write_doc(rows, bgm_rows, bgm_spec, loop_sec, all_tot)
+    write_doc(rows, bgm_rows, bgm_spec, loop_sec, all_tot, aliases)
     if over:
         print("용량 초과:", over)
         sys.exit(1)
     print("완료")
 
 
+def build_aliases(spec, by_key):
+    out = []
+    for a in spec.get("aliases", []):
+        src = by_key.get(a["of"])
+        assert src, "별칭 %s: 원본 %s가 sounds에 없음" % (a["key"], a["of"])
+        assert a["key"] not in by_key, "별칭 %s가 실제 효과음 키와 겹침" % a["key"]
+        semis = a.get("semitones", 0)
+        rate = round(2.0 ** (semis / 12.0), 4) if "rate" not in a else a["rate"]
+        assert ALIAS_RATE[0] <= rate <= ALIAS_RATE[1], (a["key"], rate)
+        out.append({
+            "key": a["key"], "of": a["of"], "rate": rate, "semitones": semis, "volume": a.get("volume", 1.0),
+            "category": a["category"], "durationSec": round(src["durationSec"] / rate, 3), "loop": False,
+            "play": a["play"], "dataRefs": a["dataRefs"], "visual": a["visual"], "note": a.get("note", ""),
+        })
+    return out
+
+
 def kb(n):
     return "%.1f" % (n / 1024.0) if n else "-"
 
 
-def write_doc(rows, bgm_rows, bgm_spec, loop_sec, all_tot):
+def write_doc(rows, bgm_rows, bgm_spec, loop_sec, all_tot, aliases):
     lines = ["| 키 | 분류 | 내용 | 길이(초) | 루프 | MP3(KB) |", "|---|---|---|---|---|---|"]
     ts = 0
     for c, item, sizes in rows:
@@ -407,7 +446,12 @@ def write_doc(rows, bgm_rows, bgm_spec, loop_sec, all_tot):
         tm += sizes.get(FMT, 0)
     lines.append("| 합계 | | | | | %s |" % kb(tm))
     bgm_table = "\n".join(lines)
-    total_line = "효과음 %s KB + BGM %s KB = **%s KB** (목표 %d KB 이하, 1KB = 1,024바이트)" % (kb(ts), kb(tm), kb(all_tot), LIMITS["total"] // 1024)
+    total_line = "효과음 %s KB + BGM %s KB = **%s KB** (상한 %d KB, D-082. 1KB = 1,024바이트)" % (kb(ts), kb(tm), kb(all_tot), LIMITS["total"] // 1024)
+
+    lines = ["| 별칭 키 | 원본 파일 | rate | 반음 | 볼륨 | 길이(초) | 용도 |", "|---|---|---|---|---|---|---|"]
+    for a in aliases:
+        lines.append("| `%s` | `%s` | %.4f | %+d | %.2f | %.2f | %s |" % (a["key"], a["of"], a["rate"], a["semitones"], a["volume"], a["durationSec"], a["play"]))
+    alias_table = "\n".join(lines)
 
     lines = ["| 단계 | rate | main 볼륨 | tension 볼륨 | 전환(초) | 조건 |", "|---|---|---|---|---|---|"]
     for name in bgm_spec["stagePriority"][::-1]:
@@ -423,7 +467,7 @@ def write_doc(rows, bgm_rows, bgm_spec, loop_sec, all_tot):
     for c, item in tells:
         a = item["analysis"]
         lines.append("| `%s` | %.1f | %s | %d | %d | %.2f |" % (c["key"], a["phoneKeepDb"], " / ".join("%.2f" % b for b in a["bands"]), a["centroidHz"], a["onsets"], a["tonality"]))
-    core = ["sfx_chair_creak", "sfx_footsteps_crescendo", "sfx_footstep_stop", "sfx_elevator_ding", "sfx_gate_beep", "sfx_hey", "sfx_chatter", "sfx_meeting_end", "sfx_look_swish"]
+    core = ["sfx_chair_push", "sfx_chair_creak", "sfx_footsteps_crescendo", "sfx_footstep_stop", "sfx_elevator_ding", "sfx_gate_beep", "sfx_hey", "sfx_chatter", "sfx_meeting_end", "sfx_look_swish"]
     by = {c["key"]: (c, item) for c, item in tells}
     pairs = []
     for i, k1 in enumerate(core):
@@ -434,17 +478,29 @@ def write_doc(rows, bgm_rows, bgm_spec, loop_sec, all_tot):
             pairs.append((d, k1, k2))
     pairs.sort()
     lines.append("")
-    lines.append("핵심 전조 9종 특징 거리(작을수록 비슷함, 대역 비율·길이·어택 수·음정성 기준). 가장 가까운 5쌍:")
+    lines.append("핵심 전조 %d종 특징 거리" % len(core) + "(작을수록 비슷함, 대역 비율·길이·어택 수·음정성 기준). 가장 가까운 5쌍:")
     lines.append("")
     for d, k1, k2 in pairs[:5]:
         lines.append("- `%s` - `%s`: %.2f" % (k1, k2, d))
     lines.append("- (전체 %d쌍 중 최댓값 %.2f)" % (len(pairs), pairs[-1][0]))
+    # T-147: 의자 밀기(팀장 순회 출발) vs 기존 전조 비교
+    cp = by["sfx_chair_push"]
+    lines.append("")
+    lines.append("`sfx_chair_push`(팀장 순회 출발 전조)와 기존 전조의 거리 및 포락선 거칠기(10ms 창 RMS의 프레임 간 변화 평균, dB. 드르륵처럼 덜컹거릴수록 큼):")
+    lines.append("")
+    lines.append("| 비교 대상 | 특징 거리 | 거칠기(dB) | 음정성 | 길이(초) |")
+    lines.append("|---|---|---|---|---|")
+    lines.append("| `sfx_chair_push` (기준) | - | %.1f | %.2f | %.2f |" % (roughness(phone_sim(cp[1]["samples"])), cp[1]["analysis"]["tonality"], cp[1]["dur"]))
+    for k in ["sfx_chair_creak", "sfx_footsteps_3", "sfx_footsteps_crescendo", "sfx_footstep_stop", "sfx_elevator_ding", "sfx_gate_beep", "sfx_hey", "sfx_look_swish"]:
+        c2, i2 = by[k]
+        d = distance(feature_vec(cp[1]["analysis"], cp[1]["dur"]), feature_vec(i2["analysis"], i2["dur"]))
+        lines.append("| `%s` | %.2f | %.1f | %.2f | %.2f |" % (k, d, roughness(phone_sim(i2["samples"])), i2["analysis"]["tonality"], i2["dur"]))
     analysis = "\n".join(lines)
 
     with open(os.path.join(SRC, "sound-list.template.md"), encoding="utf-8") as f:
         tpl = f.read()
     doc = (tpl.replace("{{SFX_TABLE}}", sfx_table).replace("{{BGM_TABLE}}", bgm_table)
-           .replace("{{STAGE_TABLE}}", stage_table).replace("{{TOTAL_LINE}}", total_line)
+           .replace("{{STAGE_TABLE}}", stage_table).replace("{{ALIAS_TABLE}}", alias_table).replace("{{TOTAL_LINE}}", total_line)
            .replace("{{BARS}}", str(bgm_spec["bars"])).replace("{{ANALYSIS}}", analysis)
            .replace("{{LOOP_SEC}}", "%.1f" % loop_sec).replace("{{BPM}}", str(bgm_spec["bpm"])))
     with open(os.path.join(AUDIO, "sound-list.md"), "w", encoding="utf-8") as f:
