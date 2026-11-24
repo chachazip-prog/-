@@ -43,6 +43,8 @@ async function start(): Promise<void> {
     const zoom = integerZoomFor(parent.clientWidth || window.innerWidth, parent.clientHeight || window.innerHeight);
     if (game.scale.zoom !== zoom) game.scale.setZoom(zoom);
   };
+  // 개발 빌드 전용: 자동화(스크린샷) 훅. 프로덕션 번들에서는 제거됨
+  if (import.meta.env.DEV) (window as unknown as { __mtGame?: Phaser.Game }).__mtGame = game;
   window.addEventListener('resize', applyZoom);
 }
 

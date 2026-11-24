@@ -194,7 +194,8 @@ export function drawModifiers(ctx: ModDrawContext): DrawnModifiers {
     const id = rng.weighted(left, (x) => (ids.indexOf(x) < required ? 2 : 1) * (yesterday[x] ? 0.5 : 1));
     if (!id) break;
     left.splice(left.indexOf(id), 1);
-    let cands = candidates(id, ['hard', 'soft']);
+    // 데뷔 날 그 미션에는 하드 변형 금지(gdd-v3 §4-1), noModifier면 변형 없음(ids에서 이미 제외)
+    let cands = candidates(id, debut.missions.some((d) => d.id === id) ? ['soft'] : ['hard', 'soft']);
     if (forcedTypes.length > 0 && cands.some((m) => forcedTypes.includes(str(m['type'])))) cands = cands.filter((m) => forcedTypes.includes(str(m['type'])));
     const chosen: O[] = [];
     while (chosen.length < Math.min(1, perMission) && cands.length > 0) {

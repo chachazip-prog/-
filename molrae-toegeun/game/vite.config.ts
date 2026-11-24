@@ -15,7 +15,16 @@ function minifyJsonAssets(): Plugin {
       for (const out of Object.values(bundle)) {
         if (out.type !== 'asset' || !out.fileName.endsWith('.json')) continue;
         const src = typeof out.source === 'string' ? out.source : new TextDecoder().decode(out.source);
-        out.source = JSON.stringify(JSON.parse(src));
+        const json = JSON.parse(src) as { frames?: unknown; meta?: unknown };
+        // T-145: 텍스처 아틀라스(JSON Hash)의 자르지 않은 프레임은 Phaser JSONHash 파서가 frame·anchor만 읽는다
+        // (trimmed가 false면 sourceSize·spriteSourceSize 미사용, rotated false 기본) → 빌드 산출물에서만 뺌. 원본은 그대로
+        if (json.meta && json.frames && typeof json.frames === 'object' && !Array.isArray(json.frames)) {
+          for (const f of Object.values(json.frames as Record<string, Record<string, unknown>>)) {
+            if (f['trimmed'] === false) { delete f['trimmed']; delete f['sourceSize']; delete f['spriteSourceSize']; }
+            if (f['rotated'] === false) delete f['rotated'];
+          }
+        }
+        out.source = JSON.stringify(json);
       }
     },
   };

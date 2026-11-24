@@ -317,6 +317,7 @@ export class GameScene extends Phaser.Scene {
     switch (e.type) {
       case 'hint':
         // 튜토리얼 문구 키가 'tutorial.<id>'에 없고 '<id>'(missions.stringsKo)에 있으면 그것(T-145)
+        if (e.key.startsWith('tutorial.') && !str.has(e.key) && !str.has(e.key.slice(9))) break; // 문구 없는 튜토리얼(기획 추가 대기)은 생략
         this.hud.hint(!str.has(e.key) && e.key.startsWith('tutorial.') && str.has(e.key.slice(9)) ? e.key.slice(9) : e.key);
         if (e.key.startsWith('tutorial.') && !this.seenHints.has(e.key)) { this.seenHints.add(e.key); this.saveSeenHints(); }
         break;
@@ -433,8 +434,7 @@ export class GameScene extends Phaser.Scene {
   private followerBubbleBg!: Phaser.GameObjects.Rectangle;
   private npcSay(npc: PatrolNpc | undefined, text: string, sec: number): void {
     if (!npc) return;
-    const v = this.views.get(npc);
-    if (!v) return;
+    const v = this.viewFor(npc);
     setPixelText(v.bubble, text);
     this.sayLeft.set(npc, sec);
   }
@@ -738,7 +738,8 @@ export class GameScene extends Phaser.Scene {
       else this.tourIcon.setFrame(this.tourIconFor.frame).setPosition(v.sprite.x, v.sprite.y - 30).setVisible(true);
     } else this.tourIcon.setVisible(false);
     // HUD '자리 비움' 배지(남은 시간은 표시 안 함)
-    const away = (sim.content.bossTours ?? []).some((t) => sim.actorAway(t.actorId)) && sim.phase === 'day';
+    // 자리 비움 = 의자를 떠난 뒤(일어나기 전조 중에는 아직 자리)
+    const away = sim.phase === 'day' && sim.touringNpcs().some((n) => !(n.stopId === 'stop_tour_stand' && n.mode !== 'walk'));
     this.awayBadge.setVisible(away);
     if (away) { placeText(this.awayBadge, LOGICAL_WIDTH - 6, HUD_TOP_PX + 6, 1, 0); fitPanel(this.awayBadgeBg, this.awayBadge, 3, 2); } else this.awayBadgeBg.setVisible(false);
     // 들고 오는 소품(아트 player/carry_* 전 임시: 미션 아이콘을 머리 위에)
