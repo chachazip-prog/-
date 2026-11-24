@@ -439,4 +439,6 @@ export interface DayResult {
   readonly eyeContact?: boolean;
   /** 대표님 순시 결과: none(없음) / skipped(CEO 패스) / cancelled(끝까지 안 앉음) / done */
   readonly ceoVisit?: 'none' | 'skipped' | 'cancelled' | 'done';
+  /** 오늘 받은 카페 쿠폰 도장(T-145, 도감 카운터) */
+  readonly couponStamps?: number;
 }

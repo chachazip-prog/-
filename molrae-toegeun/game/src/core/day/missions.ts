@@ -48,7 +48,29 @@ export type ActivityView =
   | { kind: 'restroom'; restLeft: number; bonusSec: number; bonusMax: number }
   | { kind: 'nap'; fatigue: number; head: number; headUp: boolean; threshold: number }
   | { kind: 'shop'; cart: number; items: number; itemsRequired: number; checkout: number; checkoutSec: number; shopping: boolean }
-  | { kind: 'snack'; bites: number; required: number; sinceLast: number; window: readonly [number, number] };
+  | { kind: 'snack'; bites: number; required: number; sinceLast: number; window: readonly [number, number] }
+  // ── T-145 ──
+  | { kind: 'fetch'; progress: number; total: number; paused: boolean }
+  | { kind: 'remote_start'; progress: number; total: number }
+  | { kind: 'grab'; pages: number; pagesRequired: number; done: boolean; paused: boolean }
+  | { kind: 'queue'; stage: 'order' | 'tell' | 'window' | 'retry'; progress: number; total: number; paused: boolean; missed: number; maxMissed: number };
+
+/** 원격 출력 작업(remote_start_fetch). 자리에서 시작 → 걸어가는 동안에도 출력 → 프린터에서 집기. DaySim이 매 스텝 진행시킨다 */
+export class PrintJob {
+  printedSec = 0;
+  paused = false;
+  doneAt: number | null = null;
+  grabbed = false;
+  constructor(readonly pagesRequired: number, readonly secPerPage: number) {}
+  get pages(): number { return Math.min(this.pagesRequired, Math.floor(this.printedSec / this.secPerPage + 1e-9)); }
+  get done(): boolean { return this.pages >= this.pagesRequired; }
+  get printing(): boolean { return !this.paused && !this.done && !this.grabbed; }
+  step(dt: number, now: number): void {
+    if (this.grabbed || this.paused || this.done) return;
+    this.printedSec += dt;
+    if (this.done && this.doneAt === null) this.doneAt = now;
+  }
+}
 
 const num = (p: Readonly<Record<string, unknown>>, k: string, d: number): number => (typeof p[k] === 'number' ? (p[k] as number) : d);
 const range = (p: Readonly<Record<string, unknown>>, k: string, d: readonly [number, number]): readonly [number, number] => {
@@ -288,8 +310,131 @@ class SnackActivity implements Activity {
   }
 }
 
+const bool = (p: Readonly<Record<string, unknown>>, k: string, d: boolean): boolean => (typeof p[k] === 'boolean' ? p[k] as boolean : d);
+
+/** 택배(fetch_carry): 보관함에서 꺼내기 pickupSec(탭 = 일시정지·휴대폰 보는 척). 끝나면 상자 들고 자리로(carry) */
+class FetchActivity implements Activity {
+  readonly mechanic = 'fetch_carry' as const;
+  posture: ActivityPosture = 'activity';
+  activityScale = 1;
+  private t = 0;
+  private paused = false;
+  private readonly total: number;
+  private readonly tapPauses: boolean;
+  constructor(p: Readonly<Record<string, unknown>>) {
+    this.total = num(p, 'pickupSec', 1.5);
+    this.tapPauses = bool(p, 'tapPauses', true);
+  }
+  tick(dt: number, _c: ActivityCtx, fx: ActivityEffects): ActivityStatus {
+    if (this.paused) return 'running';
+    this.t += dt;
+    if (this.t >= this.total) { fx.event = 'parcelPicked'; return 'success'; }
+    return 'running';
+  }
+  tap(): ActivityStatus {
+    if (!this.tapPauses) return 'running';
+    this.paused = !this.paused;
+    this.posture = this.paused ? 'paused' : 'activity';
+    return 'running';
+  }
+  view(): ActivityView { return { kind: 'fetch', progress: this.t, total: this.total, paused: this.paused }; }
+}
+
+/** 출력 시작(자리, startAtSeatSec). 끝나면 DaySim이 PrintJob을 만들고 프린터로 보낸다 */
+class RemoteStartActivity implements Activity {
+  readonly mechanic = 'remote_start_fetch' as const;
+  posture: ActivityPosture = 'activity';
+  activityScale = 1;
+  private t = 0;
+  private readonly total: number;
+  constructor(p: Readonly<Record<string, unknown>>) { this.total = num(p, 'startAtSeatSec', 0.5); }
+  tick(dt: number, _c: ActivityCtx, fx: ActivityEffects): ActivityStatus {
+    this.t += dt;
+    if (this.t >= this.total) { fx.event = 'printStart'; return 'success'; }
+    return 'running';
+  }
+  tap(): ActivityStatus { return 'running'; }
+  view(): ActivityView { return { kind: 'remote_start', progress: this.t, total: this.total }; }
+}
+
+/** 프린터에서 집기: 다 나오면 탭 = 집기(grab_when_done). 덜 나왔을 때 탭 = 출력 일시정지/재개(tapEarly 'pause') */
+class GrabActivity implements Activity {
+  readonly mechanic = 'remote_start_fetch' as const;
+  posture: ActivityPosture = 'paused';
+  activityScale = 1;
+  constructor(private readonly job: PrintJob, private readonly tapEarly: string) {}
+  tick(): ActivityStatus { return 'running'; }
+  tap(_c: ActivityCtx, fx: ActivityEffects): ActivityStatus {
+    if (this.job.done) { this.job.grabbed = true; fx.event = 'printGrab'; return 'success'; }
+    if (this.tapEarly === 'pause') { this.job.paused = !this.job.paused; fx.event = this.job.paused ? 'printPause' : 'printResume'; }
+    return 'running';
+  }
+  view(): ActivityView { return { kind: 'grab', pages: this.job.pages, pagesRequired: this.job.pagesRequired, done: this.job.done, paused: this.job.paused }; }
+}
+
+/** 카페(queue_wait_tap): 주문 orderSec(탭 = 일시정지) → '컵 나왔어요' 전조 pickupTellSec → pickupWindowSec 안에 탭 = 성공(컵 들고 자리로).
+ *  전조 중 탭·창 놓침 = 놓침(딸깍 소음 missNoiseSuspicion), missRetrySec 뒤 다시 전조. 놓침이 maxMissedPickups를 넘으면 실패 */
+class QueueActivity implements Activity {
+  readonly mechanic = 'queue_wait_tap' as const;
+  posture: ActivityPosture = 'activity';
+  activityScale = 1;
+  private stage: 'order' | 'tell' | 'window' | 'retry' = 'order';
+  private t = 0;
+  private paused = false;
+  private missed = 0;
+  private readonly p: { order: number; tell: number; window: number; retry: number; maxMissed: number; noise: number; tapPauses: boolean };
+  constructor(p: Readonly<Record<string, unknown>>) {
+    this.p = {
+      order: num(p, 'orderSec', 2.5), tell: num(p, 'pickupTellSec', 0.6), window: num(p, 'pickupWindowSec', 0.6),
+      retry: num(p, 'missRetrySec', 1), maxMissed: num(p, 'maxMissedPickups', 2), noise: num(p, 'missNoiseSuspicion', 0.04),
+      tapPauses: bool(p, 'tapPauses', true),
+    };
+  }
+  private miss(fx: ActivityEffects): ActivityStatus {
+    this.missed++;
+    fx.suspicion += this.p.noise;
+    fx.noise = { radius: 0, idleTo: Infinity };
+    fx.event = 'cafeMiss';
+    fx.toastKey = 'event.result.fail';
+    if (this.missed > this.p.maxMissed) return 'fail';
+    this.stage = 'retry'; this.t = 0;
+    return 'running';
+  }
+  tick(dt: number, _c: ActivityCtx, fx: ActivityEffects): ActivityStatus {
+    if (this.stage === 'order' && this.paused) return 'running';
+    this.t += dt;
+    switch (this.stage) {
+      case 'order': if (this.t >= this.p.order) { this.stage = 'tell'; this.t = 0; fx.event = 'cupReady'; } break;
+      case 'retry': if (this.t >= this.p.retry) { this.stage = 'tell'; this.t = 0; fx.event = 'cupReady'; } break;
+      case 'tell': if (this.t >= this.p.tell) { this.stage = 'window'; this.t = 0; } break;
+      case 'window': if (this.t > this.p.window) return this.miss(fx); break;
+    }
+    return 'running';
+  }
+  tap(_c: ActivityCtx, fx: ActivityEffects): ActivityStatus {
+    if (this.stage === 'order') {
+      if (this.p.tapPauses) { this.paused = !this.paused; this.posture = this.paused ? 'paused' : 'activity'; }
+      return 'running';
+    }
+    if (this.stage === 'window') { fx.event = 'cupPicked'; return 'success'; }
+    if (this.stage === 'tell') return this.miss(fx);
+    return 'running';
+  }
+  view(): ActivityView {
+    const total = this.stage === 'order' ? this.p.order : this.stage === 'tell' ? this.p.tell : this.stage === 'window' ? this.p.window : this.p.retry;
+    return { kind: 'queue', stage: this.stage, progress: this.t, total, paused: this.paused, missed: this.missed, maxMissed: this.p.maxMissed };
+  }
+}
+
+export function createGrabActivity(job: PrintJob, params: Readonly<Record<string, unknown>>): Activity {
+  return new GrabActivity(job, typeof params['tapEarly'] === 'string' ? params['tapEarly'] as string : 'pause');
+}
+
 export function createActivity(mechanic: Mechanic, params: Readonly<Record<string, unknown>>, opts: { snackBiteMul?: number } = {}): Activity {
   switch (mechanic) {
+    case 'fetch_carry': return new FetchActivity(params);
+    case 'remote_start_fetch': return new RemoteStartActivity(params);
+    case 'queue_wait_tap': return new QueueActivity(params);
     case 'pour_tap_stop': return new PourActivity(params);
     case 'trip_safe_zone': return new RestroomActivity(params);
     case 'nap_tap_toggle': return new NapActivity(params);

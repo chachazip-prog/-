@@ -17,7 +17,7 @@ import { GreetQte, type QteResult } from './qte';
 import { findPath } from '../pathfinding';
 import type { NpcDef, PatrolNpc, WaypointDef } from '../patrol';
 import { addSuspicion } from '../suspicion';
-import { createActivity, emptyEffects, type Activity, type ActivityEffects, type ActivityView } from './missions';
+import { PrintJob, createActivity, createGrabActivity, emptyEffects, type Activity, type ActivityEffects, type ActivityView } from './missions';
 import { evaluateMissionConditions } from './modifiers';
 import type { CameraView } from '../camera';
 import type {
@@ -55,7 +55,13 @@ export type DayEvent =
   | { t: number; type: 'offscreenDemo'; actor: string; sec: number }
   | { t: number; type: 'continued' }
   // ── T-144 팀장 순회(D-075): stand = 일어나기 전조 시작, seated = 자리 복귀 완료, skipped = 늦어져 취소 ──
-  | { t: number; type: 'tour'; actor: string; stage: 'stand' | 'seated' | 'skipped'; index: number; npc?: string };
+  | { t: number; type: 'tour'; actor: string; stage: 'stand' | 'seated' | 'skipped'; index: number; npc?: string; icon?: string; lineKey?: string; sfx?: readonly string[] }
+  // ── T-145 ──
+  /** 순회 목적지에서 복귀 전조 시작(endTell) */
+  | { t: number; type: 'tourEndTell'; npc: string; lineKey?: string; sfx?: readonly string[] }
+  /** 미션 세부 단계(사운드·연출): printStart·printPause·printResume·printGrab·cupReady·cupPicked·cafeMiss·parcelPicked·trayExposed */
+  | { t: number; type: 'missionStage'; id: string; stage: string }
+  | { t: number; type: 'couponStamp'; total: number };
 
 /** 미션 런타임 상태 */
 export interface MissionRuntime {
@@ -65,8 +71,10 @@ export interface MissionRuntime {
   startedAt: number | null;
   /** 잠김 사유(회의 중) */
   blocked: boolean;
-  /** 변형 조건 판정용 기록(T-144). 시작 시점에 생김 */
-  run?: { susAtStart: number; seenSec: number };
+  /** 변형 조건 판정용 기록(T-144·T-145 MissionRunStats). 시작 시점에 생김 */
+  run?: { susAtStart: number; seenSec: number; seenSecBy: Record<string, number>; noise: number; cover: Set<number>; closeCalls: number; tlAway: boolean };
+  /** 원격 출력 작업(remote_start_fetch) */
+  job?: PrintJob;
 }
 
 export interface DaySimOptions {
@@ -80,6 +88,13 @@ export interface DaySimOptions {
 
 /** 직업 표시용 단계: 지금 플레이어 상태(의심 상승률 선택에 씀) */
 export type PlayerPosture = 'moving' | 'still' | 'seated' | 'activity' | 'paused' | 'safe' | 'talked' | 'lobby';
+
+/** 데이터에 없는 튜토리얼 id → 트리거: tut_<미션 id> = start:<미션 id>, tut_tour = tourStand(T-145) */
+function tutorialTrigger(id: string): string | undefined {
+  if (TUTORIAL_ON[id]) return TUTORIAL_ON[id];
+  if (id === 'tut_tour') return 'tourStand';
+  return id.startsWith('tut_') ? `start:${id.slice(4)}` : undefined;
+}
 
 const TUTORIAL_ON: Readonly<Record<string, string>> = {
   // tutorialId → 트리거 이름 (트리거가 오면 tutorial.<id> 문구를 한 번 띄움)
@@ -194,8 +209,11 @@ export class DaySim {
   private slowMoLeft = 0;
   private slowMoScale = 1;
   private scriptCount = new Map<number, number>();
-  // ── 팀장 순회(D-075, T-144) ──
-  private tours = new Map<BossTourDef, { next: number; npc: PatrolNpc | null; index: number }>();
+  // ── 팀장 순회(D-075, T-144·T-145) ──
+  private tours = new Map<BossTourDef, { next: number; npc: PatrolNpc | null; index: number; route: BossTourDef['routes'][number]; endTellShown: Set<number> }>();
+  /** 오늘 받은 카페 쿠폰 도장 */
+  couponStamps = 0;
+  private coverSet = new Set<number>();
   // ── 이어하기(D-050) ──
   continued = false;
   private endedFrom: { phase: DayPhase; leaveStage: LeaveStage } | null = null;
@@ -221,6 +239,7 @@ export class DaySim {
     if (opts.seenHints) for (const k of opts.seenHints) this.hintsShown.add(k);
     this.snackStock = content.scoring.snackStockStart;
     this.missions = content.missions.map((def) => ({ def, state: 'locked' as MissionState, startedAt: null, blocked: false }));
+    for (const c of content.coverSpots) this.coverSet.add(c.y * this.floor.map.width + c.x);
     this.push({ t: 0, type: 'phase', phase: 'intro' });
   }
 
@@ -399,7 +418,7 @@ export class DaySim {
     this.pendingMission = m;
     this.maybeOffer(m);
     this.routeHintFor(m);
-    if (m.def.startsAt === 'chip_tap_at_seat') {
+    if (m.def.startsAt === 'chip_tap_at_seat' || (m.def.mechanic === 'remote_start_fetch' && !m.job)) {
       if (this.playerAtSeat && this.floor.player.mode !== 'moving') { this.startActivity(m); return true; }
       return this.floor.moveTo(this.content.playerSeat);
     }
@@ -443,6 +462,10 @@ export class DaySim {
         // 시계 정지(①~⑤): 미션 제한 시간도 멈춤
         for (const m of this.missions) if (m.startedAt !== null) m.startedAt += dt;
       }
+      // T-139 bosses.ceo.visit.missionTimersPausedWhileFrozen: 얼음 표시 중(⑥ 퇴장 포함) 내내 미션 제한 시간 정지(근무 시계는 그대로)
+      if (!this.clockPaused && this.frozenAll && this.content.ceoVisit?.missionTimersPausedWhileFrozen) {
+        for (const m of this.missions) if (m.startedAt !== null) m.startedAt += dt;
+      }
     } else this.leaveTime += dt;
 
     const s0 = this.floor.suspicion.value;
@@ -477,8 +500,25 @@ export class DaySim {
   private playerRate(base: number): number {
     // 공범 합류 중: 둘이라 더 눈에 띔(npcs.accomplice.effects.suspicionGainMultiplier)
     const k = this.follower ? (this.content.accomplice?.suspicionGainMultiplier ?? 1) : 1;
-    return this.postureRate(base) * k;
+    return this.postureRate(base) * k * this.carryMul();
   }
+
+  /** 들고 돌아오는 중(택배 상자·출력물·컵, carry 변형) 이동 의심 배율(params.carryMovingMul, 여럿이면 최댓값) */
+  private carryMul(): number {
+    if (this.floor.player.mode !== 'moving') return 1;
+    let k = 1;
+    for (const m of this.missions) if (m.state === 'carry' && typeof m.def.params['carryMovingMul'] === 'number') k = Math.max(k, m.def.params['carryMovingMul'] as number);
+    return k;
+  }
+
+  /** 지금 들고 있는 소품(표시용): params.carryProp */
+  carryProp(): string | null {
+    for (const m of this.missions) if (m.state === 'carry' && typeof m.def.params['carryProp'] === 'string') return m.def.params['carryProp'] as string;
+    return null;
+  }
+
+  /** 출력 중인 작업이 있는가(sfx_printer_run 루프) */
+  get printing(): boolean { return this.missions.some((m) => !!m.job?.printing && m.state !== 'failed' && m.state !== 'done'); }
 
   private postureRate(base: number): number {
     const s = this.content.floor.rules.suspicion;
@@ -541,8 +581,10 @@ export class DaySim {
   private onNpcEnded(npc: PatrolNpc): NpcDef | null {
     const next = npc.def.thenPatrol;
     if (next) {
-      const def = this.content.patrols[next];
-      if (def) return def;
+      // 순회 복귀(T-145): '<앉은 순찰>#after_tour' = 앉은 순찰 + 첫 돌아보기 정상 전조
+      const [base, tag] = next.split('#');
+      const def = this.content.patrols[base!];
+      if (def) return tag === 'after_tour' ? { ...def, plainFirstLook: true } : def;
     }
     return null;
   }
@@ -569,6 +611,13 @@ export class DaySim {
     this.pendingMission = null;
     this.offer = null;
     this.dismissAccomplice();
+    // D-070 INT-05.effect.cancelOnLeaveStart: 퇴근이 시작되면 근태 점검 카운트다운·점검 취소(인사팀은 그대로 퇴장 동선)
+    const hr = this.content.interrupts.find((i) => i.category === 'countdown');
+    if (hr && hr.effect['cancelOnLeaveStart'] === true && (this.hrCountdown !== null || !this.hrChecked)) {
+      if (this.hrCountdown !== null) this.push({ t: this.time, type: 'interrupt', id: hr.id, textKey: '' });
+      this.hrCountdown = null;
+      this.hrChecked = true;
+    }
     if (this.ceoState === 'pending') { this.ceoState = 'cancelled'; this.push({ t: this.time, type: 'ceo', stage: 'cancelled' }); }
     else if (this.ceoState === 'exit' || this.ceoState === 'resume') this.endCeoVisit(true);
     this.setPhase('leave');
@@ -615,6 +664,7 @@ export class DaySim {
       missionsDone: done, missionsTotal: this.missions.length, missionsRequired: c.missionsRequired,
       slackPoints: points, salary, timeSec: this.content.introSec + this.time, clockMin: this.clockMin, caughtBy: by, reactionKey: reaction,
       continued: this.continued, eyeContact: this.eyeContact, ceoVisit,
+      ...(this.couponStamps > 0 ? { couponStamps: this.couponStamps } : {}),
     };
     this.phase = 'ended';
     this.push({ t: this.time, type: 'phase', phase: 'ended' });
@@ -635,6 +685,11 @@ export class DaySim {
   }
 
   private missionBlocked(id: string): boolean {
+    const m = this.missions.find((x) => x.def.id === id);
+    // during_tour(availability while_actor_away): 시작 전에는 그 사람이 순회 중일 때만 칩이 켜짐
+    if (m && m.def.availability?.type === 'while_actor_away' && m.startedAt === null && m.state !== 'active' && !this.actorAway(m.def.availability.actorId)) return true;
+    // 순회 목적지 locksMissions(회의 중 낮잠): 회의실로 가는 중~회의 끝 전조까지
+    for (const lk of this.tourLocks()) if (lk.includes(id)) return true;
     for (const int of this.content.interrupts) {
       const bm = int.effect['blocksMissions'];
       if (!Array.isArray(bm) || !bm.includes(id)) continue;
@@ -673,28 +728,61 @@ export class DaySim {
       // 도착 → 행동 시작 (칩으로 고른 미션, 또는 열린 미션 장소를 직접 탭해 도착)
       const here = p.tile;
       const cand = this.pendingMission && this.matchesSpot(this.pendingMission, here) ? this.pendingMission
-        : this.missions.find((m) => m.state === 'open' && !m.blocked && m.def.startsAt === 'arrive_spot' && this.matchesSpot(m, here));
+        : this.missions.find((m) => m.state === 'open' && !m.blocked && m.def.startsAt === 'arrive_spot' && !(m.def.mechanic === 'remote_start_fetch' && !m.job) && this.matchesSpot(m, here));
       if (cand && cand.state === 'open' && !cand.blocked) this.startActivity(cand);
     }
     // 들고 돌아오기 → 자리 도착하면 완료
     for (const m of this.missions) {
       if (m.state === 'carry' && this.playerAtSeat && this.floor.playerStill) this.completeMission(m);
     }
-    // 변형 조건 기록(T-144): 시작 후 의심 증가·시선 시간
+    // 변형 조건 기록(T-144·T-145): 시작 후 의심 증가·시선 시간(액터별 = 화면 안 콘)·밟은 엄폐 칸
+    const pt = this.floor.player.tile;
+    const onCover = this.coverSet.has(pt.y * this.floor.map.width + pt.x);
     for (const m of this.missions) {
       if (m.startedAt === null || m.state === 'done' || m.state === 'failed' || m.state === 'locked') continue;
-      if (!m.run) m.run = { susAtStart: this.floor.suspicion.value, seenSec: 0 };
-      else if (this.floor.gazeNow > 0) m.run.seenSec += dt;
+      if (!m.run) { this.ensureRun(m); continue; }
+      if (this.floor.gazeNow > 0) m.run.seenSec += dt;
+      this.floor.npcs.forEach((n, i) => {
+        const a = n.def.actorId;
+        if (a && n.coneActive && this.floor.isOnScreen(n) && seesPlayer(this.floor, n)) m.run!.seenSecBy[a] = (m.run!.seenSecBy[a] ?? 0) + dt;
+        void i;
+      });
+      if (onCover) m.run.cover.add(pt.y * this.floor.map.width + pt.x);
+    }
+    // 원격 출력 진행 + 쟁반 노출(다 나온 종이가 trayExposeSec 넘게 있는데 지정 인물이 반경 안이면 들킴)
+    for (const m of this.missions) {
+      const j = m.job;
+      if (!j || m.state === 'done' || m.state === 'failed') continue;
+      const wasDone = j.done;
+      j.step(dt, this.time);
+      if (!wasDone && j.done) this.push({ t: this.time, type: 'missionStage', id: m.def.id, stage: 'printDone' });
+      const p = m.def.params;
+      if (j.doneAt !== null && !j.grabbed && this.time - j.doneAt > (typeof p['trayExposeSec'] === 'number' ? p['trayExposeSec'] as number : 6)) {
+        const by = Array.isArray(p['trayExposedBy']) ? (p['trayExposedBy'] as unknown[]).filter((x): x is string => typeof x === 'string') : [];
+        const r = typeof p['trayExposedRadiusTiles'] === 'number' ? p['trayExposedRadiusTiles'] as number : 2;
+        const sp = m.def.spot;
+        const near = this.floor.npcs.some((n) => !!n.def.actorId && by.includes(n.def.actorId) && Math.hypot(n.x - (sp.x + 0.5), n.y - (sp.y + 0.5)) <= r);
+        if (near) {
+          this.push({ t: this.time, type: 'missionStage', id: m.def.id, stage: 'trayExposed' });
+          const pen = typeof p['trayExposedPenalty'] === 'number' ? p['trayExposedPenalty'] as number : m.def.failPenalty;
+          if (this.activeMission === m) { this.activity = null; this.activeMission = null; }
+          m.state = 'failed';
+          if (this.pendingMission === m) this.pendingMission = null;
+          if (pen > 0) addSuspicion(this.floor.suspicion, this.content.floor.rules.suspicion, pen);
+          this.push({ t: this.time, type: 'missionFail', id: m.def.id, reason: 'fail' });
+        }
+      }
     }
     // 제한 시간
     for (const m of this.missions) {
-      if ((m.state === 'active' || m.state === 'carry' || (m.state === 'open' && m === this.pendingMission)) && m.startedAt !== null
+      if ((m.state === 'active' || m.state === 'carry' || (m.state === 'open' && (m === this.pendingMission || !!m.job))) && m.startedAt !== null
         && this.time - m.startedAt > m.def.timeLimitSec) this.failMission(m, 'timeout');
     }
   }
 
   private matchesSpot(m: MissionRuntime, t: Tile): boolean {
-    const s = m.def.startsAt === 'chip_tap_at_seat' ? this.content.playerSeat : m.def.spot;
+    const atSeat = m.def.startsAt === 'chip_tap_at_seat' || (m.def.mechanic === 'remote_start_fetch' && !m.job);
+    const s = atSeat ? this.content.playerSeat : m.def.spot;
     return s.x === t.x && s.y === t.y;
   }
 
@@ -709,6 +797,7 @@ export class DaySim {
     this.activeMission = m;
     this.pendingMission = null;
     this.activity = this.makeActivity(m);
+    this.ensureRun(m);
     this.push({ t: this.time, type: 'missionStart', id: m.def.id });
     if (this.commitRule(m) === 'activity_start') this.commitMission(m);
     this.tutorial(`start:${m.def.id}`);
@@ -717,6 +806,7 @@ export class DaySim {
 
   /** 미션 행동 생성. 공범 합류 미션이면 accompliceEffect(커피 cupsRequired 덮어쓰기, 간식 한 입 수 배율) 적용 */
   private makeActivity(m: MissionRuntime): ReturnType<typeof createActivity> {
+    if (m.def.mechanic === 'remote_start_fetch' && m.job) return createGrabActivity(m.job, m.def.params);
     const fx = m === this.joinedMission ? m.def.accompliceEffect : undefined;
     if (!fx) return createActivity(m.def.mechanic, m.def.params);
     const params = fx.cupsRequired !== undefined ? { ...m.def.params, cupsRequired: fx.cupsRequired } : m.def.params;
@@ -741,13 +831,18 @@ export class DaySim {
   }
 
   private applyEffects(fx: ActivityEffects): void {
+    const NOISE = ['snackNoise', 'coffeeOverflow', 'cafeMiss'];
+    if ((fx.noise || (fx.event && NOISE.includes(fx.event))) && this.activeMission?.run) this.activeMission.run.noise++;
+    if (fx.event && this.activeMission && ['printPause', 'printResume', 'printGrab', 'cupReady', 'cupPicked', 'cafeMiss', 'parcelPicked'].includes(fx.event)) {
+      this.push({ t: this.time, type: 'missionStage', id: this.activeMission.def.id, stage: fx.event });
+    }
     if (fx.suspicion !== 0) addSuspicion(this.floor.suspicion, this.content.floor.rules.suspicion, fx.suspicion);
     if (fx.points !== 0) this.addPoints(fx.points);
     if (fx.toastKey) this.push({ t: this.time, type: 'toast', key: fx.toastKey });
     if (fx.noise) {
       const p = this.floor.player.pos;
       for (const n of this.floor.npcs) {
-        if (n.def.seated && Math.hypot(n.x - p.x, n.y - p.y) <= fx.noise.radius) n.shortenIdle(fx.noise.idleTo);
+        if (n.def.seated && fx.noise.radius > 0 && Math.hypot(n.x - p.x, n.y - p.y) <= fx.noise.radius) n.shortenIdle(fx.noise.idleTo);
       }
     }
   }
@@ -758,6 +853,16 @@ export class DaySim {
     this.activity = null;
     this.activeMission = null;
     if (st === 'fail') { this.failMission(m, 'fail'); return; }
+    if (m.def.mechanic === 'remote_start_fetch' && !m.job) {
+      // 자리에서 출력 시작 → 프린터로(출력은 걷는 동안에도 진행)
+      const p = m.def.params;
+      m.job = new PrintJob(Math.max(1, Math.round(typeof p['pagesRequired'] === 'number' ? p['pagesRequired'] as number : 4)), typeof p['secPerPage'] === 'number' ? p['secPerPage'] as number : 0.7);
+      m.state = 'open';
+      this.pendingMission = m;
+      this.push({ t: this.time, type: 'missionStage', id: m.def.id, stage: 'printStart' });
+      this.floor.moveTo(m.def.spot);
+      return;
+    }
     this.push({ t: this.time, type: 'missionSuccess', id: m.def.id });
     if (m.def.completeAt === 'return_to_seat') m.state = 'carry';
     else this.completeMission(m);
@@ -772,6 +877,13 @@ export class DaySim {
         elapsedSec: m.startedAt !== null ? this.time - m.startedAt : 0,
         suspicionGain: Math.max(0, this.floor.suspicion.value - (m.run?.susAtStart ?? this.floor.suspicion.value)),
         seenSec: m.run?.seenSec ?? 0,
+        timeLimitSec: m.def.timeLimitSec,
+        seenSecBy: m.run?.seenSecBy ?? {},
+        noiseCount: m.run?.noise ?? 0,
+        coverTilesVisited: m.run?.cover.size ?? 0,
+        closeCalls: m.run?.closeCalls ?? 0,
+        startState: { tlAway: m.run?.tlAway ?? false },
+        completedAtClock: this.clockMin,
       });
       if (r.fail) { this.failMission(m, 'fail'); return; }
       modMul = r.rewardMul;
@@ -781,6 +893,9 @@ export class DaySim {
     const mul = (m === this.joinedMission ? (this.content.accomplice?.rewardMultiplier ?? 1) : 1) * modMul;
     this.addPoints(m.def.reward.slackPoints * mul);
     if (m.def.reward.snackStock) this.snackStock = Math.min(this.content.scoring.snackStockMax, this.snackStock + m.def.reward.snackStock);
+    // 창가: 성공 시 의심 감소 / 카페: 쿠폰 도장(결정적, 성공 1회 = 1)
+    if (m.def.reward.suspicionRelief) addSuspicion(this.floor.suspicion, this.content.floor.rules.suspicion, -m.def.reward.suspicionRelief);
+    if (m.def.reward.couponStamp) { this.couponStamps += m.def.reward.couponStamp; this.push({ t: this.time, type: 'couponStamp', total: this.couponStamps }); }
     this.push(bonus.length > 0
       ? { t: this.time, type: 'missionDone', id: m.def.id, points: m.def.reward.slackPoints * mul, bonus }
       : { t: this.time, type: 'missionDone', id: m.def.id, points: m.def.reward.slackPoints * mul });
@@ -1232,6 +1347,8 @@ export class DaySim {
     const p = this.floor.player;
     if (!this.playerAtSeat || p.mode === 'moving' || p.mode === 'talked' || this.reportActive) return;
     if (this.content.h7?.ceoStartWaitsWhileDirectorOnFloor !== false && this.floor.findNpc((n) => n.def.actorId === 'director')) return;
+    // leadRoaming.conflicts: 순시 시작 조건에 '팀장이 자리에 앉아 있음' 추가(순회 중이면 복귀까지 대기)
+    if (this.content.bossTours?.some((t) => t.ceoWaitsForSeat && this.actorAway(t.actorId))) return;
     const def = this.content.patrols[v.patrolId];
     if (!def) { this.ceoState = 'cancelled'; return; }
     this.ceoNpc = this.floor.addNpc(def);
@@ -1496,19 +1613,80 @@ export class DaySim {
     return n;
   }
 
+  /** 미션 진행 기록 시작(T-145 MissionRunStats) */
+  private ensureRun(m: MissionRuntime): void {
+    if (m.run) return;
+    m.run = { susAtStart: this.floor.suspicion.value, seenSec: 0, seenSecBy: {}, noise: 0, cover: new Set(), closeCalls: 0, tlAway: this.actorAway('team_lead') };
+  }
+
+  /** 이 액터가 지금 순회 중(자리 비움)인가 */
+  actorAway(actorId: string): boolean {
+    for (const [def, st] of this.tours) if (def.actorId === actorId && st.npc && this.floor.npcs.includes(st.npc)) return true;
+    return false;
+  }
+
+  /** 지금 순회 경로에서 잠긴 미션 목록(목적지 locksMissions: 출발 ~ 그 목적지 복귀 전조 끝) */
+  private tourLocks(): (readonly string[])[] {
+    const out: (readonly string[])[] = [];
+    for (const st of this.tours.values()) {
+      if (!st.npc || !this.floor.npcs.includes(st.npc)) continue;
+      const wi = st.npc.waypointIndex;
+      st.route.forEach((s, i) => { if (s.locksMissions && wi <= this.stopWpIndex(st.route, i, true)) out.push(s.locksMissions); });
+    }
+    return out;
+  }
+
+  /** 순회 웨이포인트 배치: 0 = 일어나기, 그다음 목적지마다 [도착 대기, (복귀 전조)], 마지막 = 자리. last=true면 그 목적지의 마지막 웨이포인트 */
+  private stopWpIndex(route: BossTourDef['routes'][number], i: number, last: boolean): number {
+    let k = 1;
+    for (let j = 0; j < i; j++) k += route[j]!.endTell ? 2 : 1;
+    return last && route[i]!.endTell ? k + 1 : k;
+  }
+
+  /** 회의실 문 '사용 중' 표시(순회 목적지 meetingDoorBusy에 머무는 중) — 표시용 */
+  meetingDoorBusy(): boolean {
+    for (const st of this.tours.values()) {
+      if (!st.npc || !this.floor.npcs.includes(st.npc)) continue;
+      const wi = st.npc.waypointIndex;
+      if (st.route.some((s, i) => s.meetingDoorBusy && wi >= this.stopWpIndex(st.route, i, false) && wi <= this.stopWpIndex(st.route, i, true) && st.npc!.mode !== 'walk')) return true;
+    }
+    return false;
+  }
+
+  /** 순회 중인 상사의 지금 목적지(표시: 바닥 대기 표시·포즈) */
+  tourStopOf(npc: PatrolNpc): BossTourDef['routes'][number][number] | null {
+    for (const st of this.tours.values()) {
+      if (st.npc !== npc) continue;
+      const wi = npc.waypointIndex;
+      for (let i = 0; i < st.route.length; i++) if (wi >= this.stopWpIndex(st.route, i, false) && wi <= this.stopWpIndex(st.route, i, true)) return st.route[i]!;
+    }
+    return null;
+  }
+
   /**
    * 앉은 상사 순회. 예정 시각이 지나면 '앉아서 대기(wait) 중'일 때만 출발한다(전조·돌아보기·통화·말걸기 중이면 다음 스텝으로 미룸).
-   * 출발 = 앉은 순찰을 순회 순찰로 교체: 0번 웨이포인트(자리)에서 standTellSec 동안 시선 없이 서 있음(일어나기 전조) →
-   * 경유지 → 자리 → thenPatrol로 앉은 순찰 복귀. 걷기 방향 전환 전조는 PatrolNpc(D-038/D-044)가 처리한다.
+   * 출발 = 앉은 순찰을 순회 순찰로 교체: 0번 웨이포인트(자리)에서 standTellSec 동안 시선 없이 서 있음(일어나기 전조 + 의자 소리 + 목적지 아이콘) →
+   * 목적지(대기 → 있으면 복귀 전조 endTell) → 자리 → '<앉은 순찰>#after_tour'(첫 돌아보기 정상 전조)로 복귀.
+   * 회차별 출발 마감(latestStartByTour)을 넘기면 그 회차는 취소(퇴근 mustBeSeatedBeforeLeaveSec 전 복귀 보장).
    */
   private tourStep(): void {
     const defs = this.content.bossTours;
     if (!defs || defs.length === 0) return;
     for (const def of defs) {
       let st = this.tours.get(def);
-      if (!st) { st = { next: 0, npc: null, index: 0 }; this.tours.set(def, st); }
+      if (!st) { st = { next: 0, npc: null, index: 0, route: [], endTellShown: new Set() }; this.tours.set(def, st); }
       if (st.npc) {
-        if (this.floor.npcs.includes(st.npc)) continue;
+        if (this.floor.npcs.includes(st.npc)) {
+          // 복귀 전조 시작 알림(표시·사운드)
+          st.route.forEach((s, i) => {
+            if (!s.endTell || st!.endTellShown.has(i)) return;
+            if (st!.npc!.waypointIndex === this.stopWpIndex(st!.route, i, true) && st!.npc!.mode !== 'walk') {
+              st!.endTellShown.add(i);
+              this.push({ t: this.time, type: 'tourEndTell', npc: st!.npc!.def.id, ...(s.endTell.lineKey ? { lineKey: s.endTell.lineKey } : {}), ...(s.endTell.sfx ? { sfx: s.endTell.sfx } : {}) });
+            }
+          });
+          continue;
+        }
         // 교체됨(thenPatrol로 앉음 또는 다른 규칙이 바꿈)
         const back = this.floor.findNpc((n) => n.def.actorId === def.actorId && !!n.def.seated && n.def.patrolId === def.seatPatrolId);
         st.npc = null;
@@ -1517,8 +1695,10 @@ export class DaySim {
       }
       if (this.phase !== 'day' || st.next >= def.atSec.length) continue;
       if (this.dayTime < def.atSec[st.next]!) continue;
-      if (this.dayTime > def.latestStartSec) {
-        for (; st.next < def.atSec.length; st.next++) this.push({ t: this.time, type: 'tour', actor: def.actorId, stage: 'skipped', index: st.next });
+      const latest = Math.min(def.latestStartSec, def.latestStartByTour?.[st.next] ?? Infinity);
+      if (this.dayTime > latest) {
+        this.push({ t: this.time, type: 'tour', actor: def.actorId, stage: 'skipped', index: st.next });
+        st.next++;
         continue;
       }
       if (this.frozenAll || this.qteActive || this.greetState !== 'idle') continue;
@@ -1530,25 +1710,38 @@ export class DaySim {
       const sw = seat.def.waypoints[0]!;
       const wps: WaypointDef[] = [
         { x: sw.x, y: sw.y, waitSec: def.standTellSec, lookChance: 0, coneOff: true, stopId: 'stop_tour_stand', ...(sw.facing ? { facing: sw.facing } : {}) },
-        ...route.map((s): WaypointDef => ({
+      ];
+      for (const s of route) {
+        wps.push({
           x: s.tile.x, y: s.tile.y, waitSec: s.waitSec, lookChance: s.lookChance ?? 0, stopId: `stop_tour_${s.id}`,
           ...(s.facing ? { facing: s.facing } : {}),
-        })),
-        { x: sw.x, y: sw.y, waitSec: 0, lookChance: 0 },
-      ];
+        });
+        // 복귀 전조(endTell): 같은 칸에서 sec 동안 시선 없이 서 있음
+        if (s.endTell) wps.push({ x: s.tile.x, y: s.tile.y, waitSec: s.endTell.sec, lookChance: 0, coneOff: true, stopId: `stop_tour_end_${s.id}`, ...(s.facing ? { facing: s.facing } : {}) });
+      }
+      wps.push({ x: sw.x, y: sw.y, waitSec: 0, lookChance: 0 });
       const { phone: _p, coneActiveIn: _c, idleSecRange: _i, ...base } = seat.def;
       const tour: NpcDef = {
         ...base, id: `${seat.def.id}_tour`, patrolId: `${def.seatPatrolId}_tour`, seated: false, loop: false,
-        thenPatrol: def.seatPatrolId, waypoints: wps,
+        thenPatrol: def.firstLookPlain ? `${def.seatPatrolId}#after_tour` : def.seatPatrolId, waypoints: wps,
         ...(def.speedTilesPerSec !== undefined ? { speedTilesPerSec: def.speedTilesPerSec } : {}),
         ...(def.coneActiveIn ? { coneActiveIn: def.coneActiveIn } : {}),
       };
       let npc: PatrolNpc;
       try { npc = this.floor.replaceNpc(seat, tour); } catch { st.next++; continue; } // 경로 없음(생성 층 오류) → 이 회차 건너뜀
+      const from = def.fromInterrupt?.[st.next] ?? null;
       st.npc = npc;
+      st.route = route;
+      st.endTellShown = new Set();
       st.next++;
       st.index++;
-      this.push({ t: this.time, type: 'tour', actor: def.actorId, stage: 'stand', index: st.index - 1, npc: npc.def.id });
+      const first = route[0]!;
+      this.push({
+        t: this.time, type: 'tour', actor: def.actorId, stage: 'stand', index: st.index - 1, npc: npc.def.id,
+        ...(first.bubbleIcon ? { icon: first.bubbleIcon } : {}), ...(first.lineKey ? { lineKey: first.lineKey } : {}), ...(def.standSfx ? { sfx: def.standSfx } : {}),
+      });
+      this.tutorial('tourStand');
+      if (from) { this.noteInterrupt(from); this.tutorial(`int:${from}`); }
     }
   }
 
@@ -1597,7 +1790,7 @@ export class DaySim {
   }
 
   private tutorial(trigger: string): void {
-    for (const id of this.content.tutorialIds) if (TUTORIAL_ON[id] === trigger) this.hint(`tutorial.${id}`);
+    for (const id of this.content.tutorialIds) if (tutorialTrigger(id) === trigger) this.hint(`tutorial.${id}`);
   }
 
   private hint(key: string): void {
@@ -1617,6 +1810,7 @@ export class DaySim {
     for (const e of this.floor.drainEvents()) {
       this.floorEvents.push(e);
       if (e.type === 'closeCall') {
+        for (const m of this.missions) if (m.run && m.startedAt !== null && (m.state === 'active' || m.state === 'carry' || m.state === 'open')) m.run.closeCalls++;
         this.addPoints(this.content.scoring.closeCallBonusPoints);
         this.push({ t: this.time, type: 'closeCall', points: this.content.scoring.closeCallBonusPoints });
       } else if (e.type === 'talkWarn') {

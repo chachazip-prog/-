@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vite';
 
@@ -40,13 +41,36 @@ function stripDataMemos(): Plugin {
     }
     return v;
   };
+  /**
+   * T-145(D-082): v3 테이블(missions·layout)의 stringsKo(strings.ko.json 병합 대기 문구)는 strings.ko.json으로 옮기고(같은 키는 strings.ko 우선)
+   * 원래 테이블에서는 지운다. 기획 원본 파일은 그대로다.
+   */
+  const STRINGS_SOURCES = ['missions.json', 'layout.json'];
+  const pendingStrings = (): Record<string, unknown> => {
+    const out: Record<string, unknown> = {};
+    for (const f of STRINGS_SOURCES) {
+      try {
+        const sk = (JSON.parse(readFileSync(DATA_DIR + f, 'utf8')) as { stringsKo?: Record<string, unknown> }).stringsKo ?? {};
+        for (const [k, v] of Object.entries(sk)) if (!k.startsWith('_')) out[k] = v;
+      } catch { /* 파일 없음 */ }
+    }
+    return out;
+  };
   return {
     name: 'mt-strip-data-memos',
     enforce: 'pre',
     transform(code, id) {
       const file = (id.split('?')[0] ?? '').replace(/\\/g, '/');
       if (!file.startsWith(DATA_DIR) || !file.endsWith('.json')) return null;
-      return { code: JSON.stringify(strip(JSON.parse(code))), map: null };
+      const name = file.slice(DATA_DIR.length);
+      const data = strip(JSON.parse(code)) as Record<string, unknown>;
+      if (STRINGS_SOURCES.includes(name)) delete data['stringsKo'];
+      if (name === 'strings.ko.json') {
+        const base = (data['strings'] ?? {}) as Record<string, unknown>;
+        data['strings'] = { ...pendingStrings(), ...base };
+        for (const f of STRINGS_SOURCES) this.addWatchFile(DATA_DIR + f);
+      }
+      return { code: JSON.stringify(data), map: null };
     },
   };
 }

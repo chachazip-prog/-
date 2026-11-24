@@ -178,6 +178,8 @@ export interface NpcDef {
    * 길이 = rules.sight.cornerTurnTellSec). 없으면 전조 없이 바로 돌아봄(T-127 동작)
    */
   readonly escapeLookTellSec?: number;
+  /** T-145: 첫 돌아보기는 정상 전조(페이크·연속 보기 없음) — 팀장 순회 복귀 직후(leadRoaming 확장) */
+  readonly plainFirstLook?: boolean;
 }
 
 export type NpcMode = 'spawn' | 'walk' | 'wait' | 'tell' | 'look' | 'return' | 'fake' | 'talk' | 'phone' | 'hold' | 'done';
@@ -245,6 +247,7 @@ export class PatrolNpc {
   constructor(def: NpcDef, map: GridMap, rng: Rng) {
     if (def.waypoints.length === 0) throw new Error(`npc ${def.id}: 웨이포인트 없음`);
     this.def = def;
+    this.plainPending = def.plainFirstLook === true;
     this.loop = def.loop !== false;
     const wps = def.waypoints;
     const n = wps.length;
@@ -299,6 +302,9 @@ export class PatrolNpc {
   }
 
   private setMode(m: NpcMode): void { this.mode = m; this.modeTime = 0; }
+  /** 첫 돌아보기를 정상 전조로 강제하는 중(plainFirstLook) */
+  private plainPending = false;
+  private plainThisLook = false;
 
   private drawRange(r: readonly [number, number] | undefined, fallback: number, rng: Rng): number {
     if (!r) return fallback;
@@ -319,8 +325,10 @@ export class PatrolNpc {
     this.gazeScaleOverride = opts.gazeScale ?? null;
     // 페이크(X2): 상한 = min(chance, capChance, 전역 상한). 연속 페이크 금지면 직전이 페이크일 때 진짜
     this.tellIsFake = false;
+    this.plainThisLook = this.plainPending && !opts.second;
+    if (this.plainThisLook) this.plainPending = false;
     const f = this.def.fake;
-    if (f && !opts.noFake && !opts.second && f.chance > 0) {
+    if (f && !opts.noFake && !opts.second && !this.plainThisLook && f.chance > 0) {
       if (this.def.noConsecutiveFakes && this.lastWasFake) this.lastWasFake = false;
       else {
         const p = Math.min(f.chance, f.capChance, this.def.fakeAbsoluteCap ?? 1);
@@ -669,7 +677,9 @@ export class PatrolNpc {
     const dl = this.def.doubleLook;
     const wasFake = this.mode === 'fake';
     if (this.curLookKind === 'turn' && !wasFake) { this.resumeAfter(rng, ctx); return; }
-    if (dl && !wasFake && this.curLookKind === 'look' && !this.inSecondLook && dl.chance > 0 && rng.chance(Math.min(dl.chance, dl.capChance))) {
+    const plain = this.plainThisLook;
+    this.plainThisLook = false;
+    if (dl && !wasFake && !plain && this.curLookKind === 'look' && !this.inSecondLook && dl.chance > 0 && rng.chance(Math.min(dl.chance, dl.capChance))) {
       this.lastLookFacing = this.facing;
       const o: LookOpts = { second: true, noFake: true };
       if (dl.secondTellSec !== undefined) o.tellSec = dl.secondTellSec;
