@@ -26,7 +26,8 @@
     ".OSSSOSSSSOSSSO.",
     ".OSSSSSssSSSSSO.",
     "..OOOOssssOOOO.."
-   ]
+   ],
+   "slot": "head"
   },
   {
    "dir": "up",
@@ -45,7 +46,8 @@
     ".OSHHHHHHHHHHSO.",
     ".OHHHHHHHHHHHHO.",
     "..OOOOssssOOOO.."
-   ]
+   ],
+   "slot": "head"
   },
   {
    "dir": "right",
@@ -64,7 +66,8 @@
     ".OHHHHHsSSSOSO..",
     ".OHHHHHSSSSSSO..",
     "..OOOOOsssOOO..."
-   ]
+   ],
+   "slot": "head"
   },
   {
    "dir": "down",

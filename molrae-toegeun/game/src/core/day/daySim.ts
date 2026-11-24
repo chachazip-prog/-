@@ -833,7 +833,7 @@ export class DaySim {
   private applyEffects(fx: ActivityEffects): void {
     const NOISE = ['snackNoise', 'coffeeOverflow', 'cafeMiss'];
     if ((fx.noise || (fx.event && NOISE.includes(fx.event))) && this.activeMission?.run) this.activeMission.run.noise++;
-    if (fx.event && this.activeMission && ['printPause', 'printResume', 'printGrab', 'cupReady', 'cupPicked', 'cafeMiss', 'parcelPicked'].includes(fx.event)) {
+    if (fx.event && this.activeMission && ['printPause', 'printResume', 'printGrab', 'cupReady', 'cupPicked', 'cafeMiss', 'parcelPicked', 'snackNoise', 'coffeeOverflow'].includes(fx.event)) {
       this.push({ t: this.time, type: 'missionStage', id: this.activeMission.def.id, stage: fx.event });
     }
     if (fx.suspicion !== 0) addSuspicion(this.floor.suspicion, this.content.floor.rules.suspicion, fx.suspicion);

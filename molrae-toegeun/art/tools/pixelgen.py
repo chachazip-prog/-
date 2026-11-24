@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""몰래퇴근 픽셀 생성기 (pixelgen) v2.4 (T-146: prefix 키 접두어, kits 공용 키트, 스탬프 match 패턴).
+"""몰래퇴근 픽셀 생성기 (pixelgen) v2.5 (T-149: variantOf 변형 상속 + headKit 머리 키트 교체, 같은 그림 프레임은 시트 영역 공유).
+(v2.4 T-146: prefix 키 접두어, kits 공용 키트, 스탬프 match 패턴)
 (v2.3 T-143: 장면 labels 이름표)
 (v2.2 T-130: from 프레임 복사, flat 키, 배경 동료 그룹)
 (v2.1 T-125: 걷기 들썩임 bob, clear 스탬프, 상사 줄 색 검사)
@@ -35,10 +36,16 @@ PNG 인코더를 직접 구현했으므로 같은 입력이면 항상 같은 바
     kit: true           → 공용 키트(머리 모양·소품 포즈). 출력하지 않고 kits 로만 쓴다(v2.4)
     kits: ["<kit>", …]  → 키트의 frames·stamps·anims 를 덧붙인다. 스탬프 순서 = 자기 stamps → 키트(나열 순서)
     stamp match: "glob" | [..] → 프레임 이름 패턴(fnmatch)으로 대상 지정. dir 과 함께 쓰면 합집합(v2.4)
+    variantOf: "<sprite>" → 다른 캐릭터의 원본(base·swap·stamps·frames·kits·anims·group)을 그대로 물려받는다(v2.5)
+      headKit: "<kit>"    → 원본에서 "slot": "head" 인 스탬프를 빼고 그 자리(첫 머리 스탬프 위치, 없으면 맨 앞)에
+                            키트 스탬프를 넣는다. 소품·포즈 스탬프는 그 뒤에 그대로 찍힌다
+      kitsReplace: {a: b} → 물려받은 kits 목록에서 a 를 b 로 바꾼다(예: 머리 키트 교체)
+      stamps/frames/swap  → 물려받은 것 뒤에 덧붙임 / 같은 이름 프레임은 교체 / 덮어씀
   scenes/*.json
     size, tile, offset, bg, tiles, map, cones, objects(depth_sort), ui, labels[{x,y,text}](v2.3)
 """
 import argparse
+import copy
 import fnmatch
 import hashlib
 import json
@@ -194,6 +201,38 @@ def load_sprites(src, legend):
             d = load_json(os.path.join(sdir, fn))
             d["_file"] = fn
             files[d["name"]] = d
+    for name in sorted(files):  # v2.5 변형 상속 해석(원본은 변형이 아닌 파일이어야 함)
+        d = files[name]
+        if not d.get("variantOf"):
+            continue
+        src_d = files.get(d["variantOf"])
+        if not src_d or src_d.get("variantOf") or src_d.get("template") or src_d.get("kit"):
+            errors.append("%s: variantOf '%s' 없음(또는 변형·템플릿·키트)" % (d["_file"], d["variantOf"]))
+            continue
+        m = copy.deepcopy(src_d)
+        stamps = m.get("stamps", [])
+        if d.get("headKit"):
+            hk = files.get(d["headKit"])
+            if not hk or not hk.get("kit"):
+                errors.append("%s: headKit '%s' 없음" % (d["_file"], d["headKit"]))
+                hk = {"stamps": []}
+            heads = [i for i, st in enumerate(stamps) if st.get("slot") == "head"]
+            at = heads[0] if heads else 0
+            rest = [st for st in stamps if st.get("slot") != "head"]
+            stamps = rest[:at] + copy.deepcopy(hk.get("stamps", [])) + rest[at:]
+        m["stamps"] = stamps + d.get("stamps", [])
+        rep = d.get("kitsReplace", {})
+        m["kits"] = [rep.get(k, k) for k in m.get("kits", [])]
+        fr = m.get("frames", [])
+        for f in d.get("frames", []):
+            fr = [x for x in fr if x["name"] != f["name"]] + [f]
+        m["frames"] = fr
+        m["swap"] = dict(m.get("swap", {}), **d.get("swap", {}))
+        for k in ("name", "_file", "note", "group"):
+            if k in d:
+                m[k] = d[k]
+        m.pop("prefix", None)
+        files[name] = m
 
     def raw_frames(d):
         """(이름, rows | None, flip 원본) 순서 리스트."""
@@ -417,27 +456,42 @@ def check_scene(name, sc, by_key, colors):
 # ---------------------------------------------------------------- 시트·애니메이션
 
 
-def pack(frames, max_w=256, pad=1):
-    """선반(shelf) 패킹. 입력 순서를 그대로 지켜 결정적이다."""
+def pack(frames, max_w=256, pad=1, same=None):
+    """선반(shelf) 패킹. 입력 순서를 그대로 지켜 결정적이다.
+    same: {프레임 인덱스: 앞선 같은 그림 인덱스} → 그 프레임은 앞선 영역을 공유(v2.5)."""
     x = y = shelf_h = 0
     placed = []
-    for f in frames:
+    pos = {}
+    for i, f in enumerate(frames):
+        if same and i in same:
+            px, py = pos[same[i]]
+            placed.append((f, px, py))
+            pos[i] = (px, py)
+            continue
         if x + f["w"] > max_w:
             x, y, shelf_h = 0, y + shelf_h + pad, 0
         placed.append((f, x, y))
+        pos[i] = (x, y)
         x += f["w"] + pad
         shelf_h = max(shelf_h, f["h"])
     return placed, max_w, y + shelf_h
 
 
 def build_sheet(frames, legend, colors, out_dir, png_dir=None):
-    placed, sw, sh = pack(frames)
+    imgs = [render(f, legend, colors) for f in frames]
+    first, same = {}, {}
+    for i, (f, img) in enumerate(zip(frames, imgs)):  # 같은 그림·같은 원점이면 영역 공유(키는 그대로)
+        sig = (img.w, img.h, tuple(f["origin"] or ()), tuple(img.px))
+        if sig in first:
+            same[i] = first[sig]
+        else:
+            first[sig] = i
+    placed, sw, sh = pack(frames, same=same)
     sheet = Canvas(sw, sh)
     atlas = {"frames": {}, "meta": {"image": "sheet.png", "size": {"w": sw, "h": sh},
                                     "format": "RGBA8888", "scale": "1",
-                                    "app": "molrae-toegeun art/tools/pixelgen.py v2.2"}}
-    for f, x, y in placed:
-        img = render(f, legend, colors)
+                                    "app": "molrae-toegeun art/tools/pixelgen.py v2.5"}}
+    for (f, x, y), img in zip(placed, imgs):
         sheet.blit(img, x, y)
         if png_dir:
             img.save(os.path.join(png_dir, f["key"].replace("/", "__") + ".png"))

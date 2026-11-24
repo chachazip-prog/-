@@ -5,7 +5,7 @@
  "note": "공범 동료(NPC, 조력). 바디 A + 노랑 후드티(point2/wood) + 초록 사원증 줄(D-037) + 초록 헤드폰 + 양손에 종이컵 2개(초록 슬리브) + 정면 윙크",
  "swap": {"shirt": "point2", "shirt_sh": "wood", "$lanyard": "green"},
  "stamps": [
-  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
+  {"dir": "down", "clear": true, "x": 0, "y": 0, "slot": "head", "rows": [
    "................",
    ".....OOOOOO.....",
    "...OOGGGGGGOO...",
@@ -18,7 +18,7 @@
    "..OSSSSssSSSSO..",
    "...OOOssssOOO..."
   ]},
-  {"dir": "up", "clear": true, "x": 0, "y": 0, "rows": [
+  {"dir": "up", "clear": true, "x": 0, "y": 0, "slot": "head", "rows": [
    "................",
    ".....OOOOOO.....",
    "...OOGGGGGGOO...",
@@ -31,7 +31,7 @@
    "..OHHHHHHHHHHO..",
    "...OOOssssOOO..."
   ]},
-  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
+  {"dir": "right", "clear": true, "x": 0, "y": 0, "slot": "head", "rows": [
    "................",
    "....OOOOOO......",
    "...OHHGGHHOO....",

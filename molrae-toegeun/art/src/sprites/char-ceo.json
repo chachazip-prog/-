@@ -5,7 +5,7 @@
  "note": "CEO(상사). 바디 B + 무릎까지 오는 밝은 회색 롱코트(어깨 1px 더 넓음, 밑단이 다리를 덮는 실루엣) + 금 넥타이 + 금 배지 + 빨간 사원증 줄(D-037). 머리: 앞으로 솟은 퐁파두르(맨 윗줄까지 둥글게 올라가 키가 1px 커 보임).",
  "swap": {"shirt": "light", "shirt_sh": "mid", "$lanyard": "point"},
  "stamps": [
-  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
+  {"dir": "down", "clear": true, "x": 0, "y": 0, "slot": "head", "rows": [
    "....OOOOOOO.....",
    "..OOHHHHHHHOO...",
    "..OHHHLLHHHHHO..",
@@ -18,7 +18,7 @@
    ".OSSSSSssSSSSSO.",
    "..OOOOssssOOOO.."
   ]},
-  {"dir": "up", "clear": true, "x": 0, "y": 0, "rows": [
+  {"dir": "up", "clear": true, "x": 0, "y": 0, "slot": "head", "rows": [
    ".....OOOOOOO....",
    "...OOHHHHHHHOO..",
    "..OHHHHHLLHHHO..",
@@ -31,7 +31,7 @@
    ".OHHHHHHHHHHHHO.",
    "..OOOOssssOOOO.."
   ]},
-  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
+  {"dir": "right", "clear": true, "x": 0, "y": 0, "slot": "head", "rows": [
    ".....OOOOOO.....",
    "...OOHHHHHHOO...",
    "..OHHHHHHLLHHO..",

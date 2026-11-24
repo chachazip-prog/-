@@ -184,7 +184,8 @@
     ".OSSSOSSSSOSSSO.",
     "..OSSSSssSSSSO..",
     "...OOOssssOOO..."
-   ]
+   ],
+   "slot": "head"
   },
   {
    "dir": "up",
@@ -203,7 +204,8 @@
     ".OSHHHHHHHHHHSO.",
     "..OHHOHHHHOHHO..",
     "...OOOssssOOO..."
-   ]
+   ],
+   "slot": "head"
   },
   {
    "dir": "right",
@@ -222,7 +224,8 @@
     ".OHHHHHsSSSOSO..",
     "..OHHHHSSSSSSO..",
     "...OOOOsssOOO..."
-   ]
+   ],
+   "slot": "head"
   },
   {
    "frames": [

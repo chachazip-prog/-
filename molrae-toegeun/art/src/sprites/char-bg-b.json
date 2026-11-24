@@ -54,7 +54,8 @@
    "rows": [
     "O",
     "OH"
-   ]
+   ],
+   "slot": "head"
   },
   {
    "dir": "up",
@@ -63,7 +64,8 @@
    "rows": [
     "O",
     "OH"
-   ]
+   ],
+   "slot": "head"
   },
   {
    "dir": "right",
@@ -72,7 +74,8 @@
    "rows": [
     "O",
     "OH"
-   ]
+   ],
+   "slot": "head"
   },
   {
    "frames": [

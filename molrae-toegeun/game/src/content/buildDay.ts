@@ -450,6 +450,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       ...(typeof talk['dodgedLineKey'] === 'string' ? { dodgedLineKey: talk['dodgedLineKey'] as string } : {}),
       ...(a['hierarchy'] ? { hierarchy: obj(a['hierarchy']) } : {}),
       ...(typeof a['spriteKey'] === 'string' ? { spriteKey: a['spriteKey'] as string } : {}),
+      ...(typeof a['spriteVariant'] === 'string' ? { spriteVariant: a['spriteVariant'] as string } : {}),
     };
   }
 
@@ -615,7 +616,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     }
     const id = str(b['id'], `bg_${background.length}`);
     background.push({
-      sprite,
+      sprite, ...(typeof b['variant'] === 'string' ? { variant: b['variant'] as string } : {}),
       behavior: behavior === 'walk' ? 'walk' : behavior === 'stand' ? 'stand' : 'sit',
       idleAnims: arr(b['idleAnims']).map((x) => str(x)),
       idleAnimEverySecRange: range2(b['idleAnimEverySecRange']) ?? [4, 8],

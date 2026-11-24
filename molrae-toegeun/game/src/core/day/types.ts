@@ -210,11 +210,15 @@ export interface ActorInfo {
   readonly hierarchy?: Readonly<Record<string, unknown>>;
   /** 아트 캐릭터 키(bosses/npcs.json spriteKey, T-134) */
   readonly spriteKey?: string;
+  /** 외형 변형(T-145: 액터 + variant 구조, D-088 대비). 데이터 spriteVariant. 판정과 무관 */
+  readonly spriteVariant?: string;
 }
 
 /** 배경 동료(D-049). 메카닉 없음(시선·말걸기 없음), 표시 전용 */
 export interface BackgroundDef {
   readonly sprite: string;
+  /** 외형 변형(데이터 variant, T-145) */
+  readonly variant?: string;
   readonly behavior: 'sit' | 'stand' | 'walk';
   /** 앉은·선 동안 가끔 재생할 프레임(아트 프레임 접미사) */
   readonly idleAnims: readonly string[];

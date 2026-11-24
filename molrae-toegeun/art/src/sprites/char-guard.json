@@ -5,21 +5,21 @@
  "note": "경비(NPC). 바디 B + 회청색 제복 + 검정 사원증 줄(D-037) + 챙 모자(노란 배지) + 손전등(시선 콘의 출발점). 빨강 없음",
  "swap": {"shirt": "mid", "shirt_sh": "dark", "$lanyard": "outline"},
  "stamps": [
-  {"dir": "down", "x": 0, "y": 0, "rows": [
+  {"dir": "down", "x": 0, "y": 0, "slot": "head", "rows": [
    "...OOOOOOOOOO...",
    "..ODDDDYYDDDDO..",
    ".ODDDDDDDDDDDDO.",
    ".ODDDDDDDDDDDDO.",
    "OOOOOOOOOOOOOOOO"
   ]},
-  {"dir": "up", "x": 0, "y": 0, "rows": [
+  {"dir": "up", "x": 0, "y": 0, "slot": "head", "rows": [
    "...OOOOOOOOOO...",
    "..ODDDDDDDDDDO..",
    ".ODDDDDDDDDDDDO.",
    ".ODDDDDDDDDDDDO.",
    ".OOOOOOOOOOOOOO."
   ]},
-  {"dir": "right", "x": 0, "y": 0, "rows": [
+  {"dir": "right", "x": 0, "y": 0, "slot": "head", "rows": [
    "..OOOOOOOOO.....",
    "..ODDDDDDYDO....",
    ".ODDDDDDDDDDO...",

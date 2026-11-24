@@ -5,7 +5,7 @@
  "note": "임원(상사). 바디 B + 청록 정장(cool_sh/dark) + 흰 깃 + 빨간 사원증 줄(D-037) + 금(노랑) 배지 + 테이크아웃 커피(허당: 커피 흘림 연출용). 머리: 올백(앞머리 없이 뒤로 넘김, 광택 하이라이트 L 4px). 얼굴: 가로 2px 느긋한 눈",
  "swap": {"shirt": "cool_sh", "shirt_sh": "dark", "$lanyard": "point"},
  "stamps": [
-  {"dir": "down", "clear": true, "x": 0, "y": 0, "rows": [
+  {"dir": "down", "clear": true, "x": 0, "y": 0, "slot": "head", "rows": [
    "................",
    "..OOOOOOOOOOOO..",
    "..OHHHLLLLHHHO..",
@@ -18,7 +18,7 @@
    ".OSSSSSssSSSSSO.",
    "..OOOOssssOOOO.."
   ]},
-  {"dir": "up", "clear": true, "x": 0, "y": 0, "rows": [
+  {"dir": "up", "clear": true, "x": 0, "y": 0, "slot": "head", "rows": [
    "................",
    "..OOOOOOOOOOOO..",
    "..OHHHLLLLHHHO..",
@@ -31,7 +31,7 @@
    ".OHHHHHHHHHHHHO.",
    "..OOOOssssOOOO.."
   ]},
-  {"dir": "right", "clear": true, "x": 0, "y": 0, "rows": [
+  {"dir": "right", "clear": true, "x": 0, "y": 0, "slot": "head", "rows": [
    "................",
    "..OOOOOOOOOO....",
    "..OHHHLLLLHO....",

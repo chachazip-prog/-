@@ -12,7 +12,8 @@ import { applyDayResult, loadProgress, saveProgress } from '../state/progress';
 import { UiButton } from '../ui/button';
 import { color, overlay, pulseAlpha } from '../render/palette';
 import { ATLAS_KEY, coneOverlayKeys, edgeArrowKey, facing4, spriteKeyFor, type Facing4 } from '../render/sprites';
-import { TILE, buildTileLayout } from '../render/tilemap';
+import { TILE, buildTileLayout, missingArt } from '../render/tilemap';
+import { iconFallback } from '../render/sprites';
 import { Hud, type BorderStage } from '../ui/hud';
 import { addPixelText, fitPanel, placeText, setPixelText, setWrap, type UIText } from '../ui/pixelText';
 import { SceneKey } from './keys';
@@ -69,6 +70,16 @@ export class GameScene extends Phaser.Scene {
   private dest!: Phaser.GameObjects.Sprite;
   private arrows: Phaser.GameObjects.Image[] = [];
   private stalls: { img: Phaser.GameObjects.Image; x: number; y: number }[] = [];
+  /** 전높이 칸막이·큐비클(D-080): 플레이어가 뒤(rect)에 서면 알파 0.5 */
+  private occluders: { img: Phaser.GameObjects.Image; rect: readonly [number, number, number, number] }[] = [];
+  /** 회의실 문 '사용 중' 덮개(순회 meeting 중) */
+  private busyDoors: Phaser.GameObjects.Image[] = [];
+  /** 팀장 출발 말풍선 아이콘(목적지) */
+  private tourIcon!: Phaser.GameObjects.Image;
+  private tourIconFor: { npc: string; left: number; frame: string } | null = null;
+  private awayBadge!: UIText;
+  private awayBadgeBg!: Phaser.GameObjects.Rectangle;
+  private carryIcon!: Phaser.GameObjects.Image;
   private gateTiles: { x: number; y: number }[] = [];
   private toast!: UIText;
   private toastBg!: Phaser.GameObjects.Rectangle;
@@ -148,6 +159,9 @@ export class GameScene extends Phaser.Scene {
     this.pathDots = [];
     this.arrows = [];
     this.stalls = [];
+    this.occluders = [];
+    this.busyDoors = [];
+    this.tourIconFor = null;
     this.gateTiles = [];
     this.result = null;
     this.resultAge = 0;
@@ -178,6 +192,10 @@ export class GameScene extends Phaser.Scene {
     this.followerBubble = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 2).setVisible(false);
     this.followerSay = 0;
     for (let i = 0; i < 8; i++) this.arrows.push(this.img(0, 0, 'edge_boss/down_2').setScrollFactor(0).setDepth(9000).setVisible(false));
+    this.tourIcon = this.img(0, 0, 'ui/suspect').setDepth(D.overhead + 3).setVisible(false);
+    this.carryIcon = this.img(0, 0, 'ui/suspect').setDepth(D.overhead).setVisible(false);
+    this.awayBadgeBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.92).setScrollFactor(0).setDepth(9001).setStrokeStyle(1, color('dark')).setVisible(false);
+    this.awayBadge = addPixelText(this, 0, 0, str.t('hud.tl_away'), { role: 'label', color: color('outline') }).setScrollFactor(0).setDepth(9002).setVisible(false);
 
     this.hud = new Hud(this, this.sim, str);
     this.bannerBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.94).setScrollFactor(0).setDepth(11000).setStrokeStyle(1, color('dark'));
@@ -211,7 +229,9 @@ export class GameScene extends Phaser.Scene {
   private buildMap(): void {
     const c = this.sim.content;
     const map = this.sim.floor.map;
-    const layout = buildTileLayout(c);
+    const tex = this.hasAtlas ? this.textures.get(ATLAS_KEY) : null;
+    const layout = buildTileLayout(c, (f) => !!tex && tex.has(f));
+    if (import.meta.env.DEV && missingArt.size > 0) console.info(`[art] 없는 키 → 기존 키로 대체: ${[...missingArt].join(', ')}`);
     const rt = this.add.renderTexture(this.offsetX, 0, map.width * TILE, map.height * TILE).setOrigin(0, 0).setDepth(D.ground);
     if (this.hasAtlas) {
       layout.ground.forEach((frame, i) => {
@@ -223,6 +243,10 @@ export class GameScene extends Phaser.Scene {
       const im = this.img(this.offsetX + o.x, o.y, o.frame).setOrigin(0.5, 1).setFlipX(o.flipX === true);
       im.setDepth(o.y + (o.depthBias ?? 0));
       if (o.frame === 'tall/stall' && o.tile) this.stalls.push({ img: im, x: o.tile.x, y: o.tile.y });
+      if (o.occlude) this.occluders.push({ img: im, rect: o.occlude });
+      if (o.meetingDoor && tex?.has('tall2/glass_door_busy')) {
+        this.busyDoors.push(this.img(this.offsetX + o.x, o.y, 'tall2/glass_door_busy').setOrigin(0.5, 1).setDepth(o.y + 0.5).setVisible(false));
+      }
     }
     for (let y = 0; y < map.height; y++) for (let x = 0; x < map.width; x++) if (isGateOnly(map, x, y)) this.gateTiles.push({ x, y });
     // 세로 유리벽(D-053: 이동 차단·시선 통과)은 아트 T-135 스프라이트(tilemap.ts objects)로 그림
@@ -292,7 +316,8 @@ export class GameScene extends Phaser.Scene {
     const str = getStrings();
     switch (e.type) {
       case 'hint':
-        this.hud.hint(e.key);
+        // 튜토리얼 문구 키가 'tutorial.<id>'에 없고 '<id>'(missions.stringsKo)에 있으면 그것(T-145)
+        this.hud.hint(!str.has(e.key) && e.key.startsWith('tutorial.') && str.has(e.key.slice(9)) ? e.key.slice(9) : e.key);
         if (e.key.startsWith('tutorial.') && !this.seenHints.has(e.key)) { this.seenHints.add(e.key); this.saveSeenHints(); }
         break;
       case 'toast': this.showToast(str.t(e.key)); break;
@@ -336,6 +361,34 @@ export class GameScene extends Phaser.Scene {
         break;
       }
       case 'hrAbsent': this.showToast(str.t('react.hr_inspector.absent')); break;
+      case 'tour':
+        if (e.stage === 'stand') {
+          // 출발 전조(D-075 확장): 의자 미는 소리(화면 밖이어도 1회) + 목적지 아이콘 말풍선 + 대사
+          const sfx = (e.sfx ?? []).find((k) => audio.knows(k));
+          if (sfx) audio.sfx(sfx);
+          const npc = this.sim.floor.findNpc((n) => n.def.id === e.npc);
+          const sec = (this.sim.content.bossTours?.[0]?.standTellSec ?? 1) + 0.6;
+          if (e.icon) this.tourIconFor = { npc: e.npc ?? '', left: sec, frame: this.atlasHas(e.icon) ? e.icon : '' };
+          if (e.lineKey) this.npcSay(npc, str.t(e.lineKey), sec);
+        }
+        break;
+      case 'tourEndTell': {
+        const sfx = (e.sfx ?? []).find((k) => audio.knows(k));
+        if (sfx) audio.sfx(sfx);
+        if (e.lineKey) this.npcSay(this.sim.floor.findNpc((n) => n.def.id === e.npc), str.t(e.lineKey), 1.2);
+        break;
+      }
+      case 'missionStage': {
+        const SFX: Record<string, string> = { cupReady: 'sfx_cup_ready', parcelPicked: 'sfx_locker_open', printGrab: 'sfx_pop', cupPicked: 'sfx_pop' };
+        let k = SFX[e.stage];
+        if (e.stage === 'snackNoise' && e.id === 'chat') k = 'sfx_laugh_burst';
+        if (e.stage === 'coffeeOverflow' && e.id === 'window') k = 'sfx_sneeze';
+        if (e.stage === 'trayExposed') this.showToast(str.t('react.print.found'));
+        if (e.stage === 'cupReady') this.showToast(str.t('event.cafe.name'));
+        if (k) audio.sfx(k);
+        break;
+      }
+      case 'couponStamp': audio.sfx('sfx_stamp'); break;
       case 'phase': if (e.phase === 'day') { this.banner.setVisible(false); this.bannerBg.setVisible(false); } break;
       case 'result': this.onResult(); break;
       default: break;
@@ -402,7 +455,10 @@ export class GameScene extends Phaser.Scene {
     if (v) return v;
     const actorId = npc.def.actorId ?? '';
     const bg = actorId.startsWith('background:') ? this.sim.content.background.find((b) => b.npc.id === npc.def.id) : undefined;
-    const base = bg ? bg.sprite : spriteKeyFor(actorId);
+    // 외형 = 액터 + 변형(T-145). 변형 키가 아틀라스에 없으면 기본 외형
+    const has = (f: string) => this.atlasHas(f);
+    const info = this.sim.content.actors[actorId];
+    const base = bg ? spriteKeyFor(undefined, bg.sprite, bg.variant, has) : spriteKeyFor(actorId, info?.spriteKey, info?.spriteVariant, has);
     const lanyard = bg ? 'background' : (this.sim.content.actors[actorId]?.lanyard ?? 'background');
     const sprite = this.add.sprite(0, 0, ATLAS_KEY, `${base}/idle_down`).setOrigin(0.5, 1);
     const mark = this.add.sprite(0, 0, ATLAS_KEY, 'ui/suspect').setOrigin(0.5, 1).setDepth(D.overhead).setVisible(false);
@@ -539,7 +595,19 @@ export class GameScene extends Phaser.Scene {
           v.bgIdle.next = t + v.bgIdle.range[0] + ((Math.floor(t * 7) % 10) / 10) * (v.bgIdle.range[1] - v.bgIdle.range[0]);
         }
       } else if (npc.mode === 'walk') this.playAnim(v.sprite, `${v.base}/walk_${dir}`);
-      else this.playAnim(v.sprite, `${v.base}/idle_${dir}`);
+      else {
+        // 팀장 순회 프레임(아트 §13-6): 앉음 sit_up/sit_down(dy −3), 출발 전조 rise_*(1회), 목적지 대기 포즈(wait_up). 애니가 없는 캐릭터는 idle
+        const sd = dir === 'down' ? 'down' : dir === 'up' ? 'up' : null;
+        const stop = sim.tourStopOf(npc);
+        const rise = sd ? `${v.base}/rise_${sd}` : '';
+        if (npc.stopId === 'stop_tour_stand' && sd && this.anims.exists(rise)) {
+          if (v.sprite.anims.currentAnim?.key !== rise) v.sprite.play(rise);
+        } else if (npc.def.seated && sd && this.anims.exists(`${v.base}/sit_${sd}`)) {
+          this.playAnim(v.sprite, `${v.base}/sit_${sd}`);
+          v.sprite.setY(sy - 3);
+        } else if (stop?.pose && npc.mode === 'wait' && this.anims.exists(stop.pose)) this.playAnim(v.sprite, stop.pose);
+        else this.playAnim(v.sprite, `${v.base}/idle_${dir}`);
+      }
       // 페이크(헛기침) 효과음: tell → fake 전환
       const pm = this.prevMode.get(npc);
       if (pm === 'tell' && npc.mode === 'fake' && npc.def.actorId) audio.sfx(this.cues.fake[npc.def.actorId] ?? 'sfx_cough');
@@ -648,8 +716,39 @@ export class GameScene extends Phaser.Scene {
   }
 
   /** T-133 표시: 공범, 얼음 비네트, 중앙 문구, 경로 힌트, 화면 밖 미션 장소 화살표 */
+  private atlasHas(frame: string): boolean { return this.hasAtlas && this.textures.get(ATLAS_KEY).has(frame); }
+
   private syncExtras(dt: number, pw: { x: number; y: number }): void {
     const sim = this.sim, floor = sim.floor;
+    // D-080: 전높이 칸막이·큐비클 뒤에 선 플레이어 → 칸막이 알파 0.5
+    const pt = floor.player.tile;
+    for (const o of this.occluders) {
+      const [rx, ry, rw, rh] = o.rect;
+      o.img.setAlpha(pt.x >= rx && pt.x < rx + rw && pt.y >= ry && pt.y < ry + rh ? 0.5 : 1);
+    }
+    // 회의실 문 '사용 중'(순회 meeting, 통행은 유지)
+    const busy = sim.meetingDoorBusy();
+    for (const d of this.busyDoors) d.setVisible(busy);
+    // 팀장 출발 말풍선 아이콘
+    if (this.tourIconFor) {
+      this.tourIconFor.left -= dt;
+      const npc = floor.findNpc((n) => n.def.id === this.tourIconFor!.npc);
+      const v = npc ? this.views.get(npc) : undefined;
+      if (!v || this.tourIconFor.left <= 0 || !this.tourIconFor.frame) { this.tourIcon.setVisible(false); if (!v || this.tourIconFor.left <= 0) this.tourIconFor = null; }
+      else this.tourIcon.setFrame(this.tourIconFor.frame).setPosition(v.sprite.x, v.sprite.y - 30).setVisible(true);
+    } else this.tourIcon.setVisible(false);
+    // HUD '자리 비움' 배지(남은 시간은 표시 안 함)
+    const away = (sim.content.bossTours ?? []).some((t) => sim.actorAway(t.actorId)) && sim.phase === 'day';
+    this.awayBadge.setVisible(away);
+    if (away) { placeText(this.awayBadge, LOGICAL_WIDTH - 6, HUD_TOP_PX + 6, 1, 0); fitPanel(this.awayBadgeBg, this.awayBadge, 3, 2); } else this.awayBadgeBg.setVisible(false);
+    // 들고 오는 소품(아트 player/carry_* 전 임시: 미션 아이콘을 머리 위에)
+    const prop = sim.phase === 'day' ? sim.carryProp() : null;
+    const carryM = prop ? sim.missions.find((m) => m.state === 'carry') : undefined;
+    const icon = carryM && this.atlasHas(carryM.def.iconSprite) ? carryM.def.iconSprite : carryM ? iconFallback(carryM.def.iconSprite) : null;
+    this.carryIcon.setVisible(!!icon && this.atlasHas(icon));
+    if (icon && this.atlasHas(icon)) this.carryIcon.setFrame(icon).setPosition(Math.round(pw.x), Math.round(pw.y) - 14);
+    // 출력 진행 루프(sfx_printer_run: 시작 loop true, 완료·일시정지 false)
+    audio.loop('sfx_printer_run', sim.printing && this.overlay === 'none');
     // 공범 동료(따라오기)
     const f = sim.follower;
     if (f && !this.follower) this.follower = this.add.sprite(0, 0, ATLAS_KEY, 'accomplice/idle_down').setOrigin(0.5, 1);
