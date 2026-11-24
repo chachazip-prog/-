@@ -1,0 +1,51 @@
+{
+ "name": "t149-mark12",
+ "lean": true,
+ "prefix": "mark",
+ "group": "ui",
+ "size": [
+  12,
+  12
+ ],
+ "origin": [
+  0.5,
+  1
+ ],
+ "note": "T-149 '같은 성별 / 다른 성별' 표식(D-093, 인물 머리 위, 원점 아래 가운데). 플레이어 기준 관계만 보여 줌(절대 성별 그림 없음). gender_same = 하늘색 말풍선 + 똑같은 흰 사람 둘, gender_other = 회색 말풍선 + 흰 사람·짙은 사람(모양·명도로도 구분, 색약 대응). 빨강 없음",
+ "frames": [
+  {
+   "name": "gender_same",
+   "rows": [
+    ".OOOOOOOOOO.",
+    "OCCCCCCCCCCO",
+    "OCCWCCCCWCCO",
+    "OCCCCCCCCCCO",
+    "OCWWWCCWWWCO",
+    "OCWWWCCWWWCO",
+    "OCWCWCCWCWCO",
+    "OCWCWCCWCWCO",
+    "OCCCCCCCCCCO",
+    ".OOOOOOOOOO.",
+    ".....OO.....",
+    ".....O......"
+   ]
+  },
+  {
+   "name": "gender_other",
+   "rows": [
+    ".OOOOOOOOOO.",
+    "OMMMMMMMMMMO",
+    "OMMWMMMMDMMO",
+    "OMMMMMMMMMMO",
+    "OMWWWMMDDDMO",
+    "OMWWWMMDDDMO",
+    "OMWMWMMDMDMO",
+    "OMWMWMMDMDMO",
+    "OMMMMMMMMMMO",
+    ".OOOOOOOOOO.",
+    ".....OO.....",
+    ".....O......"
+   ]
+  }
+ ]
+}

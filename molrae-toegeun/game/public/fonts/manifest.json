@@ -11,12 +11,12 @@
       "derivedFrom": "Galmuri11 2.40.3",
       "source": "vendor/fonts/galmuri/Galmuri11.bdf",
       "sourceSha256": "f72dba056f163f250b4af62ac08736391f82c8f680abb554e5fc0997f29e9936",
-      "glyphs": 2534,
+      "glyphs": 2538,
       "atlas": "1024x512",
       "lineHeight": 13,
       "base": 11,
-      "pngSha256": "69c15127bfebb7fb2c9c3111e34603b2970c31434dc38ca3785940d1a63acb33",
-      "jsonSha256": "c6e04cb3ceb8193d487a601baf695d678dc95628d552b4d0da59db1b2c591ef4",
+      "pngSha256": "552c587685d3b1a440b81517b230638f7c20baf96094d97948285ff92c4267f5",
+      "jsonSha256": "de1aba780ccd261b09dbf538df8765005680976f4d3e501c4121c58ecac9a5bd",
       "allowedMissing": []
     },
     {
@@ -25,12 +25,12 @@
       "derivedFrom": "Galmuri9 2.40.3",
       "source": "vendor/fonts/galmuri/Galmuri9.bdf",
       "sourceSha256": "e87a1a4f7c5ce72b72802959fce27a3221d05e1f60f4610092d6922ad0456733",
-      "glyphs": 2534,
+      "glyphs": 2538,
       "atlas": "512x512",
       "lineHeight": 10,
       "base": 9,
-      "pngSha256": "4ffcd2387d07e8ca62654bb616157ece5e041829da9ffd2077539b63f7bc7fba",
-      "jsonSha256": "3b25d10c772800c5a7ca90a4a1ca137b5c0f6fd318d59f2a15289d346671e021",
+      "pngSha256": "5f8a07d63c5de9e10b0c8c11d59fc22edf24958b4cd416776d6723d5e3105bd5",
+      "jsonSha256": "370b036c9e1d9ac08a353c9e96cf64654737b8ebe8024113ba336299ae1fddc5",
       "allowedMissing": []
     },
     {

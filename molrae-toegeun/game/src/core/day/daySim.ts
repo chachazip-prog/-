@@ -122,6 +122,8 @@ const TUTORIAL_ON: Readonly<Record<string, string>> = {
 /** 공범 망보기 헛기침 대상(상사) */
 const BOSS_ROLE = 'boss';
 
+interface TourState { next: number; npc: PatrolNpc | null; index: number; route: BossTourDef['routes'][number]; endTellShown: Set<number>; cutShort?: boolean }
+
 export class DaySim {
   readonly content: DayContent;
   readonly floor: FloorSim;
@@ -139,6 +141,8 @@ export class DaySim {
   /** 진행 중인 미션 행동 */
   activity: Activity | null = null;
   activeMission: MissionRuntime | null = null;
+  /** 지금 행동 중인 미션 정의(HUD 문구) */
+  get activeMissionDef(): MissionDef | null { return this.activeMission?.def ?? null; }
   /** 칩으로 고른 미션(도착하면 시작) */
   pendingMission: MissionRuntime | null = null;
   leaveStage: LeaveStage = 'pack';
@@ -210,7 +214,7 @@ export class DaySim {
   private slowMoScale = 1;
   private scriptCount = new Map<number, number>();
   // ── 팀장 순회(D-075, T-144·T-145) ──
-  private tours = new Map<BossTourDef, { next: number; npc: PatrolNpc | null; index: number; route: BossTourDef['routes'][number]; endTellShown: Set<number> }>();
+  private tours = new Map<BossTourDef, TourState>();
   /** 오늘 받은 카페 쿠폰 도장 */
   couponStamps = 0;
   private coverSet = new Set<number>();
@@ -1613,6 +1617,22 @@ export class DaySim {
     return n;
   }
 
+  /** 퇴근 mustBeSeatedBeforeLeaveSec 전 복귀(leadRoaming.schedule.rule): 목적지 대기 중 남은 시간이 부족하면 체류를 끊고 바로 자리로 */
+  private tourReturnEarly(def: BossTourDef, st: TourState): void {
+    const npc = st.npc!;
+    const must = def.mustBeSeatedBeforeLeaveSec;
+    if (must === undefined || st.cutShort || this.phase !== 'day' || npc.mode !== 'wait' || npc.stopId === 'stop_tour_stand') return;
+    const left = this.content.dayPhaseSec - this.dayTime;
+    if (left > must + 25) return;
+    const seatWp = npc.def.waypoints[npc.def.waypoints.length - 1]!;
+    const here = tileOf(npc);
+    const path = findPath(this.floor.map, here, { x: seatWp.x, y: seatWp.y });
+    const ret = (path ? path.length - 1 : 0) / Math.max(0.1, npc.def.speedTilesPerSec) + 0.5;
+    if (left > must + ret) return;
+    const back: NpcDef = { ...npc.def, id: `${npc.def.id}_back`, waypoints: [{ x: here.x, y: here.y, waitSec: 0, lookChance: 0 }, seatWp] };
+    try { st.npc = this.floor.replaceNpc(npc, back); st.cutShort = true; st.route = []; } catch { /* 경로 없음: 그대로 */ }
+  }
+
   /** 미션 진행 기록 시작(T-145 MissionRunStats) */
   private ensureRun(m: MissionRuntime): void {
     if (m.run) return;
@@ -1677,6 +1697,7 @@ export class DaySim {
       if (!st) { st = { next: 0, npc: null, index: 0, route: [], endTellShown: new Set() }; this.tours.set(def, st); }
       if (st.npc) {
         if (this.floor.npcs.includes(st.npc)) {
+          this.tourReturnEarly(def, st);
           // 복귀 전조 시작 알림(표시·사운드)
           st.route.forEach((s, i) => {
             if (!s.endTell || st!.endTellShown.has(i)) return;

@@ -41,6 +41,8 @@ PNG 인코더를 직접 구현했으므로 같은 입력이면 항상 같은 바
                             키트 스탬프를 넣는다. 소품·포즈 스탬프는 그 뒤에 그대로 찍힌다
       kitsReplace: {a: b} → 물려받은 kits 목록에서 a 를 b 로 바꾼다(예: 머리 키트 교체)
       stamps/frames/swap  → 물려받은 것 뒤에 덧붙임 / 같은 이름 프레임은 교체 / 덮어씀
+    lean: true          → 이 파일의 아틀라스·애니메이션 항목을 Phaser 기본값 필드 없이 짧게 씀(초기 로드 절감, v2.5).
+                          아틀라스 {"frame", "anchor"} / 애니메이션 {"key", "defaultTextureKey", "frames":[{"frame"}], "frameRate", "repeat"}
   scenes/*.json
     size, tile, offset, bg, tiles, map, cones, objects(depth_sort), ui, labels[{x,y,text}](v2.3)
 """
@@ -228,7 +230,7 @@ def load_sprites(src, legend):
             fr = [x for x in fr if x["name"] != f["name"]] + [f]
         m["frames"] = fr
         m["swap"] = dict(m.get("swap", {}), **d.get("swap", {}))
-        for k in ("name", "_file", "note", "group"):
+        for k in ("name", "_file", "note", "group", "lean"):
             if k in d:
                 m[k] = d[k]
         m.pop("prefix", None)
@@ -313,7 +315,7 @@ def load_sprites(src, legend):
                 for ch in r:
                     if ch not in legend:
                         errors.append("%s: %d행 미정의 문자 '%s'" % (key, i, ch))
-            frames.append({"key": key, "w": w, "h": h, "rows": rows, "sprite": name,
+            frames.append({"key": key, "w": w, "h": h, "rows": rows, "sprite": name, "lean": bool(d.get("lean")),
                            "frame": n, "group": d.get("group", "misc"), "swap": swap,
                            "origin": origin, "file": d["_file"]})
         adefs = (list((base or {}).get("anims", [])) + list(d.get("anims", []))
@@ -324,7 +326,7 @@ def load_sprites(src, legend):
         for k in [a["key"] for a in adefs if seen.get(a["key"]) is a]:
             a = seen[k]
             pre = "" if d.get("flat") else d.get("prefix", name) + "/"
-            anims.append({"key": pre + k, "sprite": name,
+            anims.append({"key": pre + k, "sprite": name, "lean": bool(d.get("lean")),
                           "frames": [pre + f for f in a["frames"]],
                           "frameRate": a.get("frameRate", 8), "repeat": a.get("repeat", -1)})
     seen_k, seen_a = {}, set()
@@ -495,10 +497,11 @@ def build_sheet(frames, legend, colors, out_dir, png_dir=None):
         sheet.blit(img, x, y)
         if png_dir:
             img.save(os.path.join(png_dir, f["key"].replace("/", "__") + ".png"))
-        ent = {"frame": {"x": x, "y": y, "w": f["w"], "h": f["h"]},
-               "rotated": False, "trimmed": False,
-               "spriteSourceSize": {"x": 0, "y": 0, "w": f["w"], "h": f["h"]},
-               "sourceSize": {"w": f["w"], "h": f["h"]}}
+        ent = {"frame": {"x": x, "y": y, "w": f["w"], "h": f["h"]}}
+        if not f.get("lean"):  # lean(v2.5): Phaser 기본값과 같은 필드 생략(rotated·trimmed false, 원본 크기 = 프레임)
+            ent.update({"rotated": False, "trimmed": False,
+                        "spriteSourceSize": {"x": 0, "y": 0, "w": f["w"], "h": f["h"]},
+                        "sourceSize": {"w": f["w"], "h": f["h"]}})
         if f["origin"]:
             # Phaser JSON Hash 파서는 anchor 를 customPivot(원점)으로 읽는다
             ent["anchor"] = {"x": f["origin"][0], "y": f["origin"][1]}
@@ -511,6 +514,11 @@ def build_sheet(frames, legend, colors, out_dir, png_dir=None):
 def build_anims(anims, texture_key, out_dir):
     data = {"anims": []}
     for a in anims:
+        if a.get("lean"):  # lean(v2.5): 기본값 필드 생략 + defaultTextureKey(Phaser 3.90 Animation 기본값과 같음)
+            data["anims"].append({"key": a["key"], "defaultTextureKey": texture_key,
+                                  "frames": [{"frame": fk} for fk in a["frames"]],
+                                  "frameRate": a["frameRate"], "repeat": a["repeat"]})
+            continue
         data["anims"].append({
             "key": a["key"], "type": "frame",
             "frames": [{"key": texture_key, "frame": fk, "duration": 0} for fk in a["frames"]],

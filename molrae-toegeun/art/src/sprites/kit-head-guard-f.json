@@ -1,0 +1,64 @@
+{
+ "name": "kit-head-guard-f",
+ "kit": true,
+ "note": "T-149 머리 키트(바디 B): 경비 여 변형: 챙 모자(노란 배지) 원본 그대로 + 모자 뒤 구멍으로 뺀 포니테일(회색 끈), 관자놀이 옆머리. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "stamps": [
+  {
+   "dir": "down",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "...OOOOOOOOOO...",
+    "..ODDDDYYDDDDO..",
+    ".ODDDDDDDDDDDDO.",
+    ".ODDDDDDDDDDDDO.",
+    "OOOOOOOOOOOOOOOO",
+    ".OHHSSSSSSSSHHO.",
+    ".OHHSSSSSSSSHHO.",
+    ".OHSSOSSSSOSSHO.",
+    ".OHSSOSSSSOSSHO.",
+    ".OSSSSSssSSSSSO.",
+    "..OOOOssssOOOO.."
+   ]
+  },
+  {
+   "dir": "up",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "...OOOOOOOOOO...",
+    "..ODDDDDDDDDDO..",
+    ".ODDDDDDDDDDDDO.",
+    ".ODDDDDDDDDDDDO.",
+    ".OOOOOOOOOOOOOO.",
+    ".OHHHHOOOOHHHHO.",
+    ".OHHHHOMMOHHHHO.",
+    ".OHHHHOHHOHHHHO.",
+    ".OSHHHOHHOHHHSO.",
+    ".OHHHHOHHOHHHHO.",
+    "..OOOOOHHOOOOO.."
+   ]
+  },
+  {
+   "dir": "right",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "..OOOOOOOOO.....",
+    "..ODDDDDDYDO....",
+    ".ODDDDDDDDDDO...",
+    ".ODDDDDDDDDDDO..",
+    ".OOOOOOOOOOOOOOO",
+    "OMOHHHHHHHHHHO..",
+    "OHOHHHHHHSSSSO..",
+    "OHOHHHHSSSSOSO..",
+    "OHOHHHHsSSSOSO..",
+    ".OOHHHHSSSSSSO..",
+    "..OOOOOsssOOO..."
+   ]
+  }
+ ]
+}

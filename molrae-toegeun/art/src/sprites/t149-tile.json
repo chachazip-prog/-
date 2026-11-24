@@ -1,0 +1,139 @@
+{
+ "name": "t149-tile",
+ "lean": true,
+ "prefix": "tile2",
+ "group": "tile",
+ "size": [
+  16,
+  16
+ ],
+ "note": "T-149 성별 시설 타일. wall_door_restroom_<m|f>_<mine|other> = 가림막 문(세로 벽 문틀 + 문판) + 8x8 공공시설 표준 픽토그램 표지판. mine = 하늘색(cool, 플레이어 줄 색) 테두리, other = 회색(mid) 테두리. 빨강·주황 없음. 두 쪽 시설 안은 같은 그림(표지만 다름). floor_locker = 탈의실 바닥(흰·연회색 타일), wall_locker = 사물함 벽 앞면(남녀 공용 같은 그림)",
+ "frames": [
+  {
+   "name": "wall_door_restroom_m_mine",
+   "rows": [
+    "OLqQQQQQQQQQQqLO",
+    "OLqQQQQQQQQQQqLO",
+    "OLOOOOOOOOOOOOLO",
+    "OLOCCCCCCCCCCOLO",
+    "OLOCWWWDDWWWCOLO",
+    "OLOCWWWDDWWWCOLO",
+    "OLOCWWWWWWWWCOLO",
+    "OLOCWWDDDDWWCOLO",
+    "OLOCWDDDDDDWCOLO",
+    "OLOCWWDDDDWWCOLO",
+    "OLOCWWDWWDWWCOLO",
+    "OLOCWWDWWDWWCOLO",
+    "OLOCCCCCCCCCCOLO",
+    "OLOOOOOOOOOOOOLO",
+    "OLqQQQQQQQQQQqLO",
+    "OLqqqqqqqqqqqqLO"
+   ]
+  },
+  {
+   "name": "wall_door_restroom_m_other",
+   "rows": [
+    "OLqQQQQQQQQQQqLO",
+    "OLqQQQQQQQQQQqLO",
+    "OLOOOOOOOOOOOOLO",
+    "OLOMMMMMMMMMMOLO",
+    "OLOMWWWDDWWWMOLO",
+    "OLOMWWWDDWWWMOLO",
+    "OLOMWWWWWWWWMOLO",
+    "OLOMWWDDDDWWMOLO",
+    "OLOMWDDDDDDWMOLO",
+    "OLOMWWDDDDWWMOLO",
+    "OLOMWWDWWDWWMOLO",
+    "OLOMWWDWWDWWMOLO",
+    "OLOMMMMMMMMMMOLO",
+    "OLOOOOOOOOOOOOLO",
+    "OLqQQQQQQQQQQqLO",
+    "OLqqqqqqqqqqqqLO"
+   ]
+  },
+  {
+   "name": "wall_door_restroom_f_mine",
+   "rows": [
+    "OLqQQQQQQQQQQqLO",
+    "OLqQQQQQQQQQQqLO",
+    "OLOOOOOOOOOOOOLO",
+    "OLOCCCCCCCCCCOLO",
+    "OLOCWWWDDWWWCOLO",
+    "OLOCWWWDDWWWCOLO",
+    "OLOCWWWWWWWWCOLO",
+    "OLOCWWWDDWWWCOLO",
+    "OLOCWWDDDDWWCOLO",
+    "OLOCWDDDDDDWCOLO",
+    "OLOCWWDWWDWWCOLO",
+    "OLOCWWDWWDWWCOLO",
+    "OLOCCCCCCCCCCOLO",
+    "OLOOOOOOOOOOOOLO",
+    "OLqQQQQQQQQQQqLO",
+    "OLqqqqqqqqqqqqLO"
+   ]
+  },
+  {
+   "name": "wall_door_restroom_f_other",
+   "rows": [
+    "OLqQQQQQQQQQQqLO",
+    "OLqQQQQQQQQQQqLO",
+    "OLOOOOOOOOOOOOLO",
+    "OLOMMMMMMMMMMOLO",
+    "OLOMWWWDDWWWMOLO",
+    "OLOMWWWDDWWWMOLO",
+    "OLOMWWWWWWWWMOLO",
+    "OLOMWWWDDWWWMOLO",
+    "OLOMWWDDDDWWMOLO",
+    "OLOMWDDDDDDWMOLO",
+    "OLOMWWDWWDWWMOLO",
+    "OLOMWWDWWDWWMOLO",
+    "OLOMMMMMMMMMMOLO",
+    "OLOOOOOOOOOOOOLO",
+    "OLqQQQQQQQQQQqLO",
+    "OLqqqqqqqqqqqqLO"
+   ]
+  },
+  {
+   "name": "floor_locker",
+   "rows": [
+    "WWWqWWWqWWWqWWWq",
+    "WLLqWLLqWLLqWLLq",
+    "WLLqWLLqWLLqWLLq",
+    "qqqqqqqqqqqqqqqq",
+    "WWWqWWWqWWWqWWWq",
+    "WLLqWLLqWLLqWLLq",
+    "WLLqWLLqWLLqWLLq",
+    "qqqqqqqqqqqqqqqq",
+    "WWWqWWWqWWWqWWWq",
+    "WLLqWLLqWLLqWLLq",
+    "WLLqWLLqWLLqWLLq",
+    "qqqqqqqqqqqqqqqq",
+    "WWWqWWWqWWWqWWWq",
+    "WLLqWLLqWLLqWLLq",
+    "WLLqWLLqWLLqWLLq",
+    "qqqqqqqqqqqqqqqq"
+   ]
+  },
+  {
+   "name": "wall_locker",
+   "rows": [
+    "WWWWWWWWWWWWWWWW",
+    "OOOOOOOOOOOOOOOO",
+    "OLDDDDLOOLDDDDLO",
+    "OLLLLLLOOLLLLLLO",
+    "OLDDDDLOOLDDDDLO",
+    "OLLLLLLOOLLLLLLO",
+    "OLLLLLDOOLLLLLDO",
+    "OLLLLLDOOLLLLLDO",
+    "OLLLLLLOOLLLLLLO",
+    "OLLLLLLOOLLLLLLO",
+    "OMMMMMMOOMMMMMMO",
+    "OOOOOOOOOOOOOOOO",
+    "qqqqqqqqqqqqqqqq",
+    "OOOOOOOOOOOOOOOO",
+    "MMMMMMMMMMMMMMMM",
+    "OOOOOOOOOOOOOOOO"
+   ]
+  }
+ ]
+}

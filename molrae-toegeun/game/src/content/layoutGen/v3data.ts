@@ -7,6 +7,7 @@
  */
 import type { LegendEntry, Tile } from '../../core/grid';
 import type { Dir } from '../../core/vision';
+import { V3_PROSE_KEYS } from './proseKeys';
 
 type O = Record<string, unknown>;
 const obj = (v: unknown): O => (typeof v === 'object' && v !== null && !Array.isArray(v) ? v as O : {});
@@ -129,12 +130,12 @@ const DIRS: readonly Dir[] = ['up', 'down', 'left', 'right'];
 const dirOf = (v: unknown): Dir | undefined => (DIRS.includes(v as Dir) ? v as Dir : undefined);
 const tileOfArr = (v: unknown): Tile => { const a = nums(v); return { x: a[0] ?? 0, y: a[1] ?? 0 }; };
 
-/** 사람용 메모 키 제거(런타임은 원래 읽지 않음. 해시 안정용) */
+/** 사람용 메모 키·설명 문장 키 제거(런타임은 원래 읽지 않음. 빌드 제거와 같은 기준 → 해시 안정) */
 function stripMemo(v: unknown): unknown {
   if (Array.isArray(v)) return v.map(stripMemo);
   if (v && typeof v === 'object') {
     const o: O = {};
-    for (const k of Object.keys(v as O).sort()) if (!k.startsWith('_')) o[k] = stripMemo((v as O)[k]);
+    for (const k of Object.keys(v as O).sort()) if (!k.startsWith('_') && !V3_PROSE_KEYS.includes(k)) o[k] = stripMemo((v as O)[k]);
     return o;
   }
   return v;

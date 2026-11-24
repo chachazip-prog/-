@@ -1,0 +1,82 @@
+{
+ "name": "kit-head-bg-buddy-m",
+ "kit": true,
+ "note": "T-149 머리 키트(바디 B): 옆 팀 동기 남 변형(회전 인물, 여와 같은 비중): 옆 가르마 웨이브 중단발(끝이 바깥으로 뻗침) + 볼터치·웃음(동기 표지). 여 변형은 기존 kit-head-buddy(짧은 뽀글). D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "stamps": [
+  {
+   "dir": "down",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "....OOOOOOO.....",
+    "..OOHHHHHHHOOO..",
+    ".OHHHHHHHDDHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHSHHSSSSHHO.",
+    ".OHHSSSSSSSSHHO.",
+    ".OHHSOSSSSOSHHO.",
+    ".OHHsOSSSSOsHHO.",
+    "OHHHSSSssSSSHHHO",
+    ".OOOOOssssOOOOO."
+   ],
+   "match": [
+    "sit_turn_*"
+   ]
+  },
+  {
+   "dir": "up",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "....OOOOOOO.....",
+    "..OOHHHHHHHOOO..",
+    ".OHHHDDHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    "OHHHHHHHHHHHHHHO",
+    ".OOOOOOOOOOOOOO."
+   ],
+   "match": [
+    "sit_type_*"
+   ]
+  },
+  {
+   "dir": "right",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "....OOOOOO......",
+    "..OOHHHHHHOO....",
+    ".OHHHHHHHDDHO...",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHHSHHO..",
+    ".OHHHHHHHSSSSO..",
+    ".OHHHHHHSSSOSO..",
+    ".OHHHHHHsSSOSO..",
+    "OHHHHHHHSSSSSO..",
+    ".OOOOOOsssOOO..."
+   ]
+  },
+  {
+   "match": "sit_turn_1",
+   "x": 0,
+   "y": 7,
+   "_note": "웃음 표정(^ ^ + 벌린 입), 머리 모양에 맞춘 판",
+   "rows": [
+    ".OHHSOSSSSOSHHO.",
+    ".OHHOSOSSOSOHHO.",
+    "OHHHSSSDDSSSHHHO",
+    ".OOOOOssssOOOOO."
+   ]
+  }
+ ]
+}

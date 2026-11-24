@@ -72,6 +72,7 @@
       "rankScaling": {},
       "failReactionKeys": ["react.restroom.timeout", "react.restroom.exposed"],
       "tutorialId": "tut_restroom",
+      "shareCard": { "trigger": false, "eventVarAllowed": false, "_note": "T-152(마케팅 요청·M-01): '화장실 피신' 결과는 공유 카드 트리거가 되지 않고 {이벤트} 변수에도 넣지 않음. 이 미션이 있던 판의 카드는 다른 트리거(퇴근 성공 등)로만 만들고, 카드 문구·그림에 화장실 장면을 쓰지 않음. 없는 이벤트의 기본값은 true(기존 동작)" },
       "_designNote": "왕복 17+17타일(11.3초) + 휴식 3초 = 최소 14.3초. 칸 안은 안전 구역이고 최대 4초 더 머물면 초당 20점(욕심 vs 제한 시간·인사팀 점검). 최단 경로가 팀장 옆을 지나 첫 '경로 선택' 미션."
     },
     {

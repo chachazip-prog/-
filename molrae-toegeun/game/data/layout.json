@@ -178,7 +178,13 @@
       "safeZone": true,
       "zone": "restroom_stall",
       "art": "tile2/shower_stall",
-      "_note": "T-148: 헬스장 탈의실 샤워 칸. 화장실 칸 S와 같은 판정(칸 안 = 안전 구역). zone을 restroom_stall로 둬 화장실 미션 로직을 그대로 씀"
+      "_note": "T-148: 헬스장 탈의실 샤워 칸. 화장실 칸 S와 같은 판정(칸 안 = 안전 구역). zone을 restroom_stall로 둬 화장실 미션 로직을 그대로 씀",
+      "occupiedDisplay": "closed_door_in_use",
+      "inUseLabelKey": "facility.in_use",
+      "steamIcon": false,
+      "drawOccupantInside": false,
+      "_t152Note": "T-152(S-02): 닫힌 문 + '사용 중' 표시만. 김(증기) 아이콘·물줄기·인물 그림 없음. 화면 문구에서는 '샤워 칸' 대신 '구석 칸'으로 부름. 아트 T-149 그림과 맞춤: 비어 있으면 tile2/shower_stall(표시창 회색), 플레이어가 안에 있으면 tile2/shower_stall_hiding(표시창 하늘색). inUseLabelKey 글자는 접근성·툴팁용 선택",
+      "occupiedArt": "tile2/shower_stall_hiding"
     },
     "l": {
       "kind": "locker_floor",
@@ -3397,7 +3403,10 @@
       "talkCancelLineKey": "int.talk.cancel_at_door",
       "sightIntoFacility": "blocked_by_screened_door",
       "inspectionsInside": "never",
-      "_note": "플레이어는 내 쪽 문만 지남(다른 쪽 문 앞은 그냥 복도). 고정 인물(선배·팀장·대표님·동료·동기)은 성별과 상관없이 시설 안에 들어가지 않음 → 고정 인물의 성별이 메카닉에 영향 없음. 말걸기 전조 중 내 쪽 문을 지나면 누구든 말걸기 취소(D-054 '피할 여지'의 시설 버전). 인사팀 점검·경비는 시설 안을 확인하지 않음(사생활)"
+      "_note": "플레이어는 내 쪽 문만 지남(다른 쪽 문 앞은 그냥 복도). 고정 인물(선배·팀장·대표님·동료·동기)은 성별과 상관없이 시설 안에 들어가지 않음 → 고정 인물의 성별이 메카닉에 영향 없음. 말걸기 전조 중 내 쪽 문을 지나면 누구든 말걸기 취소(D-054 '피할 여지'의 시설 버전). 인사팀 점검·경비는 시설 안을 확인하지 않음(사생활)",
+      "talkCancelNpcBehavior": "stop_in_place",
+      "talkCancelNpcApproachDoor": false,
+      "_t152Note": "T-152(S-05): 말걸기가 시설 문에서 취소되면 말을 걸던 인물은 그 자리에서 멈춘 뒤 원래 경로로 돌아감. 시설 문 쪽으로 걸어오거나 문 앞에서 기다리지 않음(따라가기 연상 금지)"
     },
     "missionTargets": {
       "restroom.mine": {
@@ -3511,6 +3520,32 @@
         "case": "C5_locker_room"
       }
     ],
-    "_comment": "T-148(REQ-016, D-087·D-088) 성별 시설 케이스. 규칙서 design/gender-design.md §3. 모든 값은 '내 쪽(mine)/다른 쪽(other)', '같은 성별(same)/다른 성별(other)' 같은 플레이어 기준 표현으로만 씀(절대 성별 값 금지 → 남녀 대칭이 구조로 보장됨)"
+    "_comment": "T-148(REQ-016, D-087·D-088) 성별 시설 케이스. 규칙서 design/gender-design.md §3. 모든 값은 '내 쪽(mine)/다른 쪽(other)', '같은 성별(same)/다른 성별(other)' 같은 플레이어 기준 표현으로만 씀(절대 성별 값 금지 → 남녀 대칭이 구조로 보장됨)",
+    "artRules": {
+      "insideAllowed": [
+        "stall_door",
+        "sink",
+        "mirror",
+        "locker",
+        "bench",
+        "screened_door",
+        "floor"
+      ],
+      "insideForbidden": [
+        "urinal",
+        "toilet",
+        "bathtub",
+        "use_pose",
+        "underwear",
+        "hanging_clothes",
+        "towel_with_clothes",
+        "steam",
+        "water_stream"
+      ],
+      "occupantInStall": "not_drawn_closed_door",
+      "bothSidesIdentical": true,
+      "signPictogram": "public_standard_no_body_lines",
+      "_note": "T-152(S-03·S-08): 시설 안 그림 범위. 두 쪽 시설은 같은 그림(표지만 다름). 칸 안 플레이어는 그리지 않고 닫힌 문으로 표현. 표지는 공공시설 표준 픽토그램 수준, 허리·가슴 신체선·리본 장식 금지. design/gender-design.md §9-1"
+    }
   }
 }

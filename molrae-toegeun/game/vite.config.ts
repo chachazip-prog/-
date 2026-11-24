@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vite';
+import { V3_PROSE_KEYS, V3_PROSE_TABLES } from './src/content/layoutGen/proseKeys';
 
 /**
  * T-140: ?url로 내보내는 JSON 에셋(아트 산출물 sheet.json·anims.json)은 들여쓰기된 원본 그대로 복사되어
@@ -46,6 +47,11 @@ function stripDataMemos(): Plugin {
    * 원래 테이블에서는 지운다. 기획 원본 파일은 그대로다.
    */
   const STRINGS_SOURCES = ['missions.json', 'layout.json'];
+  /** v3 테이블의 설명 문장 키(런타임 미사용) 제거: 모든 깊이 */
+  const stripKeys = (v: unknown, keys: readonly string[]): void => {
+    if (Array.isArray(v)) { for (const x of v) stripKeys(x, keys); return; }
+    if (v && typeof v === 'object') for (const k of Object.keys(v)) { if (keys.includes(k)) delete (v as Record<string, unknown>)[k]; else stripKeys((v as Record<string, unknown>)[k], keys); }
+  };
   const pendingStrings = (): Record<string, unknown> => {
     const out: Record<string, unknown> = {};
     for (const f of STRINGS_SOURCES) {
@@ -64,6 +70,7 @@ function stripDataMemos(): Plugin {
       if (!file.startsWith(DATA_DIR) || !file.endsWith('.json')) return null;
       const name = file.slice(DATA_DIR.length);
       const data = strip(JSON.parse(code)) as Record<string, unknown>;
+      if (V3_PROSE_TABLES.includes(name)) stripKeys(data, V3_PROSE_KEYS);
       if (STRINGS_SOURCES.includes(name)) delete data['stringsKo'];
       if (name === 'strings.ko.json') {
         const base = (data['strings'] ?? {}) as Record<string, unknown>;

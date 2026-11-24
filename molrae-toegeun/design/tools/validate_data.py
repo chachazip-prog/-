@@ -15,6 +15,9 @@
       T-148: 남녀 변형(variants 2종·spriteKey 중복 없음, 아트 미반영은 WARN)·casting(fixed|rotate), 플레이어 선택(기본값 없음),
              직급별·전체 출연 여성 비율, 고정 인물 집합 양성 포함, 성별 시설 모듈 대칭(크기·칸 수·포트 기준 거리 차 ≤ 3·가림막 문·두 시설 분리),
              절대 성별 값 금지(mine/other·same/other만), facilityStop 회전 인물·벌 상한, 성별 호칭·고정관념 단어.
+      T-152: 동료 집합(고정 + 회전 0.5) 여성 비율 범위(D-095 A안), 옆 팀 동기 회전(D-090), 시설 안 콘 그리지 않음·'!' 전조 ≥ 0.4초,
+             샤워 칸 김 아이콘 금지, 시설 그림 범위, 말걸기 취소 시 NPC 문 접근 금지, player.variant 분석 전송 금지,
+             '몰래'+시설 단어 금지 조합(문자열·시설 미션 칩), 공유 카드 성별 변수·화장실 트리거 금지.
 """
 import itertools
 import json
@@ -788,6 +791,34 @@ for grp, items in (("fixed_bosses", [(a, k_) for a in T["bosses"]["bosses"] if a
     if grp in BAL.get("requireBothGendersIn", []) and {f_share(a, k_) for a, k_ in items} != {0.0, 1.0}:
         err(f"{grp}: 고정 인물이 한 성별로만 채워짐(역할-성별 연결 금지, T-148)")
 
+# T-152) 동료 집합 여성 비율(D-095 A안): 고정 = 0/1, 회전 = 0.5. 동기는 회전(D-090)
+CW = BAL.get("coworkerSet")
+cw_share = None
+if not CW:
+    err("rules.characters.casting.balance.coworkerSet 없음(T-152, D-095)")
+else:
+    cw_sl = []
+    for mem in CW.get("members", []):
+        if mem == "npcs.background":
+            cw_sl += [f_share(b) for b in BG]
+        elif mem == "npcs.buddy":
+            cw_sl.append(f_share(buddy_))
+        elif mem.startswith("npcs.") and mem[5:] in npc_by:
+            cw_sl.append(f_share(npc_by[mem[5:]]))
+        else:
+            err(f"coworkerSet.members: '{mem}' 없음")
+    cw_share = sum(cw_sl) / len(cw_sl) if cw_sl else 0
+    lo_, hi_ = CW.get("femaleShareRange", [0.3, 0.7])
+    if not (lo_ <= cw_share <= hi_):
+        err(f"동료 집합 여성 비율 {cw_share:.2f} 범위 [{lo_}, {hi_}] 밖(T-152, D-095)")
+if buddy_.get("casting", {}).get("mode") != "rotate":
+    err("npcs.buddy.casting.mode는 rotate(D-090: '수다 상대 = 한 성별' 고정 금지)")
+if "fixed_npcs" in BAL.get("requireBothGendersIn", []):
+    err("requireBothGendersIn.fixed_npcs는 coworkerSet으로 대체됨(D-095)")
+PSA = rules["characters"]["playerSelection"].get("analytics", {})
+if PSA.get("sendVariant") is not False or PSA.get("logVariant") is not False:
+    err("rules.characters.playerSelection.analytics: player.variant 분석·로그 전송 금지(B-02, D-095)")
+
 # 시설 대칭(layout.genderFacilities): 모듈 안 두 쪽의 크기·칸 수·문→가운데 복도 거리, 플레이어 기준 표현만
 GF = T["layout"].get("genderFacilities")
 if GF:
@@ -882,6 +913,22 @@ if GF:
             err("facilityStop.target은 same·other 둘 다 필요")
         if i10.get("seenInsideEffect", {}).get("suspicionOnce", 1) > T["missions"]["modifiers"][[m_["id"] for m_ in T["missions"]["modifiers"]].index("bonus.clean")]["condition"]["args"]["max"]:
             err("facilityStop.seenInsideEffect.suspicionOnce > bonus.clean 기준(벌이 너무 큼)")
+    # T-152 S-01: 시설 안 콘은 판정만(그리지 않음), 대신 머리 위 '!' ≥ 0.4초
+    if i10:
+        ic_ = i10.get("insideCone", {})
+        if ic_.get("renderCone") is not False:
+            err("facilityStop.insideCone.renderCone은 false(시설 안 시선 콘 그리지 않음, S-01)")
+        if i10.get("insideCue", {}).get("minSec", 0) < rules["tell"]["minSec"]:
+            err("facilityStop.insideCue.minSec < rules.tell.minSec")
+    # T-152 S-02·S-03·S-05
+    W_ = T["layout"]["legendAdd"].get("W", {})
+    if W_.get("steamIcon") is not False or W_.get("drawOccupantInside") is not False or W_.get("occupiedDisplay") != "closed_door_in_use":
+        err("layout.legendAdd.W: 샤워 칸은 닫힌 문 + '사용 중'만(김 아이콘·인물 금지, S-02)")
+    AR_ = GF.get("artRules", {})
+    if AR_.get("bothSidesIdentical") is not True or not {"urinal", "toilet", "use_pose", "steam"} <= set(AR_.get("insideForbidden", [])):
+        err("layout.genderFacilities.artRules: 두 쪽 같은 그림·소변기·변기·사용 포즈·김 금지 필요(S-03)")
+    if GF.get("access", {}).get("talkCancelNpcApproachDoor") is not False:
+        err("layout.genderFacilities.access.talkCancelNpcApproachDoor는 false(S-05)")
     if len(GF.get("cases", [])) < 5:
         err("layout.genderFacilities.cases ≥ 5 필요(T-148)")
     acc_ = GF.get("access", {})
@@ -910,7 +957,69 @@ for _t in T.values():
     for k_, v_ in _t.get("stringsKo", {}).items():
         if isinstance(v_, str) and GENDER_WORDS.search(v_):
             err(f"stringsKo.{k_}: 성별 호칭·고정관념 단어 '{GENDER_WORDS.search(v_).group(0)}'")
-print("출연 여성 비율(직급별, 회전 = 0.5): " + ", ".join(share_report) + f" / 전체 {ov:.2f}")
+# T-152 S-04: '몰래'류 + 시설 단어 금지 조합(한 문자열, 시설 미션 칩 = 미션 이름 + 변형 라벨)
+CR_ = T["strings.ko"].get("copyRules", {})
+FC_ = CR_.get("facilityCombo")
+all_str = {}
+for p_, k_, v_ in walk_json(T["strings.ko"]["strings"]):
+    for txt in (v_ if isinstance(v_, list) else [v_]):
+        if isinstance(txt, str):
+            all_str.setdefault(p_.lstrip(".").split("[")[0], []).append(txt)
+for _t in T.values():
+    for k_, v_ in _t.get("stringsKo", {}).items():
+        if isinstance(v_, str):
+            all_str.setdefault(k_, []).append(v_)
+if not FC_:
+    err("strings.ko.copyRules.facilityCombo 없음(T-152)")
+else:
+    sneaky_ = re.compile("|".join(map(re.escape, FC_["sneakyWords"])))
+    fac_ = re.compile("|".join(map(re.escape, FC_["facilityWords"])))
+
+    def bad_combo(t):
+        t2 = t.replace("몰래퇴근", "")  # 게임명 자체는 조합 판정에서 뺌(시설 문장에 쓰지 않는 건 검토로)
+        return bool(sneaky_.search(t2) and fac_.search(t2))
+    for k_, txts in all_str.items():
+        if k_ in FC_.get("allowKeys", []):
+            continue
+        for txt in txts:
+            if bad_combo(txt):
+                err(f"strings.{k_}: '몰래'류 + 시설 단어 조합 금지 '{txt}'(T-152 S-04)")
+    first_ = lambda k: (all_str.get(k) or [""])[0]
+    mp_ = T["missions"]
+    ev_by_ = {e["id"]: e for e in T["events"]["events"]}
+    fac_missions = [e_ for e_ in mp_["missionPool"]["existing"] if e_.get("targetFacility")]
+    for e_ in fac_missions:
+        ev_ = ev_by_.get(e_["id"], {})
+        nm = first_(ev_.get("nameKey", ""))
+        tags_ = set(e_.get("tags", []))
+        for md in mp_["modifiers"] + mp_.get("genderModifiers", []):
+            if md.get("missions") and e_["id"] not in md["missions"]:
+                continue
+            at_ = md.get("appliesToTags")
+            if at_ and "any" not in at_ and not (set(at_) & tags_):
+                continue
+            lk = md.get("facilityLabelKey") or md.get("labelKey")
+            chip = f"{nm} · {first_(lk)}"
+            if bad_combo(chip):
+                err(f"시설 미션 칩 '{chip}'({e_['id']} + {md['id']}): '몰래'류 + 시설 조합. facilityLabelKey 필요(T-152 S-04)")
+    for md in mp_["modifiers"]:
+        if md.get("facilityLabelKey") and md["facilityLabelKey"] not in all_str:
+            err(f"missions.modifiers.{md['id']}.facilityLabelKey '{md['facilityLabelKey']}' 문자열 없음")
+# T-152 공유 카드: 성별 변수·성별 라벨 금지, 화장실 미션 트리거 금지
+SC_ = CR_.get("shareCard")
+if not SC_:
+    err("strings.ko.copyRules.shareCard 없음(T-152)")
+else:
+    for k_, txts in all_str.items():
+        if k_.startswith("share."):
+            for txt in txts:
+                if any(fv in txt for fv in SC_["forbiddenVars"]):
+                    err(f"strings.{k_}: 공유 카드에 성별 변수 금지(M-03)")
+    for eid in SC_.get("excludeEventIds", []):
+        sc_ev = next((e for e in T["events"]["events"] if e["id"] == eid), {}).get("shareCard", {})
+        if sc_ev.get("trigger") is not False or sc_ev.get("eventVarAllowed") is not False:
+            err(f"events.{eid}.shareCard: trigger·eventVarAllowed false 필요(T-152)")
+print("출연 여성 비율(직급별, 회전 = 0.5): " + ", ".join(share_report) + f" / 전체 {ov:.2f}" + (f" / 동료 집합 {cw_share:.2f}" if cw_share is not None else ""))
 
 print(f"tables: {', '.join(T)}")
 print("화면 안 최악 인원(직급별, 플레이어 포함): " + ", ".join(f"{k} {v[0]}" for k, v in RANK_SCREEN.items()))

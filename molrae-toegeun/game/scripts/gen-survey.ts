@@ -32,7 +32,7 @@ const opts = { levelProvider: createLevelProvider({ generate: true }), tours: 'a
 const hash = (s: string): string => { let h = 0x811c9dc5; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(16).padStart(8, '0'); };
 const T = load();
 const t0 = Date.now();
-type Row = { day: number; rank: string; source: string; attempts: number; hash: string; height: number; m?: Record<string, unknown>; fails: string[]; ms: number; tours: number; mods: number };
+type Row = { day: number; rank: string; source: string; attempts: number; hash: string; height: number; m?: Record<string, unknown>; fails: string[]; ms: number; tours: number; toursFeasible: number; awayMax: number; mods: number };
 const rows: Row[] = [];
 for (let day = 3; day <= last; day++) {
   const a = Date.now();
@@ -42,7 +42,7 @@ for (let day = 3; day <= last; day++) {
   rows.push({
     day, rank: c.rankId, source: L.source, attempts: L.attempts ?? 0, hash: hash(c.floor.level.rows.join('\n')), height: c.floor.level.rows.length,
     ...(L.metrics ? { m: L.metrics as unknown as Record<string, unknown> } : {}), fails: (L.failures ?? []).map((f) => f.replace(/^[^:]*: /, '').split(' ').slice(0, 2).join(' ')),
-    ms: Date.now() - a, tours: c.bossTours?.[0]?.atSec.length ?? 0, mods: c.missions.reduce((s, m) => s + (m.modifierIds?.length ?? 0), 0),
+    ms: Date.now() - a, tours: c.bossTours?.[0]?.atSec.length ?? 0, toursFeasible: (c.bossTours?.[0]?.atSec ?? []).filter((a, i) => a <= Math.min(c.bossTours![0]!.latestStartSec, c.bossTours![0]!.latestStartByTour?.[i] ?? Infinity)).length, awayMax: Math.max(0, ...(c.bossTours?.[0]?.awaySec ?? [0])), mods: c.missions.reduce((s, m) => s + (m.modifierIds?.length ?? 0), 0),
   });
   if (show && (day === 3 || day === 6 || day === 16 || day === 28 || day === 41 || day === 53 || day === 65)) {
     console.log(`\n## ${day}일차 ${c.rankId} ${L.source} [${(L.modules ?? []).join(', ')}]`);
@@ -74,7 +74,7 @@ for (const [rank, rs] of byRank) {
   const top = [...fc.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k, v]) => `${k}×${v}`).join(', ');
   const mv = (k: string) => rs.map((r) => Number((r.m?.['v3'] as Record<string, unknown> | undefined)?.[k] ?? NaN)).filter((x) => Number.isFinite(x));
   const fmt = (k: string) => { const v = mv(k); return v.length ? `${k} ${Math.min(...v)}~${Math.max(...v)}(평균 ${avg(v).toFixed(1)})` : `${k} -`; };
-  console.log(`\n[${rank}] ${rs.length}일 · 시도 평균 ${avg(rs.map((r) => r.attempts)).toFixed(1)} / 최대 ${Math.max(...rs.map((r) => r.attempts))} · 순회 평균 ${avg(rs.map((r) => r.tours)).toFixed(1)}회 · 변형 평균 ${avg(rs.map((r) => r.mods)).toFixed(1)}개`);
+  console.log(`\n[${rank}] ${rs.length}일 · 시도 평균 ${avg(rs.map((r) => r.attempts)).toFixed(1)} / 최대 ${Math.max(...rs.map((r) => r.attempts))} · 순회 예정 평균 ${avg(rs.map((r) => r.tours)).toFixed(1)}회(출발 가능 ${avg(rs.map((r) => r.toursFeasible)).toFixed(1)}회, 최장 자리 비움 추정 ${Math.max(...rs.map((r) => r.awayMax)).toFixed(1)}초) · 변형 평균 ${avg(rs.map((r) => r.mods)).toFixed(1)}개`);
   console.log(`  높이 ${Math.min(...rs.map((r) => r.height))}~${Math.max(...rs.map((r) => r.height))} · ${fmt('seatToGate')} · ${fmt('branchPointsOnLeave')} · ${fmt('deadEnds')} · ${fmt('pillars')}`);
   console.log(`  ${fmt('uncoveredStraight')} · ${fmt('coverTiles')} · ${fmt('halfPartitions')} · ${fmt('repairsUsed')} · ${fmt('trimSec')} · ${fmt('predictedRunSec')}`);
   console.log(`  실패 사유 상위: ${top || '없음'}`);

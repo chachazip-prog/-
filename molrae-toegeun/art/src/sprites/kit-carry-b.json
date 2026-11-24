@@ -1,0 +1,921 @@
+{
+ "name": "kit-carry-b",
+ "kit": true,
+ "note": "T-149 바디 B용 들고 걷기 키트. kit-carry(바디 A)와 프레임·애니메이션 이름이 같음(carry_<box|paper|cup>_<dir>[_0|_1], pose_hold_<item>_<dir>_<0|1>). 바디 B 는 어깨가 1px씩 넓어 정면 손·상자·출력물을 2px 넓히고 뒷모습 소품을 바깥으로 1px 옮김. 지금 데이터에서 쓰는 캐릭터는 없음(바디 B 역할이 물건을 들게 되면 \"kits\": [\"kit-carry-b\"] 한 줄)",
+ "frames": [
+  {
+   "name": "carry_box_down",
+   "from": "idle_down"
+  },
+  {
+   "name": "carry_box_down_0",
+   "from": "walk_down_0",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_box_down_1",
+   "from": "walk_down_1",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_box_up",
+   "from": "idle_up"
+  },
+  {
+   "name": "carry_box_up_0",
+   "from": "walk_up_0",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_box_up_1",
+   "from": "walk_up_1",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_box_right",
+   "from": "idle_right"
+  },
+  {
+   "name": "carry_box_right_0",
+   "from": "walk_right_0"
+  },
+  {
+   "name": "carry_box_right_1",
+   "from": "walk_right_1"
+  },
+  {
+   "name": "carry_box_left",
+   "flip": "carry_box_right"
+  },
+  {
+   "name": "carry_box_left_0",
+   "flip": "carry_box_right_0"
+  },
+  {
+   "name": "carry_box_left_1",
+   "flip": "carry_box_right_1"
+  },
+  {
+   "name": "pose_hold_box_down_0",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_hold_box_down_1",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_hold_box_right_0",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_hold_box_right_1",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_hold_box_left_0",
+   "flip": "pose_hold_box_right_0"
+  },
+  {
+   "name": "pose_hold_box_left_1",
+   "flip": "pose_hold_box_right_1"
+  },
+  {
+   "name": "carry_paper_down",
+   "from": "idle_down"
+  },
+  {
+   "name": "carry_paper_down_0",
+   "from": "walk_down_0",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_paper_down_1",
+   "from": "walk_down_1",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_paper_up",
+   "from": "idle_up"
+  },
+  {
+   "name": "carry_paper_up_0",
+   "from": "walk_up_0",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_paper_up_1",
+   "from": "walk_up_1",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_paper_right",
+   "from": "idle_right"
+  },
+  {
+   "name": "carry_paper_right_0",
+   "from": "walk_right_0"
+  },
+  {
+   "name": "carry_paper_right_1",
+   "from": "walk_right_1"
+  },
+  {
+   "name": "carry_paper_left",
+   "flip": "carry_paper_right"
+  },
+  {
+   "name": "carry_paper_left_0",
+   "flip": "carry_paper_right_0"
+  },
+  {
+   "name": "carry_paper_left_1",
+   "flip": "carry_paper_right_1"
+  },
+  {
+   "name": "pose_hold_paper_down_0",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_hold_paper_down_1",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_hold_paper_right_0",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_hold_paper_right_1",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_hold_paper_left_0",
+   "flip": "pose_hold_paper_right_0"
+  },
+  {
+   "name": "pose_hold_paper_left_1",
+   "flip": "pose_hold_paper_right_1"
+  },
+  {
+   "name": "carry_cup_down",
+   "from": "idle_down"
+  },
+  {
+   "name": "carry_cup_down_0",
+   "from": "walk_down_0",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_cup_down_1",
+   "from": "walk_down_1",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_cup_up",
+   "from": "idle_up"
+  },
+  {
+   "name": "carry_cup_up_0",
+   "from": "walk_up_0",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_cup_up_1",
+   "from": "walk_up_1",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "carry_cup_right",
+   "from": "idle_right"
+  },
+  {
+   "name": "carry_cup_right_0",
+   "from": "walk_right_0"
+  },
+  {
+   "name": "carry_cup_right_1",
+   "from": "walk_right_1"
+  },
+  {
+   "name": "carry_cup_left",
+   "flip": "carry_cup_right"
+  },
+  {
+   "name": "carry_cup_left_0",
+   "flip": "carry_cup_right_0"
+  },
+  {
+   "name": "carry_cup_left_1",
+   "flip": "carry_cup_right_1"
+  },
+  {
+   "name": "pose_hold_cup_down_0",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_hold_cup_down_1",
+   "from": "idle_down"
+  },
+  {
+   "name": "pose_hold_cup_right_0",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_hold_cup_right_1",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_hold_cup_left_0",
+   "flip": "pose_hold_cup_right_0"
+  },
+  {
+   "name": "pose_hold_cup_left_1",
+   "flip": "pose_hold_cup_right_1"
+  }
+ ],
+ "anims": [
+  {
+   "key": "carry_box_down",
+   "frames": [
+    "carry_box_down_0",
+    "carry_box_down",
+    "carry_box_down_1",
+    "carry_box_down"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_box_idle_down",
+   "frames": [
+    "carry_box_down"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "carry_box_up",
+   "frames": [
+    "carry_box_up_0",
+    "carry_box_up",
+    "carry_box_up_1",
+    "carry_box_up"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_box_idle_up",
+   "frames": [
+    "carry_box_up"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "carry_box_left",
+   "frames": [
+    "carry_box_left_0",
+    "carry_box_left",
+    "carry_box_left_1",
+    "carry_box_left"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_box_idle_left",
+   "frames": [
+    "carry_box_left"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "carry_box_right",
+   "frames": [
+    "carry_box_right_0",
+    "carry_box_right",
+    "carry_box_right_1",
+    "carry_box_right"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_box_idle_right",
+   "frames": [
+    "carry_box_right"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "pose_hold_box_down",
+   "frames": [
+    "pose_hold_box_down_0",
+    "pose_hold_box_down_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_hold_box_left",
+   "frames": [
+    "pose_hold_box_left_0",
+    "pose_hold_box_left_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_hold_box_right",
+   "frames": [
+    "pose_hold_box_right_0",
+    "pose_hold_box_right_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "carry_paper_down",
+   "frames": [
+    "carry_paper_down_0",
+    "carry_paper_down",
+    "carry_paper_down_1",
+    "carry_paper_down"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_paper_idle_down",
+   "frames": [
+    "carry_paper_down"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "carry_paper_up",
+   "frames": [
+    "carry_paper_up_0",
+    "carry_paper_up",
+    "carry_paper_up_1",
+    "carry_paper_up"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_paper_idle_up",
+   "frames": [
+    "carry_paper_up"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "carry_paper_left",
+   "frames": [
+    "carry_paper_left_0",
+    "carry_paper_left",
+    "carry_paper_left_1",
+    "carry_paper_left"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_paper_idle_left",
+   "frames": [
+    "carry_paper_left"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "carry_paper_right",
+   "frames": [
+    "carry_paper_right_0",
+    "carry_paper_right",
+    "carry_paper_right_1",
+    "carry_paper_right"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_paper_idle_right",
+   "frames": [
+    "carry_paper_right"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "pose_hold_paper_down",
+   "frames": [
+    "pose_hold_paper_down_0",
+    "pose_hold_paper_down_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_hold_paper_left",
+   "frames": [
+    "pose_hold_paper_left_0",
+    "pose_hold_paper_left_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_hold_paper_right",
+   "frames": [
+    "pose_hold_paper_right_0",
+    "pose_hold_paper_right_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "carry_cup_down",
+   "frames": [
+    "carry_cup_down_0",
+    "carry_cup_down",
+    "carry_cup_down_1",
+    "carry_cup_down"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_cup_idle_down",
+   "frames": [
+    "carry_cup_down"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "carry_cup_up",
+   "frames": [
+    "carry_cup_up_0",
+    "carry_cup_up",
+    "carry_cup_up_1",
+    "carry_cup_up"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_cup_idle_up",
+   "frames": [
+    "carry_cup_up"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "carry_cup_left",
+   "frames": [
+    "carry_cup_left_0",
+    "carry_cup_left",
+    "carry_cup_left_1",
+    "carry_cup_left"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_cup_idle_left",
+   "frames": [
+    "carry_cup_left"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "carry_cup_right",
+   "frames": [
+    "carry_cup_right_0",
+    "carry_cup_right",
+    "carry_cup_right_1",
+    "carry_cup_right"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  },
+  {
+   "key": "carry_cup_idle_right",
+   "frames": [
+    "carry_cup_right"
+   ],
+   "frameRate": 1,
+   "repeat": -1
+  },
+  {
+   "key": "pose_hold_cup_down",
+   "frames": [
+    "pose_hold_cup_down_0",
+    "pose_hold_cup_down_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_hold_cup_left",
+   "frames": [
+    "pose_hold_cup_left_0",
+    "pose_hold_cup_left_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_hold_cup_right",
+   "frames": [
+    "pose_hold_cup_right_0",
+    "pose_hold_cup_right_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  }
+ ],
+ "stamps": [
+  {
+   "match": [
+    "carry_box_down*",
+    "carry_paper_down*",
+    "pose_hold_box_down_*",
+    "pose_hold_paper_down_*"
+   ],
+   "x": 1,
+   "y": 12,
+   "rows": [
+    "S............S",
+    "S............S"
+   ],
+   "_note": "두 손으로 앞에 듦(정면). 손 = 소품 양옆"
+  },
+  {
+   "match": [
+    "carry_box_up*",
+    "carry_paper_up*",
+    "carry_cup_up*"
+   ],
+   "x": 3,
+   "y": 13,
+   "rows": [
+    "p........p",
+    "p........p"
+   ],
+   "_note": "뒷모습: 손이 앞으로 가서 안 보임"
+  },
+  {
+   "match": [
+    "carry_*_right*",
+    "pose_hold_*_right_*"
+   ],
+   "x": 5,
+   "y": 12,
+   "rows": [
+    "PPpPPS",
+    "PPPPPP",
+    "PPPPPP"
+   ],
+   "_note": "옆모습: 팔을 앞으로(손 x10)"
+  },
+  {
+   "match": [
+    "carry_box_down*",
+    "pose_hold_box_down_0"
+   ],
+   "x": 2,
+   "y": 10,
+   "rows": [
+    "OOOOOOOOOOOO",
+    "OTTTTttTTTTO",
+    "OTTTTttTTTTO",
+    "OttWWTTttttO",
+    "OttLLTTttttO",
+    "OOOOOOOOOOOO"
+   ],
+   "_note": "택배 상자(정면): 턱 밑까지 듦, 위 테이프 + 앞면 흰 송장"
+  },
+  {
+   "match": [
+    "pose_hold_box_down_1"
+   ],
+   "x": 2,
+   "y": 9,
+   "rows": [
+    "OOOOOOOOOOOO",
+    "OTTTTttTTTTO",
+    "OTTTTttTTTTO",
+    "OttWWTTttttO",
+    "OttLLTTttttO",
+    "OOOOOOOOOOOO"
+   ],
+   "_note": "송장 확인하는 척: 상자 1px 들어 올림"
+  },
+  {
+   "match": [
+    "pose_hold_box_down_1"
+   ],
+   "x": 2,
+   "y": 15,
+   "rows": [
+    "OOOOOOOOOOOO"
+   ]
+  },
+  {
+   "match": [
+    "carry_box_up*"
+   ],
+   "x": 0,
+   "y": 10,
+   "rows": [
+    "OO............OO",
+    "OT............TO",
+    "OT............TO",
+    "Ot............tO",
+    "Ot............tO",
+    "OO............OO"
+   ],
+   "_note": "뒷모습: 몸 양옆으로 상자 모서리"
+  },
+  {
+   "match": [
+    "carry_box_right*",
+    "pose_hold_box_right_0"
+   ],
+   "x": 11,
+   "y": 10,
+   "rows": [
+    "OOOOO",
+    "OTTTO",
+    "OTTTO",
+    "OtWtO",
+    "OtttO",
+    "OOOOO"
+   ],
+   "_note": "옆모습: 몸 앞 상자"
+  },
+  {
+   "match": [
+    "pose_hold_box_right_1"
+   ],
+   "x": 11,
+   "y": 9,
+   "rows": [
+    "OOOOO",
+    "OTTTO",
+    "OTTTO",
+    "OtWtO",
+    "OtttO",
+    "OOOOO"
+   ]
+  },
+  {
+   "match": [
+    "pose_hold_box_right_1"
+   ],
+   "x": 11,
+   "y": 15,
+   "rows": [
+    "OOOOO"
+   ]
+  },
+  {
+   "match": [
+    "carry_paper_down*",
+    "pose_hold_paper_down_0"
+   ],
+   "x": 2,
+   "y": 11,
+   "rows": [
+    "OOOOOOOOOOOO",
+    "OWWWWWWWWWWO",
+    "OWWMMMWMMWWO",
+    "OLLLLLLLLLLO",
+    "OOOOOOOOOOOO"
+   ],
+   "_note": "출력물(정면): 가슴 앞 종이 묶음, 윗장 인쇄 줄"
+  },
+  {
+   "match": [
+    "pose_hold_paper_down_1"
+   ],
+   "x": 2,
+   "y": 11,
+   "rows": [
+    "OOOOOOOOOOOO",
+    "OWWWWWWWWWWO",
+    "OWWMMWMMMWWO",
+    "OLLLLLLLLLLO",
+    "OOOOOOOOOOOO"
+   ],
+   "_note": "검토하는 척: 윗장 줄이 바뀜(한 장 넘김)"
+  },
+  {
+   "match": [
+    "carry_paper_up*"
+   ],
+   "x": 0,
+   "y": 11,
+   "rows": [
+    "OO............OO",
+    "OW............WO",
+    "OL............LO",
+    "OO............OO"
+   ]
+  },
+  {
+   "match": [
+    "carry_paper_right*",
+    "pose_hold_paper_right_0"
+   ],
+   "x": 11,
+   "y": 11,
+   "rows": [
+    "OOOO",
+    "OWWO",
+    "OLLO",
+    "OOOO"
+   ]
+  },
+  {
+   "match": [
+    "pose_hold_paper_right_1"
+   ],
+   "x": 11,
+   "y": 10,
+   "rows": [
+    "OOOO",
+    "OWWO",
+    "OWMO",
+    "OLLO",
+    "OOOO"
+   ]
+  },
+  {
+   "match": [
+    "carry_cup_down*",
+    "pose_hold_cup_down_0"
+   ],
+   "x": 12,
+   "y": 13,
+   "rows": [
+    "p",
+    "p"
+   ],
+   "_note": "정면: 오른손이 컵으로 감"
+  },
+  {
+   "match": [
+    "carry_cup_down*",
+    "pose_hold_cup_down_0"
+   ],
+   "x": 7,
+   "y": 11,
+   "rows": [
+    "OOOO.",
+    "OLLO.",
+    "OWWOS",
+    "OTTOS",
+    "OOOO."
+   ],
+   "_note": "카페 컵(정면): 가슴 앞 한 손"
+  },
+  {
+   "match": [
+    "pose_hold_cup_down_1"
+   ],
+   "x": 12,
+   "y": 13,
+   "rows": [
+    "p",
+    "p"
+   ]
+  },
+  {
+   "match": [
+    "pose_hold_cup_down_1"
+   ],
+   "x": 7,
+   "y": 8,
+   "rows": [
+    "OOOO.",
+    "OLLO.",
+    "OWWO.",
+    "OTTOS",
+    "OOOOS"
+   ],
+   "_note": "홀짝: 컵을 입가로"
+  },
+  {
+   "match": [
+    "carry_cup_up*"
+   ],
+   "x": 12,
+   "y": 11,
+   "rows": [
+    "OOOO",
+    "OLLO",
+    "OWWO",
+    "OTTO",
+    "OOOO"
+   ],
+   "_note": "뒷모습: 오른손 옆에 컵"
+  },
+  {
+   "match": [
+    "carry_cup_right*",
+    "pose_hold_cup_right_0"
+   ],
+   "x": 11,
+   "y": 10,
+   "rows": [
+    "OOOO",
+    "OLLO",
+    "OWWO",
+    "OTTO",
+    "OOOO"
+   ]
+  },
+  {
+   "match": [
+    "pose_hold_cup_right_1"
+   ],
+   "x": 11,
+   "y": 7,
+   "rows": [
+    "OOOO",
+    "OLLO",
+    "OWWO",
+    "OTTO",
+    "OOOO"
+   ],
+   "_note": "옆모습 홀짝: 컵을 입가로"
+  },
+  {
+   "match": [
+    "pose_hold_cup_right_1"
+   ],
+   "x": 5,
+   "y": 12,
+   "rows": [
+    "PPpPPP"
+   ]
+  },
+  {
+   "match": [
+    "pose_hold_cup_right_1"
+   ],
+   "x": 10,
+   "y": 9,
+   "rows": [
+    "S",
+    "S"
+   ]
+  }
+ ]
+}

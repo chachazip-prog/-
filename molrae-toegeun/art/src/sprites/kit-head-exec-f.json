@@ -1,0 +1,64 @@
+{
+ "name": "kit-head-exec-f",
+ "kit": true,
+ "note": "T-149 머리 키트(바디 B): 임원(본부장) 여 변형: 올백 + 정수리 광택(임원 표지) 유지, 뒤로 묶은 쪽머리(뒷모습 가운데 둥근 매듭, 옆모습 뒤통수 혹), 관자놀이 옆머리. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "stamps": [
+  {
+   "dir": "down",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    ".....OOOOOO.....",
+    "..OOOHHHHHHOOO..",
+    "..OHHHLLLLHHHO..",
+    ".OHHHHHHMMHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHSSSSSSSSHHO.",
+    ".OHSSSSSSSSSSHO.",
+    ".OHSOOSSSSOOSHO.",
+    ".OHSSSSSSSSSSHO.",
+    ".OSSSSSssSSSSSO.",
+    "..OOOOssssOOOO.."
+   ]
+  },
+  {
+   "dir": "up",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "................",
+    "..OOOOOOOOOOOO..",
+    "..OHHHLLLLHHHO..",
+    ".OHHHHMMHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHOOOOHHHHO.",
+    ".OHHHOHHHMOHHHO.",
+    ".OHHHOHHHHOHHHO.",
+    ".OSHHOHHHHOHHSO.",
+    ".OHHHHOOOOHHHHO.",
+    "..OOOOssssOOOO.."
+   ]
+  },
+  {
+   "dir": "right",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "................",
+    "..OOOOOOOOOO....",
+    "..OHHHLLLLHO....",
+    ".OHHHHHHMHHHO...",
+    "OOHHHHHHHHHHHO..",
+    "OHOHHHHHHSSSSO..",
+    "OHOHHHHHSSSSSO..",
+    "OOHHHHHSSSOOSO..",
+    ".OHHHHHsSSSSSO..",
+    ".OHHHHHSSSSSSO..",
+    "..OOOOOsssOOO..."
+   ]
+  }
+ ]
+}

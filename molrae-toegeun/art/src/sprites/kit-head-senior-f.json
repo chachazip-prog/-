@@ -1,0 +1,64 @@
+{
+ "name": "kit-head-senior-f",
+ "kit": true,
+ "note": "T-149 머리 키트(바디 A): 선배 여 변형: 구름 머리 단발(옆이 부풀어 9행까지). 웃는 눈 ^ ^·볼터치는 선배 표지라 남녀 동일. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "stamps": [
+  {
+   "dir": "down",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    ".....OO..OO.....",
+    "...OOHHOOHHOO...",
+    "..OHHHHHHHHHHO..",
+    ".OHHDHHHHDHHHHO.",
+    "OHHHHHHHHHHHHHHO",
+    "OHHHHHHHHHHHHHHO",
+    "OHHHSSSSSSSSHHHO",
+    "OHHSSOSSSSOSSHHO",
+    "OHHSOSOSSOSOSHHO",
+    "OHHsSSSssSSSsHHO",
+    ".OOOOOssssOOOOO."
+   ]
+  },
+  {
+   "dir": "up",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    ".....OO..OO.....",
+    "...OOHHOOHHOO...",
+    "..OHHHHHHHHHHO..",
+    ".OHHHHHDHHHHDHO.",
+    "OHHHHHHHHHHHHHHO",
+    "OHHHHHHHHHHHHHHO",
+    "OHHHHHHHHHHHHHHO",
+    "OHHHHHHHHHHHHHHO",
+    "OHHHHHHHHHHHHHHO",
+    "OHHHHHHHHHHHHHHO",
+    ".OOOOOOOOOOOOOO."
+   ]
+  },
+  {
+   "dir": "right",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "....OO..OO......",
+    "..OOHHOOHHOO....",
+    ".OHHHHHHHHHHO...",
+    "OHHDHHHHHDHHHO..",
+    "OHHHHHHHHHHHHO..",
+    "OHHHHHHHHHHHHO..",
+    "OHHHHHHHHSSSSO..",
+    "OHHHHHHSSSSOSO..",
+    "OHHHHHHsSOSOSO..",
+    "OHHHHHHSSsSSSO..",
+    ".OOOOOOsssOOO..."
+   ]
+  }
+ ]
+}

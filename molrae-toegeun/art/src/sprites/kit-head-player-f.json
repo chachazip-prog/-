@@ -1,0 +1,105 @@
+{
+ "name": "kit-head-player-f",
+ "kit": true,
+ "note": "T-149 머리 키트(바디 A): 플레이어 여 변형: 턱선 단발 + 정수리 갈고리 삐침·옆머리 삐침(플레이어 표지) 유지. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "stamps": [
+  {
+   "dir": "down",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "......O..OOO....",
+    ".....OOOOHHO....",
+    "...OOHHHHHHOO...",
+    "..OHHHDDHHHHHO..",
+    "OHHHHDHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHSSSHSSSSHHO.",
+    ".OHHSOSSSSOSHHO.",
+    ".OHHSOSSSSOSHHO.",
+    ".OHHSSSssSSSHHO.",
+    ".OOOOOssssOOOOO."
+   ]
+  },
+  {
+   "dir": "up",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "....OOO..O......",
+    "....OHHOOOO.....",
+    "...OOHHHHHHOO...",
+    "..OHHHHHHDDHHO..",
+    ".OHHHHHHHHHDHHHO",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    "..OOOOOOOOOOOO.."
+   ]
+  },
+  {
+   "dir": "right",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "......OOO.......",
+    "....OOHHOO......",
+    "...OHHHHHHOO....",
+    "..OHHHHHDDHHO...",
+    "OHHHHHHHHHHDHO..",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHSHSSO..",
+    ".OHHHHHHSSSOSO..",
+    ".OHHHHHHsSSOSO..",
+    ".OHHHHHHSSSSSO..",
+    ".OOOOOOsssOOO..."
+   ]
+  },
+  {
+   "frames": [
+    "disguise"
+   ],
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "_note": "위장(서류로 얼굴 아래 가림): 머리 0~7행만",
+   "rows": [
+    "......O..OOO....",
+    ".....OOOOHHO....",
+    "...OOHHHHHHOO...",
+    "..OHHHDDHHHHHO..",
+    "OHHHHDHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHSSSHSSSSHHO.",
+    ".OHHSSOSSSSOHHO."
+   ]
+  },
+  {
+   "frames": [
+    "caught"
+   ],
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "_note": "들킴: 머리카락 곤두섬 + 흰자 눈 + 벌린 입(손은 원본 그대로)",
+   "rows": [
+    "...O..O..OOO.O..",
+    "....OOOOOHHOO...",
+    "...OOHHHHHHOO...",
+    "..OHHHDDHHHHHO..",
+    "OHHHHDHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHSSSHSSSSHHO.",
+    ".OHHWWSSSSWWHHO.",
+    ".OHHWOSSSSOWHHO.",
+    ".OHHSSSOOSSSHHO.",
+    "OOOOOOssssOOOOOO"
+   ]
+  }
+ ]
+}

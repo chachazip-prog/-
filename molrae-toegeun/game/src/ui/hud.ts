@@ -8,7 +8,7 @@ import { HUD_BOTTOM_PX, HUD_TOP_PX, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../con
 import type { Strings } from '../content/strings';
 import type { DaySim } from '../core/day/daySim';
 import { color, overlay, pulseAlpha } from '../render/palette';
-import { ATLAS_KEY } from '../render/sprites';
+import { ATLAS_KEY, iconFallback } from '../render/sprites';
 import { addPixelText, fitPanel, placeText, setPixelText, setWrap, type UIText } from './pixelText';
 
 const DEPTH = 10000;
@@ -27,6 +27,8 @@ export class Hud {
   private readonly snack: UIText;
   private readonly chipIcons: Phaser.GameObjects.Image[] = [];
   private readonly chipDone: Phaser.GameObjects.Image[] = [];
+  /** 변형 배지 대체 점(아트 mod/* 전) */
+  private readonly modDots: { x: number; y: number }[] = [];
   private readonly stageText: UIText;
   private readonly leaveIcon: Phaser.GameObjects.Image | null;
   private readonly panelText: UIText;
@@ -56,7 +58,13 @@ export class Hud {
     sim.missions.forEach((m, i) => {
       const x = 4 + i * (CHIP + CHIP_GAP) + CHIP / 2, y = LOGICAL_HEIGHT - HUD_BOTTOM_PX / 2;
       if (this.hasAtlas) {
-        this.chipIcons.push(fixed(scene.add.image(x, y, ATLAS_KEY, m.def.iconSprite)));
+        // 새 미션 아이콘(T-146 작업 중)이 아직 없으면 기존 아이콘으로 대체
+        const tex = scene.textures.get(ATLAS_KEY);
+        this.chipIcons.push(fixed(scene.add.image(x, y, ATLAS_KEY, tex.has(m.def.iconSprite) ? m.def.iconSprite : iconFallback(m.def.iconSprite))));
+        // 변형 배지(mod/<type>, 8×8): 아트가 없으면 칩 오른쪽 위 작은 점
+        const mt = m.def.modifierTypes?.[0];
+        if (mt && tex.has(`mod/${mt}`)) fixed(scene.add.image(x + CHIP / 2 - 4, y - CHIP / 2 + 4, ATLAS_KEY, `mod/${mt}`));
+        else if (mt) this.modDots.push({ x: x + CHIP / 2 - 4, y: y - CHIP / 2 + 3 });
         this.chipDone.push(fixed(scene.add.image(x + CHIP / 2 - 3, y - CHIP / 2 + 3, ATLAS_KEY, 'icon_done')).setVisible(false));
       }
     });
@@ -146,7 +154,8 @@ export class Hud {
     this.leaveIcon?.setVisible(leaving);
     sim.missions.forEach((m, i) => {
       this.chipIcons[i]?.setVisible(!leaving);
-      if (leaving) { this.chipDone[i]?.setVisible(false); return; }
+      if (!leaving) for (const d of this.modDots) g.fillStyle(color('point'), 1).fillRect(d.x - 1, d.y - 1, 3, 3);
+    if (leaving) { this.chipDone[i]?.setVisible(false); return; }
       const x = 4 + i * (CHIP + CHIP_GAP), y = by + 2;
       const st = m.state;
       const locked = st === 'locked' || m.blocked || sim.phase !== 'day' && st !== 'done';
@@ -202,8 +211,14 @@ export class Hud {
         case 'restroom': label = this.str.t(v.restLeft > 0 ? 'event.restroom.inside' : 'event.restroom.leave_hint'); break;
         case 'nap': label = this.str.t(v.head > 0.7 && !v.headUp ? 'event.nap.head_warning' : v.headUp ? 'event.nap.head_up' : 'event.nap.name'); break;
         case 'shop': label = v.items >= v.itemsRequired ? this.str.t('event.shopping.checkout') : this.str.t('event.shopping.cart', { n: v.items, total: v.itemsRequired }); break;
-        case 'snack': label = `${this.str.t('event.snack.name')} ${v.bites}/${v.required}`; break;
+        case 'snack': label = `${this.str.t(sim.activeMissionDef?.nameKey ?? 'event.snack.name')} ${v.bites}/${v.required}`; break;
+        // T-145 새 방식
+        case 'fetch': label = this.str.t(sim.activeMissionDef?.nameKey ?? 'event.parcel.name'); break;
+        case 'remote_start': label = this.str.t(sim.activeMissionDef?.nameKey ?? 'event.print.name'); break;
+        case 'grab': label = `${this.str.t(sim.activeMissionDef?.nameKey ?? 'event.print.name')} ${v.pages}/${v.pagesRequired}`; break;
+        case 'queue': label = this.str.t(sim.activeMissionDef?.nameKey ?? 'event.cafe.name'); break;
       }
+      if (v.kind === 'pour' && sim.activeMissionDef && sim.activeMissionDef.id !== 'coffee') label = this.str.t(sim.activeMissionDef.nameKey);
     } else if (sim.phase === 'leave' && sim.leaveStage === 'pack') label = this.str.t('event.leave.pack');
     else if (sim.phase === 'leave' && sim.leaveStage === 'gate') {
       const left = sim.content.leave.gate.maxAttempts - sim.gateAttempts;
@@ -222,6 +237,10 @@ export class Hud {
         case 'shop': bar(v.items >= v.itemsRequired ? v.checkout / v.checkoutSec : (v.items + v.cart) / v.itemsRequired, v.shopping ? color('suit') : color('green_sh')); break;
         case 'snack': bar(Math.min(1, v.sinceLast / (v.window[1] * 1.2)), v.sinceLast >= v.window[0] && v.sinceLast <= v.window[1] ? color('green') : color('mid'),
           [v.window[0] / (v.window[1] * 1.2), v.window[1] / (v.window[1] * 1.2)]); break;
+        case 'fetch': bar(v.progress / v.total, v.paused ? color('green_sh') : color('suit')); break;
+        case 'remote_start': bar(v.progress / v.total, color('suit')); break;
+        case 'grab': bar(v.pages / v.pagesRequired, v.done ? color('green') : v.paused ? color('mid') : color('cool')); break;
+        case 'queue': bar(v.progress / Math.max(0.01, v.total), v.stage === 'window' ? color('green') : v.stage === 'tell' ? color('point2') : v.paused ? color('green_sh') : color('suit')); break;
       }
     } else if (sim.leaveStage === 'pack') bar(sim.packProgress / sim.content.leave.packSec, color('green_sh'));
     else if (sim.leaveStage === 'gate') {

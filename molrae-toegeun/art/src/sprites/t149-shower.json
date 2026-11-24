@@ -1,0 +1,75 @@
+{
+ "name": "t149-shower",
+ "lean": true,
+ "prefix": "tile2",
+ "group": "furniture",
+ "size": [
+  16,
+  24
+ ],
+ "origin": [
+  0.5,
+  1
+ ],
+ "note": "T-149 헬스장 탈의실 샤워 칸(layout W). 화장실 칸 tall/stall 과 같은 크기·배치(원점 (0.5,1), 칸 아래 변 + 1px). 닫힌 문(연회색 판 + 흰 반사 + 손잡이) + 문 위 '사용 중' 표시창만 그림. 김(증기)·내부·인물 묘사 없음(컴플라이언스). shower_stall = 표시창 회색(비어 있음), shower_stall_hiding = 표시창 하늘색(플레이어가 안에 있음, 플레이어 줄 색). 남녀 탈의실 같은 그림",
+ "frames": [
+  {
+   "name": "shower_stall",
+   "rows": [
+    "................",
+    "................",
+    "OOOOOOOOOOOOOOOO",
+    "OLLLLLLLLLLLLLLO",
+    "OOOOOOOOOOOOOOOO",
+    "OWWWWWWWWWWWWWLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLOOOLO",
+    "OWLLLLLLLLLOMOLO",
+    "OWLLLLLLLLLOOOLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLMMLLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLLLLLO",
+    "OMMMMMMMMMMMMMMO",
+    "OOOOOOOOOOOOOOOO",
+    "OM............MO",
+    "OM............MO",
+    "OOO..........OOO",
+    "................",
+    "................"
+   ]
+  },
+  {
+   "name": "shower_stall_hiding",
+   "rows": [
+    "................",
+    "................",
+    "OOOOOOOOOOOOOOOO",
+    "OLLLLLLLLLLLLLLO",
+    "OOOOOOOOOOOOOOOO",
+    "OWWWWWWWWWWWWWLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLOOOLO",
+    "OWLLLLLLLLLOCOLO",
+    "OWLLLLLLLLLOOOLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLMMLLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLLLLLO",
+    "OWLLLLLLLLLLLLLO",
+    "OMMMMMMMMMMMMMMO",
+    "OOOOOOOOOOOOOOOO",
+    "OM............MO",
+    "OM............MO",
+    "OOO..........OOO",
+    "................",
+    "................"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,9 @@
+{
+ "name": "bg_buddy_m",
+ "variantOf": "bg_buddy",
+ "lean": true,
+ "kitsReplace": {
+  "kit-head-buddy": "kit-head-bg-buddy-m"
+ },
+ "note": "T-149 bg_buddy 남 변형(머리 길이 M). 머리 키트 bg_buddy_m. 소품·옷·사원증 줄 색·체형·특수 프레임은 원본 'bg_buddy'와 같음(D-093)"
+}

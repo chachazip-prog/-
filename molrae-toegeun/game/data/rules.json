@@ -266,7 +266,12 @@
       "confirmKey": "charsel.confirm",
       "settingsLabelKey": "settings.character",
       "changedToastKey": "settings.character_changed",
-      "_note": "D-088. 기본값 없음: 첫 출근 전에 반드시 고름(미선택이면 확인 버튼 비활성). 판 도중에는 바꾸지 않고 다음 판부터 적용. 선택은 그림과 '플레이어 기준 회전'의 기준점으로만 쓰이고 수치·보상·확률에는 쓰지 않음(design/gender-design.md §1)"
+      "_note": "D-088. 기본값 없음: 첫 출근 전에 반드시 고름(미선택이면 확인 버튼 비활성). 판 도중에는 바꾸지 않고 다음 판부터 적용. 선택은 그림과 '플레이어 기준 회전'의 기준점으로만 쓰이고 수치·보상·확률에는 쓰지 않음(design/gender-design.md §1)",
+      "analytics": {
+        "sendVariant": false,
+        "logVariant": false,
+        "_note": "T-152(B-02·D-095): player.variant는 기기 Storage에만 둠. 분석 이벤트·오류 로그·리더보드·공유 카드 텍스트에 넣지 않음. 보내야 할 일이 생기면 출시 전에 개인정보 처리방침을 먼저 고침(컴플라이언스)"
+      }
     },
     "casting": {
       "modes": [
@@ -302,10 +307,22 @@
         ],
         "endlessRankDaysForWeight": 30,
         "requireBothGendersIn": [
-          "fixed_bosses",
-          "fixed_npcs"
+          "fixed_bosses"
         ],
-        "_note": "검사기 §T-148이 직급별 출연(상사 수·NPC·배경 동료·동기)으로 계산. 고정 인물 = 0 또는 1, 회전 = 0.5. 고정 상사·고정 NPC 집합이 한 성별로만 채워지면 오류(역할-성별 연결 금지)"
+        "_note": "검사기 §T-148이 직급별 출연(상사 수·NPC·배경 동료·동기)으로 계산. 고정 인물 = 0 또는 1, 회전 = 0.5. 고정 상사 집합이 한 성별로만 채워지면 오류(역할-성별 연결 금지). T-152(D-095): 고정 NPC 남녀 필수 규칙(fixed_npcs)은 동료 집합(coworkerSet) 여성 비율 범위 검사로 대체. 동기가 회전(D-090)이 되며 고정 동료가 남성 둘만 남기 때문",
+        "coworkerSet": {
+          "members": [
+            "npcs.snitch",
+            "npcs.accomplice",
+            "npcs.buddy",
+            "npcs.background"
+          ],
+          "femaleShareRange": [
+            0.3,
+            0.7
+          ],
+          "_note": "T-152(D-095 선택지 A): 동료(같은 층 또래) 집합 = 정의로운 동료·공범·옆 팀 동기·배경 동료 3명. 고정 = 0/1, 회전 = rotateCountsAs(0.5). 현재 (0+0+0.5+1.5)/6 = 0.33. 하한 0.30 = 고정 동료를 남성 하나만 더 늘리거나 회전 하나를 고정 남성으로 바꾸면 깨지는 선(0.29). 상한 0.70은 반대 방향 대칭. 경비·인사팀은 업무 역할이라 동료 집합에서 뺌(전체·직급별 비율에는 포함)"
+        }
       },
       "_comment": "T-148(D-087·D-088). 고정(fixed) = 기억해야 하는 인물: 날마다 같은 사람·같은 변형. 회전(rotate) = 교대·여러 명이 있는 역할: 일차 시드로 플레이어 기준 같은/다른 성별. 성별에 따라 달라지는 메카닉은 회전 인물(본부장)과 '내 쪽' 시설에만 걸고, 고정 인물의 성별은 그림에만 씀"
     }

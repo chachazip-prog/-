@@ -1,0 +1,64 @@
+{
+ "name": "kit-head-snitch-f",
+ "kit": true,
+ "note": "T-149 머리 키트(바디 B): 정의로운 동료 여 변형: 옆으로 넘긴 앞머리 짧은 커트(옆·목선 짧음) + 반짝이는 사각 안경(표지). 남(원본)은 일자 앞머리 바가지. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "stamps": [
+  {
+   "dir": "down",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "................",
+    "..OOOOOOOOOOOO..",
+    "..OHHHHHHHHHHO..",
+    ".OHHHHHHHDDHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHSSSSHO.",
+    ".OSHHHSSSSSSSSO.",
+    ".OSOCCOOOOCCOSO.",
+    ".OSOWCOSSOWCOSO.",
+    ".OSSSSSssSSSSSO.",
+    "..OOOOssssOOOO.."
+   ]
+  },
+  {
+   "dir": "up",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "................",
+    "..OOOOOOOOOOOO..",
+    "..OHHHHHHHHHHO..",
+    ".OHHHHHHHHDDHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OSHHHHHHHHHHSO.",
+    ".OSSHHHHHHHHSSO.",
+    "..OOOOssssOOOO.."
+   ]
+  },
+  {
+   "dir": "right",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "................",
+    "..OOOOOOOOOO....",
+    "..OHHHHHHHHO....",
+    ".OHHHHHHDDHHO...",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHSSSSO..",
+    ".OHHHSSOOOCCOO..",
+    ".OHHHSssSOWCOO..",
+    ".OHHHSSSSSSSSO..",
+    "..OOOOOsssOOO..."
+   ]
+  }
+ ]
+}

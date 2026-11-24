@@ -615,7 +615,10 @@
           "insideCone": {
             "range": 3,
             "halfAngleDeg": 60,
-            "activeOnlyInside": true
+            "activeOnlyInside": true,
+            "renderCone": false,
+            "judgeOnly": true,
+            "_note": "T-152(S-01): 시설 안에서는 시선 콘 그래픽을 그리지 않고 판정만 함(range·각도는 판정용). 세면대·바닥에서 판정에 걸리면 본부장 머리 위 '!'(insideCue) + 인사 1.2초로 바로 보여 줌. 칸 S 쪽으로는 판정도 시각 표시도 없음"
           },
           "seenInsideEffect": {
             "suspicionOnce": 0.05,
@@ -632,7 +635,12 @@
             "ceo_on_floor",
             "player_in_leave_phase"
           ],
-          "_designNote": "T-148 C2·C3. 본부장은 순찰 중 자기 성별 화장실에 3초 들름. relation same(같은 성별) 날은 내 화장실로 들어옴: 들어오기 1.0초 전 발소리·문 그림자·문 위 '!'(칸 안에서도 들림·보임). 칸 안(S)은 그대로 안전, 세면대·바닥에서 마주치면 의심 +0.05 한 번 + 1.2초 인사(그 뒤 콘 끔). relation other 날은 건너편 화장실로 들어가 3초 동안 층 콘이 꺼짐 → 내 화장실은 완전 안전지대 + 복도 기회. 2일 블록이라 same/other 반반. +0.05 = bonus.clean 기준(0.05) 이하라 '깔끔' 보너스는 지킬 수 있음(벌은 작게, 판단은 분명하게)"
+          "_designNote": "T-148 C2·C3. 본부장은 순찰 중 자기 성별 화장실에 3초 들름. relation same(같은 성별) 날은 내 화장실로 들어옴: 들어오기 1.0초 전 발소리·문 그림자·문 위 '!'(칸 안에서도 들림·보임). 칸 안(S)은 그대로 안전, 세면대·바닥에서 마주치면 의심 +0.05 한 번 + 1.2초 인사(그 뒤 콘 끔). relation other 날은 건너편 화장실로 들어가 3초 동안 층 콘이 꺼짐 → 내 화장실은 완전 안전지대 + 복도 기회. 2일 블록이라 same/other 반반. +0.05 = bonus.clean 기준(0.05) 이하라 '깔끔' 보너스는 지킬 수 있음(벌은 작게, 판단은 분명하게)",
+          "insideCue": {
+            "overHead": "icon_door_alert",
+            "minSec": 0.4,
+            "_note": "콘 대신 쓰는 시각 신호. 문 위 '!'와 같은 그림 재사용(아트 추가 없음). 0.4초 이상 표시(rules.tell.minSec)"
+          }
         }
       },
       "counters": [

@@ -124,6 +124,14 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
       pool = pool.filter((d) => d !== far);
     }
     if (route.length === 0) continue;
+    // 그래도 22초 초과: 가장 가까운 목적지 하나만, 그래도 넘으면 대기를 최소(waitSecRange[0] × waitMul)로
+    if (awayOf(route) > awayMax && route.length > 1) route = [route.slice().sort((x, y) => pathLen(seat, x.tile) - pathLen(seat, y.tile))[0]!];
+    if (awayOf(route) > awayMax) {
+      route = route.map((st0) => {
+        const d = dests.find((q) => q.id === st0.id)!;
+        return { ...st0, waitSec: round1(pair(d.d['waitSecRange'], [3, 4])[0] * waitMul) };
+      });
+    }
     // 6초 미만: 마지막 목적지 대기를 늘림
     const aw = awayOf(route);
     if (aw < awayMin) { const last = route[route.length - 1]!; route[route.length - 1] = { ...last, waitSec: round1(last.waitSec + (awayMin - aw)) }; }
@@ -139,7 +147,9 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
   const meetingDest = dests.find((d) => d.id === 'meeting');
   for (const m of inp.meetings) {
     if (!meetingDest) break;
-    const stop = stopOf(meetingDest, rng, m.waitSec);
+    // 대기 = leadRoaming meeting.waitSecRange(8~10초, INT-08 근무판 흡수). m.waitSec(INT-08 meetingSec)는 범위 밖일 때만 상한으로
+    const wr = pair(meetingDest.d['waitSecRange'], [m.waitSec, m.waitSec]);
+    const stop = stopOf(meetingDest, rng, round1(Math.min(m.waitSec, rng.range(wr[0], wr[1])) * waitMul));
     let best = -1;
     for (let i = 0; i < atSec.length; i++) if (fromInt[i] === null && (best < 0 || Math.abs(atSec[i]! - m.atSec) < Math.abs(atSec[best]! - m.atSec))) best = i;
     if (best >= 0) { atSec[best] = round1(m.atSec); routes[best] = [stop]; fromInt[best] = 'INT-08'; }
@@ -163,7 +173,8 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
     actorId: str(R['actorId'], 'team_lead'), seatPatrolId: str(R['seatPatrolId'], 'p_tl_seat'),
     atSec: final.map((t) => t.at), routes: final.map((t) => t.route), standTellSec,
     latestStartSec: latestFrac,
-    latestStartByTour: final.map((t) => round1(Math.min(latestFrac, dp - seatedBefore - t.away))),
+    // 출발 마감은 latestStartFrac 하나. '퇴근 4초 전 자리'는 출발을 막지 않고 런타임에 체류를 줄여 바로 복귀(schedule.rule)
+    latestStartByTour: final.map(() => round1(latestFrac)), mustBeSeatedBeforeLeaveSec: seatedBefore,
     awaySec: final.map((t) => t.away), fromInterrupt: final.map((t) => t.from),
     speedTilesPerSec: speed,
     coneActiveIn: arr(R['coneActiveIn']).map((x) => str(x)) as BossTourDef['coneActiveIn'] & string[],

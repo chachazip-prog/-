@@ -1,0 +1,43 @@
+{
+ "name": "t149-mark8",
+ "lean": true,
+ "prefix": "mark",
+ "group": "ui",
+ "size": [
+  8,
+  8
+ ],
+ "origin": [
+  0.5,
+  1
+ ],
+ "note": "T-149 표식 작은 판 8x8: gender_same_s = 하늘색 원 + '=', gender_other_s = 회색 원 + '≠'(사선)",
+ "frames": [
+  {
+   "name": "gender_same_s",
+   "rows": [
+    ".OOOOOO.",
+    "OCCCCCCO",
+    "OCWWWWCO",
+    "OCCCCCCO",
+    "OCWWWWCO",
+    "OCCCCCCO",
+    ".OOOOOO.",
+    "...OO..."
+   ]
+  },
+  {
+   "name": "gender_other_s",
+   "rows": [
+    ".OOOOOO.",
+    "OMMMMWMO",
+    "OMWWWWMO",
+    "OMMMWMMO",
+    "OMWWWWMO",
+    "OMWMMMMO",
+    ".OOOOOO.",
+    "...OO..."
+   ]
+  }
+ ]
+}

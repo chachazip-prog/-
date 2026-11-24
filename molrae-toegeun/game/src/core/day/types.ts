@@ -131,6 +131,8 @@ export interface BossTourDef {
   // ── T-145 확장 ──
   /** 회차별 출발 마감(근무 구간 초): 퇴근 mustBeSeatedBeforeLeaveSec 전에 자리로 돌아올 수 있는 마지막 출발 시각 */
   readonly latestStartByTour?: readonly number[];
+  /** 퇴근 시작 이 초 전에는 자리에 있어야 함: 목적지에서 대기 중이면 남은 대기를 끊고 바로 복귀(런타임) */
+  readonly mustBeSeatedBeforeLeaveSec?: number;
   /** 회차별 예상 자리 비움(초, QA·표시용) */
   readonly awaySec?: readonly number[];
   /** 회차가 근무 INT-08(회의)을 흡수한 것이면 'INT-08' */

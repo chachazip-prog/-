@@ -148,7 +148,7 @@
     ],
     "event.coffee.name": "몰래 커피",
     "event.coffee.desc": "탕비실에서 커피를 따르다 선 안에서 톡! 들고 자리로 돌아오면 완료.",
-    "event.restroom.name": "몰래 화장실",
+    "event.restroom.name": "화장실 피신",
     "event.restroom.desc": "화장실 칸 안은 안전해요. 조금 더 쉬면 점수도 쑥. 돌아와 앉으면 완료.",
     "event.nap.name": "몰래 낮잠",
     "event.nap.desc": "빈 회의실에서 꾸벅. 톡 하면 고개 번쩍! 유리벽 너머를 조심하세요.",
@@ -337,8 +337,8 @@
     "charsel.title": "첫 출근 날이에요. 어떤 모습으로 출근할까요?",
     "charsel.option.m": "남자 사원",
     "charsel.option.f": "여자 사원",
-    "charsel.note": "어느 쪽을 골라도 난이도와 보상은 똑같아요. 설정에서 언제든 바꿀 수 있어요.",
-    "charsel.confirm": "이 모습으로 출근",
+    "charsel.note": "실제 성별과 상관없이 마음에 드는 모습을 골라요. 난이도와 보상은 똑같고, 설정에서 바꿀 수 있어요(다음 판부터).",
+    "charsel.confirm": "출근하기",
     "settings.character": "내 캐릭터",
     "settings.character_changed": "다음 판부터 바뀐 모습으로 출근해요.",
     "zone.locker_room": "탈의실",
@@ -351,21 +351,72 @@
     "int.talk.cancel_at_door": "(문 앞에서 멈칫) 아, 이따 얘기해요~",
     "int.director_restroom.tell": "(누군가 화장실로 들어오는 발소리…)",
     "int.director_restroom.meet": [
-      "어, {name} 씨. 손 깨끗이 씻고 들어가요~",
+      "어, {name} 씨. 여기서 다 보네요~",
       "아, 수고 많아요. 오늘도 힘내요."
     ],
     "int.director_restroom.away": "본부장님이 잠깐 화장실에 들어가셨어요. 복도가 비었어요!",
-    "react.director.restroom_seen": "(거울 너머로 눈이 마주쳤다) …손만 씻으러 왔습니다.",
+    "react.director.restroom_seen": "(세면대 앞에서 딱 마주쳤다) …손만 씻으러 왔습니다.",
     "mod.facility_cleaning": "청소 시간",
     "mod.facility_cleaning.desc": "내 화장실이 잠깐 청소 중이에요. 기다릴지, 돌아갈지 골라요.",
     "facility.cleaning.sign": "청소 중이에요 · {n}초",
     "react.restroom.cleaning": "(청소 중 표지 앞에서) …타이밍 한번 절묘하네.",
     "mod.relocate.locker": "오늘은 헬스장 탈의실에서",
-    "event.restroom.locker_inside": "샤워 칸 안, 잠깐의 평화",
-    "react.locker.exposed": "(운동복도 없이 헬스장 한가운데서) …스트레칭 중이었습니다."
+    "event.restroom.locker_inside": "탈의실 구석 칸, 잠깐의 평화",
+    "react.locker.exposed": "(운동복도 없이 헬스장 한가운데서) …스트레칭 중이었습니다.",
+    "facility.in_use": "사용 중"
   },
   "uiIcons": {
     "prep.ceo_forecast": "ui_icon_megaphone",
     "_comment": "문구 앞에 붙일 아이콘 스프라이트(아트 UI). 런타임은 문자열 대신 스프라이트를 그림"
+  },
+  "copyRules": {
+    "facilityCombo": {
+      "sneakyWords": [
+        "몰래",
+        "숨어",
+        "숨어서",
+        "들키지 않게",
+        "들키지 말고",
+        "훔쳐"
+      ],
+      "facilityWords": [
+        "화장실",
+        "탈의실",
+        "샤워",
+        "헬스장",
+        "세면대",
+        "사물함"
+      ],
+      "scope": [
+        "strings",
+        "stringsKo",
+        "facility_mission_chip"
+      ],
+      "allowKeys": [],
+      "_note": "T-152(S-04·D-095): 한 문자열(또는 시설 미션 칩 = 미션 이름 + 변형 라벨) 안에 두 목록 단어가 같이 있으면 검사기 오류. '몰래 + 시설'은 불법촬영을 떠올리게 함. 게임명 '몰래퇴근'·기본 이름 '나몰래'는 시설 단어가 없는 문자열에서만 씀"
+    },
+    "shareCard": {
+      "forbiddenVars": [
+        "{gender}",
+        "{성별}",
+        "{variant}",
+        "{player.variant}"
+      ],
+      "forbiddenLabelKeys": [
+        "charsel.option.m",
+        "charsel.option.f"
+      ],
+      "excludeEventIds": [
+        "restroom"
+      ],
+      "excludeReactionKeyPrefixes": [
+        "react.restroom.",
+        "react.locker.",
+        "react.director.restroom_",
+        "int.director_restroom.",
+        "event.restroom."
+      ],
+      "_note": "T-152(마케팅 요청·M-01·M-03·D-091): 공유 카드 텍스트에 성별 값·성별 라벨을 넣지 않음. '화장실 피신'(restroom) 결과와 시설 대사는 카드 트리거·{이벤트}·인용 대사로 쓰지 않음(events.restroom.shareCard). 카드 문구 원본은 marketing/tone-guide.md §6"
+    }
   }
 }

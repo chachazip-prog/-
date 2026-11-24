@@ -1,0 +1,64 @@
+{
+ "name": "kit-head-teamlead-f",
+ "kit": true,
+ "note": "T-149 머리 키트(바디 B): 팀장 여 변형(1번 팀장): 볼륨 있는 옆 가르마 단발 + 굵은 눈썹 2px(팀장 표지). 옆 팀 팀장(남 = 원본 짧은 가르마)과 머리 실루엣으로 구분. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "stamps": [
+  {
+   "dir": "down",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "...OOOOOOOOOO...",
+    "..OHHHHMHHHHHO..",
+    ".OHHHHHMHHHDDHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHSSSSSSHHHHO.",
+    ".OHHHHSSSSHHHHO.",
+    ".OHHSOSSSSOSHHO.",
+    ".OHHSOSSSSOSHHO.",
+    ".OHHSSSssSSSHHO.",
+    ".OOOOOssssOOOOO."
+   ]
+  },
+  {
+   "dir": "up",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "...OOOOOOOOOO...",
+    "..OHHHHHHMHHHO..",
+    ".OHHDDHHHMHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    "..OOOOOOOOOOOO.."
+   ]
+  },
+  {
+   "dir": "right",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "...OOOOOOOO.....",
+    "..OHHHHHMHHO....",
+    ".OHHHHHHMDDHO...",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHSHHHO..",
+    ".OHHHHHHSSSOSO..",
+    ".OHHHHHHsSSOSO..",
+    ".OHHHHHHSSSSSO..",
+    ".OOOOOOsssOOO..."
+   ]
+  }
+ ]
+}

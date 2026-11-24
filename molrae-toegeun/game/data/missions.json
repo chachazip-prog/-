@@ -1149,7 +1149,8 @@
       },
       "minDay": 8,
       "minRank": "staff",
-      "kind": "soft"
+      "kind": "soft",
+      "facilityLabelKey": "mod.avoid.snitch.facility"
     },
     {
       "id": "avoid.team_lead",
@@ -1181,7 +1182,8 @@
       },
       "minDay": 6,
       "minRank": "staff",
-      "kind": "soft"
+      "kind": "soft",
+      "facilityLabelKey": "mod.avoid.team_lead.facility"
     },
     {
       "id": "avoid.director",
@@ -1215,7 +1217,8 @@
         "INT-10"
       ],
       "minRank": "staff",
-      "kind": "soft"
+      "kind": "soft",
+      "facilityLabelKey": "mod.avoid.director.facility"
     },
     {
       "id": "avoid.hr_inspector",
@@ -1250,7 +1253,8 @@
         "INT-06"
       ],
       "minRank": "staff",
-      "kind": "soft"
+      "kind": "soft",
+      "facilityLabelKey": "mod.avoid.hr_inspector.facility"
     },
     {
       "id": "avoid.security_guard",
@@ -1284,7 +1288,8 @@
         "parcel"
       ],
       "minRank": "staff",
-      "kind": "soft"
+      "kind": "soft",
+      "facilityLabelKey": "mod.avoid.security_guard.facility"
     },
     {
       "id": "silent",
@@ -1353,7 +1358,8 @@
       "rewardMul": 1.2,
       "budgetSecDelta": 0.0,
       "minRank": "staff",
-      "kind": "bonus"
+      "kind": "bonus",
+      "facilityLabelKey": "mod.bonus.cover.facility"
     },
     {
       "id": "bonus.close_call",
@@ -1744,7 +1750,13 @@
     "zone.storage": "창고",
     "zone.window": "창가",
     "codex.title.cafe_regular": "카페 단골",
-    "tut_tour": "팀장님이 자리를 비우면 기회예요. 말풍선 아이콘이 가는 곳이에요"
+    "tut_tour": "팀장님이 자리를 비우면 기회예요. 말풍선 아이콘이 가는 곳이에요",
+    "mod.avoid.snitch.facility": "정의로운 동료 눈 피해서",
+    "mod.avoid.team_lead.facility": "팀장님 눈 피해서",
+    "mod.avoid.director.facility": "본부장님 눈 피해서",
+    "mod.avoid.hr_inspector.facility": "인사팀 눈 피해서",
+    "mod.avoid.security_guard.facility": "경비님 눈 피해서",
+    "mod.bonus.cover.facility": "엄폐물 끼고 가면 보너스"
   },
   "_stringsNote": "strings.ko.json 병합 대기(통합 단계에서 기획이 strings 아래 같은 키로 옮김). 검사기는 이 블록도 문자열 키 출처로 인정",
   "genderModifiers": [
@@ -1798,5 +1810,6 @@
       "_note": "T-148 C5. 오늘은 헬스장 탈의실 샤워 칸에서 쉬기. 판정은 화장실 칸과 같음(W = restroom_stall 구역)"
     }
   ],
-  "_genderModifiersNote": "T-148: 성별 시설 변형. layout.genderFacilities.enabled가 true일 때만 modifiers 추첨 풀에 합류(그 전엔 무시). 별도 배열로 둔 이유 = 개발 T-145가 modifiers 형식을 연동 중이라 새 type(facility_closed)이 기존 파서에 들어가지 않게 함. 확률 필드 없음·보상 배수 결정적(D-004)"
+  "_genderModifiersNote": "T-148: 성별 시설 변형. layout.genderFacilities.enabled가 true일 때만 modifiers 추첨 풀에 합류(그 전엔 무시). 별도 배열로 둔 이유 = 개발 T-145가 modifiers 형식을 연동 중이라 새 type(facility_closed)이 기존 파서에 들어가지 않게 함. 확률 필드 없음·보상 배수 결정적(D-004)",
+  "_facilityLabelNote": "T-152(S-04·D-095): 시설 미션(missionPool.existing에서 targetFacility가 있는 미션 = 화장실 피신, 그리고 relocate로 시설 칸·탈의실이 목적지가 된 미션) 칩에서는 변형 라벨에 facilityLabelKey가 있으면 그것을 씀. '몰래'·'숨어' 등이 화장실·탈의실과 한 칩에 같이 보이지 않게. 판정·비용·보상은 같음. 검사기가 시설 미션 이름 × 붙을 수 있는 변형 라벨 조합을 strings.ko.copyRules.facilityCombo로 검사"
 }

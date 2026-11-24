@@ -1,0 +1,64 @@
+{
+ "name": "kit-head-hr-f",
+ "kit": true,
+ "note": "T-149 머리 키트(바디 A): 인사팀 여 변형: 가운데 가르마 짧은 커트(귀·목선이 보임). 남 변형(원본)이 더 긴 커튼 앞머리. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "stamps": [
+  {
+   "dir": "down",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "................",
+    ".....OOOOOO.....",
+    "...OOHHMHHHOO...",
+    "..OHHHHMHHHHHO..",
+    ".OHHHHMHHHHHHHO.",
+    ".OHHSSSSSSSSHHO.",
+    ".OHSSSSSSSSSSHO.",
+    ".OSSSOSSSSOSSSO.",
+    ".OSSSOSSSSOSSSO.",
+    "..OSSSSssSSSSO..",
+    "...OOOssssOOO..."
+   ]
+  },
+  {
+   "dir": "up",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "................",
+    ".....OOOOOO.....",
+    "...OOHHHMHHOO...",
+    "..OHHHHHMHHHHO..",
+    ".OHHHHHHMHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OSHHHHHHHHHHSO.",
+    ".OSHHHHHHHHHHSO.",
+    "..OSSHHHHHHSSO..",
+    "...OOOssssOOO..."
+   ]
+  },
+  {
+   "dir": "right",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "................",
+    "....OOOOOO......",
+    "...OHHHHHHOO....",
+    "..OHHHHHHMHHO...",
+    ".OHHHHHHHHMHHO..",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHSSSSSO..",
+    ".OHHHSSSSSSOSO..",
+    ".OHHHSsSSSSOSO..",
+    "..OHHSSSSSSSSO..",
+    "...OOOOsssOOO..."
+   ]
+  }
+ ]
+}

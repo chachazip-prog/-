@@ -545,6 +545,7 @@ interface AdsTable {
 | 2 (T-139) | 2026-11-23 | QA T-131 밸런스 제안 10건 + D-070 반영(`design/gdd.md` §19-5). **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
 | 3-draft (T-142) | 2026-11-23 | 새 테이블 `layout.json`·`missions.json`(schemaVersion 3) 추가. 상세 스키마는 `design/data-schema-v3-draft.md`. **v2 테이블은 변경 없음**(키·값 그대로). 검사기는 테이블별 버전 확인(layout·missions = 3, 나머지 = 2)과 v3 기본 검사를 추가 |
 | 2 (T-148) | 2026-11-24 | 성별 다양화(REQ-016, D-087·D-088). **필드 추가만, 키 이름·계층·기존 값 변경 없음 → schemaVersion 2 유지**(v3 테이블도 3 유지). 아래 상세 |
+| 2 (T-152) | 2026-11-24 | 컴플라이언스 성별 검토(T-150) 반영, D-090·D-095. **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**(v3 테이블도 3 유지). 아래 상세 |
 
 ### v1 → v2 상세
 - **신규 테이블**: `maps`, `patrols`, `interrupts`, `ads`.
@@ -671,3 +672,17 @@ interface AdsTable {
 - **개발 영향**: 모든 새 필드는 무시해도 크래시가 없는 추가 필드입니다. `genderFacilities.enabled` false인 동안 생성 맵은 기존과 같습니다(새 모듈은 기존 그룹 목록에 없는 새 그룹). 구현 목록은 `design/gender-design.md` §8.
 - **검사기(§10 T-148)**: 변형 2종·spriteKey 중복 없음(anims.json 미반영은 WARN), casting 형식, 플레이어 선택 기본값 없음, 직급별·전체 출연 여성 비율, 고정 인물 집합 양성 포함, 성별 시설 모듈 대칭, 절대 성별 값 금지, facilityStop 회전 인물·벌 상한, 성별 호칭·고정관념 단어.
 
+### T-152 상세 (v2 유지)
+- **값 수정**
+  - npcs.json `buddy.casting`: `{mode: "fixed", variant: "f"}` → `{mode: "rotate", rule: "relation_block2"}`(D-090). `variant` 키는 회전이라 빠짐(casting 형식은 T-148에서 정의한 두 형식 중 하나 그대로).
+  - rules.json `characters.casting.balance.requireBothGendersIn`: `["fixed_bosses", "fixed_npcs"]` → `["fixed_bosses"]`(D-095 A안, 아래 `coworkerSet`이 대체).
+  - strings.ko.json 값 6건: `event.restroom.name` "화장실 피신", `event.restroom.locker_inside` "탈의실 구석 칸, 잠깐의 평화", `react.director.restroom_seen` "(세면대 앞에서 딱 마주쳤다) …손만 씻으러 왔습니다.", `int.director_restroom.meet[0]` "어, {name} 씨. 여기서 다 보네요~", `charsel.note`(실제 성별과 상관없이…), `charsel.confirm` "출근하기".
+- **필드 추가**
+  - rules.json `characters.casting.balance.coworkerSet`(`members`, `femaleShareRange` [0.30, 0.70]), `characters.playerSelection.analytics`(`sendVariant` false, `logVariant` false).
+  - interrupts.json INT-10 `facilityStop.insideCone.renderCone` false·`judgeOnly` true, `facilityStop.insideCue`(`overHead` icon_door_alert, `minSec` 0.4).
+  - layout.json `legendAdd.W`: `occupiedDisplay` closed_door_in_use, `inUseLabelKey` facility.in_use, `steamIcon` false, `drawOccupantInside` false, `occupiedArt` tile2/shower_stall_hiding(아트 T-149). `genderFacilities.access.talkCancelNpcBehavior` stop_in_place·`talkCancelNpcApproachDoor` false. `genderFacilities.artRules`.
+  - missions.json `modifiers[avoid.* 5종, bonus.cover].facilityLabelKey` + `stringsKo` 6키(`*.facility`), 최상위 `_facilityLabelNote`.
+  - events.json `events[restroom].shareCard`(`trigger` false, `eventVarAllowed` false). 다른 이벤트는 필드 없음 = 기본 true.
+  - strings.ko.json 새 키 `facility.in_use` "사용 중", 최상위 `copyRules`(`facilityCombo`, `shareCard`).
+- **개발 영향**: 전부 무시해도 크래시가 없습니다. 구현이 필요한 것은 ① 시설 안 콘 그리지 않기(판정만) + 머리 위 '!' ② 시설 미션 칩에서 `facilityLabelKey` 우선 ③ 말걸기 문 취소 시 NPC 제자리 정지 ④ 샤워 칸 '사용 중' 표시 ⑤ 공유 카드 생성 시 `shareCard`·`copyRules.shareCard` 준수 ⑥ player.variant 분석·로그 전송 안 함. 상세 `design/gender-design.md` §8.
+- **검사기(§10 T-152)**: 동료 집합 여성 비율 범위, 동기 회전, `fixed_npcs` 사용 금지, variant 전송 금지, 시설 안 `renderCone` false·`insideCue` ≥ 0.4초, 샤워 칸 표시, `artRules`, 말걸기 취소 NPC 문 접근 금지, '몰래'류 + 시설 단어 금지 조합(문자열 전체 + 시설 미션 칩 = 미션 이름 × 붙을 수 있는 변형 라벨), 공유 카드 성별 변수·화장실 트리거 금지.

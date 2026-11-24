@@ -226,11 +226,11 @@ export function validateV3(L: V3Layout, ctx: V3ValidateContext): V3ValidationRes
   const V03 = v3.validators['V03_distance'] ?? {};
   let [lo, hiG] = L.tier.seatToGate;
   if (ctx.ceoDay) hiG = Math.min(hiG, typeof V03['ceoDaySeatToGateMax'] === 'number' ? V03['ceoDaySeatToGateMax'] as number : 40);
-  if (sg < lo || sg > hiG) fail('distance_out_of_band', `V03 seatToGate ${sg} ∉ [${lo}, ${hiG}]`);
+  if (sg < lo || sg > hiG) fail('distance_out_of_band', `V03 seatToGate ${sg} 범위 밖 [${lo}, ${hiG}]`);
   for (const m of missionGoals) {
     const d = dOf(m.t); mo[m.id] = d;
     const cap = missionCap(v3, L.tier, m.id);
-    if (d < 6 || d > cap) fail('distance_out_of_band', `V03 ${m.id} ${d} ∉ [6, ${cap}]`);
+    if (d < 6 || d > cap) fail('distance_out_of_band', `V03 ${m.id} ${d} 범위 밖 [6, ${cap}]`);
   }
   const ceoWalk = dsv && cg ? dsv[idx(cg)]! : -1;
   const ceoMax = typeof V03['ceoWalkMaxTiles'] === 'number' ? V03['ceoWalkMaxTiles'] as number : 20;
