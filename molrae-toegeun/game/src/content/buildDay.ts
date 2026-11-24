@@ -645,26 +645,91 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   // ── 미션 ──
   const events = eventsAll;
   const missions: MissionDef[] = [];
+  const W = map.rows[0]?.length ?? 11;
+  const seatDist = bfsDist(map.rows, map.legend, playerSeat, occupiedSet(spots, W));
+  const oneWay = (t: Tile): number => seatDist[t.y * W + t.x] ?? -1;
+  const speed = floorRules.playerSpeedTilesPerSec;
+  const refOW = v3?.missionRefOneWayTiles ?? {};
+  const isGen = map.source === 'generated';
+  const clk = obj(rules['day']);
+  const clockAt = (dps: number) => (sec: number) => hhmm(str(clk['clockStart'], '09:00')) + sec * (hhmm(str(clk['dayPhaseClockEnd'], '17:48')) - hhmm(str(clk['clockStart'], '09:00'))) / Math.max(1, dps);
+  const infoOf = (p: O) => (id: string) => {
+    const e = missionRaw(tables, id, mv3);
+    const pm = arr(p['missions']).map(obj).find((x) => x['eventId'] === id);
+    return { expectedSec: baseExpectedSec(tables, id), timeLimitSec: num(e?.['timeLimitSec'], 30), unlockAtSec: num(pm?.['unlockAtSec'], 0) };
+  };
+  // 변형 추첨(missions.combination, 생성일 + missions.appliesFromDay 이후): ① 미션 ② 층 ③ 순회 ④ 변형 ⑤ budgetCheck
+  let drawn: Record<string, (string | O)[]> = {};
+  if (mv3 && plan['generated'] === true && day >= num(missionsTable(tables)['appliesFromDay'], 6)) {
+    const mk = (d: number, p: O): ModDrawContext => ({
+      tables, day: d, rankId: str(p['rankId'], rankId), ceoDay: str(p['ceo'], 'none') !== 'none', plan: p,
+      missionInfo: infoOf(p), clockAt: clockAt(num(p['dayPhaseSec'], 50)),
+    });
+    const lastAuthored = authoredDayCount(tables);
+    const history = modifierHistory((d) => (d <= lastAuthored ? null : mk(d, dayPlan(tables, d, planOpts))), day);
+    drawn = drawModifiers({
+      ...mk(day, plan), plan: { ...plan, dayPhaseSec: dayPhaseSecFinal }, clockAt: clockAt(dayPhaseSecFinal),
+      hasSpot: (n) => !!spots[n], longTourCount: longTourCount(tour), history,
+    }).byMission;
+  }
+  const expected: Record<string, number> = {};
   for (const m of arr(plan['missions']).map(obj)) {
-    const e = events.find((x) => x['id'] === m['eventId']);
-    if (!e) { warn.push(`days.${day}: 미션 ${String(m['eventId'])} 없음`); continue; }
+    const id = str(m['eventId']);
+    const e = missionRaw(tables, id, mv3) ?? events.find((x) => x['id'] === id);
+    if (!e) { warn.push(`days.${day}: 미션 ${id} 없음`); continue; }
     const loc = obj(e['location']);
-    const spot = spots[str(loc['spot'])]?.tile ?? playerSeat;
-    const params = applyOverrideScaling(obj(e['params']), obj(e['rankScaling']) as Record<string, Record<string, unknown>>, rankId);
+    const rawParams = obj(e['params']);
+    const spotName = [str(loc['spot']), str(rawParams['fallbackSpot'])].find((n) => n && spots[n]);
+    const spot = (spotName ? spots[spotName]?.tile : undefined) ?? playerSeat;
+    const params = applyOverrideScaling(rawParams, obj(e['rankScaling']) as Record<string, Record<string, unknown>>, rankId);
     const reward = obj(e['reward']);
-    const mods = parseModifiers(tables, m['modifiers'], warn);
+    let rawMods: unknown[] = [...arr(m['modifiers']), ...(drawn[id] ?? [])];
+    const lib = arr(missionsTable(tables)['modifiers']).map(obj);
+    const spotOfMod = (r: unknown): string | undefined => { const o = typeof r === 'string' ? lib.find((x) => x['id'] === r) : obj(r); return typeof o?.['spot'] === 'string' ? o['spot'] as string : undefined; };
+    // 장소 바꾸기 'a|b' = 그날 층에 있는 첫 스팟. 하나도 없으면 그 변형은 건너뜀(ifSpotExists·relocate 공통)
+    rawMods = rawMods.flatMap((r) => {
+      const sp = spotOfMod(r);
+      if (sp === undefined) return [r];
+      const hit = sp.split('|').find((n) => spots[n]);
+      if (!hit) { if (m['modifiersIfSpotExists'] !== true) warn.push(`days.${day}: 미션 ${id} 변형 ${typeof r === 'string' ? r : str(obj(r)['id'])}: 스팟 ${sp} 없음 → 생략`); return []; }
+      const base = typeof r === 'string' ? lib.find((x) => x['id'] === r) ?? {} : obj(r);
+      return [{ ...base, spot: hit }];
+    });
+    const mods = parseModifiers(tables, rawMods, warn, rankId);
     const def: MissionDef = {
       id: str(e['id']), nameKey: str(e['nameKey']), descKey: str(e['descKey']), iconSprite: str(e['iconSprite']),
       mechanic: str(e['mechanic']) as Mechanic, unlockAtSec: num(m['unlockAtSec'], 0), spot,
       startsAt: e['startsAt'] === 'chip_tap_at_seat' ? 'chip_tap_at_seat' : 'arrive_spot',
       completeAt: e['completeAt'] === 'on_success' ? 'on_success' : 'return_to_seat',
       awayFromDesk: e['awayFromDesk'] === true, timeLimitSec: num(e['timeLimitSec'], 30),
-      reward: { slackPoints: num(reward['slackPoints'], 0), ...(typeof reward['snackStock'] === 'number' ? { snackStock: reward['snackStock'] as number } : {}) },
+      reward: {
+        slackPoints: num(reward['slackPoints'], 0), ...(typeof reward['snackStock'] === 'number' ? { snackStock: reward['snackStock'] as number } : {}),
+        ...(typeof reward['couponStamp'] === 'number' ? { couponStamp: reward['couponStamp'] as number } : {}),
+        ...(typeof reward['suspicionRelief'] === 'number' ? { suspicionRelief: reward['suspicionRelief'] as number } : {}),
+      },
       failPenalty: num(obj(e['failPenalty'])['suspicion'], 0), timeoutPenalty: num(obj(e['timeoutPenalty'])['suspicion'], 0),
       params, ...(typeof e['tutorialId'] === 'string' ? { tutorialId: e['tutorialId'] as string } : {}),
       ...(e['accompliceAllowed'] === true && e['accompliceEffect'] ? { accompliceEffect: accompliceEffectOf(obj(e['accompliceEffect'])) } : {}),
     };
-    missions.push(applyMissionModifiers(def, mods, spots, warn));
+    const md = applyMissionModifiers(def, mods, spots, warn);
+    missions.push(md);
+    // 시간 예산 예상 시간(gdd-v3 §4-6): 기본 + 생성 맵 거리 보정 + Σ budgetSecDelta('travel_diff' = 바뀐 장소로 보정)
+    const ref = refOW[id];
+    const corr = (t: Tile) => { const ow = oneWay(t); return isGen && ow >= 0 ? 2 * (ow - (ref ?? 0)) / speed : 0; };
+    let ex = baseExpectedSec(tables, id) + (def.awayFromDesk && ref !== undefined ? corr(def.spot) : 0);
+    for (const mm of mods) {
+      if (typeof mm.budgetSecDelta === 'number') ex += mm.budgetSecDelta;
+      else if (mm.budgetSecDelta === 'travel_diff' && md.awayFromDesk) ex += corr(md.spot) - (def.awayFromDesk && ref !== undefined ? corr(def.spot) : 0);
+    }
+    expected[id] = Math.round(ex * 10) / 10;
+    void missionTags;
+  }
+  // T-139 budgetCheck 재계산(생성일만): 근무 구간 트림·거리·변형 반영. 저작일은 데이터 필수 수 그대로
+  let budget: { requiredBefore: number; required: number; needSec: number } | undefined;
+  if (plan['generated'] === true) {
+    const before = num(plan['missionsRequiredPreBudget'], num(plan['missionsRequired'], missions.length));
+    const r = budgetCheckRequired({ tables, rank, plan, dayPhaseSec: dayPhaseSecFinal, startRequired: before, expectedOf: (id) => expected[id] ?? baseExpectedSec(tables, id) });
+    budget = { requiredBefore: before, required: r.required, needSec: r.needSec };
   }
 
   // ── 퇴근 ──
