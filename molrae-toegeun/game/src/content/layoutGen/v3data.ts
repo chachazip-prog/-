@@ -243,7 +243,7 @@ export function parseLayoutV3(tables: Readonly<Record<string, unknown>>): Layout
     c: L['complexityByRank'], v: L['validators'], ref: L['missionRefOneWayTiles'], g: L['grid'],
   }));
   const out: LayoutV3 = {
-    enabled: L['enabled'] === true, generatorVersion: gv, versionTag: `g${gv}m${fnv1a(hashSrc)}${(globalThis as any).process?.env?.SALT ?? ""}`,
+    enabled: L['enabled'] === true, generatorVersion: gv, versionTag: `g${gv}m${fnv1a(hashSrc)}`,
     authoredMapDays: num(L['authoredMapDays'], 2), sourceMapId: str(L['sourceMapId'], 'office_floor_1'),
     width: num(grid['width'], 11), maxHeight: num(grid['maxHeight'], 64),
     legendAdd, wildcards,
