@@ -7,7 +7,7 @@
   40,
   52
  ],
- "note": "T-149 캐릭터 선택 카드(남녀 공용 같은 판). charsel_card = 기본(연회색 테 1px), charsel_card_on = 선택(하늘색 테 3px). 초상 ui/charsel_portrait_<m|f>(32x40)를 카드 (4, 6)에 얹고 글자는 코드가 아래 흰 칸 대신 바닥색 띠(아래 11px)에 씀. 미리 선택 없음·한쪽 강조 없음(gender-design §5)",
+ "note": "T-149 캐릭터 선택 카드(남녀 공용 같은 판). charsel_card = 기본(연회색 테 1px), charsel_card_on = 선택(하늘색 테 3px). 초상 ui/charsel_portrait_<m|f>(32x40, 원점 아래 가운데)를 카드 왼쪽 위 기준 (4, 2)에 얹고(원점 기준이면 카드 (20, 42)), 이름표 글자는 코드가 아래 바닥색 띠(11px)에 씀. 미리 선택 없음·한쪽 강조 없음(gender-design §5)",
  "frames": [
   {
    "name": "charsel_card",

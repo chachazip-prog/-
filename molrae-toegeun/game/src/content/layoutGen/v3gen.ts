@@ -291,6 +291,8 @@ export function generateV3(ctx: V3GenContext, attemptSeed: string): V3GenResult 
         cand.splice(cand.indexOf(x), 1);
         if (chosen.every((y) => Math.abs(x - y) >= sm.minGap + 1)) chosen.push(x);
       }
+      // [해석] 통로 열이 하나도 안 남고 문 포트만 맞으면 그 문을 연다(실패보다 '회의실 문으로만 통하는 날'). RNG 소비 없음
+      if (chosen.length === 0) { const d = [...doorcols].sort((x, y) => x - y).find((x) => cols.includes(x)); if (d !== undefined) chosen.push(d); }
       if (chosen.length === 0) return { layout: null, fail: { code: 'seam_incompatible', detail: `${prev.m.id} ↔ ${m.id}` } };
       for (const x of chosen) row[x] = doorcols.has(x) ? '=' : wpick(rng, sm.openChars, c);
       if (![...doorcols].some((x) => chosen.includes(x)) && rng.chance(lerp2(wideChance, c))) {

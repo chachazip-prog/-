@@ -17,7 +17,8 @@
              절대 성별 값 금지(mine/other·same/other만), facilityStop 회전 인물·벌 상한, 성별 호칭·고정관념 단어.
       T-152: 동료 집합(고정 + 회전 0.5) 여성 비율 범위(D-095 A안), 옆 팀 동기 회전(D-090), 시설 안 콘 그리지 않음·'!' 전조 ≥ 0.4초,
              샤워 칸 김 아이콘 금지, 시설 그림 범위, 말걸기 취소 시 NPC 문 접근 금지, player.variant 분석 전송 금지,
-             '몰래'+시설 단어 금지 조합(문자열·시설 미션 칩), 공유 카드 성별 변수·화장실 트리거 금지.
+             '몰래'+시설 단어 금지 조합(문자열·시설 미션 칩), 공유 카드 성별 변수·화장실 트리거 금지,
+             고정 인물 명부(명부 밖 새 고정 = 여성만, D-098), 시설 대사 {name} 금지(D-099), 시설 미션 외 변형의 시설 목적지 금지(D-100).
 """
 import itertools
 import json
@@ -811,6 +812,28 @@ else:
     lo_, hi_ = CW.get("femaleShareRange", [0.3, 0.7])
     if not (lo_ <= cw_share <= hi_):
         err(f"동료 집합 여성 비율 {cw_share:.2f} 범위 [{lo_}, {hi_}] 밖(T-152, D-095)")
+# T-152 D-098: 승인된 고정 배정 명부. 명부 밖 새 고정 인물은 여성만
+FR_ = BAL.get("fixedRoster", {})
+if not FR_.get("approved"):
+    err("rules.characters.casting.balance.fixedRoster.approved 없음(D-098)")
+else:
+    need_g = {"female": "f", "male": "m"}.get(FR_.get("newFixedMustBe"), "f")
+    fixed_now = {}
+    for where, a, kind in cast_slots:
+        c = a.get("casting", {})
+        if c.get("mode") != "fixed":
+            continue
+        if "byInstance" in c:
+            for k_, v_ in c["byInstance"].items():
+                fixed_now[f"{where}#{k_}"] = v_
+        else:
+            fixed_now[where] = c.get("variant")
+    for key_, v_ in fixed_now.items():
+        if key_ in FR_["approved"]:
+            if FR_["approved"][key_] != v_:
+                err(f"{key_}: 고정 배정 {v_} ≠ 승인 명부 {FR_['approved'][key_]}(D-090·D-098, PM 결정 필요)")
+        elif v_ != need_g:
+            err(f"{key_}: 명부에 없는 새 고정 인물은 {need_g}만 가능(아니면 rotate, D-098)")
 if buddy_.get("casting", {}).get("mode") != "rotate":
     err("npcs.buddy.casting.mode는 rotate(D-090: '수다 상대 = 한 성별' 고정 금지)")
 if "fixed_npcs" in BAL.get("requireBothGendersIn", []):
@@ -1005,6 +1028,27 @@ else:
     for md in mp_["modifiers"]:
         if md.get("facilityLabelKey") and md["facilityLabelKey"] not in all_str:
             err(f"missions.modifiers.{md['id']}.facilityLabelKey '{md['facilityLabelKey']}' 문자열 없음")
+# T-152 D-099: 시설 장면 문구에 {name} 금지(키 접두사 또는 시설 단어 포함)
+FL_ = CR_.get("facilityLines")
+if not FL_:
+    err("strings.ko.copyRules.facilityLines 없음(D-099)")
+else:
+    fac_w = re.compile("|".join(map(re.escape, (FC_ or {}).get("facilityWords", ["화장실"]))))
+    for k_, txts in all_str.items():
+        is_fac_key = any(k_.startswith(px) for px in FL_["keyPrefixes"])
+        for txt in txts:
+            if (is_fac_key or fac_w.search(txt)) and any(ph in txt for ph in FL_["forbidPlaceholders"]):
+                err(f"strings.{k_}: 시설 장면 문구에 {{name}} 금지 '{txt}'(D-099)")
+# T-152 D-100: 시설 미션이 아닌 미션의 변형은 시설 칸·탈의실을 목적지로 쓰지 않음
+FAC_SPOT = re.compile(r"restroom|locker|shower")
+fac_ids = {e_["id"] for e_ in T["missions"]["missionPool"]["existing"] if e_.get("targetFacility")}
+for md in T["missions"]["modifiers"]:
+    if md.get("spot") and FAC_SPOT.search(md["spot"]) and not set(md.get("missions", [])) <= fac_ids:
+        err(f"missions.modifiers.{md['id']}: 시설 밖 미션의 목적지가 시설 '{md['spot']}'(D-100)")
+for t_ in T["missions"]["modifierTemplates"]:
+    for mid_, sp_ in (t_.get("appliesTo") or {}).items():
+        if isinstance(sp_, str) and FAC_SPOT.search(sp_) and mid_ not in fac_ids:
+            err(f"missions.modifierTemplates.{t_['type']}.appliesTo.{mid_}: 시설 목적지 금지(D-100)")
 # T-152 공유 카드: 성별 변수·성별 라벨 금지, 화장실 미션 트리거 금지
 SC_ = CR_.get("shareCard")
 if not SC_:

@@ -686,3 +686,9 @@ interface AdsTable {
   - strings.ko.json 새 키 `facility.in_use` "사용 중", 최상위 `copyRules`(`facilityCombo`, `shareCard`).
 - **개발 영향**: 전부 무시해도 크래시가 없습니다. 구현이 필요한 것은 ① 시설 안 콘 그리지 않기(판정만) + 머리 위 '!' ② 시설 미션 칩에서 `facilityLabelKey` 우선 ③ 말걸기 문 취소 시 NPC 제자리 정지 ④ 샤워 칸 '사용 중' 표시 ⑤ 공유 카드 생성 시 `shareCard`·`copyRules.shareCard` 준수 ⑥ player.variant 분석·로그 전송 안 함. 상세 `design/gender-design.md` §8.
 - **검사기(§10 T-152)**: 동료 집합 여성 비율 범위, 동기 회전, `fixed_npcs` 사용 금지, variant 전송 금지, 시설 안 `renderCone` false·`insideCue` ≥ 0.4초, 샤워 칸 표시, `artRules`, 말걸기 취소 NPC 문 접근 금지, '몰래'류 + 시설 단어 금지 조합(문자열 전체 + 시설 미션 칩 = 미션 이름 × 붙을 수 있는 변형 라벨), 공유 카드 성별 변수·화장실 트리거 금지.
+- **PM 결정 반영(D-098~D-100, 같은 T-152)**
+  - 값 수정: `relocate.bank_stall.spot` restroom_stall → `storage_corner_use`, `rewardMul` 1.0 → 1.1, `params.stallIsSafeZone` false, `targetFacility` 키 삭제(시설 미션이 아님). `modifierTemplates[relocate].appliesTo.bank` 같은 값. `genderModifiers[facility.cleaning].missions` ["restroom", "bank"] → ["restroom"].
+  - 문구 4건: `int.director_restroom.meet[0]` "어… 여기서 다 보네요~"(D-099), `int.director_restroom.away` "본부장님이 잠깐 자리를 비우셨어요. 복도가 비었어요!"(T-17), `mod.facility_cleaning.desc` "…다른 길로 갈지 골라요."(T-20), `day.2.title` "화장실은 소중하니까"(T-27).
+  - 필드 추가: layout `mid_printer`·`bottom_storage`의 `spots.storage_corner_use`(타일 (1,3), use, target storage_corner). rules `casting.balance.fixedRoster`(`approved` 6자리, `newFixedMustBe` female). strings.ko `copyRules.facilityLines`(`keyPrefixes`, `forbidPlaceholders` ["{name}"]).
+  - 검사기: 고정 명부(D-098), 시설 문구 `{name}` 금지(D-099), 시설 밖 미션 변형의 시설 목적지 금지(D-100).
+  - 개발 영향: 코드 변경 없음(`spotOk`가 창고 모듈이 없는 날 이 변형을 거름). 단 변형 후보가 바뀌어 생성 날의 변형 추첨 결과가 달라질 수 있음 → QA 기대값 재생성 필요.

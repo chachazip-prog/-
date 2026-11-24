@@ -1,7 +1,7 @@
 {
  "name": "kit-head-accomplice-f",
  "kit": true,
- "note": "T-149 머리 키트(바디 A): 공범 여 변형: 초록 헤드폰 유지 + 높이 묶은 포니테일(정면 오른쪽 위로 삐져나옴, 뒷모습 가운데로 늘어짐, 옆모습 뒤로). D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "note": "T-149 머리 키트(바디 A): 공범 여 변형: 초록 헤드폰 유지 + 높이 묶은 포니테일(정면 오른쪽 위로 삐져나옴, 뒷모습 가운데로 늘어짐(짙은 회남색 D 결 + 회색 끈), 옆모습 뒤로). D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
  "stamps": [
   {
    "dir": "down",
@@ -31,13 +31,13 @@
     "................",
     ".....OOOOOO.....",
     "...OOGGGGGGOO...",
-    "..OGHHHOOHHHGO..",
-    ".OGHHHOMMOHHHGO.",
-    "OGGOHHOHHOHHOGGO",
-    "OGgOHHOHHOHHOgGO",
-    "OGgOHHOHHOHHOgGO",
-    ".OOSHHOHHOHHSOO.",
-    "..OHHHOHHOHHHO..",
+    "..OGHHHHHHHHGO..",
+    ".OGHHHHMMHHHHGO.",
+    "OGGOHHHDDHHHOGGO",
+    "OGgOHHHDDHHHOgGO",
+    "OGgOHHHDDHHHOgGO",
+    ".OOSHHHDDHHHSOO.",
+    "..OHHHODDOHHHO..",
     "...OOOOHHOOOO..."
    ]
   },

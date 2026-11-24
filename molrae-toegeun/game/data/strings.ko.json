@@ -125,7 +125,7 @@
     "day.weekday.4": "금요일",
     "day.intro": "{n}일차 · {weekday}",
     "day.1.title": "첫 출근",
-    "day.2.title": "화장실은 인권입니다",
+    "day.2.title": "화장실은 소중하니까",
     "day.3.title": "바스락 금지",
     "day.4.title": "점심 먹고 나른한 오후",
     "day.5.title": "인턴 마지막 날",
@@ -351,13 +351,13 @@
     "int.talk.cancel_at_door": "(문 앞에서 멈칫) 아, 이따 얘기해요~",
     "int.director_restroom.tell": "(누군가 화장실로 들어오는 발소리…)",
     "int.director_restroom.meet": [
-      "어, {name} 씨. 여기서 다 보네요~",
+      "어… 여기서 다 보네요~",
       "아, 수고 많아요. 오늘도 힘내요."
     ],
-    "int.director_restroom.away": "본부장님이 잠깐 화장실에 들어가셨어요. 복도가 비었어요!",
+    "int.director_restroom.away": "본부장님이 잠깐 자리를 비우셨어요. 복도가 비었어요!",
     "react.director.restroom_seen": "(세면대 앞에서 딱 마주쳤다) …손만 씻으러 왔습니다.",
     "mod.facility_cleaning": "청소 시간",
-    "mod.facility_cleaning.desc": "내 화장실이 잠깐 청소 중이에요. 기다릴지, 돌아갈지 골라요.",
+    "mod.facility_cleaning.desc": "내 화장실이 잠깐 청소 중이에요. 기다릴지, 다른 길로 갈지 골라요.",
     "facility.cleaning.sign": "청소 중이에요 · {n}초",
     "react.restroom.cleaning": "(청소 중 표지 앞에서) …타이밍 한번 절묘하네.",
     "mod.relocate.locker": "오늘은 헬스장 탈의실에서",
@@ -417,6 +417,29 @@
         "event.restroom."
       ],
       "_note": "T-152(마케팅 요청·M-01·M-03·D-091): 공유 카드 텍스트에 성별 값·성별 라벨을 넣지 않음. '화장실 피신'(restroom) 결과와 시설 대사는 카드 트리거·{이벤트}·인용 대사로 쓰지 않음(events.restroom.shareCard). 카드 문구 원본은 marketing/tone-guide.md §6"
+    },
+    "facilityLines": {
+      "keyPrefixes": [
+        "int.director_restroom.",
+        "react.director.restroom_",
+        "react.restroom.",
+        "react.locker.",
+        "event.restroom.",
+        "hint.restroom.",
+        "tutorial.tut_restroom",
+        "tutorial.tut_gender_restroom",
+        "tutorial.tut_director_restroom",
+        "int.talk.cancel_at_door",
+        "mod.facility_cleaning",
+        "facility.",
+        "mod.relocate.locker",
+        "zone.locker_room",
+        "zone.fitness"
+      ],
+      "forbidPlaceholders": [
+        "{name}"
+      ],
+      "_note": "T-152(D-099): 시설 장면 문구에는 {name}을 넣지 않음(기본 이름 '나몰래'가 시설 장면에 찍히지 않게). 키 접두사에 걸리거나 시설 단어(facilityCombo.facilityWords)가 든 문자열 모두 검사"
     }
   }
 }

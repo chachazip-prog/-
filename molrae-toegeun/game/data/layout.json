@@ -1621,6 +1621,16 @@
           "facing": "left",
           "stopId": "stop_tl_printer",
           "floorMark": true
+        },
+        "storage_corner_use": {
+          "tile": [
+            1,
+            3
+          ],
+          "facing": "left",
+          "type": "use",
+          "target": "storage_corner",
+          "_note": "T-152(D-100): 창고 선반(H) 뒤 구석. 공과금 변형(relocate.bank_stall) 목적지. 시설 밖이라 성별 무관, 안전 구역 아님(선반이 옆 시선만 가림)"
         }
       },
       "routeNodes": {
@@ -1926,6 +1936,16 @@
           ],
           "facing": "up",
           "type": "spawn"
+        },
+        "storage_corner_use": {
+          "tile": [
+            1,
+            3
+          ],
+          "facing": "left",
+          "type": "use",
+          "target": "storage_corner",
+          "_note": "T-152(D-100): 창고 선반(H) 뒤 구석. 공과금 변형(relocate.bank_stall) 목적지. 시설 밖이라 성별 무관, 안전 구역 아님(선반이 옆 시선만 가림)"
         }
       },
       "routeNodes": {

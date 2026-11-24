@@ -605,10 +605,10 @@
         "coffee": "cafe_use",
         "nap": "lounge_nap",
         "snack": "tour_pantry",
-        "bank": "restroom_stall",
+        "bank": "storage_corner_use",
         "print": "copier_use|printer_use"
       },
-      "_note": "오늘은 다른 곳에서: 커피 → 라운지 카페 머신, 낮잠 → 라운지 소파, 간식 → 탕비실에서 먹기(자리 밖이 됨), 공과금 → 화장실 칸(안전하지만 멂), 출력 → 다른 프린터. 대상 스팟이 그날 층에 없으면 붙이지 않음. 예상 시간 = 이동 거리 차로 다시 계산"
+      "_note": "오늘은 다른 곳에서: 커피 → 라운지 카페 머신, 낮잠 → 라운지 소파, 간식 → 탕비실에서 먹기(자리 밖이 됨), 공과금 → 창고 구석(T-152 D-100: 시설 밖으로 옮김), 출력 → 다른 프린터. 대상 스팟이 그날 층에 없으면 붙이지 않음. 예상 시간 = 이동 거리 차로 다시 계산"
     },
     {
       "type": "double",
@@ -922,19 +922,18 @@
       "missions": [
         "bank"
       ],
-      "spot": "restroom_stall",
-      "rewardMul": 1.0,
+      "spot": "storage_corner_use",
+      "rewardMul": 1.1,
       "budgetSecDelta": "travel_diff",
       "params": {
         "startsAt": "arrive_spot",
         "completeAt": "return_to_seat",
         "awayFromDesk": true,
-        "stallIsSafeZone": true
+        "stallIsSafeZone": false
       },
-      "_note": "안전 구역이라 화면 전환 걱정은 없지만 왕복이 생김. 보상 그대로(쉬워지고 길어짐)",
+      "_note": "T-152(D-100): 목적지를 화장실 칸 → 창고 구석(storage_corner_use)으로 옮김. '몰래 공과금 내기'가 화장실과 엮이지 않게. id는 개발 호환을 위해 그대로. 안전 구역이 아니게 되어 보상 1.0 → 1.1(다른 relocate와 같음). 창고 모듈(mid_printer·bottom_storage)이 없는 날은 스폿이 없어 붙지 않음(missionsV3 spotOk)",
       "minRank": "staff",
-      "kind": "hard",
-      "targetFacility": "restroom.mine"
+      "kind": "hard"
     },
     {
       "id": "relocate.print_other",
@@ -1767,8 +1766,7 @@
       "descKey": "mod.facility_cleaning.desc",
       "cost": 1,
       "missions": [
-        "restroom",
-        "bank"
+        "restroom"
       ],
       "closes": "restroom.mine",
       "params": {
@@ -1786,7 +1784,8 @@
       "minRank": "assistant_manager",
       "minDay": 20,
       "kind": "hard",
-      "_note": "T-148 C4. 내 화장실이 미션 해금 순간부터 12초 동안 청소 중(문 앞 '청소 중' 표지와 남은 초를 처음부터 보여 줌 → 정보는 전부 공개). 기다리기(남은 시간 확인) 또는 헬스장 탈의실 샤워 칸으로 우회(그날 헬스장이 있을 때). 다른 쪽 화장실은 갈 수 없음. 12초 = 화장실 편도 약 5.7초의 2배 남짓이라 '기다리며 자리에서 일하기'와 '우회'가 비슷한 값. 미화팀 인물은 등장하지 않고 표지만(tone-guide #9). budgetSecDelta 3.0 = 기다림 기대 손실"
+      "_note": "T-148 C4. 내 화장실이 미션 해금 순간부터 12초 동안 청소 중(문 앞 '청소 중' 표지와 남은 초를 처음부터 보여 줌 → 정보는 전부 공개). 기다리기(남은 시간 확인) 또는 헬스장 탈의실 샤워 칸으로 우회(그날 헬스장이 있을 때). 다른 쪽 화장실은 갈 수 없음. 12초 = 화장실 편도 약 5.7초의 2배 남짓이라 '기다리며 자리에서 일하기'와 '우회'가 비슷한 값. 미화팀 인물은 등장하지 않고 표지만(tone-guide #9). budgetSecDelta 3.0 = 기다림 기대 손실",
+      "_t152Note": "T-152(D-100): 공과금 변형이 화장실 칸을 쓰지 않게 되어 대상에서 bank 제외(화장실 피신만)"
     },
     {
       "id": "relocate.restroom_locker",

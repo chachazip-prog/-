@@ -131,7 +131,7 @@ HEADS["senior_f"] = dict(body="A", note="선배 여 변형: 구름 머리 단발
 ])
 
 # 공범 여: 초록 헤드폰(공범 표지) + 높이 묶은 포니테일
-HEADS["accomplice_f"] = dict(body="A", note="공범 여 변형: 초록 헤드폰 유지 + 높이 묶은 포니테일(정면 오른쪽 위로 삐져나옴, 뒷모습 가운데로 늘어짐, 옆모습 뒤로)", down=[
+HEADS["accomplice_f"] = dict(body="A", note="공범 여 변형: 초록 헤드폰 유지 + 높이 묶은 포니테일(정면 오른쪽 위로 삐져나옴, 뒷모습 가운데로 늘어짐(짙은 회남색 D 결 + 회색 끈), 옆모습 뒤로)", down=[
     "................",
     ".....OOOOOO..OO.",
     "...OOGGGGGGOOHHO",
@@ -147,13 +147,13 @@ HEADS["accomplice_f"] = dict(body="A", note="공범 여 변형: 초록 헤드폰
     "................",
     ".....OOOOOO.....",
     "...OOGGGGGGOO...",
-    "..OGHHHOOHHHGO..",
-    ".OGHHHOMMOHHHGO.",
-    "OGGOHHOHHOHHOGGO",
-    "OGgOHHOHHOHHOgGO",
-    "OGgOHHOHHOHHOgGO",
-    ".OOSHHOHHOHHSOO.",
-    "..OHHHOHHOHHHO..",
+    "..OGHHHHHHHHGO..",
+    ".OGHHHHMMHHHHGO.",
+    "OGGOHHHDDHHHOGGO",
+    "OGgOHHHDDHHHOgGO",
+    "OGgOHHHDDHHHOgGO",
+    ".OOSHHHDDHHHSOO.",
+    "..OHHHODDOHHHO..",
     "...OOOOHHOOOO...",
 ], right=[
     "................",
@@ -422,11 +422,11 @@ HEADS["guard_f"] = dict(body="B", note="경비 여 변형: 챙 모자(노란 배
     ".ODDDDDDDDDDDDO.",
     ".ODDDDDDDDDDDDO.",
     ".OOOOOOOOOOOOOO.",
-    ".OHHHHOOOOHHHHO.",
-    ".OHHHHOMMOHHHHO.",
-    ".OHHHHOHHOHHHHO.",
-    ".OSHHHOHHOHHHSO.",
-    ".OHHHHOHHOHHHHO.",
+    ".OHHHHHMMHHHHHO.",
+    ".OHHHHHDDHHHHHO.",
+    ".OHHHHHDDHHHHHO.",
+    ".OSHHHHDDHHHHSO.",
+    ".OHHHHODDOHHHHO.",
     "..OOOOOHHOOOOO..",
 ], right=[
     "..OOOOOOOOO.....",
@@ -777,7 +777,7 @@ def charsel():
             rows.append("".join(r))
         return rows
     return {"name": "t149-charsel", "lean": True, "prefix": "ui", "group": "ui", "size": [W, H],
-            "note": "T-149 캐릭터 선택 카드(남녀 공용 같은 판). charsel_card = 기본(연회색 테 1px), charsel_card_on = 선택(하늘색 테 3px). 초상 ui/charsel_portrait_<m|f>(32x40)를 카드 (4, 6)에 얹고 글자는 코드가 아래 흰 칸 대신 바닥색 띠(아래 11px)에 씀. 미리 선택 없음·한쪽 강조 없음(gender-design §5)",
+            "note": "T-149 캐릭터 선택 카드(남녀 공용 같은 판). charsel_card = 기본(연회색 테 1px), charsel_card_on = 선택(하늘색 테 3px). 초상 ui/charsel_portrait_<m|f>(32x40, 원점 아래 가운데)를 카드 왼쪽 위 기준 (4, 2)에 얹고(원점 기준이면 카드 (20, 42)), 이름표 글자는 코드가 아래 바닥색 띠(11px)에 씀. 미리 선택 없음·한쪽 강조 없음(gender-design §5)",
             "frames": [{"name": "charsel_card", "rows": card("L", 1)},
                        {"name": "charsel_card_on", "rows": card("C", 3)}]}
 

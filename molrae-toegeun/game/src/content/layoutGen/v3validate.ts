@@ -271,7 +271,8 @@ export function validateV3(L: V3Layout, ctx: V3ValidateContext): V3ValidationRes
     const shared = core.filter((t) => aset.has(idx(t))).length / Math.max(1, core.length);
     const lp = P.length - 1, la = Ap.length - 1;
     const R = goal.id === 'gate' ? gateR : misR;
-    const ok = la <= lp * R.ratio && la - lp <= R.extra && shared <= R.shared;
+    // [해석] 양끝 3칸을 뺀 '가운데'가 3칸 미만인 짧은 길(팀 복사기 등)은 공유 비율 판정을 하지 않음(대안 경로가 의미 없음)
+    const ok = la <= lp * R.ratio && la - lp <= R.extra && (core.length < 3 || shared <= R.shared);
     if (goal.id === 'gate') {
       altExtra = la - lp; sharedRatio = Math.round(shared * 100) / 100;
       let run = 0;
