@@ -1,0 +1,37 @@
+{
+ "name": "tile2_v3",
+ "prefix": "tile2",
+ "group": "tile",
+ "size": [
+  16,
+  16
+ ],
+ "note": "T-146 옆 벽 창문(라운지 창가). wall_blind_side_l = 왼쪽 벽(tile/wall_cap_l 자리), _r = 좌우 반전. 위쪽 블라인드 반 + 아래 유리(하늘색 + 흰 반사). 세로로 이어 붙임",
+ "frames": [
+  {
+   "name": "wall_blind_side_l",
+   "rows": [
+    "DDDDDDDDDDDDMLO.",
+    "DDOOOOOOOOODMLO.",
+    "DDOWWWWWWWODMLO.",
+    "DDOLLLLLLLODMLO.",
+    "DDOWWWWWWDODMLO.",
+    "DDOLLLLLLDODMLO.",
+    "DDOWWWWWWMODMLO.",
+    "DDOMMMMMMMODMLO.",
+    "DDOCWCCCCCODMLO.",
+    "DDOCCWCCCCODMLO.",
+    "DDOCCCWCCCODMLO.",
+    "DDOCCCCCWCODMLO.",
+    "DDOcCCCCCWODMLO.",
+    "DDOccccccCODMLO.",
+    "DDOOOOOOOOODMLO.",
+    "DDDDDDDDDDDDMLO."
+   ]
+  },
+  {
+   "name": "wall_blind_side_r",
+   "flip": "wall_blind_side_l"
+  }
+ ]
+}

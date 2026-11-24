@@ -1,0 +1,173 @@
+{
+ "name": "kit-pose-v3",
+ "kit": true,
+ "note": "T-146 v3 미션 포즈(바디 A): 소파 낮잠 pose_nap_on_sofa(layout lounge_nap.pose), 창가 숨 돌리기 pose_breath_<right|left>, 맞장구 pose_nod_up(동기 뒤에 서서)",
+ "frames": [
+  {
+   "name": "pose_nap_on_sofa_down_0",
+   "from": "idle_down",
+   "bob": [
+    2,
+    16
+   ]
+  },
+  {
+   "name": "pose_nap_on_sofa_down_1",
+   "from": "idle_down",
+   "bob": [
+    2,
+    16
+   ]
+  },
+  {
+   "name": "pose_breath_right_0",
+   "from": "idle_right"
+  },
+  {
+   "name": "pose_breath_right_1",
+   "from": "idle_right",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "pose_breath_left_0",
+   "flip": "pose_breath_right_0"
+  },
+  {
+   "name": "pose_breath_left_1",
+   "flip": "pose_breath_right_1"
+  },
+  {
+   "name": "pose_nod_up_0",
+   "from": "idle_up"
+  },
+  {
+   "name": "pose_nod_up_1",
+   "from": "idle_up",
+   "bob": [
+    1,
+    10
+   ]
+  }
+ ],
+ "stamps": [
+  {
+   "match": "pose_nap_on_sofa_*",
+   "x": 5,
+   "y": 7,
+   "rows": [
+    "S....S"
+   ],
+   "_note": "감은 눈"
+  },
+  {
+   "match": "pose_nap_on_sofa_*",
+   "x": 4,
+   "y": 8,
+   "rows": [
+    "OO....OO"
+   ]
+  },
+  {
+   "match": "pose_nap_on_sofa_*",
+   "x": 4,
+   "y": 13,
+   "rows": [
+    "p......p",
+    "S......S"
+   ],
+   "_note": "손 무릎에"
+  },
+  {
+   "match": "pose_nap_on_sofa_down_0",
+   "x": 13,
+   "y": 2,
+   "rows": [
+    "CCC",
+    ".C.",
+    "CCC"
+   ],
+   "_note": "z (하늘색)"
+  },
+  {
+   "match": "pose_nap_on_sofa_down_1",
+   "x": 13,
+   "y": 0,
+   "rows": [
+    "CCC",
+    ".C.",
+    "CCC"
+   ]
+  },
+  {
+   "match": "pose_breath_right_*",
+   "x": 11,
+   "y": 7,
+   "rows": [
+    "S",
+    "OO"
+   ],
+   "_note": "눈 감고 숨 들이쉬기"
+  },
+  {
+   "match": "pose_breath_right_1",
+   "x": 14,
+   "y": 8,
+   "rows": [
+    ".L",
+    "WL"
+   ],
+   "_note": "후— 내쉬는 숨(연기 아님, 흰 바람)"
+  },
+  {
+   "match": "pose_nod_up_*",
+   "x": 4,
+   "y": 13,
+   "rows": [
+    "p......p"
+   ],
+   "_note": "뒷짐 없이 손 모음"
+  }
+ ],
+ "anims": [
+  {
+   "key": "pose_nap_on_sofa",
+   "frames": [
+    "pose_nap_on_sofa_down_0",
+    "pose_nap_on_sofa_down_0",
+    "pose_nap_on_sofa_down_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_breath_right",
+   "frames": [
+    "pose_breath_right_0",
+    "pose_breath_right_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_breath_left",
+   "frames": [
+    "pose_breath_left_0",
+    "pose_breath_left_1"
+   ],
+   "frameRate": 2,
+   "repeat": -1
+  },
+  {
+   "key": "pose_nod_up",
+   "frames": [
+    "pose_nod_up_0",
+    "pose_nod_up_1"
+   ],
+   "frameRate": 4,
+   "repeat": -1
+  }
+ ]
+}

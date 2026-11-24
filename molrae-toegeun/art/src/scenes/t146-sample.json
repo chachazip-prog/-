@@ -1,0 +1,191 @@
+{
+ "_doc": "T-146 견본(176x160, 11x10칸). 라운지(옆 벽 창가 + 카페 카운터 + 소파) · 옆 팀(동기) · 팀장 빈자리 재킷 · 복합기 쟁반 0~4장. 레벨 원본이 아니라 아트 검수용",
+ "name": "t146-sample",
+ "preview": "t146-scene",
+ "size": [
+  176,
+  160
+ ],
+ "tile": [
+  16,
+  16
+ ],
+ "offset": [
+  0,
+  0
+ ],
+ "bg": "floor",
+ "depth_sort": true,
+ "tiles": {
+  "A": "tile/wall_cap",
+  "B": "tile/wall_cap_l",
+  "G": "tile/wall_cap_r",
+  "w": "tile2/wall_blind_side_l",
+  "x": "tile2/wall_blind_side_r",
+  "I": "tile2/wall_lounge",
+  "M": "tile2/wall_cafe_menu",
+  "J": "tile2/wall_team2",
+  "L": "tile2/floor_lounge",
+  "K": "tile2/floor_cafe",
+  "T": "tile2/floor_team2",
+  "P": "tile2/floor_print",
+  "N": "tile/wall_cap_v",
+  " ": null
+ },
+ "layers": [
+  [
+   "AAAAAAAAAAA",
+   "BIIMMINJJJG",
+   "wLLKKKNTTTx",
+   "wLLKKKNTTTx",
+   "BLLLLLNTTTG",
+   "wLLLLLNTTTx",
+   "wLLLLLLTTTx",
+   "BAAAAANAAAG",
+   "BPPPPPPPPPG",
+   "BPPPPPPPPPG"
+  ]
+ ],
+ "objects": [
+  {
+   "sprite": "wide24/cafe_counter",
+   "x": 40,
+   "y": 24
+  },
+  {
+   "sprite": "fx/cup_ready_1",
+   "x": 66,
+   "y": 14
+  },
+  {
+   "sprite": "wide2/sofa_lounge",
+   "x": 18,
+   "y": 72
+  },
+  {
+   "sprite": "player/pose_nap_on_sofa_down_0",
+   "x": 26,
+   "y": 66,
+   "shadow": false,
+   "depth_bias": 20
+  },
+  {
+   "sprite": "player/pose_breath_left_1",
+   "tx": 1,
+   "ty": 5,
+   "shadow": true
+  },
+  {
+   "sprite": "player/carry_cup_down_0",
+   "tx": 4,
+   "ty": 4,
+   "shadow": true
+  },
+  {
+   "sprite": "furn/desk_monitor",
+   "tx": 8,
+   "ty": 2
+  },
+  {
+   "sprite": "bg_buddy/sit_turn_1",
+   "tx": 8,
+   "ty": 3,
+   "dy": -3,
+   "shadow": false
+  },
+  {
+   "sprite": "player/pose_nod_up_1",
+   "tx": 8,
+   "ty": 4,
+   "shadow": true
+  },
+  {
+   "sprite": "furn/desk_boss",
+   "tx": 7,
+   "ty": 5
+  },
+  {
+   "sprite": "furn/chair_high_jacket",
+   "tx": 7,
+   "ty": 6
+  },
+  {
+   "sprite": "player/carry_box_right_0",
+   "tx": 9,
+   "ty": 6,
+   "shadow": true
+  },
+  {
+   "sprite": "player/carry_paper_up_1",
+   "tx": 5,
+   "ty": 6,
+   "shadow": true
+  },
+  {
+   "sprite": "prop/printer_tray_0",
+   "x": 22,
+   "y": 140
+  },
+  {
+   "sprite": "prop/printer_tray_1",
+   "x": 54,
+   "y": 140
+  },
+  {
+   "sprite": "prop/printer_tray_2",
+   "x": 86,
+   "y": 140
+  },
+  {
+   "sprite": "prop/printer_tray_3",
+   "x": 118,
+   "y": 140
+  },
+  {
+   "sprite": "prop/printer_tray_4",
+   "x": 150,
+   "y": 140
+  },
+  {
+   "sprite": "player/pose_hold_box_down_1",
+   "tx": 2,
+   "ty": 8,
+   "shadow": true
+  },
+  {
+   "sprite": "player/carry_box_down_0",
+   "tx": 4,
+   "ty": 8,
+   "shadow": true
+  },
+  {
+   "sprite": "player/carry_paper_down",
+   "tx": 6,
+   "ty": 8,
+   "shadow": true
+  },
+  {
+   "sprite": "bg_buddy/walk_down_0",
+   "tx": 8,
+   "ty": 8,
+   "shadow": true
+  },
+  {
+   "sprite": "fx/zone_hint_1",
+   "tx": 9,
+   "ty": 8
+  }
+ ],
+ "ui": [
+  {
+   "sprite": "hud/tl_away",
+   "x": 160,
+   "y": 2
+  },
+  {
+   "sprite": "icon_tour_printer",
+   "x": 146,
+   "y": 2
+  }
+ ]
+}

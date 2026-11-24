@@ -5,6 +5,23 @@
     {
       "id": "senior",
       "spriteKey": "senior",
+      "variants": [
+        {
+          "id": "m",
+          "gender": "male",
+          "spriteKey": "senior_m"
+        },
+        {
+          "id": "f",
+          "gender": "female",
+          "spriteKey": "senior_f"
+        }
+      ],
+      "casting": {
+        "mode": "fixed",
+        "variant": "m",
+        "_why": "인턴 주간 첫 상사. 매일 옆자리라 같은 사람이어야 기억됨(고정)"
+      },
       "nameKey": "boss.senior.name",
       "codexKey": "codex.boss.senior",
       "tier": 1,
@@ -89,6 +106,26 @@
     {
       "id": "team_lead",
       "spriteKey": "teamlead",
+      "variants": [
+        {
+          "id": "m",
+          "gender": "male",
+          "spriteKey": "teamlead_m"
+        },
+        {
+          "id": "f",
+          "gender": "female",
+          "spriteKey": "teamlead_f"
+        }
+      ],
+      "casting": {
+        "mode": "fixed",
+        "byInstance": {
+          "1": "f",
+          "2": "m"
+        },
+        "_why": "매일 보는 핵심 인물(고정). 차장~ 옆 팀 팀장(2번)은 반대 성별로 둬 두 팀장을 머리·실루엣으로도 구분"
+      },
       "nameKey": "boss.team_lead.name",
       "codexKey": "codex.boss.team_lead",
       "tier": 2,
@@ -439,6 +476,23 @@
     {
       "id": "director",
       "spriteKey": "exec",
+      "variants": [
+        {
+          "id": "m",
+          "gender": "male",
+          "spriteKey": "exec_m"
+        },
+        {
+          "id": "f",
+          "gender": "female",
+          "spriteKey": "exec_f"
+        }
+      ],
+      "casting": {
+        "mode": "rotate",
+        "rule": "relation_block2",
+        "_why": "본부장은 여러 명이 번갈아 층에 오는 설정(순찰 방해로만 등장). 화장실 케이스(C2·C3)의 유일한 행위자라 반드시 플레이어 기준 회전"
+      },
       "nameKey": "boss.director.name",
       "codexKey": "codex.boss.director",
       "tier": 3,
@@ -630,6 +684,23 @@
     {
       "id": "ceo",
       "spriteKey": "ceo",
+      "variants": [
+        {
+          "id": "m",
+          "gender": "male",
+          "spriteKey": "ceo_m"
+        },
+        {
+          "id": "f",
+          "gender": "female",
+          "spriteKey": "ceo_f"
+        }
+      ],
+      "casting": {
+        "mode": "fixed",
+        "variant": "f",
+        "_why": "회사에 한 명. 드물게 나오는 상징 인물이라 고정. 최상위 직급이 한 성별로 굳지 않게 팀장(1번)·선배와 교차 배정"
+      },
       "nameKey": "boss.ceo.name",
       "codexKey": "codex.boss.ceo",
       "tier": 4,
@@ -810,5 +881,6 @@
       },
       "_designNote": "얼음 = 대표님이 화물 엘리베이터에서 내 자리 앞까지 걸어오는 4.6초(최대 5초). 전역 규칙이라 화면 밖 규칙의 예외지만, 전조가 화면 전체(BGM 정지·비네트·모두 고개 듦·'얼음!' 문구)라 놓칠 수 없음. 등장 조건 '내가 자리에 앉아 있을 때'로 눈도장 기회를 항상 보장. 랜덤 출현일도 시드로 미리 정해져 '출근 준비' 화면에 예보(D-027)."
     }
-  ]
+  ],
+  "_t148Note": "T-148(REQ-016, D-087·D-088): variants = 남녀 변형(성별·spriteKey, 아트 T-149), casting = 배치 규칙(fixed = 고정 인물, rotate = rules.characters.casting.rotation 플레이어 기준 회전). 기존 spriteKey는 변형 그림이 나오기 전 대체 그림으로 유지. 규칙서 design/gender-design.md §2"
 }

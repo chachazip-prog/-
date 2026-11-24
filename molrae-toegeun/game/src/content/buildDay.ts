@@ -6,18 +6,27 @@
  */
 import { createRng } from '../core/rng';
 import type { FloorRules, LevelDef } from '../core/floorSim';
-import { buildGridMap, type Tile } from '../core/grid';
+import { buildGridMap, nearestWalkable, type Tile } from '../core/grid';
 import { findPath } from '../core/pathfinding';
 import type { ConeState, NpcDef, TalkDef, WaypointDef } from '../core/patrol';
 import type { Dir } from '../core/vision';
 import type {
-  AccompliceDef, ActorInfo, BackgroundDef, CeoElevatorDef, CeoVisitDef, DayContent, DayInterruptDef, GreetingDef, LeaveDef, Mechanic,
+  AccompliceDef, ActorInfo, BackgroundDef, BossTourDef, CeoElevatorDef, CeoVisitDef, DayContent, DayInterruptDef, GreetingDef, LeaveDef, Mechanic,
   MissionDef, MissionModifier, QteDef, RouteDef, ScriptedBeat,
 } from '../core/day/types';
 import { applyMissionModifiers } from '../core/day/modifiers';
 import { applyInterpScaling, applyOverrideScaling, rankProgress } from './scaling';
 import { createLevelProvider, layoutEnabledInData, remapWaypoints, type LevelProvider } from './levelProvider';
 import { buildDevTour } from './devTour';
+import { buildLeadTour, longTourCount } from './leadRoaming';
+import { parseLayoutV3 } from './layoutGen/v3data';
+import { bfsDist, occupiedSet } from './layoutGen/v3gen';
+import { missionRaw } from './levelV3';
+import {
+  baseExpectedSec, budgetCheckRequired, debutsFor, drawModifiers, missionTags, missionsEnabledInData, missionsTable, modifierHistory,
+  overlayPlan, poolForRank, type ModDrawContext,
+} from './missionsV3';
+import { mergedStrings } from './strings';
 
 /** 데이터 미정 기본값 (D-054). 데이터에 같은 이름의 값이 생기면 그쪽이 우선 */
 export const DEFAULTS = {
@@ -30,6 +39,8 @@ export const DEFAULTS = {
   talkWarnSec: 0.5,
   /** 대표님 순시 예정 시각 비율(생성기가 ceoAtSec를 주지 않은 경우) */
   ceoAtFrac: 0.55,
+  /** [임시 추정] 낮잠·회의 시각 조정에서 팀장이 회의실까지 걷는 시간(초). 기획이 데이터로 주면 교체 */
+  meetingWalkEstSec: 4,
 } as const;
 
 type O = Record<string, unknown>;
@@ -49,10 +60,8 @@ function accompliceEffectOf(e: O): NonNullable<MissionDef['accompliceEffect']> {
   };
 }
 
-export function hhmm(s: string): number {
-  const m = /^(\d+):(\d+)$/.exec(s);
-  return m ? Number(m[1]) * 60 + Number(m[2]) : 0;
-}
+import { hhmm } from './time';
+export { hhmm };
 
 /** rules.day의 'HH:MM' 시각(분). 없거나 형식이 틀리면 예외(시각 기본값을 코드에 두지 않음, BUG-011) */
 function clockOf(day: O, key: string): number {
@@ -75,15 +84,19 @@ export interface BuildWarnings { push(msg: string): void }
 export interface BuildOptions {
   /** 일차별 층 공급자. 없으면 데이터 기준 기본값(layout.json enabled면 3일차부터 생성, 아니면 모든 날 수작업 맵) */
   readonly levelProvider?: LevelProvider;
-  /** 팀장 순회(D-075): true 강제 / false 끔 / 'auto'(기본) = 생성 층인 날만 [임시 정책] */
+  /** 팀장 순회(D-075): true 강제 / false 끔 / 'auto'(기본) = 생성 층인 날만 */
   readonly tours?: boolean | 'auto';
+  /** missions.json(v3) 사용: 미션 풀·새 미션 6종·변형 추첨·저작일 얹기. 없으면 missions.enabled(D-086: false) */
+  readonly missionsV3?: boolean;
 }
+
+export interface PlanOptions { readonly missionsV3?: boolean }
 
 /**
  * 미션 변형 파싱([추측] T-142 스키마 전): 계획 항목의 modifiers = 변형 객체 또는 id 문자열 배열.
  * id는 tables.missions.modifiers[] (id 일치)에서 찾는다
  */
-function parseModifiers(tables: Tables, raw: unknown, warn: BuildWarnings): MissionModifier[] {
+function parseModifiers(tables: Tables, raw: unknown, warn: BuildWarnings, rankId = ''): MissionModifier[] {
   const lib = arr(obj(tables['missions'])['modifiers']).map(obj);
   const out: MissionModifier[] = [];
   for (const r of arr(raw)) {
@@ -91,8 +104,14 @@ function parseModifiers(tables: Tables, raw: unknown, warn: BuildWarnings): Miss
     if (!m || typeof m['id'] !== 'string') { warn.push(`미션 변형 ${JSON.stringify(r)} 정의 없음`); continue; }
     const tl = obj(m['timeLimit']);
     const cond = obj(m['condition']);
+    // avoid: 직급별 onFail(onFailByRank), 없으면 condition.onFail
+    const onFail = str(obj(m['onFailByRank'])[rankId], str(cond['onFail']));
+    const av = obj(m['availability']);
     out.push({
       id: m['id'] as string,
+      ...(typeof m['type'] === 'string' ? { type: m['type'] as string } : {}),
+      ...(m['kind'] === 'hard' || m['kind'] === 'soft' || m['kind'] === 'bonus' ? { kind: m['kind'] as 'hard' | 'soft' | 'bonus' } : {}),
+      ...(av['type'] === 'while_actor_away' ? { availability: { type: 'while_actor_away' as const, actorId: str(av['actorId'], 'team_lead') } } : {}),
       ...(typeof m['labelKey'] === 'string' ? { labelKey: m['labelKey'] as string } : {}),
       ...(m['timeLimit'] ? { timeLimit: {
         ...(typeof tl['set'] === 'number' ? { set: tl['set'] as number } : {}),
@@ -100,11 +119,12 @@ function parseModifiers(tables: Tables, raw: unknown, warn: BuildWarnings): Miss
         ...(typeof tl['add'] === 'number' ? { add: tl['add'] as number } : {}),
       } } : {}),
       ...(typeof m['spot'] === 'string' ? { spot: m['spot'] as string } : {}),
+      ...(typeof m['budgetSecDelta'] === 'number' || m['budgetSecDelta'] === 'travel_diff' ? { budgetSecDelta: m['budgetSecDelta'] as number | 'travel_diff' } : {}),
       ...(m['params'] ? { params: obj(m['params']) } : {}),
       ...(typeof m['rewardMul'] === 'number' ? { rewardMul: m['rewardMul'] as number } : {}),
       ...(typeof cond['id'] === 'string' ? { condition: {
         id: cond['id'] as string, args: obj(cond['args']),
-        ...(cond['onFail'] === 'fail' ? { onFail: 'fail' as const } : {}),
+        ...(onFail === 'fail' ? { onFail: 'fail' as const } : {}),
       } } : {}),
     });
   }
@@ -124,9 +144,10 @@ export function authoredDayCount(tables: Tables): number {
 }
 
 /** AuthoredDay 모양을 돌려줌(저작 또는 생성) */
-export function dayPlan(tables: Tables, day: number): O {
+export function dayPlan(tables: Tables, day: number, opts: PlanOptions = {}): O {
   const authored = arr(obj(tables['days'])['authoredDays']).map(obj).find((d) => d['day'] === day);
-  return authored ?? generateDay(tables, day);
+  if (authored) return opts.missionsV3 && day >= num(missionsTable(tables)['appliesFromDay'], 6) ? overlayPlan(tables, day, authored) : authored;
+  return generateDay(tables, day, opts);
 }
 
 function rankFor(tables: Tables, day: number): O {
@@ -142,7 +163,7 @@ function rankFor(tables: Tables, day: number): O {
  * 16일차 이후 생성기(days.generator, 요약 구현). 시드 스트림 day-{n}-plan / day-{n}-leave.
  * [부분 구현] 대표님 순시(INT-09)·데뷔 고정·최근 2일 강제 포함 규칙은 아직 반영하지 않음.
  */
-export function generateDay(tables: Tables, day: number): O {
+export function generateDay(tables: Tables, day: number, opts: PlanOptions = {}): O {
   const rank = rankFor(tables, day);
   const dr = arr(rank['dayRange']);
   const t = rankProgress(day, [num(dr[0], 1), dr[1] === null ? null : num(dr[1], 1)]);
@@ -156,7 +177,9 @@ export function generateDay(tables: Tables, day: number): O {
   const count = Math.max(ceoDay ? 2 : 0, num(arr(rank['missionsPerDay'])[half], 3) - (ceoDay ? 1 : 0));
   const required = Math.max(ceoDay ? 2 : 0, num(arr(rank['missionsRequired'])[half], 2) - (ceoDay ? 1 : 0));
   const ceoAtSec = ceoDay ? Math.round(dayPhaseSec * ceoPlan.atFrac * 10) / 10 : -1;
-  const pool = arr(rank['eventPool']).map(obj);
+  // D-084: missions.json(v3)이 켜지면 poolByRank가 ranks.eventPool을 대체(ranks.json은 그대로)
+  const mv3 = opts.missionsV3 === true;
+  const pool = mv3 ? poolForRank(tables, str(rank['id']), day) : arr(rank['eventPool']).map(obj);
   const picked: string[] = [];
   const left = pool.slice();
   for (let i = 0; i < count && left.length > 0; i++) {
@@ -164,6 +187,12 @@ export function generateDay(tables: Tables, day: number): O {
     if (!e) break;
     picked.push(str(e['eventId']));
     left.splice(left.indexOf(e), 1);
+  }
+  // 새 미션 데뷔(missionPool.debuts): 그날 반드시 포함(RNG 추가 소비 없음 — 마지막 추첨을 바꿈)
+  const debut = mv3 ? debutsFor(tables, day) : { missions: [], modifierTypes: [] };
+  for (const d of debut.missions) {
+    if (picked.includes(d.id)) continue;
+    if (picked.length >= count && picked.length > 0) picked[picked.length - 1] = d.id; else picked.push(d.id);
   }
   const step = Math.floor((dayPhaseSec - 22) / Math.max(1, picked.length));
   const missions = picked.map((id, i) => ({ eventId: id, unlockAtSec: 3 + i * step }));
@@ -208,14 +237,48 @@ export function generateDay(tables: Tables, day: number): O {
     lpool.splice(lpool.indexOf(p), 1);
     if (!leaveInterrupts.some((x) => x['id'] === p['id'])) leaveInterrupts.push({ id: p['id'] });
   }
+  // 회의 중 낮잠 잠김(days.generator.dayInterrupts.constraints): 낮잠 해금이 회의와 겹치면 해금을 회의 끝 뒤로, 그게 안 되면 회의를 낮잠 뒤로
+  adjustNapForMeeting(tables, dayInts, missions, dayPhaseSec);
+  // T-139 budgetCheck(RNG 소비 없음, 모든 추첨 뒤). 생성 맵이면 buildDayContent가 거리·변형 보정으로 다시 계산
+  const bud = budgetCheckRequired({
+    tables, rank, plan: { missions, dayInterrupts: dayInts }, dayPhaseSec, startRequired: required, expectedOf: (id) => baseExpectedSec(tables, id),
+  });
   return {
     day, rankId: rank['id'], weekday: (day - 1) % 5, seed: `day-${day}`, mapId: 'office_floor_1',
     titleKey: 'day.generated.title',
-    tutorialIds: arr(obj(obj(tables['days'])['generator'])['debuts']).map(obj).filter((d) => d['day'] === day && typeof d['tutorialId'] === 'string').map((d) => d['tutorialId']),
-    dayPhaseSec, missions, missionsRequired: required,
+    tutorialIds: [
+      ...arr(obj(obj(tables['days'])['generator'])['debuts']).map(obj).filter((d) => d['day'] === day && typeof d['tutorialId'] === 'string').map((d) => d['tutorialId']),
+      ...debut.missions.filter((d) => d.tutorialId).map((d) => d.tutorialId),
+    ],
+    dayPhaseSec, missions, missionsRequired: bud.required, missionsRequiredPreBudget: required,
     castPatrols, dayInterrupts: dayInts, leaveInterrupts, scripted: [], ceo: ceoPlan.kind, generated: true,
     ...(ceoDay ? { ceoAtSec } : {}),
   };
+}
+
+/** 회의(INT-08) 근무판과 낮잠 해금 시각 조정(T-145, D-079). 결정적(RNG 없음) */
+function adjustNapForMeeting(tables: Tables, dayInts: O[], missions: O[], dayPhaseSec: number): void {
+  const i08 = arr(obj(tables['interrupts'])['interrupts']).map(obj).find((x) => x['id'] === 'INT-08');
+  if (!i08) return;
+  const eff = obj(i08['effect']);
+  const locked = arr(eff['blocksMissions']).map((x) => str(x));
+  for (const d of dayInts) {
+    if (d['id'] !== 'INT-08') continue;
+    const at = num(d['atSec'], 0);
+    // 회의 끝 = 전조 + 걸어가기(추정) + 회의 + 끝 전조
+    const end = at + num(obj(i08['tell'])['sec'], 0.6) + DEFAULTS.meetingWalkEstSec + num(eff['meetingSec'], 10) + num(eff['letoutTellSec'], 1);
+    for (const m of missions) {
+      const id = str(m['eventId']);
+      if (!locked.includes(id)) continue;
+      const u = num(m['unlockAtSec'], 0);
+      const exp = baseExpectedSec(tables, id);
+      if (u + exp <= at || u >= end) continue;
+      const pushed = Math.ceil(end);
+      if (pushed <= dayPhaseSec - 22) { m['unlockAtSec'] = pushed; continue; }
+      const moved = Math.round((u + exp) * 10) / 10;
+      if (moved <= dayPhaseSec - 10) d['atSec'] = Math.max(8, moved);
+    }
+  }
 }
 
 /**
@@ -245,7 +308,9 @@ export function ceoForDay(tables: Tables, day: number, rank: O, t: number): { ki
 /** 하루 콘텐츠 조립 */
 export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings = { push: () => {} }, opts: BuildOptions = {}): DayContent {
   const rules = obj(tables['rules']);
-  const plan = dayPlan(tables, day);
+  const mv3 = opts.missionsV3 ?? missionsEnabledInData(tables);
+  const planOpts: PlanOptions = { missionsV3: mv3 };
+  const plan = dayPlan(tables, day, planOpts);
   const ranks = arr(obj(tables['ranks'])['ranks']).map(obj);
   const rank = ranks.find((r) => r['id'] === plan['rankId']) ?? rankFor(tables, day);
   const rankId = str(rank['id'], 'intern');
@@ -255,9 +320,9 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   const eventsAll = arr(obj(tables['events'])['events']).map(obj);
   const extraRequiredSpots: string[] = [];
   for (const m of arr(plan['missions']).map(obj)) {
-    const e = eventsAll.find((x) => x['id'] === m['eventId']);
+    const e = missionRaw(tables, str(m['eventId']), mv3) ?? eventsAll.find((x) => x['id'] === m['eventId']);
     const sp = str(obj(e?.['location'])['spot']);
-    if (sp) extraRequiredSpots.push(sp);
+    if (sp && !str(obj(e?.['params'])['fallbackSpot'])) extraRequiredSpots.push(sp);
   }
   // 이 날 쓰는 순찰: 출연 + 방해 이벤트 effect의 순찰 id + 대표님 순시/엘리베이터
   const requiredPatrols = new Set<string>(arr(plan['castPatrols']).map((x) => str(x)));
@@ -278,7 +343,15 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     }
   }
   const provider = opts.levelProvider ?? createLevelProvider({ generate: layoutEnabledInData(tables) });
-  const map = provider.levelFor({ tables, day, plan, rankId, t, extraRequiredSpots, requiredPatrols: [...requiredPatrols] });
+  const v3 = parseLayoutV3(tables);
+  const roam = obj(v3?.leadRoaming);
+  const castHasTl = arr(plan['castPatrols']).includes(str(roam['seatPatrolId'], 'p_tl_seat'));
+  const toursWanted = opts.tours === true || (opts.tours ?? 'auto') === 'auto';
+  const toursActive = toursWanted && castHasTl && roam['enabled'] === true && day >= num(roam['appliesFromDay'], 6);
+  const map = provider.levelFor({
+    tables, day, plan, rankId, t, extraRequiredSpots, requiredPatrols: [...requiredPatrols],
+    planFor: (d) => dayPlan(tables, d, planOpts), toursActive,
+  });
   if (map.source === 'fallback') warn.push(`days.${day}: 생성 층 검증 실패 ${map.gen?.attempts ?? 0}회 → 수작업 맵 폴백 (${(map.gen?.failures ?? []).slice(-3).join(' / ')})`);
 
   // ── 규칙 ──
@@ -305,8 +378,29 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       ? { turnWarnLeadSec: obj(rules['offscreenWarning'])['minLeadSecBeforeGaze'] as number } : {}),
   };
 
-  // ── 방해 이벤트(이 날 켜진 것) ──
+  // ── 근무 구간(V12 트림 반영) ──
+  const trimSec = map.source === 'generated' ? (map.trimSec ?? 0) : 0;
+  const dayPhaseSecFinal = Math.round((num(plan['dayPhaseSec'], num(rank['dayPhaseSec'], 50)) - trimSec) * 10) / 10;
+  const tellMin0 = num(obj(rules['tell'])['minSec'], 0.4);
+  // ── 팀장 순회(D-075): v3 leadRoaming(T-145). 옛 엔진(테스트)은 devTour ──
   const intTable = arr(obj(tables['interrupts'])['interrupts']).map(obj);
+  const toursOn = opts.tours === true || ((opts.tours ?? 'auto') === 'auto' && map.source === 'generated');
+  let tour: BossTourDef | null = null;
+  if (toursOn && castHasTl) {
+    if (v3 && map.patrolFor) {
+      const i08 = intTable.find((x) => x['id'] === 'INT-08');
+      tour = buildLeadTour({
+        leadRoaming: v3.leadRoaming, day, rankId, dayPhaseSec: dayPhaseSecFinal, tellMinSec: tellMin0, spots: map.spots,
+        grid: buildGridMap(map.rows, map.legend), ...(map.tourOk ? { tourOk: map.tourOk } : {}),
+        ...(str(plan['ceo'], 'none') !== 'none' ? { ceoAtSec: num(plan['ceoAtSec'], dayPhaseSecFinal * DEFAULTS.ceoAtFrac) } : {}),
+        directorAtSec: arr(plan['dayInterrupts']).map(obj).filter((d) => d['id'] === 'INT-10').map((d) => num(d['atSec'], 0)),
+        meetings: arr(plan['dayInterrupts']).map(obj).filter((d) => d['id'] === 'INT-08').map((d) => ({ atSec: num(d['atSec'], 0), waitSec: num(obj(i08?.['effect'])['meetingSec'], 10) })),
+      });
+    } else tour = buildDevTour(day, dayPhaseSecFinal, tellMin0, map.spots);
+  }
+  const meetingAbsorbed = !!tour?.fromInterrupt?.includes('INT-08');
+
+  // ── 방해 이벤트(이 날 켜진 것) ──
   const interrupts: DayInterruptDef[] = [];
   const addInt = (ref: O, phase: 'day' | 'leave') => {
     const id = str(ref['id']);
@@ -324,7 +418,8 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     };
     interrupts.push(def);
   };
-  for (const r of arr(plan['dayInterrupts']).map(obj)) addInt(r, 'day');
+  // 근무 INT-08이 meeting 순회로 흡수된 날은 방해 목록에서 뺌(leadRoaming.conflicts)
+  for (const r of arr(plan['dayInterrupts']).map(obj)) if (!(meetingAbsorbed && r['id'] === 'INT-08')) addInt(r, 'day');
   for (const r of arr(plan['leaveInterrupts']).map(obj)) addInt(r, 'leave');
   const enabledInts = new Set(interrupts.map((i) => i.id));
 
@@ -333,7 +428,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   const npcs = arr(obj(tables['npcs'])['npcs']).map(obj);
   const actorRaw = new Map<string, O>();
   for (const a of [...bosses, ...npcs]) actorRaw.set(str(a['id']), applyInterpScaling(a, rankId, t));
-  const strings = obj(obj(tables['strings.ko'])['strings']);
+  const strings = obj(mergedStrings(tables)['strings']);
   const ambient = arr(plan['ambientOnly']).map((x) => str(x));
   const tellMin = num(obj(rules['tell'])['minSec'], 0.4);
   const talkRules = obj(rules['talk']);
@@ -462,7 +557,15 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   for (const p0 of patrolTable) {
     if (p0['mapId'] !== map.patrolMapId) continue;
     let p = p0;
-    if (remap) {
+    if (map.patrolFor) {
+      // v3 생성 층(T-145): 재매핑 → patrolTemplates → 앉은 순찰 스팟 덮어쓰기 → 대표님 입장 속도
+      const moved = map.patrolFor(p0);
+      if (!moved) {
+        if (requiredPatrols.has(str(p0['id']))) warn.push(`생성 층 ${map.id}: 순찰 ${str(p0['id'])} 옮기기 불가 → 제외`);
+        continue;
+      }
+      p = moved;
+    } else if (remap) {
       // 생성 층: 수작업 맵 좌표 → 생성 층 좌표. 정지 지점을 옮길 수 없으면 순찰 제외
       const wps = remapWaypoints(arr(p0['waypoints']), remap);
       if (!wps || !patrolConnected(wps, p0['loop'] !== false && p0['kind'] !== 'seated')) {
@@ -492,7 +595,19 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     let wps: WaypointDef[] = behavior === 'walk'
       ? arr(b['waypoints']).map(obj).map(toWaypoint)
       : [{ x: num(at['x'], 0), y: num(at['y'], 0), waitSec: 0, ...(typeof at['facing'] === 'string' ? { facing: at['facing'] as Dir } : {}) }];
-    if (remap) {
+    if (map.patrolFor) {
+      const moved = map.patrolFor({ id: str(b['id']), kind: behavior === 'walk' ? 'route' : 'seated', loop: b['loop'] !== false, waypoints: wps });
+      const mw = moved ? arr(moved['waypoints']).map(obj).map(toWaypoint) : null;
+      // bg_pantry_walker 등 걷는 배경: 못 옮기면 n_pantry ±2 사각 순환(patrolTemplates.background 메모)
+      if (!mw && behavior === 'walk' && map.nodes?.['n_pantry']) {
+        const c0 = map.nodes['n_pantry']!;
+        const g = buildGridMap(map.rows, map.legend);
+        const sq = [[-2, 0], [2, 0], [2, 1], [-2, 1]].map(([dx, dy]) => nearestWalkable(g, c0.x + dx!, c0.y + dy!, 2)).filter((x): x is Tile => !!x);
+        if (sq.length < 2) continue;
+        wps = sq.map((q, i) => ({ x: q.x, y: q.y, waitSec: i % 2 === 0 ? 1.5 : 0 }));
+      } else if (!mw) continue;
+      else wps = mw;
+    } else if (remap) {
       // 생성 층(T-144): 배경 동료도 재매핑. 옮길 수 없거나 경로가 끊기면 이 날은 빠짐(메카닉 없음)
       const moved = remapWaypoints(wps, remap);
       if (!moved || !patrolConnected(moved, behavior === 'walk' && b['loop'] !== false)) continue;
@@ -698,10 +813,6 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
 
   const dayCfg = obj(rules['day']);
   const camera = map.camera;
-  // ── 팀장 순회(D-075, T-144) [임시: dev 상수] ──
-  const toursOn = opts.tours === true || ((opts.tours ?? 'auto') === 'auto' && map.source === 'generated');
-  const dayPhaseSecFinal = num(plan['dayPhaseSec'], num(rank['dayPhaseSec'], 50));
-  const tour = toursOn && cast.some((n) => n.patrolId === 'p_tl_seat') ? buildDevTour(day, dayPhaseSecFinal, tellMin, spots) : null;
   const salary = obj(rules['salary']);
   const snack = obj(rules['snackStock']);
   return {
@@ -717,7 +828,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     playerSeat,
     coverSpots: map.coverSpots,
     introSec: num(dayCfg['introSec'], 2),
-    dayPhaseSec: num(plan['dayPhaseSec'], num(rank['dayPhaseSec'], 50)),
+    dayPhaseSec: dayPhaseSecFinal,
     // BUG-011: 시계 기준(18시 전 탈출·야근 등)은 데이터(rules.day)에서만 읽는다. 코드 기본 시각 없음 → 빠지면 로드 실패
     clock: {
       startMin: clockOf(dayCfg, 'clockStart'), dayEndMin: clockOf(dayCfg, 'dayPhaseClockEnd'),
@@ -729,7 +840,8 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       quota: num(plan['workQuotaOverride'], num(rank['workQuota'], 0.4)),
     },
     missions,
-    missionsRequired: num(plan['missionsRequired'], missions.length),
+    missionsRequired: budget ? budget.required : num(plan['missionsRequired'], missions.length),
+    ...(budget ? { budget } : {}),
     leave,
     interrupts,
     patrols,
@@ -767,7 +879,9 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       source: map.source, mapId: map.id,
       ...(map.gen ? {
         seed: map.gen.seed, complexity: map.gen.complexity, attempts: map.gen.attempts, modules: map.gen.modules, failures: map.gen.failures,
+        ...(map.gen.metrics ? { metrics: map.gen.metrics } : {}),
       } : {}),
+      ...(trimSec > 0 ? { trimSec } : {}), ...(map.versionTag ? { versionTag: map.versionTag } : {}),
     },
   };
 }

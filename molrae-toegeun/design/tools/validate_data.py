@@ -12,6 +12,9 @@
       T-134: spriteKey ⊂ 아트 anims.json(idle·walk 4방향).
       T-136: 이어하기 재개 의심·컷인 길이·alert 임계·H7 간격·대표님 재확인·얼음 안전장치·공범 제안 종료·간식 판정 시점·광고 문구 키.
       T-139: 생성기 시간 예산 검사(budgetCheck)·예산 모델 키, 인사 QTE 창 하한, 탈출 보너스 시각 범위, ★3 임계 범위, INT-05 퇴근 시 취소.
+      T-148: 남녀 변형(variants 2종·spriteKey 중복 없음, 아트 미반영은 WARN)·casting(fixed|rotate), 플레이어 선택(기본값 없음),
+             직급별·전체 출연 여성 비율, 고정 인물 집합 양성 포함, 성별 시설 모듈 대칭(크기·칸 수·포트 기준 거리 차 ≤ 3·가림막 문·두 시설 분리),
+             절대 성별 값 금지(mine/other·same/other만), facilityStop 회전 인물·벌 상한, 성별 호칭·고정관념 단어.
 """
 import itertools
 import json
@@ -676,6 +679,238 @@ if "missions" in T:
         for mid in w:
             if mid not in pool_ids:
                 err(f"missions.poolByRank.{rk}: 미션 {mid} 없음")
+
+# T-148) 성별 다양화(REQ-016, D-087·D-088): 변형 키·배치 규칙·등장 비율·시설 대칭·성별 고정 값 금지·문자열
+CAST = rules["characters"].get("casting", {})
+ROT_IDS = {CAST.get("rotation", {}).get("id")}
+GENDERS = {"male", "female"}
+cast_slots = []  # (where, actor dict, kind) — kind: boss | npc | bg | buddy
+for a in T["bosses"]["bosses"]:
+    cast_slots.append((f"bosses.{a['id']}", a, "boss"))
+for a in T["npcs"]["npcs"]:
+    cast_slots.append((f"npcs.{a['id']}", a, "npc"))
+for a in BG:
+    cast_slots.append((f"npcs.background.{a['id']}", a, "bg"))
+if "buddy" in T["npcs"]:
+    cast_slots.append(("npcs.buddy", T["npcs"]["buddy"], "buddy"))
+else:
+    err("npcs.buddy 없음(옆 팀 동기 남녀 변형, T-148)")
+all_variant_sprites = []
+for where, a, kind in cast_slots:
+    vs = a.get("variants")
+    if not isinstance(vs, list) or {v.get("gender") for v in vs} != GENDERS or len(vs) != 2:
+        err(f"{where}.variants: 남녀 변형 2개(gender male·female) 필요(T-148)")
+        continue
+    vids = {v["id"] for v in vs}
+    for v in vs:
+        if not v.get("spriteKey"):
+            err(f"{where}.variants.{v.get('id')}: spriteKey 없음")
+        all_variant_sprites.append((where, v.get("spriteKey")))
+    c = a.get("casting", {})
+    if c.get("mode") == "fixed":
+        picks = list(c.get("byInstance", {}).values()) if "byInstance" in c else [c.get("variant")]
+        if not picks or any(pk not in vids for pk in picks):
+            err(f"{where}.casting: 고정 변형이 variants에 없음")
+        if kind == "boss" and "byInstance" in c:
+            need_n = max(r_["cast"]["bosses"].get(a["id"], 0) for r_ in T["ranks"]["ranks"])
+            if any(str(k_) not in c["byInstance"] for k_ in range(1, need_n + 1)):
+                err(f"{where}.casting.byInstance: 인스턴스 1~{need_n} 전부 필요")
+    elif c.get("mode") == "rotate":
+        if c.get("rule") not in ROT_IDS:
+            err(f"{where}.casting.rule '{c.get('rule')}' 이 rules.characters.casting.rotation에 없음")
+    else:
+        err(f"{where}.casting.mode는 fixed|rotate(T-148)")
+sk_seen = {}
+for where, sk in all_variant_sprites + [("rules.characters.playerVariants", v.get("spriteKey")) for v in rules["characters"].get("playerVariants", [])]:
+    if sk in sk_seen:
+        err(f"{where}: 변형 spriteKey '{sk}'가 {sk_seen[sk]}와 중복")
+    sk_seen[sk] = where
+if os.path.exists(ANIMS):
+    miss_v = sorted(sk for sk in sk_seen if not any(f"{sk}/idle_down" == k for k in anim_keys))
+    if miss_v:
+        warns.append(f"T-148 변형 스프라이트 {len(miss_v)}종이 anims.json에 아직 없음(아트 T-149 대기, 그 전엔 기존 spriteKey로 대체): {', '.join(miss_v[:6])}{' …' if len(miss_v) > 6 else ''}")
+
+# 플레이어 선택(D-088): 남/여 2종, 기본값 없음, 첫 출근 전 필수, 설정에서 변경
+PV = rules["characters"].get("playerVariants", [])
+PSel = rules["characters"].get("playerSelection", {})
+if {v.get("gender") for v in PV} != GENDERS or len(PV) != 2:
+    err("rules.characters.playerVariants: 남녀 2종 필요(D-088)")
+if PSel.get("defaultVariant", "x") is not None or PSel.get("preselected") is not False or PSel.get("requiredBeforeFirstDay") is not True:
+    err("rules.characters.playerSelection: 기본값 없음(null)·미리 선택 없음·첫 출근 전 필수(D-088)")
+if PSel.get("changeableIn") != "settings" or PSel.get("appliesFrom") != "next_run" or PSel.get("sameSizeSameEmphasis") is not True:
+    err("rules.characters.playerSelection: 설정에서 변경·다음 판부터 적용·같은 크기 버튼 필요")
+if set(PSel.get("displayOrder", [])) != {v.get("id") for v in PV}:
+    err("rules.characters.playerSelection.displayOrder ≠ playerVariants id")
+
+# 등장 비율: 직급별 출연(상사 수·NPC·배경 동료·동기) 기준 여성 비율. 고정 = 0/1, 회전 = rotateCountsAs(0.5)
+BAL = CAST.get("balance", {})
+RCA = BAL.get("rotateCountsAs", 0.5)
+
+
+def f_share(a, inst=1):
+    c = a.get("casting", {})
+    if c.get("mode") == "rotate":
+        return RCA
+    pick = c.get("byInstance", {}).get(str(inst)) if "byInstance" in c else c.get("variant")
+    g = next((v["gender"] for v in a.get("variants", []) if v["id"] == pick), None)
+    return 1.0 if g == "female" else 0.0
+
+
+boss_by = {a["id"]: a for a in T["bosses"]["bosses"]}
+npc_by = {a["id"]: a for a in T["npcs"]["npcs"]}
+buddy_ = T["npcs"].get("buddy", {})
+tot_w = tot_f = 0.0
+share_report = []
+for r_ in T["ranks"]["ranks"]:
+    sl = []
+    for bid, n_ in r_["cast"]["bosses"].items():
+        sl += [f_share(boss_by[bid], k_) for k_ in range(1, n_ + 1)]
+    sl += [f_share(npc_by[nid]) for nid in r_["cast"]["npcs"]]
+    sl += [f_share(b) for b in BG if bg_active(b, r_["id"])]
+    d0, d1 = r_["dayRange"]
+    if buddy_ and (d1 is None or d1 >= buddy_.get("fromDay", 999)):
+        sl.append(f_share(buddy_))
+    sh = sum(sl) / len(sl)
+    share_report.append(f"{r_['id']} {sh:.2f}")
+    lo_, hi_ = BAL.get("femaleSharePerRank", [0.35, 0.65])
+    if not (lo_ <= sh <= hi_):
+        err(f"ranks.{r_['id']}: 출연 여성 비율 {sh:.2f} 범위 [{lo_}, {hi_}] 밖(T-148)")
+    days_ = (d1 - d0 + 1) if d1 is not None else BAL.get("endlessRankDaysForWeight", 30)
+    tot_w += days_ * len(sl)
+    tot_f += days_ * sum(sl)
+ov = tot_f / tot_w if tot_w else 0
+lo_, hi_ = BAL.get("femaleShareOverall", [0.45, 0.55])
+if not (lo_ <= ov <= hi_):
+    err(f"전체 출연 여성 비율 {ov:.2f} 범위 [{lo_}, {hi_}] 밖(T-148)")
+for grp, items in (("fixed_bosses", [(a, k_) for a in T["bosses"]["bosses"] if a.get("casting", {}).get("mode") == "fixed"
+                                     for k_ in (range(1, 3) if "byInstance" in a["casting"] else [1])]),
+                   ("fixed_npcs", [(a, 1) for a in T["npcs"]["npcs"] + [buddy_] if a and a.get("casting", {}).get("mode") == "fixed"])):
+    if grp in BAL.get("requireBothGendersIn", []) and {f_share(a, k_) for a, k_ in items} != {0.0, 1.0}:
+        err(f"{grp}: 고정 인물이 한 성별로만 채워짐(역할-성별 연결 금지, T-148)")
+
+# 시설 대칭(layout.genderFacilities): 모듈 안 두 쪽의 크기·칸 수·문→가운데 복도 거리, 플레이어 기준 표현만
+GF = T["layout"].get("genderFacilities")
+if GF:
+    LEG3 = dict(T["maps"]["maps"][0]["legend"]); LEG3.update(T["layout"]["legendAdd"])
+    if GF.get("resolve") != "player_relative":
+        err("layout.genderFacilities.resolve != player_relative")
+    mods = {m_["id"]: m_ for m_ in T["layout"]["modules"]}
+    gf_mods = [m_ for m_ in T["layout"]["modules"] if "genderFacility" in m_]
+    types_ = {m_["genderFacility"]["type"] for m_ in gf_mods}
+    if not {"restroom", "locker_room"} <= types_:
+        err("layout: 성별 화장실·탈의실 모듈 둘 다 필요(T-148)")
+    cap_mod = 3
+    v15 = next((v for v in GF.get("validators", []) if v["id"] == "V15_facility_symmetry"), None)
+    if not v15 or not (1 <= v15.get("maxOneWayDiffTiles", 0) <= 6):
+        err("layout.genderFacilities.validators.V15 maxOneWayDiffTiles 1~6 필요")
+    for m_ in gf_mods:
+        rows_ = m_["rows"]; W_ = len(rows_[0]); H_ = len(rows_)
+        sides = m_["genderFacility"]["sides"]
+        if set(sides) != {"a", "b"}:
+            err(f"layout.modules.{m_['id']}: genderFacility.sides는 a·b")
+            continue
+
+        def walk3(x, y):
+            return 0 <= x < W_ and 0 <= y < H_ and LEG3.get(rows_[y][x], {}).get("walkable") is True
+
+        def bfs3(src, block):
+            dist = {src: 0}; q_ = deque([src])
+            while q_:
+                c_ = q_.popleft()
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    n_ = (c_[0] + dx, c_[1] + dy)
+                    if n_ not in dist and walk3(*n_) and n_ not in block:
+                        dist[n_] = dist[c_] + 1; q_.append(n_)
+            return dist
+        info = {}
+        for sd, ref in sides.items():
+            sp_ = m_["spots"]
+            for f_ in ("stall", "sink", "door"):
+                if ref.get(f_) not in sp_:
+                    err(f"layout.modules.{m_['id']}.{sd}.{f_}: 스폿 {ref.get(f_)} 없음")
+            z_ = next((z for z in m_["zones"] if z["id"] == ref["zone"]), None)
+            if not z_:
+                err(f"layout.modules.{m_['id']}.{sd}: 구역 {ref['zone']} 없음")
+                continue
+            x0, y0, zw, zh = z_["rect"]
+            room = [(x, y) for y in range(y0, y0 + zh) for x in range(x0, x0 + zw) if walk3(x, y)]
+            stalls = [p_ for p_ in room if LEG3[rows_[p_[1]][p_[0]]].get("safeZone")]
+            door = tuple(m_["spots"][ref["door"]]["tile"])
+            if LEG3.get(rows_[door[1]][door[0]], {}).get("kind") != "door_screened":
+                err(f"layout.modules.{m_['id']}.{sd}: 문이 가림막 문(+)이 아님(밖에서 안이 보이면 안 됨)")
+            info[sd] = (len(room), len(stalls), door)
+        if len(info) == 2:
+            if info["a"][0] != info["b"][0] or info["a"][1] != info["b"][1]:
+                err(f"layout.modules.{m_['id']}: 두 쪽 크기·칸 수 다름 {info['a'][:2]} vs {info['b'][:2]}")
+            # 모듈 위·아래 포트에서 각 쪽 칸까지 거리(다른 쪽 문은 벽) 차이
+            for side_ in ("top", "bottom"):
+                for px in m_["ports"].get(side_, []):
+                    src = (px, 0 if side_ == "top" else H_ - 1)
+                    if not walk3(*src):
+                        continue
+                    ds = []
+                    for sd in ("a", "b"):
+                        other = info["b" if sd == "a" else "a"][2]
+                        dd = bfs3(src, {other})
+                        st_ = tuple(m_["spots"][sides[sd]["stall"]]["tile"])
+                        ds.append(dd.get(st_))
+                    if None in ds:
+                        err(f"layout.modules.{m_['id']}: 포트 {side_}{px}에서 한쪽 칸 도달 불가 {ds}")
+                    elif abs(ds[0] - ds[1]) > cap_mod:
+                        err(f"layout.modules.{m_['id']}: 포트 {side_}{px} 기준 두 쪽 거리 차 {abs(ds[0] - ds[1])} > {cap_mod}")
+            # 한쪽 시설 안에서 다른 쪽 시설로 바로 통하면 안 됨(내 쪽 문만 지남)
+            a_room = bfs3(tuple(m_["spots"][sides["a"]["stall"]]["tile"]), {info["a"][2], info["b"][2]})
+            if tuple(m_["spots"][sides["b"]["stall"]]["tile"]) in a_room:
+                err(f"layout.modules.{m_['id']}: 두 시설이 문을 거치지 않고 이어짐")
+    rg = GF.get("groupReplace", {})
+    for g_old, g_new in rg.items():
+        if not any(m_["group"] == g_new for m_ in gf_mods):
+            err(f"layout.genderFacilities.groupReplace: {g_new} 모듈 없음")
+    # 성별 고정 값 금지: 케이스·시설 규칙·본부장 시설 들름은 mine/other·same/other로만
+    i10 = ints.get("INT-10", {}).get("effect", {}).get("facilityStop")
+    for where_, blk in (("layout.genderFacilities", GF), ("interrupts.INT-10.effect.facilityStop", i10 or {}),
+                        ("missions.genderModifiers", T["missions"].get("genderModifiers", []))):
+        for p_, k_, v_ in walk_json(blk):
+            if isinstance(v_, str) and re.search(r"\b(male|female)\b|남자|여자|남성|여성", v_) and not k_.startswith("_"):
+                err(f"{where_}{p_}: 절대 성별 값 '{v_}'(플레이어 기준 mine/other·same/other만, T-148)")
+    if not i10:
+        err("interrupts.INT-10.effect.facilityStop 없음(C2·C3)")
+    else:
+        if boss_by[i10["relationOf"]].get("casting", {}).get("mode") != "rotate":
+            err("facilityStop.relationOf는 회전 인물이어야 함(고정 인물 성별이 메카닉에 쓰이면 비대칭)")
+        if set(i10.get("target", {})) != {"same", "other"}:
+            err("facilityStop.target은 same·other 둘 다 필요")
+        if i10.get("seenInsideEffect", {}).get("suspicionOnce", 1) > T["missions"]["modifiers"][[m_["id"] for m_ in T["missions"]["modifiers"]].index("bonus.clean")]["condition"]["args"]["max"]:
+            err("facilityStop.seenInsideEffect.suspicionOnce > bonus.clean 기준(벌이 너무 큼)")
+    if len(GF.get("cases", [])) < 5:
+        err("layout.genderFacilities.cases ≥ 5 필요(T-148)")
+    acc_ = GF.get("access", {})
+    if acc_.get("fixedActorsEnter") != "never" or acc_.get("playerEnters") != "mine_only" or acc_.get("inspectionsInside") != "never":
+        err("layout.genderFacilities.access: 고정 인물 출입 never·플레이어 mine_only·시설 안 점검 never 필요")
+    for e_ in T["missions"]["missionPool"]["existing"]:
+        if e_["id"] == "restroom" and e_.get("targetFacility") != "restroom.mine":
+            err("missions.existing.restroom.targetFacility != restroom.mine (T-148)")
+    for gm in T["missions"].get("genderModifiers", []):
+        if "chance" in json.dumps(gm) or "Prob" in json.dumps(gm):
+            err(f"missions.genderModifiers.{gm['id']}: 확률 필드 금지(D-004)")
+        tf = gm.get("closes") or gm.get("targetFacility")
+        if tf and not tf.endswith(".mine"):
+            err(f"missions.genderModifiers.{gm['id']}: 대상은 내 쪽(.mine)만")
+        if gm.get("params", {}).get("otherSideAllowed", False):
+            err(f"missions.genderModifiers.{gm['id']}: 다른 쪽 시설 이용 금지")
+
+# 문자열: 성별 호칭·고정관념 단어(대사는 '○○ 씨'·직함, 성별 무관 문장)
+GENDER_WORDS = re.compile(r"누나|오빠|언니|형님|아저씨|아줌마|아주머니|아가씨|총각|그녀|여직원|남직원|여사원|남사원|미녀|미남|여자가|남자가|여자는|남자는|여자라서|남자라서|여자답|남자답|김여사")
+ALLOW_GENDER_KEYS = {"charsel.option.m", "charsel.option.f"}
+for p_, k_, v_ in walk_json(T["strings.ko"]["strings"]):
+    for txt in (v_ if isinstance(v_, list) else [v_]):
+        if isinstance(txt, str) and GENDER_WORDS.search(txt) and p_.lstrip(".").split("[")[0] not in ALLOW_GENDER_KEYS:
+            err(f"strings{p_}: 성별 호칭·고정관념 단어 '{GENDER_WORDS.search(txt).group(0)}'(T-148 §4)")
+for _t in T.values():
+    for k_, v_ in _t.get("stringsKo", {}).items():
+        if isinstance(v_, str) and GENDER_WORDS.search(v_):
+            err(f"stringsKo.{k_}: 성별 호칭·고정관념 단어 '{GENDER_WORDS.search(v_).group(0)}'")
+print("출연 여성 비율(직급별, 회전 = 0.5): " + ", ".join(share_report) + f" / 전체 {ov:.2f}")
 
 print(f"tables: {', '.join(T)}")
 print("화면 안 최악 인원(직급별, 플레이어 포함): " + ", ".join(f"{k} {v[0]}" for k, v in RANK_SCREEN.items()))

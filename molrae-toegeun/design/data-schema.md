@@ -544,6 +544,7 @@ interface AdsTable {
 | 2 (T-136) | 2026-11-23 | 개발 T-133 코드 상수 → 데이터(숫자 4, 문구 키 2), T-133 해석 6건 확정(`design/gdd.md` §19-4). **필드 추가만, 값·키 이름·계층 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
 | 2 (T-139) | 2026-11-23 | QA T-131 밸런스 제안 10건 + D-070 반영(`design/gdd.md` §19-5). **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**. 아래 상세 |
 | 3-draft (T-142) | 2026-11-23 | 새 테이블 `layout.json`·`missions.json`(schemaVersion 3) 추가. 상세 스키마는 `design/data-schema-v3-draft.md`. **v2 테이블은 변경 없음**(키·값 그대로). 검사기는 테이블별 버전 확인(layout·missions = 3, 나머지 = 2)과 v3 기본 검사를 추가 |
+| 2 (T-148) | 2026-11-24 | 성별 다양화(REQ-016, D-087·D-088). **필드 추가만, 키 이름·계층·기존 값 변경 없음 → schemaVersion 2 유지**(v3 테이블도 3 유지). 아래 상세 |
 
 ### v1 → v2 상세
 - **신규 테이블**: `maps`, `patrols`, `interrupts`, `ads`.
@@ -659,3 +660,14 @@ interface AdsTable {
   - 데이터만으로 동작이 바뀌는 것: 위 값 수정 전부. 특히 대표님 날 근무 44초, 18:05 기준(보너스와 INT-07 조건이 함께 바뀜), 대표님 퇴장 중 시선 없음.
   - 코드 구현이 필요한 것: `budgetCheck`, `missionTimersPausedWhileFrozen`, `cancelOnLeaveStart` 3건. 구현 전에는 무시돼도 크래시가 없는 추가 필드입니다.
 - **QA 테스트 기대값 영향**: `t131-rules` '쇼핑 방치 → 시간초과(13초)'를 15초로 바꿔야 합니다. '18:00 전 탈출 보너스' 항목명은 18:05로 바꿔야 합니다.
+
+### T-148 상세 (v2 유지)
+- **bosses.json** 각 상사: `variants`(`[{id: "m"|"f", gender: "male"|"female", spriteKey}]`, spriteKey = `<기존 spriteKey>_m|_f`), `casting`(`{mode: "fixed", variant}` | `{mode: "fixed", byInstance: {"1": .., "2": ..}}` | `{mode: "rotate", rule: "relation_block2"}`). 최상위 `_t148Note`. 기존 `spriteKey`는 변형 그림이 없을 때 대체로 유지.
+- **npcs.json** 각 NPC·배경 동료: `variants`·`casting`(위와 같음). 최상위 `buddy`(옆 팀 동기: `sprite` `bg_buddy`, variants·casting, `seatSpot` `buddy_seat`, `fromDay` 19 — 배경 동료 인원 셈 D-049에는 넣지 않음), `_t148Note`.
+- **rules.json** `characters`: `playerVariants`(남/여 2종, `labelKey`), `playerSelection`(`defaultVariant` null, `preselected` false, `requiredBeforeFirstDay` true, `screen` first_clock_in, `displayOrder`, `sameSizeSameEmphasis`, `changeableIn` settings, `appliesFrom` next_run, `storageSlot` player.variant, `fallbackSprite` player, 문구 키 5), `casting`(`rotation` relation_block2 = 플레이어 기준 2일 블록 균형, `gameplayMayDependOn` [relation], `balance` 비율 범위). 기존 `playerSpriteKey`·`playerProps` 그대로.
+- **interrupts.json** INT-10 `effect.facilityStop`(C2·C3, `enabledWith` layout.genderFacilities.enabled, `tellSec` 1.0, `insideSec` 3.0, `insideCone`, `seenInsideEffect` 의심 +0.05 한 번·1.2초, `whileInside`, `skipIf`).
+- **strings.ko.json** 새 키 26개(`charsel.*`, `settings.character*`, `zone.locker_room`·`zone.fitness`, `hint.restroom.*`, `tutorial.tut_gender_restroom`·`tut_director_restroom`, `int.talk.cancel_at_door`, `int.director_restroom.*`, `react.director.restroom_seen`, `mod.facility_cleaning*`, `facility.cleaning.sign`, `react.restroom.cleaning`, `mod.relocate.locker`, `event.restroom.locker_inside`, `react.locker.exposed`). 기존 문구 변경 없음(이미 성별 무관 문장).
+- **v3 테이블**: `design/data-schema-v3-draft.md` §8 T-148 줄.
+- **개발 영향**: 모든 새 필드는 무시해도 크래시가 없는 추가 필드입니다. `genderFacilities.enabled` false인 동안 생성 맵은 기존과 같습니다(새 모듈은 기존 그룹 목록에 없는 새 그룹). 구현 목록은 `design/gender-design.md` §8.
+- **검사기(§10 T-148)**: 변형 2종·spriteKey 중복 없음(anims.json 미반영은 WARN), casting 형식, 플레이어 선택 기본값 없음, 직급별·전체 출연 여성 비율, 고정 인물 집합 양성 포함, 성별 시설 모듈 대칭, 절대 성별 값 금지, facilityStop 회전 인물·벌 상한, 성별 호칭·고정관념 단어.
+

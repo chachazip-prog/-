@@ -9,7 +9,9 @@ import type { NpcDef } from '../patrol';
 import type { Dir } from '../vision';
 
 export type MissionState = 'locked' | 'open' | 'active' | 'carry' | 'done' | 'failed';
-export type Mechanic = 'pour_tap_stop' | 'trip_safe_zone' | 'nap_tap_toggle' | 'screen_swap_tap' | 'rhythm_tap';
+export type Mechanic = 'pour_tap_stop' | 'trip_safe_zone' | 'nap_tap_toggle' | 'screen_swap_tap' | 'rhythm_tap'
+  /** T-145 새 방식(missions.json): 택배 들고 오기 / 자리에서 출력 시작 → 가서 집기 / 주문 → 컵 나옴 톡 */
+  | 'fetch_carry' | 'remote_start_fetch' | 'queue_wait_tap';
 
 export interface MissionDef {
   readonly id: string;
@@ -24,7 +26,13 @@ export interface MissionDef {
   readonly completeAt: 'return_to_seat' | 'on_success';
   readonly awayFromDesk: boolean;
   readonly timeLimitSec: number;
-  readonly reward: { readonly slackPoints: number; readonly snackStock?: number };
+  readonly reward: {
+    readonly slackPoints: number; readonly snackStock?: number;
+    /** 카페 쿠폰 도장(성공 1회 = 1, 도감 카운터, P14) */
+    readonly couponStamp?: number;
+    /** 성공 시 의심 감소(창가) */
+    readonly suspicionRelief?: number;
+  };
   readonly failPenalty: number;
   readonly timeoutPenalty: number;
   /** mechanic별 params (직급 덮어쓰기 적용 후) */
@@ -37,6 +45,14 @@ export interface MissionDef {
    * 여기 남은 목록은 조건(condition)이 있는 변형 — DaySim이 완료 시점에 판정한다(core/day/modifiers.ts)
    */
   readonly modifiers?: readonly MissionModifier[];
+  /** 붙은 변형 id 전부(정적 포함, HUD 배지·QA) */
+  readonly modifierIds?: readonly string[];
+  /** 변형 type(HUD 배지 mod/<type>) */
+  readonly modifierTypes?: readonly string[];
+  /** 칩이 켜지는 조건(during_tour: 팀장 순회 중일 때만 시작 가능) */
+  readonly availability?: { readonly type: 'while_actor_away'; readonly actorId: string };
+  /** 장소가 정확히 안 보이는 변형(zone_only): 이 반경 안에서만 장소 반짝임 */
+  readonly zoneOnlyRevealTiles?: number;
 }
 
 /**
@@ -61,6 +77,12 @@ export interface MissionModifier {
     /** 조건 실패 시: 보너스 없음(기본) / 미션 실패 처리 */
     readonly onFail?: 'no_bonus' | 'fail';
   };
+  // ── T-145(missions.json modifiers[]) ──
+  readonly type?: string;
+  readonly kind?: 'hard' | 'soft' | 'bonus';
+  /** 시간 예산 보정(초) 또는 'travel_diff'(바뀐 장소 편도로 다시 계산) */
+  readonly budgetSecDelta?: number | 'travel_diff';
+  readonly availability?: { readonly type: 'while_actor_away'; readonly actorId: string };
 }
 
 /** 팀장 순회 한 지점(D-075) */
@@ -71,6 +93,21 @@ export interface BossTourStop {
   readonly facing?: Dir;
   /** 도착 후 둘러보기 확률(전조 필수 — PatrolNpc 규칙) */
   readonly lookChance?: number;
+  // ── T-145 확장(layout.leadRoaming.destinations) ──
+  /** 출발 전조 말풍선 속 목적지 아이콘(아트 키) */
+  readonly bubbleIcon?: string;
+  /** 출발 전조 대사 키 */
+  readonly lineKey?: string;
+  /** 목적지 대기 포즈(teamlead/wait_up 등) */
+  readonly pose?: string;
+  /** 바닥 대기 표시(tile2/floor_print_mark) */
+  readonly floorMark?: string;
+  /** 복귀 전 전조(1.0초, 콘 없음) */
+  readonly endTell?: { readonly sec: number; readonly sfx?: readonly string[]; readonly lineKey?: string };
+  /** 이 목적지로 가서 머무는 동안 잠기는 미션(회의 중 낮잠) */
+  readonly locksMissions?: readonly string[];
+  /** 회의실 문 '사용 중' 표시 */
+  readonly meetingDoorBusy?: boolean;
 }
 
 /**
@@ -91,6 +128,23 @@ export interface BossTourDef {
   readonly speedTilesPerSec?: number;
   /** 순회 중 시선이 켜지는 상태(없으면 걷기·대기·전조·돌아보기 모두) */
   readonly coneActiveIn?: readonly ('walk' | 'wait' | 'tell' | 'look')[];
+  // ── T-145 확장 ──
+  /** 회차별 출발 마감(근무 구간 초): 퇴근 mustBeSeatedBeforeLeaveSec 전에 자리로 돌아올 수 있는 마지막 출발 시각 */
+  readonly latestStartByTour?: readonly number[];
+  /** 회차별 예상 자리 비움(초, QA·표시용) */
+  readonly awaySec?: readonly number[];
+  /** 회차가 근무 INT-08(회의)을 흡수한 것이면 'INT-08' */
+  readonly fromInterrupt?: readonly (string | null)[];
+  /** 출발 전조 효과음 후보(앞에서부터 매니페스트에 있는 것, 화면 밖이어도 1회) */
+  readonly standSfx?: readonly string[];
+  /** 자리 복귀 직후 첫 돌아보기는 정상 전조(페이크·연속 보기 금지) */
+  readonly firstLookPlain?: boolean;
+  /** 대표님 순시는 팀장이 자리에 있을 때만 시작 */
+  readonly ceoWaitsForSeat?: boolean;
+  /** HUD '자리 비움' 배지 문구 키 */
+  readonly awayBadgeKey?: string;
+  /** 첫 출발 때 띄울 튜토리얼 id(6일차 tut_tour) */
+  readonly firstTutorialId?: string;
 }
 
 export interface GateDef {
@@ -185,6 +239,8 @@ export interface QteDef {
 
 /** 대표님 순시(INT-09, bosses.ceo.visit). buildDay가 그날 순시가 있을 때만 채운다 */
 export interface CeoVisitDef {
+  /** T-139: 얼음 표시 중(전조~퇴장 뒤 복귀 전, frozenAll) 미션 제한 시간 정지 */
+  readonly missionTimersPausedWhileFrozen?: boolean;
   /** 'scheduled'(수요일 정기) | 'random'(시드로 미리 정해진 랜덤) */
   readonly kind: 'scheduled' | 'random';
   /** 예정 시각(근무 구간 초). 이후 플레이어가 자리에 앉아 있는 첫 순간 시작 */
@@ -345,7 +401,13 @@ export interface DayContent {
     readonly attempts?: number;
     readonly modules?: readonly string[];
     readonly failures?: readonly string[];
+    /** v3(T-145) */
+    readonly metrics?: import('../../content/layoutGen/types').LayoutMetrics;
+    readonly trimSec?: number;
+    readonly versionTag?: string;
   };
+  /** 시간 예산(T-139 budgetCheck) 결과: 데이터 필수 수 → 조정 뒤 필수 수, 필요 시간 */
+  readonly budget?: { readonly requiredBefore: number; readonly required: number; readonly needSec: number };
 }
 
 export type DayPhase = 'intro' | 'day' | 'leave' | 'ended';

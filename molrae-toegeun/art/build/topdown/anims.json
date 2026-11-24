@@ -860,6 +860,314 @@
    "frames": [
     {
      "duration": 0,
+     "frame": "bg_buddy/idle_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/idle_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_buddy/idle_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/idle_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_buddy/idle_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/idle_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_buddy/idle_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/idle_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 7,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_buddy/walk_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/idle_down",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/walk_down_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/idle_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/walk_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 7,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_buddy/walk_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/idle_up",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/walk_up_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/idle_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/walk_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 7,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_buddy/walk_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/idle_left",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/walk_left_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/idle_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/walk_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 7,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_buddy/walk_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/idle_right",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/walk_right_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/idle_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/walk_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 4,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_buddy/sit_type_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/sit_type_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/sit_type",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_buddy/sit_type_0",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/sit_idle",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 4,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_buddy/sit_turn_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/sit_turn_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/sit_turn_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "bg_buddy/sit_turn_0",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/sit_chat",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "bg_buddy/sit_turn_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "bg_buddy/sit_laugh",
+   "repeat": 0,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
      "frame": "bg_c/idle_down",
      "key": "sprites"
     }
@@ -1584,6 +1892,54 @@
    ],
    "hideOnComplete": false,
    "key": "fx/dest",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "fx/cup_ready",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "fx/cup_ready_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "fx/cup_ready",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 3,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "fx/zone_hint",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "fx/zone_hint_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "fx/zone_hint",
    "repeat": -1,
    "repeatDelay": 0,
    "showOnStart": false,
@@ -2632,6 +2988,959 @@
    ],
    "hideOnComplete": false,
    "key": "player/pose_check_phone_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_box_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_down",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_down_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_box_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_box_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_box_idle_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_box_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_up",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_up_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_box_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_box_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_box_idle_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_box_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_left",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_left_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_box_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_box_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_box_idle_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_box_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_right",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_right_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_box_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_box_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_box_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_box_idle_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_box_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_box_down_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_hold_box_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_box_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_box_left_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_hold_box_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_box_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_box_right_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_hold_box_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_down",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_down_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_paper_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_paper_idle_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_up",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_up_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_paper_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_paper_idle_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_left",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_left_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_paper_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_paper_idle_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_right",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_right_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_paper_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_paper_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_paper_idle_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_paper_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_paper_down_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_hold_paper_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_paper_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_paper_left_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_hold_paper_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_paper_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_paper_right_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_hold_paper_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_down",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_down_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_cup_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_down",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_cup_idle_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_up",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_up_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_cup_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_up",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_cup_idle_up",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_left",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_left_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_cup_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_left",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_cup_idle_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 8,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_right",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_right_1",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_cup_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 1,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/carry_cup_right",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/carry_cup_idle_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_cup_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_cup_down_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_hold_cup_down",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_cup_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_cup_left_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_hold_cup_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_cup_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_hold_cup_right_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_hold_cup_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_nap_on_sofa_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_nap_on_sofa_down_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_nap_on_sofa_down_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_nap_on_sofa",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_breath_right_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_breath_right_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_breath_right",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 2,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_breath_left_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_breath_left_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_breath_left",
+   "repeat": -1,
+   "repeatDelay": 0,
+   "showOnStart": false,
+   "skipMissedFrames": true,
+   "type": "frame",
+   "yoyo": false
+  },
+  {
+   "delay": 0,
+   "frameRate": 4,
+   "frames": [
+    {
+     "duration": 0,
+     "frame": "player/pose_nod_up_0",
+     "key": "sprites"
+    },
+    {
+     "duration": 0,
+     "frame": "player/pose_nod_up_1",
+     "key": "sprites"
+    }
+   ],
+   "hideOnComplete": false,
+   "key": "player/pose_nod_up",
    "repeat": -1,
    "repeatDelay": 0,
    "showOnStart": false,

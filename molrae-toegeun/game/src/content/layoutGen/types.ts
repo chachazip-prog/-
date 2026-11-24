@@ -142,7 +142,10 @@ export type GenFailCode =
   | 'too_tall' | 'width' | 'missing_spot' | 'spot_blocked' | 'unreachable_spot' | 'unreachable_exit'
   | 'no_alternative_route' | 'clear_sight_too_long' | 'duplicate_spot'
   /** 호출 측 추가 검사(예: 이 날 필요한 순찰을 이 층으로 옮길 수 없음) */
-  | 'patrol_unmappable';
+  | 'patrol_unmappable'
+  /** v3 검증(T-145, layout.json validators[].code) */
+  | 'distance_out_of_band' | 'choke_too_long' | 'dead_end_trap' | 'lead_cannot_see_seat' | 'gate_unfair'
+  | 'too_crowded' | 'over_time_budget' | 'same_as_yesterday' | 'row_budget' | 'orphan_floor';
 
 export interface GenFailure {
   readonly code: GenFailCode;
@@ -159,6 +162,26 @@ export interface LayoutMetrics {
   readonly maxClearSight: number;
   /** 가장 긴 직선 시선의 위치(디버그) */
   readonly maxClearSightAt: string;
+  /** v3 지표(T-145, 스키마 §2 metrics). 기존 생성기는 없음 */
+  readonly v3?: V3Metrics;
+}
+
+export interface V3Metrics {
+  readonly seatToGate: number;
+  readonly missionOneWay: Readonly<Record<string, number>>;
+  readonly ceoWalk: number;
+  readonly uncoveredStraight: number;
+  readonly rawClearSight: number;
+  readonly deadEnds: number;
+  readonly pillars: number;
+  readonly halfPartitions: number;
+  readonly coverTiles: number;
+  readonly branchPointsOnLeave: number;
+  readonly repairsUsed: number;
+  readonly trimSec: number;
+  readonly predictedRunSec: number;
+  readonly altExtra: number;
+  readonly sharedRatio: number;
 }
 
 export interface ValidationResult {

@@ -5,6 +5,8 @@
     {
       "id": "security_guard",
       "spriteKey": "guard",
+      "variants": [{"id": "m", "gender": "male", "spriteKey": "guard_m"}, {"id": "f", "gender": "female", "spriteKey": "guard_f"}],
+      "casting": {"mode": "rotate", "rule": "relation_block2", "_why": "경비팀 교대 근무 설정. 게이트 역할만 있고 성별 무관 메카닉 없음"},
       "nameKey": "npc.security_guard.name",
       "codexKey": "codex.npc.security_guard",
       "role": "gate",
@@ -135,6 +137,8 @@
     {
       "id": "snitch",
       "spriteKey": "snitch",
+      "variants": [{"id": "m", "gender": "male", "spriteKey": "snitch_m"}, {"id": "f", "gender": "female", "spriteKey": "snitch_f"}],
+      "casting": {"mode": "fixed", "variant": "m", "_why": "같은 팀 동료(매일). 고정. '정의로운 동료'를 특정 성별 고정관념(고자질)과 엮지 않도록 남성 배정"},
       "nameKey": "npc.snitch.name",
       "codexKey": "codex.npc.snitch",
       "role": "obstruct",
@@ -290,6 +294,8 @@
     {
       "id": "accomplice",
       "spriteKey": "accomplice",
+      "variants": [{"id": "m", "gender": "male", "spriteKey": "accomplice_m"}, {"id": "f", "gender": "female", "spriteKey": "accomplice_f"}],
+      "casting": {"mode": "fixed", "variant": "m", "_why": "같은 팀 커피 메이트(매일). 고정"},
       "nameKey": "npc.accomplice.name",
       "codexKey": "codex.npc.accomplice",
       "role": "assist",
@@ -355,6 +361,8 @@
     {
       "id": "hr_inspector",
       "spriteKey": "hr",
+      "variants": [{"id": "m", "gender": "male", "spriteKey": "hr_m"}, {"id": "f", "gender": "female", "spriteKey": "hr_f"}],
+      "casting": {"mode": "rotate", "rule": "relation_block2", "_why": "인사팀 점검 담당 교대. '인사팀 = 여성' 편향을 피하려고 회전"},
       "nameKey": "npc.hr_inspector.name",
       "codexKey": "codex.npc.hr_inspector",
       "role": "inspect",
@@ -500,6 +508,8 @@
       "kind": "ambient_coworker",
       "renderRole": "background",
       "sprite": "bg_a",
+      "variants": [{"id": "m", "gender": "male", "spriteKey": "bg_a_m"}, {"id": "f", "gender": "female", "spriteKey": "bg_a_f"}],
+      "casting": {"mode": "rotate", "rule": "relation_block2", "_why": "배경 동료(메카닉 없음). 회전"},
       "props": ["lanyard_gray"],
       "fromDay": 1,
       "untilRank": "manager",
@@ -517,6 +527,8 @@
       "kind": "ambient_coworker",
       "renderRole": "background",
       "sprite": "bg_b",
+      "variants": [{"id": "m", "gender": "male", "spriteKey": "bg_b_m"}, {"id": "f", "gender": "female", "spriteKey": "bg_b_f"}],
+      "casting": {"mode": "rotate", "rule": "relation_block2", "_why": "배경 동료(메카닉 없음). 회전"},
       "props": ["lanyard_gray"],
       "fromDay": 1,
       "untilRank": null,
@@ -534,6 +546,8 @@
       "kind": "ambient_coworker",
       "renderRole": "background",
       "sprite": "bg_c",
+      "variants": [{"id": "m", "gender": "male", "spriteKey": "bg_c_m"}, {"id": "f", "gender": "female", "spriteKey": "bg_c_f"}],
+      "casting": {"mode": "rotate", "rule": "relation_block2", "_why": "배경 동료(메카닉 없음). 회전"},
       "props": ["lanyard_gray"],
       "fromDay": 2,
       "untilRank": null,
@@ -551,5 +565,35 @@
       "_designNote": "D-049 배경 동료. 탕비실 안에서만 천천히 맴돎(플레이어 3.0의 절반 남짓 → 위협 NPC와 속도로도 구분). 플레이어와 겹쳐 지나감(blocksPlayer false)이라 커피·간식 동선을 막지 않음. 1일차는 튜토리얼 집중을 위해 앉은 2명만"
     }
   ],
-  "_backgroundComment": "D-049: 메카닉 없는 배경 동료(시선 콘·말걸기·의심·길막·화면 밖 화살표 모두 없음). 사원증 줄은 역할 없음 = 회색(lanyard_gray), 빨강·주황 소품 금지(D-037). 층 전체 ≤ rules.characters.maxOnFloor(12)·화면 안 ≤ maxOnScreen(8) 인원에 포함(검사기). 인원: 1일차 2명, 2일차~과장 3명, 차장~ 2명(탕비실 2명만). behavior: sit(seat = 다른 사람 의자 h) | stand(spot) | walk(waypoints 순환). untilRank = 마지막으로 나오는 직급(null = 끝까지). 대표님 순시 중에는 다른 직원처럼 얼음(연출)."
+  "_backgroundComment": "D-049: 메카닉 없는 배경 동료(시선 콘·말걸기·의심·길막·화면 밖 화살표 모두 없음). 사원증 줄은 역할 없음 = 회색(lanyard_gray), 빨강·주황 소품 금지(D-037). 층 전체 ≤ rules.characters.maxOnFloor(12)·화면 안 ≤ maxOnScreen(8) 인원에 포함(검사기). 인원: 1일차 2명, 2일차~과장 3명, 차장~ 2명(탕비실 2명만). behavior: sit(seat = 다른 사람 의자 h) | stand(spot) | walk(waypoints 순환). untilRank = 마지막으로 나오는 직급(null = 끝까지). 대표님 순시 중에는 다른 직원처럼 얼음(연출).",
+  "buddy": {
+    "id": "buddy",
+    "kind": "ambient_coworker",
+    "renderRole": "background",
+    "sprite": "bg_buddy",
+    "variants": [
+      {
+        "id": "m",
+        "gender": "male",
+        "spriteKey": "bg_buddy_m"
+      },
+      {
+        "id": "f",
+        "gender": "female",
+        "spriteKey": "bg_buddy_f"
+      }
+    ],
+    "casting": {
+      "mode": "fixed",
+      "variant": "f",
+      "_why": "옆 팀 동기. 수다 미션 상대라 같은 사람이 매번 나와야 친근함(고정). 대사는 예능 얘기 등 성별 무관 소재만"
+    },
+    "props": [
+      "lanyard_gray"
+    ],
+    "seatSpot": "buddy_seat",
+    "fromDay": 19,
+    "_note": "T-148: 옆 팀 동기의 남녀 변형·배치만 정의(필드 추가). 등장·자리·수다 규칙은 missions.json chat·layout 모듈 buddy_seat 그대로. npcs.background 인원 셈(D-049)에는 넣지 않음(수다 미션 대상, gdd-v3 §5)"
+  },
+  "_t148Note": "T-148: variants·casting 의미는 bosses.json _t148Note와 같음. 규칙서 design/gender-design.md §2"
 }

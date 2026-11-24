@@ -1,0 +1,22 @@
+{
+ "name": "ui_bankstep",
+ "prefix": "ui",
+ "group": "ui",
+ "size": [
+  16,
+  6
+ ],
+ "frames": [
+  {
+   "name": "bank_step_on",
+   "rows": [
+    "gggggggggggggggg",
+    "gWWWWWWWWWWWWWWg",
+    "gGGGGGGGGGGGGGGg",
+    "gGGGGGGGGGGGGGGg",
+    "gGGGGGGGGGGGGGGg",
+    "gggggggggggggggg"
+   ]
+  }
+ ]
+}

@@ -36,7 +36,9 @@
         ],
         "difficulty": 3,
         "unlockDay": 1,
-        "relocateSpots": []
+        "relocateSpots": [],
+        "targetFacility": "restroom.mine",
+        "_t148Note": "T-148: 화장실 미션 대상 = '내 화장실'(layout.genderFacilities.missionTargets). genderFacilities.enabled false면 기존 restroom_stall 그대로"
       },
       {
         "id": "nap",
@@ -931,7 +933,8 @@
       },
       "_note": "안전 구역이라 화면 전환 걱정은 없지만 왕복이 생김. 보상 그대로(쉬워지고 길어짐)",
       "minRank": "staff",
-      "kind": "hard"
+      "kind": "hard",
+      "targetFacility": "restroom.mine"
     },
     {
       "id": "relocate.print_other",
@@ -1743,5 +1746,57 @@
     "codex.title.cafe_regular": "카페 단골",
     "tut_tour": "팀장님이 자리를 비우면 기회예요. 말풍선 아이콘이 가는 곳이에요"
   },
-  "_stringsNote": "strings.ko.json 병합 대기(통합 단계에서 기획이 strings 아래 같은 키로 옮김). 검사기는 이 블록도 문자열 키 출처로 인정"
+  "_stringsNote": "strings.ko.json 병합 대기(통합 단계에서 기획이 strings 아래 같은 키로 옮김). 검사기는 이 블록도 문자열 키 출처로 인정",
+  "genderModifiers": [
+    {
+      "id": "facility.cleaning",
+      "type": "facility_closed",
+      "labelKey": "mod.facility_cleaning",
+      "descKey": "mod.facility_cleaning.desc",
+      "cost": 1,
+      "missions": [
+        "restroom",
+        "bank"
+      ],
+      "closes": "restroom.mine",
+      "params": {
+        "windowSec": 12.0,
+        "startsAt": "mission_unlock",
+        "signKey": "facility.cleaning.sign",
+        "showCountdownOnChip": true,
+        "detourTo": "locker.mine",
+        "otherSideAllowed": false,
+        "failReactionKey": "react.restroom.cleaning",
+        "art": "furn2/sign_wet"
+      },
+      "rewardMul": 1.1,
+      "budgetSecDelta": 3.0,
+      "minRank": "assistant_manager",
+      "minDay": 20,
+      "kind": "hard",
+      "_note": "T-148 C4. 내 화장실이 미션 해금 순간부터 12초 동안 청소 중(문 앞 '청소 중' 표지와 남은 초를 처음부터 보여 줌 → 정보는 전부 공개). 기다리기(남은 시간 확인) 또는 헬스장 탈의실 샤워 칸으로 우회(그날 헬스장이 있을 때). 다른 쪽 화장실은 갈 수 없음. 12초 = 화장실 편도 약 5.7초의 2배 남짓이라 '기다리며 자리에서 일하기'와 '우회'가 비슷한 값. 미화팀 인물은 등장하지 않고 표지만(tone-guide #9). budgetSecDelta 3.0 = 기다림 기대 손실"
+    },
+    {
+      "id": "relocate.restroom_locker",
+      "type": "relocate",
+      "labelKey": "mod.relocate.locker",
+      "cost": 1,
+      "missions": [
+        "restroom"
+      ],
+      "spot": "locker_{mine}_stall",
+      "targetFacility": "locker.mine",
+      "requiresProvides": "locker_room",
+      "rewardMul": 1.1,
+      "budgetSecDelta": "travel_diff",
+      "minRank": "manager",
+      "kind": "hard",
+      "params": {
+        "insideLineKey": "event.restroom.locker_inside",
+        "exposedReactionKey": "react.locker.exposed"
+      },
+      "_note": "T-148 C5. 오늘은 헬스장 탈의실 샤워 칸에서 쉬기. 판정은 화장실 칸과 같음(W = restroom_stall 구역)"
+    }
+  ],
+  "_genderModifiersNote": "T-148: 성별 시설 변형. layout.genderFacilities.enabled가 true일 때만 modifiers 추첨 풀에 합류(그 전엔 무시). 별도 배열로 둔 이유 = 개발 T-145가 modifiers 형식을 연동 중이라 새 type(facility_closed)이 기존 파서에 들어가지 않게 함. 확률 필드 없음·보상 배수 결정적(D-004)"
 }

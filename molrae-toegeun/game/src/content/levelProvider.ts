@@ -17,6 +17,8 @@ import {
   DEV_LAYOUT_MODULES, DEV_LAYOUT_POLICY, DEV_LAYOUT_RULES, DEV_VALIDATE_RULES, generateValidated,
   type GenFailure, type GeneratedLayout, type LayoutMetrics, type LayoutRules, type ModuleTemplate, type ValidateRules,
 } from './layoutGen';
+import { parseLayoutV3, type SpotV3 } from './layoutGen/v3data';
+import { generateV3Day, makePatrolMover, type PatrolMover } from './levelV3';
 
 type O = Record<string, unknown>;
 const obj = (v: unknown): O => (typeof v === 'object' && v !== null && !Array.isArray(v) ? v as O : {});
@@ -44,7 +46,7 @@ export interface MapBundle {
   readonly legend: Readonly<Record<string, LegendEntry>>;
   readonly playerStart: Tile;
   readonly exitZone: string;
-  readonly spots: Readonly<Record<string, { readonly tile: Tile; readonly facing?: Dir }>>;
+  readonly spots: Readonly<Record<string, { readonly tile: Tile; readonly facing?: Dir } & Partial<Omit<SpotV3, 'tile' | 'facing'>>>>;
   readonly zones: readonly ZoneDef[];
   readonly coverSpots: readonly Tile[];
   /** maps.playerRoutes 원본(생성 층은 빈 배열) */
@@ -55,6 +57,16 @@ export interface MapBundle {
   readonly patrolMapId: string;
   /** 있으면 순찰 웨이포인트를 이 함수로 옮긴다(생성 층) */
   readonly remap?: WaypointRemap;
+  /** v3 생성 층(T-145): 순찰 하나를 이 층에 맞게 옮김(재매핑 → patrolTemplates → 앉은 순찰 스팟 덮어쓰기 → 대표님 입장 속도). 있으면 remap보다 우선 */
+  readonly patrolFor?: PatrolMover;
+  /** v3 V12: 그날 근무 구간에서 뺄 초(0.1 단위) */
+  readonly trimSec?: number;
+  /** 생성 층 길목 노드(전역) */
+  readonly nodes?: Readonly<Record<string, Tile>>;
+  /** v3 V09를 통과한 팀장 순회 목적지 id */
+  readonly tourOk?: readonly string[];
+  /** v3 이음 행 '사용 중' 문 등 렌더 보조: 생성기 버전 태그 */
+  readonly versionTag?: string;
   readonly source: 'authored' | 'generated' | 'fallback';
   /** 생성 정보(디버그·QA) */
   readonly gen?: {
@@ -80,6 +92,10 @@ export interface LevelRequest {
   readonly extraRequiredSpots: readonly string[];
   /** 이 날 반드시 옮겨져야 하는 순찰 id(출연·방해 이벤트). 생성 층에서 재매핑이 안 되면 그 시도는 실패 */
   readonly requiredPatrols?: readonly string[];
+  /** v3 V13: 다른 일차 계획(어제 맵 비교). 없으면 V13 생략 */
+  readonly planFor?: (day: number) => O;
+  /** 팀장 순회가 켜지는 날(v3 V09·V11) */
+  readonly toursActive?: boolean;
 }
 
 /**
@@ -156,7 +172,7 @@ export function rankComplexity(tables: Tables, rankId: string, t: number): numbe
   return Math.min(1, Math.max(0, c));
 }
 
-/** [추측] T-142 layout.json에 enabled:true가 있으면 기본으로 생성 사용. 스키마 확정 후 교체 */
+/** layout.json(schemaVersion 3) enabled. D-086: PM이 QA 재측정 뒤 true로 전환 */
 export function layoutEnabledInData(tables: Tables): boolean {
   return obj(tables['layout'])['enabled'] === true;
 }
@@ -206,6 +222,10 @@ function makeRemap(src: O, gen: { spots: MapBundle['spots']; zones: readonly Zon
 export interface LevelProviderOptions {
   /** 3일차 이후 생성 사용(false면 모든 날 수작업 맵) */
   readonly generate: boolean;
+  /**
+   * [테스트 전용] T-144 임시 엔진(DEV_LAYOUT_MODULES 등). 이 값이나 rules를 넘기면 v3(layout.json) 대신 옛 엔진을 쓴다.
+   * 게임·기본 경로는 layout.json(schemaVersion 3)을 읽는다(T-145).
+   */
   readonly modules?: readonly ModuleTemplate[];
   readonly rules?: LayoutRules;
   readonly validate?: ValidateRules;
@@ -216,12 +236,53 @@ export interface LevelProviderOptions {
   readonly seedOverride?: string;
 }
 
+/** v3(layout.json) 생성 층 */
+function levelForV3(req: LevelRequest, opts: LevelProviderOptions): MapBundle | null {
+  const v3 = parseLayoutV3(req.tables);
+  if (!v3) return null;
+  const planMap = str(req.plan['mapId'], v3.sourceMapId);
+  const authoredDays = opts.authoredMapDays ?? v3.authoredMapDays;
+  if (req.day <= authoredDays) return authoredMapBundle(req.tables, planMap);
+  const r = generateV3Day({
+    tables: req.tables, day: req.day, plan: req.plan, rankId: req.rankId, requiredPatrols: req.requiredPatrols ?? [],
+    toursActive: req.toursActive === true,
+    ...(req.planFor ? { planFor: req.planFor } : {}), ...(opts.seedOverride ? { seedOverride: opts.seedOverride } : {}),
+  });
+  if (!r) return null;
+  const src = mapRaw(req.tables, v3.sourceMapId);
+  if (!r.layout) {
+    const fb = authoredMapBundle(req.tables, planMap, 'fallback');
+    return { ...fb, versionTag: v3.versionTag, gen: { seed: r.seed, complexity: 0, attempts: r.attempts, modules: [], failures: r.failures } };
+  }
+  const L = r.layout;
+  const legend = r.legend;
+  const grid = buildGridMap(L.rows, legend);
+  const mover = makePatrolMover(req.tables, v3, L, legend);
+  return {
+    id: `gen:${r.seed}`, rows: L.rows, legend, playerStart: L.spots['player_seat']!.tile, exitZone: 'exit',
+    spots: L.spots, zones: L.zones, coverSpots: coverSpotsOf(grid), playerRoutes: [], camera: obj(src['camera']),
+    patrolMapId: v3.sourceMapId, remap: makeRemap(src, { spots: L.spots, zones: L.zones, routeNodes: L.nodes }, grid), patrolFor: mover, nodes: L.nodes,
+    source: 'generated', trimSec: r.trimSec, tourOk: r.tourOk, versionTag: v3.versionTag,
+    gen: {
+      seed: r.seed, complexity: L.complexity, attempts: r.attempts,
+      modules: L.placed.map((m) => `${m.id}${m.mirrored ? '~' : ''}`), failures: r.failures,
+      ...(r.metrics ? { metrics: { height: L.rows.length, moduleCount: L.placed.length, coverTiles: r.metrics.coverTiles, shortestRoute: r.metrics.seatToGate, altRoute: r.metrics.seatToGate + r.metrics.altExtra, sharedRatio: r.metrics.sharedRatio, maxClearSight: r.metrics.rawClearSight, maxClearSightAt: '', v3: r.metrics } } : {}),
+    },
+  };
+}
+
 export function createLevelProvider(opts: LevelProviderOptions): LevelProvider {
   const authoredDays = opts.authoredMapDays ?? DEV_LAYOUT_POLICY.authoredMapDays;
+  const legacy = !!(opts.modules || opts.rules || opts.validate);
   return {
     levelFor(req: LevelRequest): MapBundle {
       const planMap = str(req.plan['mapId'], DEV_LAYOUT_POLICY.sourceMapId);
-      if (!opts.generate || req.day <= authoredDays) return authoredMapBundle(req.tables, planMap);
+      if (!opts.generate) return authoredMapBundle(req.tables, planMap);
+      if (!legacy) {
+        const v = levelForV3(req, opts);
+        if (v) return v;
+      }
+      if (req.day <= authoredDays) return authoredMapBundle(req.tables, planMap);
       const srcId = opts.sourceMapId ?? DEV_LAYOUT_POLICY.sourceMapId;
       const src = mapRaw(req.tables, srcId);
       const legend = legendOf(src);
@@ -247,6 +308,7 @@ export function createLevelProvider(opts: LevelProviderOptions): LevelProvider {
         }
         return out;
       };
+      // [테스트 전용] 옛 엔진(T-144 임시 모듈)
       const res = generateValidated(
         { modules: opts.modules ?? DEV_LAYOUT_MODULES, rules: opts.rules ?? DEV_LAYOUT_RULES, legend, complexity, seed },
         vrules, opts.maxAttempts ?? DEV_LAYOUT_POLICY.maxAttempts, extraCheck,

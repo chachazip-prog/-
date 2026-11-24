@@ -6,6 +6,10 @@
  "swap": {
   "$lanyard": "cool"
  },
+ "kits": [
+  "kit-carry",
+  "kit-pose-v3"
+ ],
  "frames": [
   {
    "name": "disguise",

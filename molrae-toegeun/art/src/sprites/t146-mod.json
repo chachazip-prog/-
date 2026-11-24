@@ -1,0 +1,210 @@
+{
+ "name": "mod",
+ "group": "ui",
+ "size": [
+  8,
+  8
+ ],
+ "origin": [
+  0.5,
+  0.5
+ ],
+ "note": "T-146 미션 변형 배지(mod/<modifierTemplates.type>). 바탕색 = 종류: hard 남색(D), soft 청록(c, avoid), bonus 초록(g). avoid_<대상> = 오른쪽 아래 2x2 대상 점(동료 파랑·인사팀 보라·경비 검정 = 줄 색, 팀장 황갈 결재판·본부장 금 배지 = 빨강 금지로 소품 색). 칩 오른쪽 위에 얹음",
+ "frames": [
+  {
+   "name": "rush",
+   "rows": [
+    ".OOOOOO.",
+    "ODWWWWDO",
+    "OWWDWWWO",
+    "OWWDDWWO",
+    "OWWWWWWO",
+    "ODWWWWDO",
+    "ODDDDDDO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "relocate",
+   "rows": [
+    ".OOOOOO.",
+    "ODDDWDDO",
+    "ODDDWWDO",
+    "OWWWWWWO",
+    "ODDDWWDO",
+    "ODDDWDDO",
+    "ODDDDDDO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "double",
+   "rows": [
+    ".OOOOOO.",
+    "ODWWWDDO",
+    "ODDDDWDO",
+    "ODDWWDDO",
+    "ODWDDDDO",
+    "ODWWWWDO",
+    "ODDDDDDO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "carry",
+   "rows": [
+    ".OOOOOO.",
+    "ODTTTTDO",
+    "ODTTTTDO",
+    "ODttttDO",
+    "OSSSSSDO",
+    "ODSSSSDO",
+    "ODDDDDDO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "avoid",
+   "rows": [
+    ".OOOOOO.",
+    "OcccccOO",
+    "OcWWWOcO",
+    "OWWOOWWO",
+    "OcWOWWcO",
+    "OcOccccO",
+    "OOcccccO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "silent",
+   "rows": [
+    ".OOOOOO.",
+    "ODWDDDDO",
+    "OWWDWDWO",
+    "OWWDDWDO",
+    "OWWDWDWO",
+    "ODWDDDDO",
+    "ODDDDDDO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "bonus",
+   "rows": [
+    ".OOOOOO.",
+    "OggYYggO",
+    "OYYYYYYO",
+    "OgYYYYgO",
+    "OgYYYYgO",
+    "OYYggYYO",
+    "OggggggO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "during_tour",
+   "rows": [
+    ".OOOOOO.",
+    "ODWWWWDO",
+    "ODWWWWDO",
+    "ODDWWDDO",
+    "ODWWWWDO",
+    "OWWWWWWO",
+    "OWWWWWWO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "deadline",
+   "rows": [
+    ".OOOOOO.",
+    "ODWDDWDO",
+    "OCCCCCCO",
+    "OWWWWWWO",
+    "OWDWDWWO",
+    "OWWWWWWO",
+    "ODDDDDDO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "zone_only",
+   "rows": [
+    ".OOOOOO.",
+    "ODWWWDDO",
+    "OWDDDWDO",
+    "ODDDWDDO",
+    "ODDWDDDO",
+    "ODDDDDDO",
+    "ODDWDDDO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "avoid_snitch",
+   "rows": [
+    ".OOOOOO.",
+    "OcccccOO",
+    "OcWWWOcO",
+    "OWWOOWWO",
+    "OcWOWWcO",
+    "OcOccPPO",
+    "OOcccPPO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "avoid_hr_inspector",
+   "rows": [
+    ".OOOOOO.",
+    "OcccccOO",
+    "OcWWWOcO",
+    "OWWOOWWO",
+    "OcWOWWcO",
+    "OcOccBBO",
+    "OOcccBBO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "avoid_security_guard",
+   "rows": [
+    ".OOOOOO.",
+    "OcccccOO",
+    "OcWWWOcO",
+    "OWWOOWWO",
+    "OcWOWWWO",
+    "OcOcWOOO",
+    "OOccWOOO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "avoid_team_lead",
+   "rows": [
+    ".OOOOOO.",
+    "OcccccOO",
+    "OcWWWOcO",
+    "OWWOOWWO",
+    "OcWOWWcO",
+    "OcOccttO",
+    "OOcccttO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "avoid_director",
+   "rows": [
+    ".OOOOOO.",
+    "OcccccOO",
+    "OcWWWOcO",
+    "OWWOOWWO",
+    "OcWOWWcO",
+    "OcOccYYO",
+    "OOcccYYO",
+    ".OOOOOO."
+   ]
+  }
+ ]
+}

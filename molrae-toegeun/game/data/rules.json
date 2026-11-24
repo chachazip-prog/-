@@ -232,7 +232,83 @@
     "playerProps": [
       "lanyard_sky"
     ],
-    "_comment": "D-049(D-036 수정). 플레이어·배경 동료 포함 층 전체 동시 12명 이하, 화면(세로 20타일 창) 안 동시 8명 이하. 화면 안 인원은 각 캐릭터가 있을 수 있는 y 범위(자리·순찰 경유점)로 보수적으로 셈(검사기 §4-1). playerProps: D-052 플레이어 사원증 줄 하늘색(아트 팔레트 cool) — 공범 초록과 겹치지 않게 '줄 색 = 역할' 유지"
+    "_comment": "D-049(D-036 수정). 플레이어·배경 동료 포함 층 전체 동시 12명 이하, 화면(세로 20타일 창) 안 동시 8명 이하. 화면 안 인원은 각 캐릭터가 있을 수 있는 y 범위(자리·순찰 경유점)로 보수적으로 셈(검사기 §4-1). playerProps: D-052 플레이어 사원증 줄 하늘색(아트 팔레트 cool) — 공범 초록과 겹치지 않게 '줄 색 = 역할' 유지",
+    "playerVariants": [
+      {
+        "id": "m",
+        "gender": "male",
+        "spriteKey": "player_m",
+        "labelKey": "charsel.option.m"
+      },
+      {
+        "id": "f",
+        "gender": "female",
+        "spriteKey": "player_f",
+        "labelKey": "charsel.option.f"
+      }
+    ],
+    "playerSelection": {
+      "defaultVariant": null,
+      "requiredBeforeFirstDay": true,
+      "screen": "first_clock_in",
+      "displayOrder": [
+        "m",
+        "f"
+      ],
+      "sameSizeSameEmphasis": true,
+      "preselected": false,
+      "changeableIn": "settings",
+      "appliesFrom": "next_run",
+      "storageSlot": "player.variant",
+      "fallbackSprite": "player",
+      "titleKey": "charsel.title",
+      "noteKey": "charsel.note",
+      "confirmKey": "charsel.confirm",
+      "settingsLabelKey": "settings.character",
+      "changedToastKey": "settings.character_changed",
+      "_note": "D-088. 기본값 없음: 첫 출근 전에 반드시 고름(미선택이면 확인 버튼 비활성). 판 도중에는 바꾸지 않고 다음 판부터 적용. 선택은 그림과 '플레이어 기준 회전'의 기준점으로만 쓰이고 수치·보상·확률에는 쓰지 않음(design/gender-design.md §1)"
+    },
+    "casting": {
+      "modes": [
+        "fixed",
+        "rotate"
+      ],
+      "rotation": {
+        "id": "relation_block2",
+        "resolve": "player_relative",
+        "blockDays": 2,
+        "seedFormat": "cast-{block}-{slot}",
+        "block": "floor((day - 1) / blockDays)",
+        "rule": "슬롯(역할 id·배경 동료 id·'restroom_side')마다 블록 안 두 날 중 하루는 same, 하루는 other. 앞날이 same인지는 시드 문자열 정수 해시 % 2(정수 연산만). same이면 플레이어와 같은 성별 변형, other면 반대 성별 변형",
+        "_why": "같은 일차·같은 시드에서 남녀 플레이어가 '같은 성별 상사 날/다른 성별 상사 날'을 똑같이 겪음 → 날마다 정확히 대칭. 2일 블록이라 어느 7일 창에서도 same/other 차이 ≤ 1일, 전체 등장은 50:50"
+      },
+      "gameplayMayDependOn": [
+        "relation"
+      ],
+      "gameplayMustNotDependOn": [
+        "absolute_gender",
+        "fixed_actor_gender"
+      ],
+      "balance": {
+        "rotateCountsAs": 0.5,
+        "excludePlayer": true,
+        "femaleShareOverall": [
+          0.45,
+          0.55
+        ],
+        "femaleSharePerRank": [
+          0.35,
+          0.65
+        ],
+        "endlessRankDaysForWeight": 30,
+        "requireBothGendersIn": [
+          "fixed_bosses",
+          "fixed_npcs"
+        ],
+        "_note": "검사기 §T-148이 직급별 출연(상사 수·NPC·배경 동료·동기)으로 계산. 고정 인물 = 0 또는 1, 회전 = 0.5. 고정 상사·고정 NPC 집합이 한 성별로만 채워지면 오류(역할-성별 연결 금지)"
+      },
+      "_comment": "T-148(D-087·D-088). 고정(fixed) = 기억해야 하는 인물: 날마다 같은 사람·같은 변형. 회전(rotate) = 교대·여러 명이 있는 역할: 일차 시드로 플레이어 기준 같은/다른 성별. 성별에 따라 달라지는 메카닉은 회전 인물(본부장)과 '내 쪽' 시설에만 걸고, 고정 인물의 성별은 그림에만 씀"
+    }
   },
   "work": {
     "fillPerSec": 0.04,

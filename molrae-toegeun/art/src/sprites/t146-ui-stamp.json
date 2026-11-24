@@ -1,0 +1,26 @@
+{
+ "name": "ui_stamp",
+ "prefix": "ui",
+ "group": "ui",
+ "size": [
+  10,
+  10
+ ],
+ "frames": [
+  {
+   "name": "coupon_stamp",
+   "rows": [
+    "...OOOO...",
+    ".OOttttOO.",
+    ".OttttttO.",
+    "OtWWWWWttO",
+    "OtWWWWWWtO",
+    "OtWWWWWttO",
+    "OttWWWtttO",
+    ".OWWWWWWO.",
+    ".OOttttOO.",
+    "...OOOO..."
+   ]
+  }
+ ]
+}

@@ -1,0 +1,82 @@
+{
+ "name": "kit-head-buddy",
+ "kit": true,
+ "note": "T-146 머리 키트(바디 B): 짧은 뽀글 머리(윗선 물결) + 물결 앞머리 + 볼터치 + 웃는 입. dir 스탬프(clear) + 앉은 프레임 match. 성별·나이 표지 없음. 다른 머리로 바꾸려면 이 키트만 교체",
+ "stamps": [
+  {
+   "dir": "down",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "...OOO.OO.OOO...",
+    "..OHHHOHHOHHHO..",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHDHHHDHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHSHSSSSHSHHO.",
+    ".OHSSSSSSSSSSHO.",
+    ".OSSSOSSSSOSSSO.",
+    ".OSsSOSSSSOSsSO.",
+    ".OSSSSSssSSSSSO.",
+    "..OOOOssssOOOO.."
+   ],
+   "match": [
+    "sit_turn_*"
+   ]
+  },
+  {
+   "dir": "up",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "...OOO.OO.OOO...",
+    "..OHHHOHHOHHHO..",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHDHHHHDHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OSHHHHHHHHHHSO.",
+    ".OHOHHHHHHHHOHO.",
+    "..OOOOssssOOOO.."
+   ],
+   "match": [
+    "sit_type_*"
+   ]
+  },
+  {
+   "dir": "right",
+   "clear": true,
+   "x": 0,
+   "y": 0,
+   "rows": [
+    "..OOO.OO.OO.....",
+    ".OHHHOHHOHHO....",
+    ".OHHHHHHHHHHO...",
+    ".OHHHHDHHHDHHO..",
+    ".OHHHHHHHHHHHO..",
+    ".OHHHHHHHHSHHO..",
+    ".OHHHHHHHSSSSO..",
+    ".OHHHHHSSSSOSO..",
+    ".OHHHHHsSSSOSO..",
+    ".OHHHHHSSSsSOO..",
+    "..OOOOOsssOOO..."
+   ]
+  },
+  {
+   "match": "sit_turn_1",
+   "x": 0,
+   "y": 7,
+   "rows": [
+    ".OSSSOSSSSOSSSO.",
+    ".OSsOSOSSOSOsSO.",
+    ".OSSSSSDDSSSSSO.",
+    "..OOOOssssOOOO.."
+   ],
+   "_note": "웃음 표정(^ ^ + 벌린 입)"
+  }
+ ]
+}

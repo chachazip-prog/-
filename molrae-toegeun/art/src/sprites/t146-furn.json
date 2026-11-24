@@ -1,0 +1,33 @@
+{
+ "name": "furn_v3",
+ "prefix": "furn",
+ "group": "furniture",
+ "size": [
+  16,
+  16
+ ],
+ "note": "T-146 furn/chair_high_jacket = 팀장 순회 중 빈 의자(furn/chair_high 위에 보라 재킷: 어깨가 등받이보다 1px씩 넓고 소매가 좌석 양옆으로 늘어짐). chair_high 와 같은 자리·같은 원점에 바꿔 끼움",
+ "frames": [
+  {
+   "name": "chair_high_jacket",
+   "rows": [
+    "...OOOOOOOOOO...",
+    "..OBBBOWWOBBBO..",
+    "..OBBBBOOBBBBO..",
+    ".OBbBBBBBBBBbBO.",
+    ".OBODDDDDDDDOBO.",
+    ".OBODMDDDDDDOBO.",
+    ".ObODMDDDDDDObO.",
+    ".OOODDDDDDDDOOO.",
+    "..ODDDDDDDDDDO..",
+    "..OOOOOOOOOOOO..",
+    ".......OO.......",
+    ".......OO.......",
+    "...OOOOOOOOOO...",
+    "...OMO.OO.OMO...",
+    "...OOO.OO.OOO...",
+    "................"
+   ]
+  }
+ ]
+}

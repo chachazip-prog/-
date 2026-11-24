@@ -1,0 +1,29 @@
+{
+ "name": "hud_v3",
+ "prefix": "hud",
+ "group": "ui",
+ "size": [
+  12,
+  12
+ ],
+ "note": "T-146 hud/tl_away = '자리 비움' 배지(HUD 팀장 아이콘 옆). 흰 판 + 보라 재킷 걸린 빈 의자. 문구는 strings hud.tl_away",
+ "frames": [
+  {
+   "name": "tl_away",
+   "rows": [
+    ".OOOOOOOOOO.",
+    "OWWWWWWWWWWO",
+    "OWWOOOOOOWWO",
+    "OWOBBOOBBOWO",
+    "OWOBBWWBBOWO",
+    "OWObBBBBbOWO",
+    "OWOOOOOOOOWO",
+    "OWWWWOOWWWWO",
+    "OWWWOOOOWWWO",
+    "OWWWOWWOWWWO",
+    "OWWWWWWWWWWO",
+    ".OOOOOOOOOO."
+   ]
+  }
+ ]
+}

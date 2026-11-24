@@ -1,0 +1,61 @@
+{
+ "name": "fx12",
+ "prefix": "fx",
+ "group": "ui",
+ "size": [
+  12,
+  12
+ ],
+ "origin": [
+  0.5,
+  1
+ ],
+ "note": "T-146 fx/cup_ready = 카페 '컵 나왔어요' 말풍선(0.6초 전조). cup_ready 정지, cup_ready_1 = 초록 반짝임 테. anim fx/cup_ready 8fps 반복",
+ "frames": [
+  {
+   "name": "cup_ready",
+   "rows": [
+    ".OOOOOOOOOO.",
+    "OWWWWWWWWWWO",
+    "OWWWOOOOWWWO",
+    "OWWWOLLOWWWO",
+    "OWWWOWWOWWWO",
+    "OWWWOTTOWWWO",
+    "OWWWOOOOWWWO",
+    "OWWWWWWWWWWO",
+    ".OOOOWWOOOO.",
+    "....OWO.....",
+    "....OO......",
+    "............"
+   ]
+  },
+  {
+   "name": "cup_ready_1",
+   "rows": [
+    "G.OOOOOOOO.G",
+    ".GWWWWWWWWG.",
+    "OWWWOOOOWWWO",
+    "OWGWOLLOWGWO",
+    "OWWWOWWOWWWO",
+    "OWWWOTTOWWWO",
+    "OWGWOOOOWGWO",
+    ".GWWWWWWWWG.",
+    "G.OOOWWOOO.G",
+    "....OWO.....",
+    "....OO......",
+    "............"
+   ]
+  }
+ ],
+ "anims": [
+  {
+   "key": "cup_ready",
+   "frames": [
+    "cup_ready",
+    "cup_ready_1"
+   ],
+   "frameRate": 8,
+   "repeat": -1
+  }
+ ]
+}

@@ -162,6 +162,31 @@
       "blocksSight": false,
       "art": "tile2/wall_door_free(회의실) | 기존 문",
       "_note": "기존 값 그대로. 회의실 포트의 열린 문은 wall_door_free로 그림"
+    },
+    "+": {
+      "kind": "door_screened",
+      "walkable": true,
+      "blocksSight": true,
+      "art": "tile2/wall_door_restroom_<sign>",
+      "facilityDoor": true,
+      "_note": "T-148: 가림막이 있는 화장실·탈의실 문. 통행 가능·시선 차단(밖에서 안이 안 보임). 표지 그림(<sign>)은 그날 이 문이 플레이어 쪽(mine)인지로 정함. 다른 쪽(other) 문은 플레이어 경로 계산에서 벽으로 취급"
+    },
+    "W": {
+      "kind": "shower_stall",
+      "walkable": true,
+      "blocksSight": true,
+      "safeZone": true,
+      "zone": "restroom_stall",
+      "art": "tile2/shower_stall",
+      "_note": "T-148: 헬스장 탈의실 샤워 칸. 화장실 칸 S와 같은 판정(칸 안 = 안전 구역). zone을 restroom_stall로 둬 화장실 미션 로직을 그대로 씀"
+    },
+    "l": {
+      "kind": "locker_floor",
+      "walkable": true,
+      "blocksSight": false,
+      "zone": "locker_room",
+      "art": "tile2/floor_locker + 벽 tile2/wall_locker",
+      "_note": "T-148: 탈의실 바닥(사물함 벽 그림). 화장실 바닥 r과 같은 규칙"
     }
   },
   "wildcards": {
@@ -1921,6 +1946,422 @@
       ],
       "requiresGroup": "pantry",
       "_designNote": "맨 아래가 창고·프린터인 변형. 이때 탕비실(mid_pantry)이 반드시 중간에 들어감(requiresGroup). n_pantry는 본부장 정지 이름 호환용"
+    },
+    {
+      "id": "mid_rest_meet_g",
+      "group": "rest_meet_g",
+      "tags": [
+        "middle"
+      ],
+      "rows": [
+        "#Srr+.g...#",
+        "#####.g.MM#",
+        "#####.=.MM#",
+        "#Srr+.gh..#"
+      ],
+      "ports": {
+        "top": [
+          5,
+          8
+        ],
+        "bottom": [
+          5,
+          8
+        ],
+        "required": {
+          "top": [
+            5
+          ],
+          "bottom": [
+            5
+          ]
+        },
+        "doorCols": [
+          8
+        ],
+        "doorOpenChance": [
+          1.0,
+          0.6
+        ]
+      },
+      "mirrorable": true,
+      "provides": [
+        "restroom",
+        "meeting_room",
+        "choke_corridor",
+        "restroom_pair"
+      ],
+      "genderFacility": {
+        "type": "restroom",
+        "sides": {
+          "a": {
+            "stall": "restroom_a_stall",
+            "sink": "restroom_a_sink",
+            "door": "restroom_a_door",
+            "zone": "restroom_a"
+          },
+          "b": {
+            "stall": "restroom_b_stall",
+            "sink": "restroom_b_sink",
+            "door": "restroom_b_door",
+            "zone": "restroom_b"
+          }
+        },
+        "mirrorAxis": "horizontal_row_1.5",
+        "_note": "a = 위 칸(0행), b = 아래 칸(3행). 두 칸은 1.5행 축으로 위아래 대칭(크기·칸 수·문 위치 같음). 좌우 반전(mirrorable)과 무관하게 a/b 이름 유지"
+      },
+      "spotAliases": {
+        "restroom_stall": "restroom_{mine}_stall",
+        "restroom_door": "restroom_{mine}_door"
+      },
+      "zoneAliases": {
+        "restroom": "restroom_{mine}"
+      },
+      "spots": {
+        "restroom_a_stall": {
+          "tile": [
+            1,
+            0
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "stall"
+        },
+        "restroom_a_sink": {
+          "tile": [
+            2,
+            0
+          ],
+          "facing": "up",
+          "type": "stand",
+          "target": "sink"
+        },
+        "restroom_a_door": {
+          "tile": [
+            4,
+            0
+          ],
+          "type": "door"
+        },
+        "restroom_b_stall": {
+          "tile": [
+            1,
+            3
+          ],
+          "facing": "down",
+          "type": "use",
+          "target": "stall"
+        },
+        "restroom_b_sink": {
+          "tile": [
+            2,
+            3
+          ],
+          "facing": "down",
+          "type": "stand",
+          "target": "sink"
+        },
+        "restroom_b_door": {
+          "tile": [
+            4,
+            3
+          ],
+          "type": "door"
+        },
+        "meeting_door_w": {
+          "tile": [
+            6,
+            2
+          ],
+          "type": "door"
+        },
+        "nap_chair": {
+          "tile": [
+            7,
+            3
+          ],
+          "facing": "up",
+          "type": "use",
+          "target": "meeting_chair"
+        },
+        "meeting_inside": {
+          "tile": [
+            9,
+            0
+          ],
+          "facing": "down",
+          "stopId": "stop_in_meeting"
+        },
+        "tour_meeting": {
+          "tile": [
+            9,
+            0
+          ],
+          "facing": "down",
+          "stopId": "stop_in_meeting"
+        },
+        "gossip_a": {
+          "tile": [
+            5,
+            0
+          ],
+          "facing": "down"
+        },
+        "gossip_b": {
+          "tile": [
+            5,
+            1
+          ],
+          "facing": "up"
+        }
+      },
+      "routeNodes": {
+        "n_d_top": [
+          5,
+          0
+        ],
+        "n_d_mid": [
+          5,
+          2
+        ],
+        "n_d_bot": [
+          5,
+          3
+        ]
+      },
+      "zones": [
+        {
+          "id": "restroom_a",
+          "nameKey": "zone.restroom",
+          "rect": [
+            1,
+            0,
+            3,
+            1
+          ],
+          "facility": "restroom",
+          "side": "a"
+        },
+        {
+          "id": "restroom_b",
+          "nameKey": "zone.restroom",
+          "rect": [
+            1,
+            3,
+            3,
+            1
+          ],
+          "facility": "restroom",
+          "side": "b"
+        },
+        {
+          "id": "meeting_room",
+          "nameKey": "zone.meeting_room",
+          "rect": [
+            7,
+            0,
+            3,
+            4
+          ]
+        },
+        {
+          "id": "corridor_mid",
+          "nameKey": "zone.corridor_mid",
+          "rect": [
+            5,
+            0,
+            1,
+            4
+          ]
+        }
+      ],
+      "chokepoints": [
+        {
+          "id": "choke_mid",
+          "tiles": [
+            [
+              5,
+              0
+            ],
+            [
+              5,
+              1
+            ],
+            [
+              5,
+              2
+            ],
+            [
+              5,
+              3
+            ]
+          ],
+          "includeSeamAbove": true,
+          "includeSeamBelow": true,
+          "bypass": "meeting_room"
+        }
+      ],
+      "_designNote": "T-148 성별 화장실 쌍. mid_rest_meet과 같은 높이(4행)·포트·회의실·가운데 복도(폭 1, INT-04 길막 무대)를 유지하고 화장실만 위(a)·아래(b) 두 칸으로 나눔. 각 칸 = 칸 S 1 + 세면대 1 + 바닥 1 + 가림막 문(+). 문은 둘 다 가운데 복도에 붙어 있어 복도 기준 거리 차는 최대 3타일. 어느 쪽이 '내 화장실'인지는 genderFacilities.mineSide(플레이어 기준 회전). genderFacilities.enabled일 때만 rest_meet 그룹을 이 모듈로 대체(groupReplace)"
+    },
+    {
+      "id": "mid_fitness",
+      "group": "fitness",
+      "tags": [
+        "middle",
+        "lower"
+      ],
+      "rows": [
+        "#Wll+.+llW#",
+        "#####.#####",
+        "#.V.....V.#",
+        "#.........#"
+      ],
+      "ports": {
+        "top": [
+          5
+        ],
+        "bottom": [
+          2,
+          5,
+          8
+        ],
+        "required": {
+          "top": [
+            5
+          ],
+          "bottom": [
+            5
+          ]
+        }
+      },
+      "mirrorable": true,
+      "provides": [
+        "locker_room",
+        "shower",
+        "fitness"
+      ],
+      "genderFacility": {
+        "type": "locker_room",
+        "sides": {
+          "a": {
+            "stall": "locker_a_stall",
+            "sink": "locker_a_bench",
+            "door": "locker_a_door",
+            "zone": "locker_a"
+          },
+          "b": {
+            "stall": "locker_b_stall",
+            "sink": "locker_b_bench",
+            "door": "locker_b_door",
+            "zone": "locker_b"
+          }
+        },
+        "mirrorAxis": "vertical_col_5",
+        "_note": "a = 왼쪽, b = 오른쪽(반전 전 기준). 5열 축 좌우 대칭이라 복도 기준 거리 차 0. 반전되면 a/b 그림 위치만 바뀌고 이름은 유지"
+      },
+      "spots": {
+        "locker_a_stall": {
+          "tile": [
+            1,
+            0
+          ],
+          "facing": "left",
+          "type": "use",
+          "target": "shower_stall"
+        },
+        "locker_a_bench": {
+          "tile": [
+            2,
+            0
+          ],
+          "facing": "up",
+          "type": "stand",
+          "target": "locker"
+        },
+        "locker_a_door": {
+          "tile": [
+            4,
+            0
+          ],
+          "type": "door"
+        },
+        "locker_b_stall": {
+          "tile": [
+            9,
+            0
+          ],
+          "facing": "right",
+          "type": "use",
+          "target": "shower_stall"
+        },
+        "locker_b_bench": {
+          "tile": [
+            8,
+            0
+          ],
+          "facing": "up",
+          "type": "stand",
+          "target": "locker"
+        },
+        "locker_b_door": {
+          "tile": [
+            6,
+            0
+          ],
+          "type": "door"
+        }
+      },
+      "routeNodes": {
+        "n_f_top": [
+          5,
+          0
+        ],
+        "n_f_mid": [
+          5,
+          2
+        ],
+        "n_f_bot": [
+          5,
+          3
+        ]
+      },
+      "zones": [
+        {
+          "id": "locker_a",
+          "nameKey": "zone.locker_room",
+          "rect": [
+            1,
+            0,
+            3,
+            1
+          ],
+          "facility": "locker_room",
+          "side": "a"
+        },
+        {
+          "id": "locker_b",
+          "nameKey": "zone.locker_room",
+          "rect": [
+            7,
+            0,
+            3,
+            1
+          ],
+          "facility": "locker_room",
+          "side": "b"
+        },
+        {
+          "id": "fitness",
+          "nameKey": "zone.fitness",
+          "rect": [
+            1,
+            2,
+            9,
+            2
+          ]
+        }
+      ],
+      "_designNote": "T-148 사내 헬스장(과장~ 선택 모듈). 위쪽 = 남녀 탈의실(사물함 벽 l·샤워 칸 W·가림막 문 +)이 5열 축으로 좌우 대칭, 아래쪽 = 운동 공간(정수기 V 2개 = 엄폐). 탈의실 안은 화장실과 같은 안전 규칙. 탈의실 사이 폭 1 통로 2행(V06 ≤ 6). 운동 기구 그림은 바닥 장식(통행·시선 영향 없음)"
     }
   ],
   "assembly": {
@@ -2905,5 +3346,171 @@
       "hudBadgeKey": "hud.tl_away",
       "_note": "남은 시간은 보여 주지 않음(읽는 재미)"
     }
+  },
+  "genderFacilities": {
+    "enabled": false,
+    "_enabledNote": "개발 연동(T-145 이후) + QA 측정(§6) 뒤 PM이 layout.enabled와 함께 결정(D-086). false면 기존 mid_rest_meet(화장실 1곳) 그대로이고 새 모듈·변형·방해 필드는 모두 무시",
+    "resolve": "player_relative",
+    "fromDay": 3,
+    "groupReplace": {
+      "rest_meet": "rest_meet_g"
+    },
+    "fitnessModule": {
+      "group": "fitness",
+      "joinOptionalPool": true,
+      "minRank": "manager",
+      "allowedPlacement": [
+        "above_team",
+        "below_team"
+      ],
+      "_note": "과장(28일차)~ 선택 모듈 풀(assembly.optionalPool)에 합류. 높이 4 + 이음 1 = 5행이라 belowTeamMaxRows 5에 들어감. 그날 미션·변형이 요구할 때(locker_room)만 강제 포함, 그 외는 일반 선택 모듈과 같은 추첨"
+    },
+    "mineSide": {
+      "slot": "restroom_side",
+      "rule": "relation_block2",
+      "map": {
+        "same": "a",
+        "other": "b"
+      },
+      "orderPolicyOverride": {
+        "authored_order": "a"
+      },
+      "lockerFollows": "independent_slot:locker_side",
+      "_note": "'내 화장실' 쪽을 rules.characters.casting.rotation과 같은 방식(2일 블록 균형)으로 정함. 성별이 아니라 플레이어 기준이라 남녀 플레이어가 같은 날 같은 거리. 인턴 3~5일차(authored_order)는 a(위) 고정(수작업 맵 화장실 문 높이와 1행 차이)"
+    },
+    "authoredMap": {
+      "days": [
+        1,
+        2
+      ],
+      "restroomIsMine": true,
+      "signFollowsPlayer": true,
+      "_note": "수작업 맵(1~2일차)은 화장실 1곳 = 항상 내 화장실(표지를 플레이어 성별로 그림). 반대쪽 화장실은 화면 밖으로 간주"
+    },
+    "access": {
+      "playerEnters": "mine_only",
+      "otherDoorForPlayer": "wall_in_pathfinding",
+      "otherDoorTapHintKey": "hint.restroom.not_mine",
+      "fixedActorsEnter": "never",
+      "rotateActorsEnter": "own_side_via_facilityStop_only",
+      "talkCancelAtMineDoor": true,
+      "talkCancelLineKey": "int.talk.cancel_at_door",
+      "sightIntoFacility": "blocked_by_screened_door",
+      "inspectionsInside": "never",
+      "_note": "플레이어는 내 쪽 문만 지남(다른 쪽 문 앞은 그냥 복도). 고정 인물(선배·팀장·대표님·동료·동기)은 성별과 상관없이 시설 안에 들어가지 않음 → 고정 인물의 성별이 메카닉에 영향 없음. 말걸기 전조 중 내 쪽 문을 지나면 누구든 말걸기 취소(D-054 '피할 여지'의 시설 버전). 인사팀 점검·경비는 시설 안을 확인하지 않음(사생활)"
+    },
+    "missionTargets": {
+      "restroom.mine": {
+        "stall": "restroom_{mine}_stall",
+        "door": "restroom_{mine}_door",
+        "zone": "restroom_{mine}"
+      },
+      "restroom.other": {
+        "stall": "restroom_{other}_stall",
+        "door": "restroom_{other}_door",
+        "sink": "restroom_{other}_sink",
+        "playerTarget": false
+      },
+      "locker.mine": {
+        "stall": "locker_{mine}_stall",
+        "door": "locker_{mine}_door",
+        "zone": "locker_{mine}"
+      }
+    },
+    "cases": [
+      {
+        "id": "C1_route_mine",
+        "fromDay": 3,
+        "summary": "내 화장실이 날마다 위/아래로 바뀜 → 오늘 동선 판단",
+        "mechanic": "mineSide로 내 쪽 결정. 다른 쪽 문은 경로상 벽. 3일차 첫 등장 때 출근 준비 화면·화장실 칩에 '오늘 내 화장실은 위쪽/아래쪽' 표시",
+        "hintKeys": {
+          "a": "hint.restroom.mine_a",
+          "b": "hint.restroom.mine_b"
+        },
+        "tutorialKey": "tutorial.tut_gender_restroom",
+        "symmetry": "플레이어 기준 회전 → 같은 날 남녀 같은 쪽. 거리 차 상한 validators V15"
+      },
+      {
+        "id": "C2_safe_from_other",
+        "fromDay": 18,
+        "summary": "다른 성별 본부장은 내 화장실에 못 들어옴 → 내 화장실이 완전 안전지대, 본부장이 건너편 화장실에 들어간 3초는 복도가 빔",
+        "mechanic": "interrupts INT-10 effect.facilityStop (relation other → restroom.other)",
+        "symmetry": "relation이 플레이어 기준 2일 블록 → 같은 날 남녀 같은 relation"
+      },
+      {
+        "id": "C3_sink_meet_same",
+        "fromDay": 18,
+        "summary": "같은 성별 본부장은 내 화장실에 들어올 수 있음 → 세면대 마주침(전조 1.0초)",
+        "mechanic": "interrupts INT-10 effect.facilityStop (relation same → restroom.mine). 칸 안이면 안전, 세면대·바닥이면 1회 의심 +0.05와 1.2초 인사",
+        "tutorialKey": "tutorial.tut_director_restroom",
+        "symmetry": "C2와 같은 relation. same 날과 other 날은 2일 블록에서 정확히 반반"
+      },
+      {
+        "id": "C4_cleaning_window",
+        "fromDay": 20,
+        "summary": "내 화장실 '청소 중'(12초) → 기다리거나 탈의실로 우회",
+        "mechanic": "missions.json genderModifiers facility.cleaning",
+        "symmetry": "항상 내 쪽에만 걸림. 다른 쪽 화장실로 갈 수는 없음(access)"
+      },
+      {
+        "id": "C5_locker_room",
+        "fromDay": 28,
+        "summary": "사내 헬스장 탈의실·샤워 칸 = 두 번째 내 쪽 안전지대(과장~)",
+        "mechanic": "mid_fitness 모듈 + genderModifiers relocate.restroom_locker + C4 우회 대상",
+        "symmetry": "5열 축 좌우 대칭 모듈, mine/other는 locker_side 슬롯(2일 블록)"
+      }
+    ],
+    "perGenderLedger": {
+      "safeZonesPerGender": [
+        "restroom.mine",
+        "locker.mine"
+      ],
+      "risksPerGender": [
+        "C3 같은 성별 본부장 마주침(same 날)",
+        "C4 청소 시간(내 쪽)"
+      ],
+      "opportunitiesPerGender": [
+        "C2 본부장 건너편 화장실 3초(other 날)"
+      ],
+      "_note": "남녀 각각 같은 목록·같은 수치. 목록이 성별에 따라 달라지면 안 됨(검사기는 cases·facilityStop에 성별 고정 값이 없는지 확인)"
+    },
+    "validators": [
+      {
+        "id": "V15_facility_symmetry",
+        "code": "facility_asymmetric",
+        "hard": true,
+        "rule": "조립된 맵에서 player_seat → restroom_a_stall, → restroom_b_stall 편도 최단 거리 차 ≤ maxOneWayDiffTiles(다른 쪽 문은 벽으로 두고 각자 자기 문으로 계산). 헬스장이 있으면 locker_a/b도 같음. 두 쪽 모두 도달 가능하고, 자리→게이트·자리→다른 미션 최단 경로가 시설 안을 지나지 않음",
+        "maxOneWayDiffTiles": 4,
+        "_why": "4타일 ≈ 1.3초(플레이어 3.0타일/초), 왕복 2.7초 = 화장실 예상 17.5초의 15%. 모듈 안 차이 최대 3 + 이음 행 개구부 위치 1"
+      },
+      {
+        "id": "V16_facility_budget",
+        "code": "facility_over_budget",
+        "hard": true,
+        "rule": "V03·V12의 화장실 편도는 '내 쪽' 거리로 계산. 그리고 mine을 a/b로 바꿔 넣은 두 경우 모두 V03(편도 ≤ 28)·V12(시간 예산)를 통과해야 함 → 어느 쪽이 내 쪽이 되든 같은 맵이 유효"
+      }
+    ],
+    "debuts": [
+      {
+        "day": 3,
+        "case": "C1_route_mine",
+        "tutorialId": "tut_gender_restroom"
+      },
+      {
+        "day": 18,
+        "case": "C3_sink_meet_same",
+        "tutorialId": "tut_director_restroom",
+        "_note": "본부장 데뷔(16) 이틀 뒤. 18일차가 other 블록이면 첫 same 날에 튜토리얼"
+      },
+      {
+        "day": 20,
+        "case": "C4_cleaning_window"
+      },
+      {
+        "day": 28,
+        "case": "C5_locker_room"
+      }
+    ],
+    "_comment": "T-148(REQ-016, D-087·D-088) 성별 시설 케이스. 규칙서 design/gender-design.md §3. 모든 값은 '내 쪽(mine)/다른 쪽(other)', '같은 성별(same)/다른 성별(other)' 같은 플레이어 기준 표현으로만 씀(절대 성별 값 금지 → 남녀 대칭이 구조로 보장됨)"
   }
 }

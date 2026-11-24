@@ -1,0 +1,22 @@
+{
+ "name": "ui_bankcheck",
+ "prefix": "ui",
+ "group": "ui",
+ "size": [
+  8,
+  6
+ ],
+ "frames": [
+  {
+   "name": "bank_check_on",
+   "rows": [
+    "gggggggg",
+    "gWWWWGWg",
+    "gWWWGGWg",
+    "gGWGGWWg",
+    "gWGGWWWg",
+    "gggggggg"
+   ]
+  }
+ ]
+}

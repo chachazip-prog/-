@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""몰래퇴근 픽셀 생성기 (pixelgen) v2.3 (T-143: 장면 labels 이름표).
+"""몰래퇴근 픽셀 생성기 (pixelgen) v2.4 (T-146: prefix 키 접두어, kits 공용 키트, 스탬프 match 패턴).
+(v2.3 T-143: 장면 labels 이름표)
 (v2.2 T-130: from 프레임 복사, flat 키, 배경 동료 그룹)
 (v2.1 T-125: 걷기 들썩임 bob, clear 스탬프, 상사 줄 색 검사)
 
@@ -30,10 +31,15 @@ PNG 인코더를 직접 구현했으므로 같은 입력이면 항상 같은 바
     anims[{key, frames[...], frameRate, repeat}] → "<name>/<key>" 애니메이션
     {"name": "...", "from": "<frame>"} → 다른 프레임의 원본 격자(스탬프 전)를 복사(v2.2)
     flat: true          → 아틀라스 키를 "<name>/<frame>" 대신 "<frame>" 으로(데이터가 참조하는 아이콘 키, v2.2)
+    prefix: "<p>"       → 아틀라스 키 접두어를 name 대신 p 로(크기·그룹이 다른 파일이 같은 접두어를 나눠 씀, v2.4)
+    kit: true           → 공용 키트(머리 모양·소품 포즈). 출력하지 않고 kits 로만 쓴다(v2.4)
+    kits: ["<kit>", …]  → 키트의 frames·stamps·anims 를 덧붙인다. 스탬프 순서 = 자기 stamps → 키트(나열 순서)
+    stamp match: "glob" | [..] → 프레임 이름 패턴(fnmatch)으로 대상 지정. dir 과 함께 쓰면 합집합(v2.4)
   scenes/*.json
     size, tile, offset, bg, tiles, map, cones, objects(depth_sort), ui, labels[{x,y,text}](v2.3)
 """
 import argparse
+import fnmatch
 import hashlib
 import json
 import math
@@ -172,7 +178,11 @@ def stamp_targets(st, names):
     if "frames" in st:
         return [n for n in st["frames"] if n in names]
     d = st.get("dir")
-    return [n for n in names if d and (n.endswith("_" + d) or ("_%s_" % d) in n)]
+    out = [n for n in names if d and (n.endswith("_" + d) or ("_%s_" % d) in n)]
+    pats = st.get("match", [])
+    for pat in ([pats] if isinstance(pats, str) else pats):  # v2.4 이름 패턴
+        out += [n for n in names if fnmatch.fnmatchcase(n, pat) and n not in out]
+    return out
 
 
 def load_sprites(src, legend):
@@ -194,15 +204,25 @@ def load_sprites(src, legend):
                 errors.append("%s: base '%s' 없음" % (d["_file"], d["base"]))
                 return out
             out += raw_frames(base)
-        for fr in d.get("frames", []):
+        for fr in d.get("frames", []) + [fr for k in kits_of(d) for fr in k.get("frames", [])]:
             out = [o for o in out if o[0] != fr["name"]]
             out.append((fr["name"], fr.get("rows"), fr.get("flip"), fr.get("bob"), fr.get("from")))
         return out
 
+    def kits_of(d):
+        ks = []
+        for kn in d.get("kits", []):
+            k = files.get(kn)
+            if not k or not k.get("kit"):
+                errors.append("%s: kit '%s' 없음" % (d["_file"], kn))
+                continue
+            ks.append(k)
+        return ks
+
     frames, anims = [], []
     for name in sorted(files):
         d = files[name]
-        if d.get("template"):
+        if d.get("template") or d.get("kit"):
             continue
         base = files.get(d.get("base")) if d.get("base") else None
         size = d.get("size") or (base or {}).get("size")
@@ -217,13 +237,14 @@ def load_sprites(src, legend):
                     errors.append("%s/%s: from 원본 '%s' 없음" % (name, n, src_name))
                     continue
                 grid[n] = list(grid[src_name])
-        for st in d.get("stamps", []):
+        stamps = list(d.get("stamps", [])) + [st for k in kits_of(d) for st in k.get("stamps", [])]
+        for st in stamps:
             tg = stamp_targets(st, [n for n in names if n in grid])
             if not tg:
-                errors.append("%s: stamp 대상 프레임 없음 (%s)" % (d["_file"], st.get("dir") or st.get("frames")))
+                errors.append("%s: stamp 대상 프레임 없음 (%s)" % (d["_file"], st.get("dir") or st.get("frames") or st.get("match")))
             for n in tg:
                 grid[n] = apply_stamp(grid[n], st)
-        for st in d.get("stamps", []):
+        for st in stamps:
             for i, line in enumerate(st["rows"]):
                 if st.get("x", 0) + len(line) > w or st.get("y", 0) + i >= h:
                     errors.append("%s: stamp 가 프레임 밖으로 나감 (x=%s y=%s %d행)"
@@ -243,7 +264,7 @@ def load_sprites(src, legend):
         for n in names:
             if n not in grid:
                 continue
-            key = n if d.get("flat") else "%s/%s" % (name, n)
+            key = n if d.get("flat") else "%s/%s" % (d.get("prefix", name), n)
             rows = grid[n]
             if len(rows) != h:
                 errors.append("%s: 행 수 %d != %d" % (key, len(rows), h))
@@ -256,16 +277,26 @@ def load_sprites(src, legend):
             frames.append({"key": key, "w": w, "h": h, "rows": rows, "sprite": name,
                            "frame": n, "group": d.get("group", "misc"), "swap": swap,
                            "origin": origin, "file": d["_file"]})
-        adefs = list((base or {}).get("anims", [])) + list(d.get("anims", []))
+        adefs = (list((base or {}).get("anims", [])) + list(d.get("anims", []))
+                 + [a for k in kits_of(d) for a in k.get("anims", [])])
         seen = {}
         for a in adefs:
             seen[a["key"]] = a
         for k in [a["key"] for a in adefs if seen.get(a["key"]) is a]:
             a = seen[k]
-            pre = "" if d.get("flat") else name + "/"
+            pre = "" if d.get("flat") else d.get("prefix", name) + "/"
             anims.append({"key": pre + k, "sprite": name,
                           "frames": [pre + f for f in a["frames"]],
                           "frameRate": a.get("frameRate", 8), "repeat": a.get("repeat", -1)})
+    seen_k, seen_a = {}, set()
+    for f in frames:
+        if f["key"] in seen_k:
+            errors.append("아틀라스 키 중복: %s (%s, %s)" % (f["key"], seen_k[f["key"]], f["file"]))
+        seen_k[f["key"]] = f["file"]
+    for a in anims:
+        if a["key"] in seen_a:
+            errors.append("애니메이션 키 중복: %s" % a["key"])
+        seen_a.add(a["key"])
     return frames, anims, errors
 
 

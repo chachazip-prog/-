@@ -1,0 +1,81 @@
+{
+ "name": "prop_tray",
+ "prefix": "prop",
+ "group": "furniture",
+ "size": [
+  16,
+  8
+ ],
+ "origin": [
+  0.5,
+  1
+ ],
+ "note": "T-146 prop/printer_tray_0~4 = 복합기 출력 쟁반 종이 0~4장(1장 = 1px 높아짐, 흰·연회색 번갈아). wide24/mfp 앞 쟁반 자리(왼쪽 아래 x=2..15, y=17 근처)에 덮어 그림",
+ "frames": [
+  {
+   "name": "printer_tray_0",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "................",
+    "................",
+    ".OOOOOOOOOOOOOO.",
+    ".OMMMMMMMMMMMMO.",
+    ".OOOOOOOOOOOOOO."
+   ]
+  },
+  {
+   "name": "printer_tray_1",
+   "rows": [
+    "................",
+    "................",
+    "................",
+    "..OOOOOOOOOOOO..",
+    "..OWMWMWMWWWWO..",
+    ".OOOOOOOOOOOOOO.",
+    ".OMMMMMMMMMMMMO.",
+    ".OOOOOOOOOOOOOO."
+   ]
+  },
+  {
+   "name": "printer_tray_2",
+   "rows": [
+    "................",
+    "................",
+    "..OOOOOOOOOOOO..",
+    "..OWMWMWMWWWWO..",
+    "..OLLLLLLLLLLO..",
+    ".OOOOOOOOOOOOOO.",
+    ".OMMMMMMMMMMMMO.",
+    ".OOOOOOOOOOOOOO."
+   ]
+  },
+  {
+   "name": "printer_tray_3",
+   "rows": [
+    "................",
+    "..OOOOOOOOOOOO..",
+    "..OWMWMWMWWWWO..",
+    "..OLLLLLLLLLLO..",
+    "..OWWWWWWWWWWO..",
+    ".OOOOOOOOOOOOOO.",
+    ".OMMMMMMMMMMMMO.",
+    ".OOOOOOOOOOOOOO."
+   ]
+  },
+  {
+   "name": "printer_tray_4",
+   "rows": [
+    "..OOOOOOOOOOOO..",
+    "..OWMWMWMWWWWO..",
+    "..OLLLLLLLLLLO..",
+    "..OWWWWWWWWWWO..",
+    "..OLLLLLLLLLLO..",
+    ".OOOOOOOOOOOOOO.",
+    ".OMMMMMMMMMMMMO.",
+    ".OOOOOOOOOOOOOO."
+   ]
+  }
+ ]
+}

@@ -587,6 +587,52 @@
           "gazeOff": true,
           "talkOff": true,
           "lineKey": "boss.team_lead.greeting"
+        },
+        "facilityStop": {
+          "enabledWith": "layout.genderFacilities.enabled",
+          "fromDay": 18,
+          "phases": [
+            "day"
+          ],
+          "maxPerDay": 1,
+          "relationOf": "director",
+          "target": {
+            "same": "restroom.mine",
+            "other": "restroom.other"
+          },
+          "at": "rest_meet_g 길목 노드(n_d_top·n_d_bot) 중 본부장 경로가 먼저 닿는 곳. 그날 경로가 rest_meet_g를 지나지 않으면 생략",
+          "tellSec": 1.0,
+          "tell": {
+            "visual": "door_shadow_facility",
+            "sfx": "sfx_footsteps_crescendo",
+            "doorIcon": "icon_door_alert",
+            "offscreenArrow": true,
+            "textKey": "int.director_restroom.tell",
+            "audibleInsideStall": true
+          },
+          "insideSec": 3.0,
+          "insideStandSpot": "sink",
+          "insideCone": {
+            "range": 3,
+            "halfAngleDeg": 60,
+            "activeOnlyInside": true
+          },
+          "seenInsideEffect": {
+            "suspicionOnce": 0.05,
+            "stopSec": 1.2,
+            "lineKey": "int.director_restroom.meet",
+            "reactionKey": "react.director.restroom_seen",
+            "coneOffAfter": true
+          },
+          "whileInside": {
+            "floorConeOff": true,
+            "otherSideToastKey": "int.director_restroom.away"
+          },
+          "skipIf": [
+            "ceo_on_floor",
+            "player_in_leave_phase"
+          ],
+          "_designNote": "T-148 C2·C3. 본부장은 순찰 중 자기 성별 화장실에 3초 들름. relation same(같은 성별) 날은 내 화장실로 들어옴: 들어오기 1.0초 전 발소리·문 그림자·문 위 '!'(칸 안에서도 들림·보임). 칸 안(S)은 그대로 안전, 세면대·바닥에서 마주치면 의심 +0.05 한 번 + 1.2초 인사(그 뒤 콘 끔). relation other 날은 건너편 화장실로 들어가 3초 동안 층 콘이 꺼짐 → 내 화장실은 완전 안전지대 + 복도 기회. 2일 블록이라 same/other 반반. +0.05 = bonus.clean 기준(0.05) 이하라 '깔끔' 보너스는 지킬 수 있음(벌은 작게, 판단은 분명하게)"
         }
       },
       "counters": [

@@ -1,0 +1,66 @@
+{
+ "name": "prop",
+ "group": "furniture",
+ "size": [
+  12,
+  12
+ ],
+ "origin": [
+  0.5,
+  1
+ ],
+ "note": "T-146 들고 다니는 소품 단독 그림(missions.json params.carryProp 키와 같은 이름). 바닥·책상 위 놓기, 다른 캐릭터 손 위 덧그리기용. 상표 없음",
+ "frames": [
+  {
+   "name": "parcel_box",
+   "rows": [
+    "............",
+    "............",
+    ".OOOOOOOOOO.",
+    ".OTTTttTTTO.",
+    ".OTTTttTTTO.",
+    ".OtWWTTtttO.",
+    ".OtLLTTtttO.",
+    ".OttttttttO.",
+    ".OttttttttO.",
+    ".OOOOOOOOOO.",
+    "............",
+    "............"
+   ]
+  },
+  {
+   "name": "paper_stack",
+   "rows": [
+    "............",
+    "............",
+    "............",
+    ".OOOOOOOOOO.",
+    ".OWWWWWWWWO.",
+    ".OWMMMWMMWO.",
+    ".OWWWWWWWWO.",
+    ".OWMMWMMMWO.",
+    ".OLLLLLLLLO.",
+    ".OWWWWWWWWO.",
+    ".OOOOOOOOOO.",
+    "............"
+   ]
+  },
+  {
+   "name": "cafe_cup",
+   "rows": [
+    "............",
+    "............",
+    "............",
+    "...OOOOOO...",
+    "..OLLLLLLO..",
+    "..OOOOOOOO..",
+    "...OWWWWO...",
+    "...OTTTTO...",
+    "...OTTTtO...",
+    "...OWWWLO...",
+    "....OOOO....",
+    "............"
+   ]
+  }
+ ]
+}

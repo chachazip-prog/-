@@ -1,0 +1,199 @@
+{
+ "name": "icons_v3",
+ "group": "ui",
+ "size": [
+  12,
+  12
+ ],
+ "flat": true,
+ "note": "T-146 v3 아이콘(flat 키). 새 미션 칩 6종(missions.json iconSprite) + 팀장 순회 목적지 5종(layout.json leadRoaming.destinations[].bubbleIcon). 상표·로고·금액 없음, 빨강 없음",
+ "frames": [
+  {
+   "name": "icon_parcel",
+   "rows": [
+    "............",
+    "............",
+    ".OOOOOOOOOO.",
+    ".OTTTttTTTO.",
+    ".OTTTttTTTO.",
+    ".OtWWTTtttO.",
+    ".OtLLTTtttO.",
+    ".OttttttttO.",
+    ".OttttttttO.",
+    ".OOOOOOOOOO.",
+    "............",
+    "............"
+   ]
+  },
+  {
+   "name": "icon_print",
+   "rows": [
+    "...OOOOOO...",
+    "...OWWWWO...",
+    "...OWMMWO...",
+    ".OOOWWWWOOO.",
+    ".OLLLLLLLLO.",
+    ".OMMMMMMCMO.",
+    ".OMMMMMMMMO.",
+    ".OOWWWWWWOO.",
+    ".OMOOOOOOMO.",
+    ".OMMMMMMMMO.",
+    ".OOOOOOOOOO.",
+    "............"
+   ]
+  },
+  {
+   "name": "icon_chat",
+   "rows": [
+    "............",
+    ".OOOOOO.....",
+    "OWWWWWWO....",
+    "OWDWDWDO....",
+    "OWWWWWWO....",
+    ".OWOOOOOOOO.",
+    "..OOCCCCCCCO",
+    "...OCWCWCWCO",
+    "...OCCCCCCcO",
+    "....OOOOOCO.",
+    "........OCO.",
+    ".........O.."
+   ]
+  },
+  {
+   "name": "icon_bank",
+   "rows": [
+    "............",
+    "..OOOOOOOO..",
+    "..OCCCCCCO..",
+    "..OWWWWWWO..",
+    "..OWMMMMWO..",
+    "..OWWWWWWO..",
+    "..OWMMMWWO..",
+    "..OWWWWWWO..",
+    "..OMWMWMWO..",
+    "..OWWWGGWO..",
+    "..OOOOOOOO..",
+    "............"
+   ]
+  },
+  {
+   "name": "icon_cafe",
+   "rows": [
+    "............",
+    "..OOOOOOOO..",
+    ".OLLLLLLLLO.",
+    ".OOOOOOOOOO.",
+    "..OWWWWWWO..",
+    "..OWWWWWWO..",
+    "..OTTTTTTO..",
+    "..OTTTTTtO..",
+    "...OWWWWO...",
+    "...OWWWLO...",
+    "...OOOOOO...",
+    "............"
+   ]
+  },
+  {
+   "name": "icon_window",
+   "rows": [
+    "............",
+    ".OOOOOOOOOO.",
+    ".OCWCCOCCCO.",
+    ".OCCWCOCWCO.",
+    ".OCCCCOCCCO.",
+    ".OOOOOOOOOO.",
+    ".OCWWWOWCCO.",
+    ".OcCCCOcWWO.",
+    ".OOOOOOOOOO.",
+    ".OLLLLLLLLO.",
+    ".OOOOOOOOOO.",
+    "............"
+   ]
+  },
+  {
+   "name": "icon_tour_printer",
+   "rows": [
+    "............",
+    "............",
+    "..OOOOOOOO..",
+    ".OLLLLLLLLO.",
+    ".OMMMMMMCMO.",
+    ".OMMMMMMMMO.",
+    ".OOOOOOOOOO.",
+    ".OMOWWWWOMO.",
+    ".OMOOOOOOMO.",
+    ".OMMMMMMMMO.",
+    ".OOOOOOOOOO.",
+    "............"
+   ]
+  },
+  {
+   "name": "icon_tour_cup",
+   "rows": [
+    "...M..M.....",
+    "....M..M....",
+    "...M..M.....",
+    "............",
+    "..OOOOOOOO..",
+    "..OWWWWWWOO.",
+    "..OCCCCCCOWO",
+    "..OCCCCCCOWO",
+    "..OWWWWWWOO.",
+    "..OLWWWWLO..",
+    "...OOOOOO...",
+    "............"
+   ]
+  },
+  {
+   "name": "icon_tour_meeting",
+   "rows": [
+    "............",
+    "..ODO..ODO..",
+    "..OOO..OOO..",
+    ".OOOOOOOOOO.",
+    ".OTTTTTTTTO.",
+    ".OTWWTTTTTO.",
+    ".OTTTTTWWTO.",
+    ".OttttttttO.",
+    ".OOOOOOOOOO.",
+    "..ODO..ODO..",
+    "..OOO..OOO..",
+    "............"
+   ]
+  },
+  {
+   "name": "icon_tour_talk",
+   "rows": [
+    "...OOOOO....",
+    "..OWDWDWO...",
+    "...OOWOO....",
+    ".....O......",
+    ".OOO....OOO.",
+    "OHHHO..OHHHO",
+    "OHSOO..OOSHO",
+    "OHSSO..OSSHO",
+    ".OOO....OOO.",
+    "OBBBO..OMMMO",
+    "OBBBO..OMMMO",
+    "............"
+   ]
+  },
+  {
+   "name": "icon_tour_report",
+   "rows": [
+    "....OOOO....",
+    "..OOOLLOOO..",
+    "..OTOOOOTO..",
+    "..OTWWWWTO..",
+    "..OTWMMWTO..",
+    "..OTWWWWTO..",
+    "..OTWMMWTO..",
+    "..OTWWWWTO..",
+    "..OTWYYWTO..",
+    "..OTTTTTTO..",
+    "..OOOOOOOO..",
+    "............"
+   ]
+  }
+ ]
+}

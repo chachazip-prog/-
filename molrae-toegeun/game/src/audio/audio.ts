@@ -14,12 +14,16 @@ const urls = import.meta.glob('../../assets/audio/**/*.mp3', { query: '?url', im
 interface AudioFiles { mp3?: string }
 interface SfxEntry { key: string; files: AudioFiles; loop?: boolean }
 interface StageParams { rate?: number; mainVol?: number; tensionVol?: number; rampSec?: number; stop?: boolean; fadeOutSec?: number; resumeFadeInSec?: number; resumeStage?: string }
+/** T-147: 같은 파일을 rate·볼륨만 바꿔 재생하는 별칭(로드하지 않음, sound-list.md 1장) */
+interface AliasEntry { key: string; of: string; rate?: number; volume?: number; loop?: boolean }
 interface Manifest {
   sfx: SfxEntry[];
+  aliases?: AliasEntry[];
   bgm: Record<string, { stems: Record<string, { key: string; files: AudioFiles }>; stages: Record<string, StageParams | string>; hysteresis?: { downgradeDelaySec?: number } }>;
 }
 const manifest = manifestJson as unknown as Manifest;
 const BGM_ID = 'bgm_office';
+const ALIASES = new Map((manifest.aliases ?? []).map((a) => [a.key, a]));
 /** 같은 효과음 연타 중복 생략 간격(sound-list: 탭 60ms) */
 const SFX_DEDUP_MS = 60;
 
@@ -70,19 +74,28 @@ class AudioController {
   private has(key: string): boolean { return !!this.game && this.loaded && this.game.cache.audio.exists(key); }
 
   sfx(key: string | undefined, volume = 1): void {
-    if (!key || !this.has(key)) return;
+    if (!key) return;
+    const alias = ALIASES.get(key);
+    const src = alias ? alias.of : key;
+    if (!this.has(src)) return;
+    // 60ms 중복 생략은 요청 키(별칭 키) 기준
     const now = performance.now();
     if (now - (this.lastPlay.get(key) ?? -1e9) < SFX_DEDUP_MS) return;
     this.lastPlay.set(key, now);
-    this.game!.sound.play(key, { volume });
+    this.game!.sound.play(src, alias ? { rate: alias.rate ?? 1, volume: (alias.volume ?? 1) * volume } : { volume });
   }
+
+  /** 매니페스트(파일 또는 별칭)에 있는 키인가 */
+  knows(key: string): boolean { return ALIASES.has(key) || manifest.sfx.some((s) => s.key === key); }
 
   /** 루프 효과음 켜기/끄기(의심 루프·발소리). rate는 재생 속도 */
   loop(key: string, on: boolean, rate = 1): void {
     const s = this.loops.get(key);
     if (!on) { if (s) { s.stop(); s.destroy(); this.loops.delete(key); } return; }
-    if (!this.has(key)) return;
-    if (!s) { const n = this.game!.sound.add(key, { loop: true, rate }); n.play(); this.loops.set(key, n); }
+    const alias = ALIASES.get(key);
+    const src = alias ? alias.of : key;
+    if (!this.has(src)) return;
+    if (!s) { const n = this.game!.sound.add(src, { loop: true, rate: rate * (alias?.rate ?? 1), volume: alias?.volume ?? 1 }); n.play(); this.loops.set(key, n); }
     else (s as unknown as Stem).setRate(rate);
   }
 
