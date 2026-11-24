@@ -266,7 +266,59 @@ def swish(p, rng):
     return out
 
 
+def rattle(p, rng):
+    """의자 바퀴 '드르륵'(T-147): 밴드패스 노이즈를 불규칙 펄스열(바닥 이음새 덜컹)로 진폭 변조.
+    rateHz [시작, 끝]으로 굴러가다 느려지는 느낌. floor = 펄스 사이 남는 바닥 마찰 비율."""
+    d = p["dur"]
+    n = ns(d)
+    nz = noise(d, rng)
+    body = [0.0] * n
+    for (fc, q, g) in p["bands"]:
+        r = biquad(nz, "bp", fc, q)
+        for i in range(n):
+            body[i] += r[i] * g
+    am = [p["floor"]] * n
+    bump_n = ns(p["bumpSec"])
+    t = 0.0
+    while t < d:
+        i0 = ns(t)
+        a = rng.uniform(0.6, 1.0)
+        for k in range(bump_n):
+            if i0 + k < n:
+                am[i0 + k] += a * math.exp(-k / (bump_n / 3.0))
+        r0, r1 = p["rateHz"]
+        rate = r0 + (r1 - r0) * (t / d)
+        t += (1.0 / rate) * (1.0 + rng.uniform(-p["jitter"], p["jitter"]))
+    e = env_adsr(n, p["attack"], 0.0, 1.0, p["release"])
+    return [v * m * ev for v, m, ev in zip(body, am, e)]
+
+
+def hum(p, rng):
+    """모터 웅- (프린터, T-147). 루프용: warm 구간을 렌더한 뒤 버려 필터 정상 상태에서 시작.
+    hz × dur, hz × warmSec가 정수가 되게 고르면 이음새에서 위상이 이어짐. wobbleHz도 같은 조건."""
+    d = p["dur"]
+    warm = p.get("warmSec", d)
+    tot = d + warm
+    x = osc(p["wave"], p["hz"], tot)
+    y = [0.0] * len(x)
+    for (fc, q, g) in p["bands"]:
+        r = biquad(x, "bp", fc, q)
+        for i in range(len(x)):
+            y[i] += r[i] * g
+    if p.get("noiseGain"):
+        nz = biquad(noise(tot, rng), "bp", p["noiseHz"], p.get("noiseQ", 1.0))
+        for i in range(len(x)):
+            y[i] += nz[i] * p["noiseGain"]
+    w = p.get("wobbleHz", 0.0)
+    if w:
+        dep = p.get("wobbleDepth", 0.2)
+        y = [v * (1.0 - dep + dep * math.cos(2 * math.pi * w * i / SR)) for i, v in enumerate(y)]
+    return y[ns(warm):ns(warm) + ns(d)]
+
+
 RECIPES = {
+    "rattle": rattle,
+    "hum": hum,
     "swish": swish,
     "creak": creak,
     "footsteps": footsteps,
