@@ -47,6 +47,33 @@ function minifyJsonAssets(): Plugin {
   };
 }
 
+/**
+ * T-155(D-102·D-073): Phaser 커스텀 빌드. 프로덕션 빌드에서만 `phaser`를 phaser-custom/phaser-custom.js(쓰는 모듈만 모은 진입점)로 바꾸고,
+ * Phaser 소스(node_modules/phaser/src, CommonJS)의 빌드 플래그 `typeof X`를 공식 dist 빌드(config/webpack.dist.config.js)와 같은 값으로 치환한다.
+ * 개발 서버·타입체크·node 스크립트는 원래 패키지 그대로다.
+ */
+const PHASER_FLAGS: Record<string, boolean> = {
+  CANVAS_RENDERER: true, WEBGL_RENDERER: true, WEBGL_DEBUG: false, EXPERIMENTAL: false,
+  PLUGIN_3D: false, PLUGIN_CAMERA3D: false, PLUGIN_FBINSTANT: false, FEATURE_SOUND: true,
+};
+function phaserCustomBuild(): Plugin {
+  const entry = fileURLToPath(new URL('./phaser-custom/phaser-custom.js', import.meta.url));
+  const flagRe = new RegExp(`typeof (${Object.keys(PHASER_FLAGS).join('|')})\\b`, 'g');
+  return {
+    name: 'mt-phaser-custom-build',
+    apply: 'build',
+    enforce: 'pre',
+    resolveId(source) {
+      if (source === 'phaser') return entry;
+      return null;
+    },
+    transform(code, id) {
+      if (!id.replace(/\\/g, '/').includes('/node_modules/phaser/src/')) return null;
+      return { code: code.replace(flagRe, (_m, k: string) => String(PHASER_FLAGS[k])), map: null };
+    },
+  };
+}
+
 // art/palette.json(아트 소유, 읽기 전용)을 import하므로 개발 서버가 game/ 밖 한 단계 위 폴더를 읽을 수 있게 함
 const PROJECT_ROOT = fileURLToPath(new URL('..', import.meta.url));
 const DATA_DIR = fileURLToPath(new URL('./data/', import.meta.url)).replace(/\\/g, '/');
@@ -110,7 +137,7 @@ function stripDataMemos(): Plugin {
 
 export default defineConfig({
   base: './',
-  plugins: [stripDataMemos(), minifyJsonAssets()],
+  plugins: [phaserCustomBuild(), stripDataMemos(), minifyJsonAssets()],
   build: {
     outDir: 'dist',
     target: 'es2020',
