@@ -293,7 +293,7 @@ HEADS["guard_f"] = dict(body="B", length="T", note="경비 여: 챙 모자 + 목
     ".OHSSOSSSSOSSHO.",
     ".OHSSOSSSSOSSHO.",
     ".OHSSSSssSSSSHO.",
-    "..OOOOssssOOOO..",
+    "..OOOOssssOOOHO.",
 ], up=[
     "...OOOOOOOOOO...",
     "..ODDDDDDDDDDO..",
@@ -319,6 +319,7 @@ HEADS["guard_f"] = dict(body="B", length="T", note="경비 여: 챙 모자 + 목
     "ODOHHHHSSSSSSO..",
     "ODOOOOOsssOOO...",
 ], ext={
+    "down": ["............ODO.", ".............O.."],  # 정면: 오른쪽 어깨 뒤로 보이는 꼬리 끝
     "up": [".......DD.......", ".......OO......."],
     "right": ["ODO.............", ".O.............."],
 })
@@ -493,7 +494,7 @@ HEADS["bg_b_f"] = dict(body="B", length="T", note="배경 B 여: 정수리 한 �
     ".OHSSOSSSSOSSHO.",
     ".OHSSOSSSSOSSHO.",
     ".OHSSSSssSSSSHO.",
-    "..OOOOssssOOOO..",
+    "..OOOOssssOOOHO.",
 ], up=[
     ".......O........",
     "..OOOOOOHOOOOO..",
@@ -519,6 +520,7 @@ HEADS["bg_b_f"] = dict(body="B", length="T", note="배경 B 여: 정수리 한 �
     "ODOHHHHSSSSSSO..",
     "ODOOOOOsssOOO...",
 ], ext={
+    "down": ["............ODO.", ".............O.."],  # 정면: 오른쪽 어깨 뒤로 보이는 꼬리 끝
     "up": [".......DD.......", ".......OO......."],
     "right": ["ODO.............", ".O.............."],
 }, sit_up=["sit_type_*"])

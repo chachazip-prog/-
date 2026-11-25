@@ -19,7 +19,21 @@
     ".OHSSOSSSSOSSHO.",
     ".OHSSOSSSSOSSHO.",
     ".OHSSSSssSSSSHO.",
-    "..OOOOssssOOOO.."
+    "..OOOOssssOOOHO."
+   ]
+  },
+  {
+   "frames": [
+    "idle_down",
+    "walk_down_0",
+    "walk_down_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    "............ODO.",
+    ".............O.."
    ]
   },
   {

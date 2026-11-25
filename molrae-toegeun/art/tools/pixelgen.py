@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""몰래퇴근 픽셀 생성기 (pixelgen) v2.5 (T-149: variantOf 변형 상속 + headKit 머리 키트 교체, 같은 그림 프레임은 시트 영역 공유).
+"""몰래퇴근 픽셀 생성기 (pixelgen) v2.6 (T-154: 색 256개 이하 PNG 는 무손실 팔레트 PNG. T-149: variantOf 변형 상속 + headKit 머리 키트 교체, 같은 그림 프레임은 시트 영역 공유).
 (v2.4 T-146: prefix 키 접두어, kits 공용 키트, 스탬프 match 패턴)
 (v2.3 T-143: 장면 labels 이름표)
 (v2.2 T-130: from 프레임 복사, flat 키, 배경 동료 그룹)
@@ -69,19 +69,54 @@ POINT_HUE_MIN_DIST = 25.0
 
 
 def write_png(path, w, h, px):
-    """px: 길이 w*h 인 (r,g,b,a) 튜플 리스트. RGBA 8bit, 필터 0, zlib 9."""
+    """px: 길이 w*h 인 (r,g,b,a) 튜플 리스트. 필터 0, zlib 9.
+    v2.6(T-154, D-102 용량): 색이 256개 이하이면 무손실 팔레트 PNG(색상 타입 3 + tRNS, 1/2/4/8bit),
+    넘으면 RGBA 8bit. 팔레트 순서는 스캔 순서의 첫 등장 순(결정적). 완전 투명 픽셀은 (0,0,0,0) 하나로 모음."""
+    px = [(0, 0, 0, 0) if p[3] == 0 else tuple(p) for p in px]
+    idx = {}
+    for p in px:
+        if p not in idx:
+            idx[p] = len(idx)
+            if len(idx) > 256:
+                break
     raw = bytearray()
-    for y in range(h):
-        raw.append(0)
-        for r, g, b, a in px[y * w:(y + 1) * w]:
-            raw += bytes((r, g, b, a))
+    if len(idx) <= 256:
+        n = len(idx)
+        bits = 1 if n <= 2 else 2 if n <= 4 else 4 if n <= 16 else 8
+        per = 8 // bits
+        for y in range(h):
+            raw.append(0)
+            row = [idx[p] for p in px[y * w:(y + 1) * w]]
+            for i in range(0, w, per):
+                v = 0
+                grp = row[i:i + per]
+                for k in range(per):
+                    v = (v << bits) | (grp[k] if k < len(grp) else 0)
+                raw.append(v)
+        pal = sorted(idx, key=idx.get)
+        hdr = struct.pack(">IIBBBBB", w, h, bits, 3, 0, 0, 0)
+        extra = [(b"PLTE", bytes(c for p in pal for c in p[:3]))]
+        alpha = [p[3] for p in pal]
+        while alpha and alpha[-1] == 255:
+            alpha.pop()
+        if alpha:
+            extra.append((b"tRNS", bytes(alpha)))
+    else:
+        for y in range(h):
+            raw.append(0)
+            for r, g, b, a in px[y * w:(y + 1) * w]:
+                raw += bytes((r, g, b, a))
+        hdr = struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)
+        extra = []
 
     def chunk(tag, data):
         c = struct.pack(">I", len(data)) + tag + data
         return c + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
 
     data = b"\x89PNG\r\n\x1a\n"
-    data += chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0))
+    data += chunk(b"IHDR", hdr)
+    for tag, body in extra:
+        data += chunk(tag, body)
     data += chunk(b"IDAT", zlib.compress(bytes(raw), 9))
     data += chunk(b"IEND", b"")
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
