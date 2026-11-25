@@ -1,0 +1,64 @@
+{
+ "name": "t166-icons",
+ "group": "ui",
+ "flat": true,
+ "lean": true,
+ "size": [
+  12,
+  12
+ ],
+ "note": "T-166 팀 안 순회 목적지 출발 아이콘(layout leadRoaming.destinations[].bubbleIcon, D-120). 글자·로고·빨강 없음. 8px 축소 비교: art/preview/t166-icons.png",
+ "frames": [
+  {
+   "name": "icon_tour_board",
+   "rows": [
+    "............",
+    "OOOOOOOOOOOO",
+    "OWWWWWWWWWWO",
+    "OWcccWWgWWWO",
+    "OWWWWWWWWWWO",
+    "OWgggWcccWWO",
+    "OWWWWWWWWWWO",
+    "OWccWWWWWWWO",
+    "OOOOOOOOOOOO",
+    ".OMDCCMMMMO.",
+    "..OO....OO..",
+    ".OO......OO."
+   ]
+  },
+  {
+   "name": "icon_tour_water",
+   "rows": [
+    ".....OO.....",
+    "....OPPO....",
+    "....OPPO....",
+    "...OPPPPO...",
+    "...OWPPPO...",
+    "..OPWPPPPO..",
+    "..OWPPPPPO..",
+    ".OPWPPPPPPO.",
+    ".OPPPPPPPPO.",
+    ".OPPPPPPpPO.",
+    "..OpPPPppO..",
+    "...OOOOOO..."
+   ]
+  },
+  {
+   "name": "icon_tour_memo",
+   "rows": [
+    "............",
+    ".OOOOOOOOOO.",
+    ".OYYYYYYYYO.",
+    ".OYttttttYO.",
+    ".OYYYYYYYYO.",
+    ".OYttttYYYO.",
+    ".OYYYYYYYYO.",
+    ".OYtttYOOOO.",
+    ".OYYYYYOTO..",
+    ".OYYYYYOO...",
+    ".OOOOOOO....",
+    "............"
+   ]
+  }
+ ]
+}

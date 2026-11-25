@@ -1,0 +1,62 @@
+{
+ "name": "t166-tile",
+ "prefix": "tile2",
+ "group": "tile",
+ "size": [
+  16,
+  16
+ ],
+ "note": "T-166 옆 벽 장식(D-120): 팀 모듈 바깥 벽(tile/wall_cap_l·_r 자리)에 그리는 그림 장식, 통행·시선 판정 없음. _l = 왼쪽 벽, _r = 좌우 반전. 화이트보드 = 주간 일정판(글자 없음), 정수기 = 벽걸이 소형(T-143 tall2/purifier 와 같은 냉 하늘색·온 노랑 버튼)",
+ "frames": [
+  {
+   "name": "wall_whiteboard_side_l",
+   "rows": [
+    "DDDDDDDDDDDDMLO.",
+    "DDOOOOOOOOODMLO.",
+    "DDOCWWWWWWODMLO.",
+    "DDOCWCCCWWODMLO.",
+    "DDOCWWWWWWODMLO.",
+    "DDOCWGGWWWODMLO.",
+    "DDOCWWWWWWODMLO.",
+    "DDOCWCCCCWODMLO.",
+    "DDOCWWWWWWODMLO.",
+    "DDOCWWGWWWODMLO.",
+    "DDOCWWWWWWODMLO.",
+    "DDOCWYYYWWODMLO.",
+    "DDOCWWWWWWODMLO.",
+    "DDOOOOOOOOODMLO.",
+    "DDDOMMDCCMODMLO.",
+    "DDDOOOOOOOODMLO."
+   ]
+  },
+  {
+   "name": "wall_whiteboard_side_r",
+   "flip": "wall_whiteboard_side_l"
+  },
+  {
+   "name": "wall_water_side_l",
+   "rows": [
+    "DDDDDDDDDDDDMLO.",
+    "DDDDDOOODDDDMLO.",
+    "DDDDOCWCODDDMLO.",
+    "DDDDOCCcODDDMLO.",
+    "DDDOOOOOOODDMLO.",
+    "DDDOWWWWLODDMLO.",
+    "DDDOWCWYLODDMLO.",
+    "DDDOWWWWLODDMLO.",
+    "DDDOWOOOLODDMLO.",
+    "DDDOWOMOLODDMLO.",
+    "DDDOWOCOLODDMLO.",
+    "DDDOWOMOLODDMLO.",
+    "DDDOLOOOLODDMLO.",
+    "DDDOLLLLLODDMLO.",
+    "DDDOOOOOOODDMLO.",
+    "DDDDDDDDDDDDMLO."
+   ]
+  },
+  {
+   "name": "wall_water_side_r",
+   "flip": "wall_water_side_l"
+  }
+ ]
+}
