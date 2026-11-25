@@ -77,6 +77,8 @@ export class GameScene extends Phaser.Scene {
   private occluders: { img: Phaser.GameObjects.Image; rect: readonly [number, number, number, number] }[] = [];
   /** 회의실 문 '사용 중' 덮개(순회 meeting 중) */
   private busyDoors: Phaser.GameObjects.Image[] = [];
+  /** 순회 '메모 남기기' 책상 메모지(D-120): 팀장이 메모를 붙이고 떠난 뒤 그날 끝까지 표시 */
+  private memoProps: Phaser.GameObjects.Image[] = [];
   /** 팀장 출발 말풍선 아이콘(목적지) */
   private tourIcon!: Phaser.GameObjects.Image;
   private tourIconFor: { npc: string; left: number; frame: string } | null = null;
@@ -176,6 +178,7 @@ export class GameScene extends Phaser.Scene {
     this.stalls = [];
     this.occluders = [];
     this.busyDoors = [];
+    this.memoProps = [];
     this.tourIconFor = null;
     this.gateTiles = [];
     this.result = null;
@@ -270,6 +273,7 @@ export class GameScene extends Phaser.Scene {
       im.setDepth(o.y + (o.depthBias ?? 0));
       if ((o.frame === 'tall/stall' || o.frame === 'tile2/shower_stall') && o.tile) this.stalls.push({ img: im, x: o.tile.x, y: o.tile.y, base: o.frame, hiding: o.frame === 'tall/stall' ? 'tall/stall_hiding' : 'tile2/shower_stall_hiding' });
       if (o.occlude) this.occluders.push({ img: im, rect: o.occlude });
+      if (o.memo) { im.setVisible(false); this.memoProps.push(im); }
       if (o.meetingDoor && tex?.has('tall2/glass_door_busy')) {
         this.busyDoors.push(this.img(this.offsetX + o.x, o.y, 'tall2/glass_door_busy').setOrigin(0.5, 1).setDepth(o.y + 0.5).setVisible(false));
       }
@@ -395,7 +399,8 @@ export class GameScene extends Phaser.Scene {
           if (sfx) audio.sfx(sfx);
           const npc = this.sim.floor.findNpc((n) => n.def.id === e.npc);
           const sec = (this.sim.content.bossTours?.[0]?.standTellSec ?? 1) + 0.6;
-          if (e.icon) this.tourIconFor = { npc: e.npc ?? '', left: sec, frame: this.atlasHas(e.icon) ? e.icon : '' };
+          // 처음 보는 아이콘(아트 미도착)은 대체표(iconFallback) → 그것도 없으면 아이콘 없이 대사만
+          if (e.icon) this.tourIconFor = { npc: e.npc ?? '', left: sec, frame: this.atlasHas(e.icon) ? e.icon : this.atlasHas(iconFallback(e.icon)) ? iconFallback(e.icon) : '' };
           if (e.lineKey) this.npcSay(npc, str.t(e.lineKey), sec);
         }
         break;
@@ -442,7 +447,8 @@ export class GameScene extends Phaser.Scene {
     if (e.type === 'tell') {
       // 전조 효과음: 앉은 상사 고유음 / 걷는 사람 walkTellSfx(화면 안일 때만, 화면 밖은 화살표 깜빡임)
       const npc = this.sim.floor.findNpc((n) => n.def.id === e.npc);
-      if (npc && npc.gazeMultiplier > 0 && npc.tellKind !== 'talk' && npc.def.actorId) {
+      // 순회 일어나기 전조(stop_tour_stand)는 의자 미는 소리가 이미 나므로 회전음 생략(BUG-018 출발 전조)
+      if (npc && npc.gazeMultiplier > 0 && npc.tellKind !== 'talk' && npc.def.actorId && npc.stopId !== 'stop_tour_stand') {
         const actor = npc.def.actorId ?? '';
         const onlyOn = this.cues.walkTellOnScreenOnly[actor] !== false;
         const recheck = npc.tellKind === 'look' && npc.def.waypoints[npc.waypointIndex]?.lookIsRecheck === true;
@@ -652,13 +658,17 @@ export class GameScene extends Phaser.Scene {
         // 팀장 순회 프레임(아트 §13-6): 앉음 sit_up/sit_down(dy −3), 출발 전조 rise_*(1회), 목적지 대기 포즈(wait_up). 애니가 없는 캐릭터는 idle
         const sd = dir === 'down' ? 'down' : dir === 'up' ? 'up' : null;
         const stop = sim.tourStopOf(npc);
-        const rise = sd ? `${v.base}/rise_${sd}` : '';
-        if (npc.stopId === 'stop_tour_stand' && sd && this.anims.exists(rise)) {
+        // 일어나기는 걷기 방향 전조(BUG-018) 중에도 자리 방향(facing) 기준으로 재생
+        const f0 = facing4(npc.facing);
+        const sdStand = f0 === 'down' ? 'down' : f0 === 'up' ? 'up' : null;
+        const rise = sdStand ? `${v.base}/rise_${sdStand}` : '';
+        const pose = stop?.pose && npc.mode === 'wait' ? this.poseAnim(v.base, stop.pose, f0) : null;
+        if (npc.stopId === 'stop_tour_stand' && sdStand && this.anims.exists(rise)) {
           if (v.sprite.anims.currentAnim?.key !== rise) v.sprite.play(rise);
         } else if ((npc.def.seated || npc.stopId === 'stop_tour_sit') && sd && this.anims.exists(`${v.base}/sit_${sd}`)) {
           this.playAnim(v.sprite, `${v.base}/sit_${sd}`);
           v.sprite.setY(sy - 3);
-        } else if (stop?.pose && npc.mode === 'wait' && this.anims.exists(stop.pose)) this.playAnim(v.sprite, stop.pose);
+        } else if (pose) this.playAnim(v.sprite, pose);
         else this.playAnim(v.sprite, `${v.base}/idle_${dir}`);
       }
       // 페이크(헛기침) 효과음: tell → fake 전환
@@ -789,6 +799,17 @@ export class GameScene extends Phaser.Scene {
   /** T-133 표시: 공범, 얼음 비네트, 중앙 문구, 경로 힌트, 화면 밖 미션 장소 화살표 */
   private atlasHas(frame: string): boolean { return this.hasAtlas && this.textures.get(ATLAS_KEY).has(frame); }
 
+  /**
+   * 순회 목적지 대기 포즈(데이터 pose 'teamlead/wait_up', 'teamlead/wait_side' 등) → 이 인물 외형의 애니 키(T-164).
+   * 접두(캐릭터)는 데이터 값 대신 지금 외형(v.base: teamlead_m/_f)으로 바꾸고(D-087·D-088: 그림만 다르고 판정 같음),
+   * 그 이름이 없으면 바라보는 방향 접미('_left'·'_right'·'_up'·'_down')를 붙여 찾는다. 다 없으면 데이터 원본 키, 그래도 없으면 null(idle)
+   */
+  private poseAnim(base: string, pose: string, facing: Facing4): string | null {
+    const name = pose.includes('/') ? pose.slice(pose.indexOf('/') + 1) : pose;
+    const cands = [`${base}/${name}`, `${base}/${name}_${facing}`, pose, `${pose}_${facing}`];
+    return cands.find((k) => this.anims.exists(k)) ?? null;
+  }
+
   private syncExtras(dt: number, pw: { x: number; y: number }): void {
     const sim = this.sim, floor = sim.floor;
     // T-151 C3 전조(same 날): 내 화장실 문 위 '!' + 문 그림자(칸 안에서도 보임). other 날은 경고 없음
@@ -821,13 +842,24 @@ export class GameScene extends Phaser.Scene {
     // 회의실 문 '사용 중'(순회 meeting, 통행은 유지)
     const busy = sim.meetingDoorBusy();
     for (const d of this.busyDoors) d.setVisible(busy);
+    // 메모 남기기: 목적지 대기를 마치고 복귀 전조(몸 돌림)에 들어가면 메모지 표시(이후 그날 유지)
+    if (this.memoProps.length > 0 && !this.memoProps[0]!.visible
+      && sim.touringNpcs().some((n) => sim.tourStopOf(n)?.id === 'desk_memo' && n.mode === 'tell' && n.tellKind === 'turn')) {
+      for (const m of this.memoProps) m.setVisible(true);
+    }
     // 팀장 출발 말풍선 아이콘
     if (this.tourIconFor) {
       this.tourIconFor.left -= dt;
       const npc = floor.findNpc((n) => n.def.id === this.tourIconFor!.npc);
       const v = npc ? this.views.get(npc) : undefined;
       if (!v || this.tourIconFor.left <= 0 || !this.tourIconFor.frame) { this.tourIcon.setVisible(false); if (!v || this.tourIconFor.left <= 0) this.tourIconFor = null; }
-      else this.tourIcon.setFrame(this.tourIconFor.frame).setPosition(v.sprite.x, v.sprite.y - 30).setVisible(true);
+      else {
+        // BUG-023: 대사 말풍선이 떠 있으면 아이콘을 말풍선 위(가운데)에 둬 문구를 가리지 않음. 말풍선이 없으면 머리 위
+        const bub = v.bubbleBg.visible ? v.bubbleBg.getBounds() : null;
+        const iy = bub ? Math.round(bub.top) - Math.ceil(this.tourIcon.displayHeight / 2) - 1 : v.sprite.y - 30;
+        const ix = bub ? Math.round(bub.centerX) : v.sprite.x;
+        this.tourIcon.setFrame(this.tourIconFor.frame).setPosition(ix, iy).setVisible(true);
+      }
     } else this.tourIcon.setVisible(false);
     // HUD '자리 비움' 배지(남은 시간은 표시 안 함)
     // 자리 비움 = 의자를 떠난 뒤(일어나기 전조 중에는 아직 자리)
@@ -1166,6 +1198,19 @@ export class GameScene extends Phaser.Scene {
     setWrap(t, LOGICAL_WIDTH - 40);
     placeText(t, LOGICAL_WIDTH / 2, HUD_TOP_PX + 14, 0.5, 0);
     fitPanel(bg, t, 5, 4);
+    // BUG-024: 결과·제안 패널(오버레이 첫 사각형)과 겹치면 패널 위쪽 여백으로 올림(위가 모자라면 화면 맨 위 2px부터, 그래도 겹치면 패널 아래)
+    const pane = this.ovObjects.find((o): o is Phaser.GameObjects.Rectangle => o instanceof Phaser.GameObjects.Rectangle && o.visible);
+    if (pane) {
+      const pb = pane.getBounds(), tb = bg.getBounds();
+      if (tb.bottom > pb.top - 2 && tb.top < pb.bottom) {
+        const h = tb.height;
+        const top = Math.round(pb.top) - 3 - h;
+        const below = Math.round(pb.bottom) + 3;
+        const y = top >= 2 ? top : below + h <= LOGICAL_HEIGHT - 2 ? below : 2;
+        placeText(t, LOGICAL_WIDTH / 2, y + 4, 0.5, 0);
+        fitPanel(bg, t, 5, 4);
+      }
+    }
     this.toastOv = { t, bg, left: sec };
     this.time.delayedCall(sec * 1000, () => { if (this.toastOv?.t === t) { t.destroy(); bg.destroy(); this.toastOv = null; } });
   }

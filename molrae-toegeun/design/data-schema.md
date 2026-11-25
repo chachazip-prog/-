@@ -531,6 +531,8 @@ interface AdsTable {
 ## 10. 검사기 `design/tools/validate_data.py`
 `python3 -I molrae-toegeun/design/tools/validate_data.py` → `OK` 또는 오류 목록(종료 코드 1). 검사 항목: schemaVersion, `*Key`·`reactionKeys` 문자열 존재, 전조 최소·페이크 상한(보간 값 포함), 맵 크기·legend·스폿/웨이포인트 통행·도달, 테이블 간 ID 참조, 방해 phase·unlockDay, 하루 예상 길이 범위, D-037 사원증 색. **T-132 추가**: 층 인원 ≤ 12·화면 안 ≤ 8(수작업 날은 그날 구성, 생성 날은 직급별 방해 countRange 최대 개수의 모든 조합 중 최악, 대표님 날 H7 반영. 각 캐릭터가 있을 수 있는 y 범위로 보수적 계산), 배경 동료(2~3명·메카닉 전부 false·회색 줄·자리/경로 유효), 말걸기 `warnSec`·`catchRadius`·`releaseSec`·문구 키, `talkedPerSec = 0`, `resultInputGuardSec ≥ 0.4`, 유리벽 walkable=false·blocksSight=false(D-053), 플레이어 줄 하늘색(D-052), `exemptFirstGamesLifetime` 없음(D-048), 이어하기 조건(D-050·D-056), 문자열 이모지·내부 ID·`{n}원`, 수작업 날 공범 제안 미션 존재, sfx 키 ⊂ `game/assets/audio/audio-manifest.json`(읽기 전용), 걷는 NPC `walkTellSfx`, 게이트 sfx, `visualCues` 6종·깜빡임 ≤ 3Hz. **T-134 추가**: `spriteKey`·`playerSpriteKey`·배경 `sprite` ⊂ `game/assets/sprites/anims.json`(idle·walk 4방향). **T-136 추가**: 이어하기 재개 의심(구 필드와 일치)·컷인 길이·alert 임계(매니페스트 숫자 일치)·H7 간격·대표님 재확인 플래그와 전조·얼음 안전장치·공범 제안 종료 규칙·간식 판정 시점·광고 문구 키. **T-139 추가**: 예산 모델 키(`missionExpectedSec`·`dayInterruptReserveSec`·`perLeaveInterruptSec`), `budgetCheck` 형식, 인사 QTE 창 ≥ 0.4(보간 포함), 생존 상승 범위, 대표님 `coneActiveIn`, 탈출 보너스 시각 범위, `star3PeakBelow` 0.1~0.3, INT-05 `cancelOnLeaveStart`. 실행 끝에 직급별 화면 안 최악 인원을 출력합니다. 데이터를 고칠 때마다 실행하세요. CI 편입은 개발·QA 판단입니다.
 
+
+- T-165 추가: ① 팀 모듈 짧은 순회 목적지(`leadRoaming.destinations[].teamShort`) — 팀 모듈마다 스팟 존재·다른 정지 스팟과 같은 칸 금지·tl_seat 편도 6~22(V09, 벗어나면 오류), 임원 추정 자리 비움이 [8, awayMaxSec] 밖이면 경고(WARN). 결과는 '팀 모듈 짧은 순회 목적지(T-165)' 줄로 출력 ② `facilityStop.scheduleGuard.marginSec` 허용 범위 0~5 → 0~15
 ---
 
 ## 11. 변경 이력
@@ -549,6 +551,7 @@ interface AdsTable {
 | 2 (T-161) | 2026-11-25 | 개발 T-155 코드 기본값 → 데이터, 설정 화면 문구. **필드 추가만, 키 이름·계층·기존 값 변경 없음 → schemaVersion 2 유지**(layout 3 유지, 변경은 `data-schema-v3-draft.md` §8 T-161). 아래 상세 |
 | 2 (T-157) | 2026-11-25 | 개발 T-151 결과의 기획 사항 4건(회전 해시·문 취소 정지·본부장 들름·성별 시설 폴백). **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**(layout 3 유지). 아래 상세 |
 | 2 (T-163) | 2026-11-25 | 설정 화면 확인 버튼 문구 키 1개 추가. **필드 추가만 → schemaVersion 2 유지**. 아래 상세 |
+| 2 (T-165) | 2026-11-25 | QA T-141 반영(D-122·D-125, BUG-021). **값 수정·주석 키 추가만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**(layout·missions 3 유지, 상세 `data-schema-v3-draft.md` §8 T-165). patrols `p_ceo_visit`: 입장 중간 웨이포인트 (5,41) 삭제(수작업 맵은 같은 직선이라 경로 동일, 생성 맵 재매핑에서 n_pantry로 튀던 문제 제거), `stop_ceo_talk.waitSec` 4.0→3.0. bosses `ceo.visit.talkWindow.durationSec` 4.0→3.0. interrupts `INT-10.effect.facilityStop.scheduleGuard.marginSec` 2.0→12.0. npcs `security_guard.rankScaling` 과장~임원 `gate.windowRatio` 각 +0.015. 주석 키 `_t165Note`·`_t165GateNote`. 검사기: scheduleGuard marginSec 상한 5→15, 팀 짧은 순회 목적지 검사(아래 §10) |
 
 ### v1 → v2 상세
 - **신규 테이블**: `maps`, `patrols`, `interrupts`, `ads`.

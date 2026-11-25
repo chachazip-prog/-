@@ -108,37 +108,38 @@
       "rankScaling": {
         "manager": {
           "start": {
-            "gate.windowRatio": 0.2
+            "gate.windowRatio": 0.215
           },
           "end": {
-            "gate.windowRatio": 0.19
+            "gate.windowRatio": 0.205
           }
         },
         "deputy_general_manager": {
           "start": {
-            "gate.windowRatio": 0.19
+            "gate.windowRatio": 0.205
           },
           "end": {
-            "gate.windowRatio": 0.18
+            "gate.windowRatio": 0.195
           }
         },
         "general_manager": {
           "start": {
-            "gate.windowRatio": 0.18
+            "gate.windowRatio": 0.195
           },
           "end": {
-            "gate.windowRatio": 0.17
+            "gate.windowRatio": 0.185
           }
         },
         "executive": {
           "start": {
-            "gate.windowRatio": 0.17
+            "gate.windowRatio": 0.185
           },
           "end": {
-            "gate.windowRatio": 0.17
+            "gate.windowRatio": 0.185
           }
         }
       },
+      "_t165GateNote": "T-165(D-125): 과장 이상 보간값 모두 +0.015(0.20→0.215 … 0.17→0.185). T-141 31일 이후 칼퇴 약 31%, 야근 원인의 60%가 게이트 3회 실패(676판). 직급 보간이 직급 단위 선형이라 '31일부터'를 정확히 자를 수 없어 과장 첫날(28일)부터 적용(28~30일 3일 포함). 인턴·사원·대리 0.22는 그대로라 1~10일 칼퇴 72.0%(합격선 2)는 영향 없음. 🧪 QA: 31~60·61~200일 칼퇴율, 게이트 3회 실패 판 수",
       "_t139GateNote": "T-139(QA 제안 ③): 기본 windowRatio 0.22(인턴·사원·대리)는 유지, 과장 이상 보간만 완화(0.18→0.16 … 0.14 → 0.20→0.19 … 0.17). 0.28 안은 T-140 코드에서 1~10일 칼퇴 88%(목표 70~80 초과), 0.24·0.25도 85%로 초과. 0.22 유지 시 77%. 생성일(31~60일) 게이트 3회 실패가 야근의 큰 원인이라 높은 직급만 완화. 🧪 QA: 직급별 게이트 3회 실패율, 합격선 2",
       "_toneNote": "유능하고 친절한 프로. 놀림·무시 연출 금지. 시선 배율 0.6: '퇴근하시나 보다' 정도로 덜 무서움.",
       "_designNote": "PM 공지 4) 출구 앞을 순찰하며 게이트 사용 칸을 콘으로 덮음 → 게이트 태그 직전에 멈춤·위장 타이밍을 요구. 18시 전에 다가가면 '벌써 퇴근하세요?'(INT-07)."

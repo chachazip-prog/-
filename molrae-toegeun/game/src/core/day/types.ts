@@ -159,6 +159,13 @@ export interface BossTourDef {
   readonly firstTutorialId?: string;
   /** 자리에 도착한 뒤 앉기(콘 없음, 초, T-155). 없으면 0 */
   readonly sitSec?: number;
+  /**
+   * 복귀 전조(BUG-018, T-164): endTell이 없는 목적지에서 떠나기 전 마지막 이 초(대기와 겹침, 대기가 짧으면 늘림)와
+   * 퇴근 전 조기 복귀(tourReturnEarly)의 출발 = 걷기 방향 몸 돌림 전조(시선 없음, 화면 밖 화살표 선행). 없으면 0(전조 없음, 옛 동작)
+   */
+  readonly returnTellSec?: number;
+  /** 복귀 전조 말풍선 키(endTell 없는 목적지용, 없으면 말풍선 없음) */
+  readonly returnTellLineKey?: string;
 }
 
 export interface GateDef {
@@ -348,6 +355,8 @@ export interface GreetingDef {
   readonly greetSpot: { readonly x: number; readonly y: number };
   readonly lineKey?: string;
   readonly resumeDelaySec: number;
+  /** D-124: 인사 자리에서 기다리는 최대 시간(초). 본부장이 구역에 계속 있어도 이 시간이 지나면 하던 일로 복귀하고, 본부장이 구역을 떠날 때까지 다시 인사하지 않음. 없으면 상한 없음 */
+  readonly holdMaxSec?: number;
 }
 
 /** 튜토리얼 경로 힌트(maps.playerRoutes) */

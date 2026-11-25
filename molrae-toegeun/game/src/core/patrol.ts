@@ -57,6 +57,12 @@ export interface WaypointDef {
   readonly lookIsRecheck?: boolean;
   /** 이 지점 돌아보기 전조 길이(초). 없으면 stopLookTellSec·tellSec(범위). 대표님 재확인 = sim.fake.tellSec(T-136 ③) */
   readonly lookTellSec?: number;
+  /**
+   * 출발 전조(BUG-018, T-164): 이 지점을 떠나 걷기 시작하기 전 마지막 departTellSec초를 '다음 구간 방향 회전 전조'(tell, tellKind 'turn')로 보낸다.
+   * 전조 중에는 시선 없음(coneActiveIn에 tell이 없으면), 화면 밖이면 위협 'turning' → 가장자리 화살표가 걷기 전에 먼저 뜬다.
+   * 대기(waitSec)가 이보다 짧으면 대기를 이 길이로 늘린다. 앉은 순찰·마지막 웨이포인트(loop:false)에는 쓰지 않는다
+   */
+  readonly departTellSec?: number;
 }
 
 export interface TalkDef {
@@ -245,6 +251,10 @@ export class PatrolNpc {
   private coneRangeOverride: number | null = null;
   private gazeScaleOverride: number | null = null;
   private seatLookPending = false;
+  /** 이 웨이포인트를 떠나기 전 남은 출발 전조 길이(0 = 없음/이미 함, BUG-018) */
+  private departLeft = 0;
+  /** 지금 tell이 출발 전조인가(끊기면 다시 전조부터) */
+  private departing = false;
   /** 지금 look의 출처: 돌아보기 / 경로 회전(유지 0초) / 말걸기 취소 */
   private curLookKind: 'look' | 'turn' | 'cancel' = 'look';
 
@@ -367,14 +377,26 @@ export class PatrolNpc {
     return false;
   }
 
+  /**
+   * 콘이 잠깐 꺼진 '멈춤'(페이크 뒤 멈춤·돌아보기 복귀) 뒤 곧바로 콘이 켜진 걷기로 돌아가는가(T-164, BUG-018 잔여).
+   * 화면 밖 경고가 이 0.3초 남짓 동안 끊기면 다시 걷는 순간 화면에 들어오며 선행 0.4초를 못 채움 → 경고 판정은 걷기와 같이 본다
+   */
+  get coneResumesWalking(): boolean {
+    return (this.mode === 'fake' || this.mode === 'return') && this.resume === 'walk' && !this.def.coneOff && !this.suppressed && this.cone.range > 0 && this.coneOnIn('walk');
+  }
+
   /** 시선이 지금 플레이어 의심에 반영되지 않는가 (말걸기 중·보내 준 직후, D-043) */
   get ignoresPlayer(): boolean { return this.mode === 'talk' || this.releaseLeft > 0; }
 
   private arrive(i: number, rng: Rng, ctx: StepContext | null): void {
     this.wpIndex = i;
     this.nodeIndex = 0;
+    this.departing = false;
     const wp = this.def.waypoints[i]!;
-    const waitSec = wp.useActorIdle && this.def.idleSecRange ? this.drawRange(this.def.idleSecRange, wp.waitSec, rng) : wp.waitSec;
+    const lastStop = !this.loop && i >= this.def.waypoints.length - 1;
+    this.departLeft = !this.def.seated && !lastStop && (wp.departTellSec ?? 0) > 0 ? wp.departTellSec! : 0;
+    const waitSec0 = wp.useActorIdle && this.def.idleSecRange ? this.drawRange(this.def.idleSecRange, wp.waitSec, rng) : wp.waitSec;
+    const waitSec = Math.max(waitSec0, this.departLeft);
     this.waitLeft = waitSec;
     if (wp.facing && this.def.seated) this.facing = DIR_ANGLE[wp.facing];
     else if (wp.facing && ctx && this.turnTo(DIR_ANGLE[wp.facing], waitSec > 0 ? 'wait' : 'next', ctx)) return;
@@ -398,10 +420,42 @@ export class PatrolNpc {
       this.startLook(DIR_ANGLE[this.pickDir(wp, rng)], 'wait', rng, wp.lookTellSec !== undefined ? { tellSec: wp.lookTellSec } : {}, true);
     } else if (waitSec > 0) {
       this.setMode('wait');
+      if (this.departLeft > 0 && this.waitLeft <= this.departLeft) this.startDepartTell();
     } else {
       this.proceed();
     }
   }
+
+  /** 다음 구간 첫 이동 방향(없으면 null) */
+  private nextLegFacing(): number | null {
+    const seg = this.segments[this.wpIndex];
+    if (!seg) return null;
+    for (const q of seg) {
+      const dx = q.x - this.x, dy = q.y - this.y;
+      if (Math.hypot(dx, dy) > 1e-6) return Math.atan2(dy, dx);
+    }
+    return null;
+  }
+
+  /** 출발 전조 시작(BUG-018): 걷기 방향으로 몸 돌림 전조 departLeft초 → (유지 0초) → 걷기. 갈 곳이 없으면 그냥 대기 계속 */
+  private startDepartTell(): boolean {
+    const f = this.nextLegFacing();
+    const sec = this.departLeft;
+    this.departLeft = 0;
+    if (f === null || sec <= 0) return false;
+    this.pendingFacing = normAngle(f);
+    this.resume = 'walk';
+    this.tellKind = 'turn';
+    this.timer = sec;
+    this.lookHold = 0;
+    this.tellIsFake = false;
+    this.waitLeft = 0;
+    this.departing = true;
+    this.departSec = sec;
+    this.setMode('tell');
+    return true;
+  }
+  private departSec = 0;
 
   private pickDir(wp: WaypointDef, rng: Rng): Dir {
     const cands = wp.lookDirs && wp.lookDirs.length > 0
@@ -590,6 +644,8 @@ export class PatrolNpc {
     if (this.returnFacing !== null) { this.facing = this.returnFacing; this.returnFacing = null; }
     if (this.mode === 'talk') this.facing = this.talkPrevFacing;
     if (this.def.seated) { this.arrive(this.wpIndex, rng, null); return; }
+    // 출발 전조가 끊기면 걷기로 바로 넘어가지 않고 전조를 처음부터 다시(BUG-018: 시선 시작 전 반드시 전조)
+    if (this.departing) { this.departing = false; this.departLeft = this.departSec; this.startDepartTell(); return; }
     this.resumeAfter(rng, ALWAYS_TELL);
   }
 
@@ -628,6 +684,7 @@ export class PatrolNpc {
             return;
           }
           const wasLook = this.tellKind === 'look';
+          this.departing = false;
           this.curLookKind = this.escapeLookPending ? 'cancel' : wasLook ? 'look' : 'turn';
           const wasEscape = this.escapeLookPending;
           this.escapeLookPending = false;
@@ -684,6 +741,7 @@ export class PatrolNpc {
         }
         return;
       case 'wait':
+        if (this.departLeft > 0 && this.waitLeft <= this.departLeft && !this.doorHold) { if (this.startDepartTell()) return; }
         this.waitLeft -= dt;
         if (this.waitLeft <= 0 && this.doorHold) { this.doorHold = false; this.setMode('walk'); return; }
         if (this.waitLeft <= 0) {

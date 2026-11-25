@@ -216,6 +216,10 @@ export class DaySim {
   private coughed = new Set<PatrolNpc>();
   // ── 위계 연쇄 H1·H2 ──
   private greetState: 'idle' | 'greeting' | 'returning' = 'idle';
+  /** D-124: 인사 자리에서 기다린 시간(hold 상한용) */
+  private greetHeld = 0;
+  /** D-124: 상한으로 인사를 끝냄 → 본부장이 구역을 떠날 때까지 다시 인사하지 않음 */
+  private greetSkipUntilLeave = false;
   private greetTimer = 0;
   // ── 스크립트·연출 ──
   private slowMoLeft = 0;
@@ -1372,7 +1376,8 @@ export class DaySim {
         }
       } else if (b.type === 'boss_opportunity' && b['opportunity'] === 'phone_call') {
         const npc = this.floor.findNpc((n) => n.def.actorId === b['actor']);
-        if (npc && npc.mode === 'wait') { npc.startPhone(numOr(b['durationSec'], 3)); this.scriptDone.add(i); }
+        // 통화 기회는 자리에 앉아 있을 때만(T-164: 순회 목적지 대기 중 통화 → 자리 비움이 4초 늘어 퇴근 전 복귀를 못 지킴). 순회 중이면 복귀 뒤로 미룸
+        if (npc && npc.mode === 'wait' && npc.def.seated) { npc.startPhone(numOr(b['durationSec'], 3)); this.scriptDone.add(i); }
       } else this.scriptDone.add(i);
     });
   }
@@ -1761,14 +1766,26 @@ export class DaySim {
     const npc = st.npc!;
     const must = def.mustBeSeatedBeforeLeaveSec;
     if (must === undefined || st.cutShort || this.phase !== 'day' || npc.mode !== 'wait' || npc.stopId === 'stop_tour_stand') return;
+    // T-164: 이미 자리에 돌아와 앉는 중(stop_tour_sit)이거나, 목적지 칸이 아닌 곳의 멈춤(걷는 중 말걸기 뒤 대기 등)에서는 끊지 않음
+    if (npc.stopId === 'stop_tour_sit' || npc.waypointIndex >= npc.def.waypoints.length - 1) return;
     const left = this.content.dayPhaseSec - this.dayTime;
     if (left > must + 25) return;
     const seatWp = npc.def.waypoints[npc.def.waypoints.length - 1]!;
     const here = tileOf(npc);
+    const cwp = npc.def.waypoints[npc.waypointIndex];
+    if (!cwp || cwp.x !== here.x || cwp.y !== here.y) return;
     const path = findPath(this.floor.map, here, { x: seatWp.x, y: seatWp.y });
-    const ret = (path ? path.length - 1 : 0) / Math.max(0.1, npc.def.speedTilesPerSec) + (def.sitSec ?? 0);
+    const rt = def.returnTellSec ?? 0;
+    // 복귀 = 복귀 전조 + 걷기 + 모퉁이 전조(조건부지만 상한으로 모두 셈) + 앉기
+    let corners = 0;
+    if (path) for (let i = 2; i < path.length; i++) if (path[i]!.x - path[i - 1]!.x !== path[i - 1]!.x - path[i - 2]!.x || path[i]!.y - path[i - 1]!.y !== path[i - 1]!.y - path[i - 2]!.y) corners++;
+    const ret = rt + (path ? path.length - 1 : 0) / Math.max(0.1, npc.def.speedTilesPerSec) + corners * (npc.def.turnTellSec ?? npc.def.tellSec) + (def.sitSec ?? 0);
     if (left > must + ret) return;
-    const back: NpcDef = { ...npc.def, id: `${npc.def.id}_back`, waypoints: [{ x: here.x, y: here.y, waitSec: 0, lookChance: 0 }, seatWp] };
+    // BUG-018: 바로 걷지 않고 복귀 전조(몸 돌림, 시선 없음) 뒤 출발
+    const back: NpcDef = {
+      ...npc.def, id: `${npc.def.id}_back`,
+      waypoints: [{ x: here.x, y: here.y, waitSec: 0, lookChance: 0, ...(rt > 0 ? { departTellSec: rt, stopId: 'stop_tour_return' } : {}) }, seatWp],
+    };
     try { st.npc = this.floor.replaceNpc(npc, back); st.cutShort = true; st.route = []; } catch { /* 경로 없음: 그대로 */ }
   }
 
@@ -1839,10 +1856,16 @@ export class DaySim {
           this.tourReturnEarly(def, st);
           // 복귀 전조 시작 알림(표시·사운드)
           st.route.forEach((s, i) => {
-            if (!s.endTell || st!.endTellShown.has(i)) return;
-            if (st!.npc!.waypointIndex === this.stopWpIndex(st!.route, i, true) && st!.npc!.mode !== 'walk') {
+            if (st!.endTellShown.has(i)) return;
+            const n = st!.npc!;
+            if (n.waypointIndex !== this.stopWpIndex(st!.route, i, true)) return;
+            if (s.endTell && n.mode !== 'walk') {
               st!.endTellShown.add(i);
-              this.push({ t: this.time, type: 'tourEndTell', npc: st!.npc!.def.id, ...(s.endTell.lineKey ? { lineKey: s.endTell.lineKey } : {}), ...(s.endTell.sfx ? { sfx: s.endTell.sfx } : {}) });
+              this.push({ t: this.time, type: 'tourEndTell', npc: n.def.id, ...(s.endTell.lineKey ? { lineKey: s.endTell.lineKey } : {}), ...(s.endTell.sfx ? { sfx: s.endTell.sfx } : {}) });
+            } else if (!s.endTell && n.mode === 'tell' && n.tellKind === 'turn' && def.returnTellLineKey) {
+              // endTell 없는 목적지의 복귀 전조(BUG-018) 말풍선
+              st!.endTellShown.add(i);
+              this.push({ t: this.time, type: 'tourEndTell', npc: n.def.id, lineKey: def.returnTellLineKey });
             }
           });
           continue;
@@ -1871,16 +1894,19 @@ export class DaySim {
       const route = def.routes[st.next] ?? def.routes[def.routes.length - 1] ?? [];
       if (route.length === 0) { st.next++; continue; }
       const sw = seat.def.waypoints[0]!;
+      // BUG-018: 일어나기·목적지 대기·복귀 전조의 끝은 모두 '걷기 방향 몸 돌림 전조'(departTellSec, 시선 없음, 화면 밖 화살표 선행)로 끝난다
+      const rt = def.returnTellSec ?? 0;
       const wps: WaypointDef[] = [
-        { x: sw.x, y: sw.y, waitSec: def.standTellSec, lookChance: 0, coneOff: true, stopId: 'stop_tour_stand', ...(sw.facing ? { facing: sw.facing } : {}) },
+        { x: sw.x, y: sw.y, waitSec: def.standTellSec, departTellSec: def.standTellSec, lookChance: 0, coneOff: true, stopId: 'stop_tour_stand', ...(sw.facing ? { facing: sw.facing } : {}) },
       ];
       for (const s of route) {
         wps.push({
           x: s.tile.x, y: s.tile.y, waitSec: s.waitSec, lookChance: s.lookChance ?? 0, stopId: `stop_tour_${s.id}`,
+          ...(!s.endTell && rt > 0 ? { departTellSec: rt } : {}),
           ...(s.facing ? { facing: s.facing } : {}),
         });
-        // 복귀 전조(endTell): 같은 칸에서 sec 동안 시선 없이 서 있음
-        if (s.endTell) wps.push({ x: s.tile.x, y: s.tile.y, waitSec: s.endTell.sec, lookChance: 0, coneOff: true, stopId: `stop_tour_end_${s.id}`, ...(s.facing ? { facing: s.facing } : {}) });
+        // 복귀 전조(endTell): 같은 칸에서 sec 동안 시선 없이 몸 돌림 전조
+        if (s.endTell) wps.push({ x: s.tile.x, y: s.tile.y, waitSec: s.endTell.sec, departTellSec: s.endTell.sec, lookChance: 0, coneOff: true, stopId: `stop_tour_end_${s.id}`, ...(s.facing ? { facing: s.facing } : {}) });
       }
       // 자리 도착 → 앉기(sitSec, 콘 없음, T-155). 없으면 바로 앉은 순찰로 교체
       wps.push({ x: sw.x, y: sw.y, waitSec: def.sitSec ?? 0, lookChance: 0, ...(def.sitSec ? { coneOff: true, stopId: 'stop_tour_sit', ...(sw.facing ? { facing: sw.facing } : {}) } : {}) });
@@ -1897,6 +1923,7 @@ export class DaySim {
       st.npc = npc;
       st.route = route;
       st.endTellShown = new Set();
+      st.cutShort = false;
       st.next++;
       st.index++;
       const first = route[0]!;
@@ -1918,7 +1945,8 @@ export class DaySim {
     const z = this.content.zones.find((zz) => zz.id === g.zoneId);
     const inZ = !!boss && !!z && (() => { const t = tileOf(boss); const [x, y, w, h] = z.rect; return t.x >= x && t.y >= y && t.x < x + w && t.y < y + h; })();
     if (this.greetState === 'idle') {
-      if (!inZ) return;
+      if (!inZ) { this.greetSkipUntilLeave = false; return; }
+      if (this.greetSkipUntilLeave) return;
       const tl = this.floor.findNpc((n) => n.def.actorId === g.greeterActorId && !!n.def.seated && n.def.patrolId === this.content.patrols['p_tl_seat']?.patrolId);
       if (!tl || tl.mode === 'talk' || (tl.mode === 'tell' && tl.tellKind === 'talk')) return;
       const seat = tl.def.waypoints[0]!;
@@ -1935,12 +1963,19 @@ export class DaySim {
       const n = this.floor.replaceNpc(tl, rest);
       this.greetState = 'greeting';
       this.greetTimer = 0;
+      this.greetHeld = 0;
       if (g.lineKey) this.push({ t: this.time, type: 'say', npc: n.def.id, key: g.lineKey, sec: 1.8 });
       return;
     }
     const greeter = this.floor.findNpc((n) => n.def.actorId === g.greeterActorId);
     if (!greeter || greeter.def.seated) { this.greetState = 'idle'; return; }
     if (this.greetState === 'greeting') {
+      if (greeter.mode === 'hold') this.greetHeld += dt;
+      const cap = this.content.greeting?.holdMaxSec;
+      if (cap !== undefined && greeter.mode === 'hold' && this.greetHeld >= cap) {
+        greeter.release(); this.greetState = 'returning'; this.greetSkipUntilLeave = inZ;
+        return;
+      }
       if (inZ) { this.greetTimer = 0; return; }
       this.greetTimer += dt;
       if (this.greetTimer >= g.resumeDelaySec && greeter.mode === 'hold') { greeter.release(); this.greetState = 'returning'; }

@@ -31,6 +31,7 @@ from collections import deque
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "game", "data"))
 errors, warns = [], []
+TOUR_SHORT_REPORT = []  # T-165
 
 
 def err(msg):
@@ -663,6 +664,60 @@ if "layout" in T:
         err("layout.leadRoaming.sitSec 없음 또는 0~1.0초 밖(T-161, GDD v3 §3-1 앉기 0.5초)")
     if not (0 <= LR.get("cornerTellShare", -1) <= 1):
         err("layout.leadRoaming.cornerTellShare 없음 또는 0~1 밖(T-161)")
+    # T-165(D-120): 팀 모듈 짧은 목적지(teamShort) — 임원 추정 자리 비움 ∈ [8, awayMaxSec] (경고), V09 편도 6~22(오류: 벗어나면 그날 후보에서 늘 빠짐)
+    TS_ = [d for d in LR["destinations"] if d.get("teamShort")]
+    if TS_:
+        BX_ = LR["byRank"]["executive"]
+        for m in LY["modules"]:
+            if m.get("group") != "team" or "tl_seat" not in m["spots"]:
+                continue
+            rows_ = m["rows"]; Hm, Wm = len(rows_), len(rows_[0])
+            occ_ = {tuple(m["spots"][k]["tile"]) for k in ("snitch_seat", "accomplice_seat", "player_seat") if k in m["spots"]}
+            def okm(x, y):
+                if not (0 <= x < Wm and 0 <= y < Hm) or (x, y) in occ_:
+                    return False
+                c = rows_[y][x]
+                return c != "?" and LEG3.get(c, {}).get("walkable") is True
+            src = tuple(m["spots"]["tl_seat"]["tile"])
+            dist_, prev_ = {src: 0}, {src: None}
+            q_ = deque([src])
+            while q_:
+                cx, cy = q_.popleft()
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nb = (cx + dx, cy + dy)
+                    if nb not in dist_ and okm(*nb):
+                        dist_[nb] = dist_[(cx, cy)] + 1; prev_[nb] = (cx, cy); q_.append(nb)
+            for d in TS_:
+                sp_ = next((m["spots"][s_] for s_ in d["spots"] if s_ in m["spots"]), None)
+                if not sp_:
+                    err(f"layout.modules.{m['id']}: teamShort 목적지 {d['id']} 스팟 없음(팀 모듈마다 필요, D-120)")
+                    continue
+                t_ = tuple(sp_["tile"])
+                for k_, o_ in m["spots"].items():
+                    if not k_.startswith("tour_") or k_ in d["spots"]:
+                        continue
+                    if tuple(o_["tile"]) == t_:
+                        err(f"layout.modules.{m['id']}.spots.{d['spots'][0]}: 다른 스팟 {k_}와 같은 칸")
+                for k_ in ("tl_greet_spot", "ceo_talk_spot", "hr_inspect_spot", "ceo_greet_spot", "snitch_report_spot", "copier_use", "player_seat", "snitch_seat", "accomplice_seat"):
+                    if k_ in m["spots"] and tuple(m["spots"][k_]["tile"]) == t_:
+                        err(f"layout.modules.{m['id']}.spots.{d['spots'][0]}: {k_}와 같은 칸(D-120 §4-1)")
+                one = dist_.get(t_)
+                if one is None or not (6 <= one <= 22):
+                    err(f"layout.modules.{m['id']}: teamShort {d['id']} 편도 {one} — V09(편도 6~22) 밖이라 늘 후보에서 빠짐")
+                    continue
+                # 임원 추정(§3-7 awayOf 근사): 전조 + 왕복 ÷ 속도 + 앉기 + 대기 × 배수 + 뒤돌아보기 + 모퉁이 + 둘러보기
+                path_, c_ = [], t_
+                while c_:
+                    path_.append(c_); c_ = prev_[c_]
+                corners_ = sum(1 for i in range(2, len(path_)) if (path_[i][0] - path_[i-1][0], path_[i][1] - path_[i-1][1]) != (path_[i-1][0] - path_[i-2][0], path_[i-1][1] - path_[i-2][1]))
+                look_ = 1.7  # 돌아보기 1회 기대 길이(임원 팀장: 전조 0.5 + 유지·페이크 가중 약 1.2)
+                base_ = LR["standTell"]["sec"] + 2 * one / BX_["speedTilesPerSec"] + LR["sitSec"]
+                base_ += 2 * max(0, one - 1) * LR["walk"]["glanceBackChancePerTile"] * look_ + 2 * corners_ * 0.5 * LR["cornerTellShare"] + d["lookChance"] * look_
+                lo_ = round(base_ + d["waitSecRange"][0] * BX_["waitMul"], 1)
+                hi_ = round(base_ + d["waitSecRange"][1] * BX_["waitMul"], 1)
+                TOUR_SHORT_REPORT.append(f"{m['id']}.{d['id']} 편도 {one} 임원 {lo_}~{hi_}초")
+                if lo_ < 8 or hi_ > BX_["awayMaxSec"]:
+                    warns.append(f"layout.leadRoaming.{d['id']}@{m['id']}: 임원 추정 자리 비움 {lo_}~{hi_}초가 [8, {BX_['awayMaxSec']}] 밖(D-120 §3: 8 미만 = during_tour 자격 경계, 상한 초과 = 다시 고르기)")
     for tr in LY["complexityByRank"]:
         c0, c1 = tr["complexity"]
         if not (0 <= c0 <= c1 <= 1):
@@ -1027,8 +1082,9 @@ if GF:
         elif rm_g and any(n_ not in rm_g.get("routeNodes", {}) for n_ in tg_["nodes"]):
             err(f"facilityStop.trigger.nodes {tg_['nodes']}가 {rm_g['id']}.routeNodes에 없음")
         sg_ = i10.get("scheduleGuard", {})
-        if sg_.get("enabled") is not True or not (0 <= sg_.get("marginSec", -1) <= 5) or sg_.get("onConflict") != "keep_original":
-            err("facilityStop.scheduleGuard: enabled true·marginSec 0~5·onConflict keep_original 필요(T-157)")
+        if sg_.get("enabled") is not True or not (0 <= sg_.get("marginSec", -1) <= 15) or sg_.get("onConflict") != "keep_original":
+            # T-165(BUG-021): 상한 5 → 15. 여유는 길목 앞 정지·둘러보기·인사 hold를 흡수하는 값(12). 15 넘으면 INT-10이 근무 앞쪽에 몰림
+            err("facilityStop.scheduleGuard: enabled true·marginSec 0~15·onConflict keep_original 필요(T-157·T-165)")
         if i10.get("insideFacing") == "toward_door" and rm_g:
             DV = {"right": (1, 0), "left": (-1, 0), "down": (0, 1), "up": (0, -1)}
             for sd, ref in rm_g["genderFacility"]["sides"].items():
@@ -1169,6 +1225,8 @@ print("출연 여성 비율(직급별, 회전 = 0.5): " + ", ".join(share_report
 
 print(f"tables: {', '.join(T)}")
 print("화면 안 최악 인원(직급별, 플레이어 포함): " + ", ".join(f"{k} {v[0]}" for k, v in RANK_SCREEN.items()))
+if TOUR_SHORT_REPORT:
+    print("팀 모듈 짧은 순회 목적지(T-165): " + " · ".join(TOUR_SHORT_REPORT))
 for w in warns:
     print("WARN", w)
 for e in errors:

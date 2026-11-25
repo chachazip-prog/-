@@ -80,7 +80,8 @@ export class CharSelectScene extends Phaser.Scene {
     });
     const note = addPixelText(this, 0, 0, str.t(pick('settings.character_hint', key('noteKey', 'charsel.note'))), { role: 'label', color: color('dark'), lineSpacing: 2 });
     setWrap(note, LOGICAL_WIDTH - 28); placeText(note, 14, top + ch + 10, 0, 0);
-    const go = new UiButton(this, 30, LOGICAL_HEIGHT - 62, LOGICAL_WIDTH - 60, 30, str.t(key('confirmKey', 'charsel.confirm')), { depth: 10, style: 'primary' });
+    // BUG-026(D-120): 설정 모드 확인 버튼 = settings.character_confirm('바꾸기'), 없으면 첫 출근 문구
+    const go = new UiButton(this, 30, LOGICAL_HEIGHT - 62, LOGICAL_WIDTH - 60, 30, str.t(pick(key('settingsConfirmKey', 'settings.character_confirm'), key('confirmKey', 'charsel.confirm'))), { depth: 10, style: 'primary' });
     go.setEnabled(false);
     let busy = false;
     this.input.on(Phaser.Input.Events.POINTER_DOWN, (p: Phaser.Input.Pointer) => {

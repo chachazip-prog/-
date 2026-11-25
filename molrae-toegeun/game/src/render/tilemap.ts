@@ -32,6 +32,8 @@ export interface Placement {
   readonly occlude?: readonly [number, number, number, number];
   /** 회의실 문(사용 중 표시 교체용) */
   readonly meetingDoor?: boolean;
+  /** 팀장 순회 '메모 남기기'(D-120) 책상 메모지: 처음엔 숨김, 팀장이 메모를 붙인 뒤 그날 끝까지 표시 */
+  readonly memo?: boolean;
 }
 
 export interface GlassPiece { readonly x: number; readonly y: number; readonly door: boolean }
@@ -59,6 +61,18 @@ const FLOOR_BY_ZONE: Readonly<Record<string, string>> = {
   storage: 'tile2/floor_print',
   next_team: 'tile2/floor_team2',
 };
+
+/**
+ * 순회 목적지 스팟 → 바라보는 쪽 바깥 벽 칸 장식(D-120, T-166 아트: <키>_l = 왼쪽 벽, _r = 오른쪽 벽). 표시 전용(통행·시선 판정 없음).
+ * 스팟 facing이 left면 왼쪽 칸, right면 오른쪽 칸이 벽일 때만 그 벽(wall_cap_l/r 자리)을 바꿈. 모듈 좌우 반전이면 facing도 반전되어 자동으로 짝이 맞음
+ */
+const WALL_DECOR_BY_SPOT: Readonly<Record<string, string>> = {
+  tour_whiteboard: 'tile2/wall_whiteboard_side',
+  tour_water: 'tile2/wall_water_side',
+};
+/** 메모 남기기 스팟(D-120): facing 쪽 책상에 메모지 소품 */
+const MEMO_SPOT = 'tour_desk_memo';
+const MEMO_FRAME_BY_DESK: Readonly<Record<string, string>> = { 'furn/desk_monitor': 'furn2/desk_memo', 'furn/desk_papers': 'furn2/desk_memo_papers' };
 
 /** 칸 좌표 해시(장식 후보 선택용, 결정적) */
 const hash2 = (x: number, y: number): number => (Math.imul(x + 1, 73856093) ^ Math.imul(y + 1, 19349663)) >>> 0;
@@ -113,6 +127,20 @@ export function buildTileLayout(c: DayContent, has: (frame: string) => boolean =
   const isGlassy = (x: number, y: number): boolean =>
     kind(x, y) === 'glass' || (kind(x, y) === 'door' && (kind(x, y - 1) === 'glass' || kind(x, y + 1) === 'glass'));
   const bottom = (y: number) => (y + 1) * TILE;
+  const DX: Readonly<Record<string, number>> = { left: -1, right: 1 };
+  /** 벽 칸 → 장식 프레임(스팟 facing 쪽 이웃 칸) */
+  const wallDecor = new Map<number, string>();
+  for (const [id, base] of Object.entries(WALL_DECOR_BY_SPOT)) {
+    const sp = c.spots[id];
+    const dx = sp?.facing ? DX[sp.facing] : undefined;
+    if (!sp || dx === undefined) continue;
+    const wx = sp.tile.x + dx, wy = sp.tile.y;
+    if (kind(wx, wy) === 'wall') wallDecor.set(wy * W + wx, `${base}_${dx < 0 ? 'l' : 'r'}`);
+  }
+  const memoSp = c.spots[MEMO_SPOT];
+  const memoDx = memoSp?.facing === 'left' ? -1 : memoSp?.facing === 'right' ? 1 : 0;
+  const memoDy = memoSp?.facing === 'up' ? -1 : memoSp?.facing === 'down' ? 1 : 0;
+  const memoAt = memoSp && (memoDx || memoDy) ? (memoSp.tile.y + memoDy) * W + memoSp.tile.x + memoDx : -1;
   const cx = (x: number) => x * TILE + TILE / 2;
   let faceCount = 0;
 
@@ -136,6 +164,8 @@ export function buildTileLayout(c: DayContent, has: (frame: string) => boolean =
           else if (x === W - 1) g = 'tile/wall_cap_r';
           else if ((wallish(x, y - 1) || wallish(x, y + 1)) && !wallish(x - 1, y) && !wallish(x + 1, y)) g = 'tile/wall_cap_v';
           else g = 'tile/wall_cap';
+          const deco = wallDecor.get(y * W + x);
+          if (deco && !southOpen && y > 0) g = orFallback(deco, g);
           break;
         }
         case 'elevator': {
@@ -182,6 +212,8 @@ export function buildTileLayout(c: DayContent, has: (frame: string) => boolean =
           const south = spotAt(x, y + 1);
           const frame = south === 'tl_seat' || south === 'tl2_seat' ? 'furn/desk_boss' : (x + y) % 3 === 0 ? 'furn/desk_papers' : 'furn/desk_monitor';
           objects.push({ frame, x: cx(x), y: bottom(y) });
+          const memo = MEMO_FRAME_BY_DESK[frame];
+          if (memo && y * W + x === memoAt && has(memo)) objects.push({ frame: memo, x: cx(x), y: bottom(y), depthBias: 0.5, memo: true });
           break;
         }
         case 'seat': {

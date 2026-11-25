@@ -47,6 +47,8 @@ const ICON_FALLBACK: Readonly<Record<string, string>> = {
   icon_parcel: 'icon_leave', icon_print: 'icon_shopping', icon_chat: 'icon_snack', icon_bank: 'icon_shopping',
   icon_cafe: 'icon_coffee', icon_window: 'icon_nap',
   icon_tour_printer: 'icon_shopping', icon_tour_cup: 'icon_coffee', icon_tour_meeting: 'icon_nap', icon_tour_talk: 'hud/talk_2', icon_tour_report: 'icon_done',
+  // D-120 팀 모듈 목적지(T-166 아트 반영 전 대비)
+  icon_tour_board: 'icon_tour_report', icon_tour_water: 'icon_tour_cup', icon_tour_memo: 'icon_tour_report',
 };
 export function iconFallback(key: string): string { return ICON_FALLBACK[key] ?? key; }
 export function iconFallbackTable(): Readonly<Record<string, string>> { return ICON_FALLBACK; }

@@ -239,12 +239,13 @@ interface LeadRoaming {
   coneActiveIn: ('walk'|'look')[];       // = BossTourDef.coneActiveIn (wait·tell 제외)
   walk: { glanceBackChancePerTile: 0.03; talkEnabled: true; avoidTiles: ['player_seat']; pathTieBreak: string };
   destinations: {
-    id: 'printer'|'pantry'|'meeting'|'next_team'|'exec_report';
+    id: 'printer'|'pantry'|'meeting'|'next_team'|'exec_report'|'whiteboard'|'water'|'desk_memo';   // T-165: 뒤 3종 추가(D-120)
     spots: string[];                     // 앞에서부터 이 층에 있는 첫 스팟 (= DEV_TOUR.destinations[].spots). T-161: printer = [tour_copier, tour_printer]
     waitSecRange: [Sec, Sec]; lookChance: number; weight: number; minDay: number;
     bubbleIcon: string; lineKey: string; pose?: string; floorMark?: string;
     locksMissions?: MissionId[]; endTell?: { sec: Sec; sfx?: string; sfxNew?: string; sfxFallback?: string; lineKey: string };
     meetingRoomDoor?: 'busy_while_inside';
+    teamShort?: boolean;                 // T-165: 팀 모듈 안 짧은 목적지(검사기 경고 대상: 임원 추정 ∈ [8, awayMaxSec], 팀 모듈마다 스팟 필수, V09 편도 6~22). 코드는 읽지 않아도 됨
   }[];
   byRank: Record<RankId, { countRange: IntRange; stopsPerTour: IntRange; speedTilesPerSec: number; waitMul: number;
                            awayMaxSec?: Sec;          // 🔧 T-156: 없으면 awaySecRange[1]
@@ -415,3 +416,4 @@ interface CombinationRules {
 | 3-draft (T-161) | 2026-11-25 | **값 수정·필드 추가만(키 이름·계층 변경 없음)**, D-113. layout `leadRoaming`: 새 필드 `sitSec` 0.5·`cornerTellShare` 0.25(T-155 코드 임시값 → 데이터, 코드가 이미 읽음), `destinations.printer.spots` 순서 [tour_printer, tour_copier] → [tour_copier, tour_printer](생성 맵 1/195 변경), `byRank.countRange` 대리 [2,3]→[2,2]·과장 [3,3]→[2,3]·차장·부장 [3,4]→[2,3]·임원 [4,4]→[2,3], `ceoDayCountRange` 부장·임원 [2,3]→[2,2], `awayMaxSec` 사원 22(신규 명시)·대리 18→22, `awayRule` 문구(🔧 다시 고르기 규칙 요청). 주석 키 `_t161Note`·`_t161EstimateNote`. 검사기: sitSec 0~1, cornerTellShare 0~1, awayMaxSec가 awaySecRange 안, ceoDayCountRange ≤ countRange 상한. 상세 gdd-v3 §3-7 |
 | 3-draft (T-152b) | 2026-11-24 | D-100. **값 수정·필드 추가만**. layout: `mid_printer`·`bottom_storage`에 `spots.storage_corner_use`. missions: `relocate.bank_stall` 목적지 창고 구석·보상 1.1·`targetFacility` 삭제, `appliesTo.bank` 같은 값, `facility.cleaning.missions` restroom만. 상세 `design/data-schema.md` §11 T-152 |
 | 3-draft (T-157) | 2026-11-25 | **값 수정·필드 추가만**. layout: `repair.protectFacilityTiles` true, `validators.maxAttempts` 24 → 32, `mid_rest_meet_g` 세면대 facing right·`doorOpenChance` [1.0, 1.0], `genderFacilities.access.talkCancelNpcHold`. 생성 버전 태그 해시가 바뀌어 성별 시설 off 맵도 달라짐. 상세 `design/data-schema.md` §11 T-157 |
+| 3-draft (T-165) | 2026-11-25 | **값 수정·필드 추가만(키 이름·계층 변경 없음)**, D-120·D-122·D-125·D-126, QA T-141. layout: `team_front`·`team_back` `spots`에 `tour_whiteboard`·`tour_water`·`tour_desk_memo`(스팟 보조 필드 `memoDesk`[x,y] = 메모 붙는 책상 칸, 아트·연출용, 반전 시 개발이 x를 같이 뒤집어야 함, 주석 `_note`), `leadRoaming.destinations`에 `whiteboard`·`water`·`desk_memo`(minDay 28, 새 필드 `teamShort` true, 새 pose `teamlead/wait_side`), 주석 `_t165Note`. 스팟 좌표는 제안서(편도 4~5)에서 편도 6~7로 옮김(V09 하한 6, 코드 고정값). `validators.V03_distance`에 `parcelOneWayCapTiles` 38·`parcelOverCap` 'drop_mission'·`restroomTimeByDistance`(🔧 셋 다 개발 반영 필요, 지금 코드는 무시). **생성 맵 해시 변경**(모듈 스팟 추가 → V08 막힌 길 판정 칸·V09 후보가 바뀜, D-120 승인). `validators.maxAttempts` 32→40(175일 폴백 방지). missions: `bank.timeLimitSec` 16→20, `parcel.timeLimitSec` 32→36, `stringsKo`에 `tour.tl.whiteboard`·`tour.tl.water`·`tour.tl.desk_memo`. v2 테이블 변경은 `data-schema.md` §11 T-165 |

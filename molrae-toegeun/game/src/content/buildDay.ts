@@ -127,7 +127,8 @@ function tourWalkerTiming(tables: Tables, roam: O, rankId: string, t: number, ru
   const seatPatrolId = str(roam['seatPatrolId'], 'p_tl_seat');
   const actorId = str(arr(obj(tables['patrols'])['patrols']).map(obj).find((p) => p['id'] === seatPatrolId)?.['actorId'], str(roam['actorId'], 'team_lead'));
   const raw = arr(obj(tables['bosses'])['bosses']).map(obj).find((a) => a['id'] === actorId) ?? arr(obj(tables['npcs'])['npcs']).map(obj).find((a) => a['id'] === actorId);
-  const sim = obj(raw ? obj(applyInterpScaling(raw, rankId, t))['sim'] : {});
+  const scaled = raw ? obj(applyInterpScaling(raw, rankId, t)) : {};
+  const sim = obj(scaled['sim']);
   const mean = (r: [number, number] | undefined, d: number) => (r ? (r[0] + r[1]) / 2 : d);
   const tellSec = num(sim['tellSec'], 0.5);
   const fake = obj(sim['fake']);
@@ -143,7 +144,48 @@ function tourWalkerTiming(tables: Tables, roam: O, rankId: string, t: number, ru
     // T-161 데이터화(T-162: 코드 기본값 제거). 없으면 경고 + 0(추정·런타임 앉기에 더하지 않음)
     cornerTellShare: roamNum(roam, 'cornerTellShare', warn),
     sitSec: roamNum(roam, 'sitSec', warn),
+    departWaitSec: seatDepartWaitSec(scaled, sim, rules),
+    doubleLookExtraSec: (() => {
+      const dl = obj(sim['doubleLook']);
+      const p = Math.min(num(dl['chance'], 0), num(dl['capChance'], 1));
+      const lk = mean(range2(sim['lookSecRange']), num(sim['lookSec'], 1));
+      return p > 0 ? p * (num(dl['gapSec'], 0.3) + num(dl['secondTellSec'], tellSec) + mean(range2(dl['secondLookSecRange']), lk)) : 0;
+    })(),
   };
+}
+
+/**
+ * D-124: 출발 예정 시각에 팀장이 돌아보기·통화 중이면 끝날 때까지 기다린다(자리 'wait'일 때만 출발). 그 기대 지연(초).
+ * 앉은 주기 = 대기(idleSecRange) + 바쁜 구간 B(돌아보기: 전조 + 유지 + 복귀 (+ 연속 보기) / 페이크: 전조 + afterFake / 통화: durationSecRange).
+ * 무작위 시각에 걸린 B의 남은 길이 기대값 = E[B²] ÷ (2 × E[주기]) (갱신 과정의 잔여 시간). 재료는 모두 데이터(직급 보간)
+ */
+function seatDepartWaitSec(actor: O, sim: O, rules: O): number {
+  const mean = (r: [number, number] | undefined, d: number) => (r ? (r[0] + r[1]) / 2 : d);
+  const idle = mean(range2(sim['idleSecRange']), 0);
+  const tell = mean(range2(sim['tellSecRange']), num(sim['tellSec'], 0.5));
+  const look = mean(range2(sim['lookSecRange']), num(sim['lookSec'], 1));
+  const ret = num(obj(rules['sight'])['returnSec'], 0.3);
+  const fake = obj(sim['fake']);
+  const fp = fake['type'] === 'recheck' ? 0 : Math.min(num(fake['chance'], 0), num(fake['capChance'], 1), num(obj(rules['fake'])['absoluteCapProb'], 1));
+  const dl = obj(sim['doubleLook']);
+  const dp = Math.min(num(dl['chance'], 0), num(dl['capChance'], 1));
+  const second = num(dl['gapSec'], 0.3) + num(dl['secondTellSec'], tell) + mean(range2(dl['secondLookSecRange']), look);
+  const lookP = Math.max(0, Math.min(1, num(sim['lookChance'], 0)));
+  const ph = arr(actor['opportunities']).map(obj).find((o) => o['type'] === 'phone_call');
+  const pp = ph ? Math.max(0, Math.min(1, num(ph['probPerCycle'], 0))) : 0;
+  const pr = range2(ph?.['durationSecRange']) ?? [0, 0];
+  const phoneM = (pr[0] + pr[1]) / 2, phone2 = (pr[0] * pr[0] + pr[0] * pr[1] + pr[1] * pr[1]) / 3;
+  // 바쁜 구간 경우별 [확률, 길이]
+  const cases: [number, number][] = [
+    [pp, phoneM],
+    [(1 - pp) * lookP * fp, tell + num(fake['afterFakeSec'], 0.3)],
+    [(1 - pp) * lookP * (1 - fp) * (1 - dp), tell + look + ret],
+    [(1 - pp) * lookP * (1 - fp) * dp, tell + look + second + ret],
+  ];
+  const eB = cases.reduce((a, [p, b]) => a + p * b, 0);
+  const eB2 = cases.reduce((a, [p, b], i) => a + p * (i === 0 ? phone2 : b * b), 0);
+  const cyc = idle + eB;
+  return cyc > 0 ? Math.round((eB2 / (2 * cyc)) * 100) / 100 : 0;
 }
 
 function roamNum(roam: O, key: string, warn: BuildWarnings): number {
@@ -1036,6 +1078,8 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
         bossActorId: 'director', greeterActorId: 'team_lead', zoneId: str(tg['whenDirectorInZone'], 'team'), greetSpot: sp,
         ...(typeof tg['lineKey'] === 'string' ? { lineKey: tg['lineKey'] as string } : {}),
         resumeDelaySec: num(obj(tl?.['hierarchy'])['resumeDelaySec'], 1),
+        // D-124 인사 hold 상한: INT-10 effect.teamLeadGreeting.holdMaxSec → team_lead.hierarchy.greetHoldMaxSec → 3초(D-124 값, 데이터 필드 추가 요청 중 [임시])
+        holdMaxSec: num(tg['holdMaxSec'], num(obj(tl?.['hierarchy'])['greetHoldMaxSec'], 3)),
       };
     }
   }

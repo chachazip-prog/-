@@ -257,7 +257,10 @@ function crowdCheck(tables: Tables, req: V3Request, L: V3Layout, legend: Readonl
     if (!p) continue;
     const m = mover(p);
     if (!m) continue;
-    add(str(p['actorId'], id), pathYs(arr(m['waypoints']).map(obj), p['loop'] !== false && p['kind'] !== 'seated'));
+    // BUG-019: 같은 액터의 다른 인스턴스(옆 팀 팀장 p_tl2_seat = team_lead #2)는 다른 사람. actorId만으로 묶으면 화면 인원을 1명 적게 셈
+    const inst = p['instance'];
+    const who = str(p['actorId'], id) + (inst !== undefined && inst !== null && inst !== 1 ? `#${String(inst)}` : '');
+    add(who, pathYs(arr(m['waypoints']).map(obj), p['loop'] !== false && p['kind'] !== 'seated'));
   }
   // 팀장 = 자리 ∪ 순회 경로(같은 사람)
   const tl = L.spots['tl_seat'];

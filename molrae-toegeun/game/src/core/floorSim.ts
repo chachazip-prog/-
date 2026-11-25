@@ -602,7 +602,7 @@ export class FloorSim {
       if (turning) return 'turning';
     }
     if (npc.mode === 'talk') return 'none';
-    if (los && !npc.coneActive && npc.mode !== 'tell') return 'none';
+    if (los && !npc.coneActive && npc.mode !== 'tell' && !npc.coneResumesWalking) return 'none';
     if (inCone(npc.pos, npc.facing, wide, pp) && (!los || hasLineOfSight(this.map, npc.pos, pp))) return 'approaching';
     if (th.approachPathTilesWithin !== undefined && npc.mode === 'walk') {
       const rec = this.pathDist.get(npc);

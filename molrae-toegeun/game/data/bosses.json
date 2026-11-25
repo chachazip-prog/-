@@ -778,12 +778,13 @@
         },
         "talkWindow": {
           "atStop": "stop_ceo_talk",
-          "durationSec": 4.0,
+          "durationSec": 3.0,
           "gazeOffFor": [
             "team_lead",
             "director"
           ],
-          "slackMultiplier": 2.0
+          "slackMultiplier": 2.0,
+          "_t165Note": "T-165(D-122): 4.0 → 3.0초. 실제 대화 길이는 patrols.p_ceo_visit stop_ceo_talk waitSec(같이 3.0)이 정하고 이 값은 표시·문서용(코드는 읽지만 sim에 안 씀). 바꿀 때는 두 값을 함께"
         },
         "exitResumeDelaySec": 1.0,
         "missionTimersPausedWhileFrozen": true,
