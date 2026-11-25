@@ -284,8 +284,36 @@
         "blockDays": 2,
         "seedFormat": "cast-{block}-{slot}",
         "block": "floor((day - 1) / blockDays)",
-        "rule": "슬롯(역할 id·배경 동료 id·'restroom_side')마다 블록 안 두 날 중 하루는 same, 하루는 other. 앞날이 same인지는 시드 문자열 정수 해시 % 2(정수 연산만). same이면 플레이어와 같은 성별 변형, other면 반대 성별 변형",
-        "_why": "같은 일차·같은 시드에서 남녀 플레이어가 '같은 성별 상사 날/다른 성별 상사 날'을 똑같이 겪음 → 날마다 정확히 대칭. 2일 블록이라 어느 7일 창에서도 same/other 차이 ≤ 1일, 전체 등장은 50:50"
+        "rule": "슬롯(역할 id·배경 동료 id·'buddy'·'restroom_side'·'locker_side')마다 블록 안 두 날 중 하루는 same, 하루는 other. 앞날이 same인지는 시드 문자열의 FNV-1a 32비트 해시(hash 블록) % 2 == 0. same이면 플레이어와 같은 성별 변형, other면 반대 성별 변형",
+        "_why": "같은 일차·같은 시드에서 남녀 플레이어가 '같은 성별 상사 날/다른 성별 상사 날'을 똑같이 겪음 → 날마다 정확히 대칭. 2일 블록이라 어느 7일 창에서도 same/other 차이 ≤ 1일, 전체 등장은 50:50",
+        "hash": {
+          "id": "fnv1a32",
+          "offsetBasis": "0x811c9dc5",
+          "prime": "0x01000193",
+          "input": "seed_ascii_bytes",
+          "step": "h = h XOR byte; h = (h × prime) mod 2^32 (부호 없는 32비트, 정수 연산만)",
+          "firstDaySameIf": "hash % 2 == 0",
+          "otherDaysInBlock": "alternate",
+          "slotIdCharset": "[a-z0-9_]",
+          "testVectors": [
+            {
+              "seed": "cast-0-director",
+              "hash": 2212442898,
+              "firstSame": true
+            },
+            {
+              "seed": "cast-8-restroom_side",
+              "hash": 343882423,
+              "firstSame": false
+            },
+            {
+              "seed": "cast-0-buddy",
+              "hash": 1350702642,
+              "firstSame": true
+            }
+          ],
+          "_note": "T-157: 개발 T-151 gender.ts fnv1a32(생성기 버전 태그와 같은 함수)를 기획 기준으로 확정. 시드는 ASCII만이라 charCodeAt(UTF-16 코드 단위) = 바이트. 블록 = floor((day−1)/blockDays), 시드 = seedFormat의 {block}·{slot} 치환. 블록 첫날 same 여부 = hash % 2 == 0, 블록 안 나머지 날은 번갈아. 슬롯 = 회전 인물 id(bosses·npcs·background·buddy) 또는 'restroom_side'·'locker_side'. testVectors는 검사기(validate_data.py)와 개발 구현이 같은 값을 내는지 확인하는 기준값"
+        }
       },
       "gameplayMayDependOn": [
         "relation"

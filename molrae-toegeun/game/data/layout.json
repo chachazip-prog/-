@@ -2007,7 +2007,7 @@
         ],
         "doorOpenChance": [
           1.0,
-          0.6
+          1.0
         ]
       },
       "mirrorable": true,
@@ -2058,7 +2058,7 @@
             2,
             0
           ],
-          "facing": "up",
+          "facing": "right",
           "type": "stand",
           "target": "sink"
         },
@@ -2083,7 +2083,7 @@
             2,
             3
           ],
-          "facing": "down",
+          "facing": "right",
           "type": "stand",
           "target": "sink"
         },
@@ -2227,7 +2227,8 @@
           "bypass": "meeting_room"
         }
       ],
-      "_designNote": "T-148 성별 화장실 쌍. mid_rest_meet과 같은 높이(4행)·포트·회의실·가운데 복도(폭 1, INT-04 길막 무대)를 유지하고 화장실만 위(a)·아래(b) 두 칸으로 나눔. 각 칸 = 칸 S 1 + 세면대 1 + 바닥 1 + 가림막 문(+). 문은 둘 다 가운데 복도에 붙어 있어 복도 기준 거리 차는 최대 3타일. 어느 쪽이 '내 화장실'인지는 genderFacilities.mineSide(플레이어 기준 회전). genderFacilities.enabled일 때만 rest_meet 그룹을 이 모듈로 대체(groupReplace)"
+      "_designNote": "T-148 성별 화장실 쌍. mid_rest_meet과 같은 높이(4행)·포트·회의실·가운데 복도(폭 1, INT-04 길막 무대)를 유지하고 화장실만 위(a)·아래(b) 두 칸으로 나눔. 각 칸 = 칸 S 1 + 세면대 1 + 바닥 1 + 가림막 문(+). 문은 둘 다 가운데 복도에 붙어 있어 복도 기준 거리 차는 최대 3타일. 어느 쪽이 '내 화장실'인지는 genderFacilities.mineSide(플레이어 기준 회전). genderFacilities.enabled일 때만 rest_meet 그룹을 이 모듈로 대체(groupReplace)",
+      "_t157Note": "T-157: ① 세면대 스폿 facing up/down → right(문 쪽, 좌우 반전 시 left로 같이 뒤집힘). 세면대는 본부장 들름(INT-10 facilityStop) 전용 스폿이라 플레이어 동작에는 영향 없음. 벽을 보면 시설 안 판정이 출입 순간에만 걸려 C3가 체감되지 않았음 → 손 씻고 돌아서 문 쪽을 보는 자세로 3초. 칸 S는 세면대 뒤쪽(시선 반대편)이고 판정에서도 제외라 칸 안 안전은 그대로. ② doorOpenChance [1.0, 0.6] → [1.0, 1.0]: 화장실 쌍은 왼쪽(x1~4)이 위아래로 완전히 막혀(시설 칸은 수리 개구부 금지, repair.protectFacilityTiles) 기존 mid_rest_meet보다 길이 하나 적음 → 회의실 문 포트(8열)를 항상 열어 대체 경로 하나를 보장(V03·V04 실패 감소)"
     },
     {
       "id": "mid_fitness",
@@ -2468,7 +2469,9 @@
       "대표님 날 화물 엘리베이터→ceo_greet_spot > 20"
     ],
     "rule": "초과량 합이 0이 될 때까지, 이음 행의 아직 막힌 열 중(양옆 통행 가능, 기존 개구부와 2칸 이상 떨어짐) 열었을 때 초과량 합을 가장 많이 줄이는 칸 하나를 '.'로 엶. 동률이면 가운데(x5)에 가까운 열 → 위쪽 이음 행. 최대 maxOpenings번. 시드 소비 없음(결정적)",
-    "_designNote": "거리 초과를 버리지 않고 고치면 시도당 통과율이 크게 오름(프로토: 사원 11% → 51%). 열린 개구부 = 분기 증가라 복잡도 의도와도 맞음"
+    "_designNote": "거리 초과를 버리지 않고 고치면 시도당 통과율이 크게 오름(프로토: 사원 11% → 51%). 열린 개구부 = 분기 증가라 복잡도 의도와도 맞음",
+    "protectFacilityTiles": true,
+    "_t157Note": "T-157: 수리 개구부는 위·아래 칸 중 하나라도 시설 칸(legend kind restroom_floor·restroom_stall·locker_floor·shower_stall·door_screened, 또는 facilityDoor true)이면 열지 않음. 지금 구현은 화장실·탈의실 바로 위아래 이음 행을 열어 '시설 안을 지나는 지름길'을 만들고, 그 시도가 V15(시설 안 통과·편도 차 7~11)로 버려졌음. 금지하면 수리가 다른 열을 고름. genderFacilities.enabled false일 때도 적용해도 됨(기존 mid_rest_meet 화장실 관통 지름길도 막음 — 단 그러면 생성 off 맵이 바뀌므로 개발은 enabled일 때만 적용 권장)"
   },
   "complexityByRank": [
     {
@@ -2857,7 +2860,7 @@
   },
   "validators": {
     "_designNote": "하드 검증 = 공정성만. 복잡도 지표(층 길이·막힌 길 수·기둥 수 등)는 complexityByRank.target으로 QA가 분포를 확인(벗어나면 가중치 조정). 실패하면 다음 시드(layout-day-{n}#r{i})로 재생성. 모든 거리는 4방향 A*, 다른 사람이 앉은 의자는 통과 불가. 실패 코드는 개발 GenFailCode에 추가",
-    "maxAttempts": 24,
+    "maxAttempts": 32,
     "onExhausted": "authored_map",
     "list": [
       {
@@ -2996,7 +2999,8 @@
       "heightTiles",
       "repairsUsed",
       "trimSec"
-    ]
+    ],
+    "_t157MaxAttemptsNote": "T-157: 24 → 32. 성별 시설을 켜면 시도당 통과율이 낮아짐(3~300일 평균 시도 3.6 → 4.6). 이미 24회 안에 통과하던 날의 맵은 시도 시드가 같아 그대로이고, 꼬리(폴백)만 줄임. 하루 조립 시간 상한은 개발 확인 필요(시도당 수 ms)"
   },
   "patrolTemplates": {
     "_designNote": "보조 수단. 개발 T-144는 수작업 맵 순찰 웨이포인트를 '같은 이름 스팟 → 같은 이름 길목 노드 → 같은 구역 상대 위치'로 재매핑함(이 방식이 기본). 모듈의 스팟·노드 이름을 수작업 맵과 같게 맞췄으므로 대부분 그대로 옮겨짐. 재매핑이 실패한 순찰만 아래 '노드 이름 목록'으로 경로를 만듦(노드 사이는 4방향 A*, 꺾이는 칸만 웨이포인트로)",
@@ -3459,7 +3463,12 @@
       "_note": "플레이어는 내 쪽 문만 지남(다른 쪽 문 앞은 그냥 복도). 고정 인물(선배·팀장·대표님·동료·동기)은 성별과 상관없이 시설 안에 들어가지 않음 → 고정 인물의 성별이 메카닉에 영향 없음. 말걸기 전조 중 내 쪽 문을 지나면 누구든 말걸기 취소(D-054 '피할 여지'의 시설 버전). 인사팀 점검·경비는 시설 안을 확인하지 않음(사생활)",
       "talkCancelNpcBehavior": "stop_in_place",
       "talkCancelNpcApproachDoor": false,
-      "_t152Note": "T-152(S-05): 말걸기가 시설 문에서 취소되면 말을 걸던 인물은 그 자리에서 멈춘 뒤 원래 경로로 돌아감. 시설 문 쪽으로 걸어오거나 문 앞에서 기다리지 않음(따라가기 연상 금지)"
+      "_t152Note": "T-152(S-05): 말걸기가 시설 문에서 취소되면 말을 걸던 인물은 그 자리에서 멈춘 뒤 원래 경로로 돌아감. 시설 문 쪽으로 걸어오거나 문 앞에서 기다리지 않음(따라가기 연상 금지)",
+      "talkCancelNpcHold": {
+        "mode": "remaining_tell",
+        "minSec": 0.6
+      },
+      "_t157HoldNote": "T-157 확정: 문 취소 시 말 걸던 인물의 제자리 정지 = 남은 전조 시간, 단 최소 0.6초(정지 = max(남은 전조, 0.6)). 남은 전조가 0에 가까우면 멈칫이 안 보여 '아, 이따 얘기해요~'와 그림이 어긋남. 0.6 = rules.tell.minSec 0.4 + 걸음 재개가 읽히는 여유 0.2. 상한은 따로 두지 않음(전조 자체가 0.5~1.0초라 최대 1.0초) — 시설 문 근처에서 오래 서 있지 않게(S-05)"
     },
     "missionTargets": {
       "restroom.mine": {
@@ -3543,7 +3552,8 @@
         "hard": true,
         "rule": "조립된 맵에서 player_seat → restroom_a_stall, → restroom_b_stall 편도 최단 거리 차 ≤ maxOneWayDiffTiles(다른 쪽 문은 벽으로 두고 각자 자기 문으로 계산). 헬스장이 있으면 locker_a/b도 같음. 두 쪽 모두 도달 가능하고, 자리→게이트·자리→다른 미션 최단 경로가 시설 안을 지나지 않음",
         "maxOneWayDiffTiles": 4,
-        "_why": "4타일 ≈ 1.3초(플레이어 3.0타일/초), 왕복 2.7초 = 화장실 예상 17.5초의 15%. 모듈 안 차이 최대 3 + 이음 행 개구부 위치 1"
+        "_why": "4타일 ≈ 1.3초(플레이어 3.0타일/초), 왕복 2.7초 = 화장실 예상 17.5초의 15%. 모듈 안 차이 최대 3 + 이음 행 개구부 위치 1",
+        "_t157Note": "T-157: 실패 22건 대부분이 수리 개구부가 시설 칸 위·아래를 연 경우(시설 안 통과·편도 차 7~11). repair.protectFacilityTiles로 원인 제거. 상한 4는 유지"
       },
       {
         "id": "V16_facility_budget",

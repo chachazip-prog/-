@@ -72,6 +72,10 @@ export interface FloorHooks {
   gazeAllowed?(npc: PatrolNpc): boolean;
   /** 이 NPC가 지금 말을 걸 수 있는가(enabledBy·onlyWhilePlayerAway·onlyWhen) */
   talkAllowed?(npc: PatrolNpc): boolean;
+  /** 말걸기 전조 끝 판정의 위장 덮어쓰기(D-107). undefined면 지금 위장 상태 */
+  talkDisguisedFor?(npc: PatrolNpc): boolean | undefined;
+  /** 붙잡는 반경 가산(carry 변형, 모든 말걸기 액터) */
+  talkCatchRadiusAdd?(): number;
   /** 지금 플레이어의 정지를 위장 안착 없이 바로 위장으로 칠지(BUG-012: 게이트 앞 대기). 시선 판정 직전에 호출 */
   settleExempt?(): boolean;
   /** 플레이어에게 추가로 막힌 타일(게이트 등) */
@@ -349,6 +353,8 @@ export class FloorSim {
       player: p.pos,
       playerTalkable: p.mode !== 'talked',
       playerDisguised: this.playerStill,
+      ...(this.hooks.talkDisguisedFor ? { talkDisguisedFor: (npc: PatrolNpc) => this.hooks.talkDisguisedFor!(npc) } : {}),
+      ...(this.hooks.talkCatchRadiusAdd ? { talkCatchRadiusAdd: this.hooks.talkCatchRadiusAdd() } : {}),
     };
     const ended: PatrolNpc[] = [];
     const frozen = (n: PatrolNpc) => this.hooks.npcFrozen?.(n) === true;

@@ -85,6 +85,13 @@ export class Hud {
 
   private readonly cleanText: UIText;
 
+  /** 안내 상자가 떠 있으면 그 아래 끝(px), 없으면 null. 같은 줄에 놓이는 배지('자리 비움')가 피해 가는 데 씀(T-155) */
+  hintBottomPx(): number | null {
+    if (!(this.hintLeft > 0 && this.hintBg.visible)) return null;
+    const b = this.hintBg.getBounds();
+    return b.bottom;
+  }
+
   /** 지금 떠 있는 안내를 닫음(모든 안내는 건너뛸 수 있음, GDD §13) */
   dismissHint(): void { this.hintLeft = 0; }
 

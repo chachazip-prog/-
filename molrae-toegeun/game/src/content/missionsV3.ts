@@ -125,6 +125,8 @@ export interface ModDrawContext {
   readonly history?: readonly Readonly<Record<string, readonly string[]>>[];
   /** T-151: 그날 풀에 합류하는 추가 변형(genderModifiers, '{mine}' 치환 완료). 없으면 기존과 같은 추첨 */
   readonly extraModifiers?: readonly O[];
+  /** zone_only를 붙일 수 있는 미션인가(목표 스폿이 내 자리와 다른 구역에 있음, gdd-v3 §10). 모르면 생략 */
+  readonly zoneOnlyOk?: (missionId: string) => boolean;
 }
 
 export interface DrawnModifiers {
@@ -182,6 +184,7 @@ export function drawModifiers(ctx: ModDrawContext): DrawnModifiers {
     const type = str(m['type']);
     if (type === 'rush' && info.timeLimitSec < info.expectedSec + 4) return false;
     if (type === 'during_tour' && (ctx.longTourCount === undefined || ctx.longTourCount < 2)) return false;
+    if (type === 'zone_only' && ctx.zoneOnlyOk && !ctx.zoneOnlyOk(id)) return false;
     if ((yesterday[id] ?? []).includes(type)) return false; // 같은 type 이틀 연속 같은 미션 금지
     return true;
   });

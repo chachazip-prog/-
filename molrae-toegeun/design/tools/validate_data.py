@@ -19,6 +19,8 @@
              샤워 칸 김 아이콘 금지, 시설 그림 범위, 말걸기 취소 시 NPC 문 접근 금지, player.variant 분석 전송 금지,
              '몰래'+시설 단어 금지 조합(문자열·시설 미션 칩), 공유 카드 성별 변수·화장실 트리거 금지,
              고정 인물 명부(명부 밖 새 고정 = 여성만, D-098), 시설 대사 {name} 금지(D-099), 시설 미션 외 변형의 시설 목적지 금지(D-100).
+      T-157: 회전 해시 FNV-1a 32비트(rules.casting.rotation.hash 상수·기준값을 직접 계산해 대조, 슬롯 id 문자 집합, 7일 창 same/other 차 ≤ 1),
+             수리 개구부 시설 칸 보호, 본부장 들름 trigger·scheduleGuard·세면대 자세(문 쪽), 말걸기 문 취소 정지 최소 시간.
 """
 import itertools
 import json
@@ -842,6 +844,56 @@ PSA = rules["characters"]["playerSelection"].get("analytics", {})
 if PSA.get("sendVariant") is not False or PSA.get("logVariant") is not False:
     err("rules.characters.playerSelection.analytics: player.variant 분석·로그 전송 금지(B-02, D-095)")
 
+# T-157) 회전 해시(relation_block2): 개발 gender.ts fnv1a32와 같은 알고리즘을 직접 계산해 기준값 대조
+ROT = CAST.get("rotation", {})
+ROT_REPORT = None
+RH = ROT.get("hash", {})
+
+
+def fnv1a32(s_):
+    h_ = int(RH.get("offsetBasis", "0x811c9dc5"), 16)
+    for b_ in s_.encode("ascii"):
+        h_ ^= b_
+        h_ = (h_ * int(RH.get("prime", "0x01000193"), 16)) & 0xFFFFFFFF
+    return h_
+
+
+def cast_relation(day_, slot_):
+    bd_ = max(1, int(ROT.get("blockDays", 2)))
+    blk_, off_ = (day_ - 1) // bd_, (day_ - 1) % bd_
+    first_same = fnv1a32(ROT["seedFormat"].replace("{block}", str(blk_)).replace("{slot}", slot_)) % 2 == 0
+    return "same" if (first_same if off_ % 2 == 0 else not first_same) else "other"
+
+
+if RH.get("id") != "fnv1a32" or RH.get("offsetBasis") != "0x811c9dc5" or RH.get("prime") != "0x01000193" or RH.get("firstDaySameIf") != "hash % 2 == 0":
+    err("rules.characters.casting.rotation.hash: FNV-1a 32비트(0x811c9dc5·0x01000193)·hash % 2 == 0 필요(T-157, 개발 gender.ts와 일치)")
+elif "{block}" not in ROT.get("seedFormat", "") or "{slot}" not in ROT.get("seedFormat", ""):
+    err("rules.characters.casting.rotation.seedFormat에 {block}·{slot} 필요")
+else:
+    for tv in RH.get("testVectors", []):
+        got = fnv1a32(tv["seed"])
+        if got != tv["hash"] or (got % 2 == 0) != tv["firstSame"]:
+            err(f"rotation.hash.testVectors '{tv['seed']}': 계산 {got} ≠ 기준 {tv['hash']}")
+    if len(RH.get("testVectors", [])) < 2:
+        err("rotation.hash.testVectors ≥ 2 필요")
+    rot_slots = [a["id"] for _w, a, _k in cast_slots if a.get("casting", {}).get("mode") == "rotate"]
+    gfc = T["layout"].get("genderFacilities", {})
+    rot_slots += [gfc.get("mineSide", {}).get("slot", "restroom_side")]
+    lf_ = gfc.get("mineSide", {}).get("lockerFollows", "")
+    if lf_.startswith("independent_slot:"):
+        rot_slots.append(lf_.split(":", 1)[1])
+    cs_ = re.compile(r"^[a-z0-9_]+$")
+    for sl_ in rot_slots:
+        if not cs_.match(sl_):
+            err(f"회전 슬롯 id '{sl_}': 문자 집합 [a-z0-9_] 밖(해시 입력은 ASCII만, T-157)")
+            continue
+        rel_ = [cast_relation(d_, sl_) for d_ in range(1, 201)]
+        worst_ = max(abs(rel_[i_:i_ + 7].count("same") - rel_[i_:i_ + 7].count("other")) for i_ in range(0, 194))
+        if worst_ > 1:
+            err(f"회전 슬롯 '{sl_}': 7일 창 same/other 차 {worst_} > 1(G10)")
+    d_same = [d_ for d_ in range(18, 61) if cast_relation(d_, "director") == "same"]
+    ROT_REPORT = f"회전 해시 fnv1a32: 슬롯 {len(rot_slots)}개 7일 창 차 ≤ 1, 본부장 same 날(18~60일) {len(d_same)}일·첫 same {d_same[0] if d_same else '-'}일"
+
 # 시설 대칭(layout.genderFacilities): 모듈 안 두 쪽의 크기·칸 수·문→가운데 복도 거리, 플레이어 기준 표현만
 GF = T["layout"].get("genderFacilities")
 if GF:
@@ -943,6 +995,33 @@ if GF:
             err("facilityStop.insideCone.renderCone은 false(시설 안 시선 콘 그리지 않음, S-01)")
         if i10.get("insideCue", {}).get("minSec", 0) < rules["tell"]["minSec"]:
             err("facilityStop.insideCue.minSec < rules.tell.minSec")
+    # T-157) 본부장 들름 조건·세면대 자세, 수리 개구부 시설 보호, 말걸기 문 취소 정지
+    if not T["layout"].get("repair", {}).get("protectFacilityTiles"):
+        err("layout.repair.protectFacilityTiles는 true(수리 개구부가 시설 칸 위·아래를 열면 시설 관통 지름길, T-157)")
+    if i10:
+        tg_ = i10.get("trigger", {})
+        rm_g = next((m_ for m_ in gf_mods if m_["genderFacility"]["type"] == "restroom"), None)
+        if tg_.get("mode") != "enter_node_tile" or not tg_.get("nodes"):
+            err("facilityStop.trigger: mode enter_node_tile + nodes 필요(T-157)")
+        elif rm_g and any(n_ not in rm_g.get("routeNodes", {}) for n_ in tg_["nodes"]):
+            err(f"facilityStop.trigger.nodes {tg_['nodes']}가 {rm_g['id']}.routeNodes에 없음")
+        sg_ = i10.get("scheduleGuard", {})
+        if sg_.get("enabled") is not True or not (0 <= sg_.get("marginSec", -1) <= 5) or sg_.get("onConflict") != "keep_original":
+            err("facilityStop.scheduleGuard: enabled true·marginSec 0~5·onConflict keep_original 필요(T-157)")
+        if i10.get("insideFacing") == "toward_door" and rm_g:
+            DV = {"right": (1, 0), "left": (-1, 0), "down": (0, 1), "up": (0, -1)}
+            for sd, ref in rm_g["genderFacility"]["sides"].items():
+                sk_ = rm_g["spots"][ref["sink"]]; dr_ = rm_g["spots"][ref["door"]]["tile"]
+                v_ = DV.get(sk_.get("facing"))
+                dx_, dy_ = dr_[0] - sk_["tile"][0], dr_[1] - sk_["tile"][1]
+                if not v_ or v_[0] * dx_ + v_[1] * dy_ <= 0:
+                    err(f"layout.modules.{rm_g['id']}.spots.{ref['sink']}: facing이 문 쪽이 아님(facilityStop.insideFacing toward_door)")
+                st_ = rm_g["spots"][ref["stall"]]["tile"]
+                if v_ and v_[0] * (st_[0] - sk_["tile"][0]) + v_[1] * (st_[1] - sk_["tile"][1]) > 0:
+                    err(f"layout.modules.{rm_g['id']}.{sd}: 세면대 자세가 칸 S 쪽을 봄(칸 안 안전 원칙)")
+    hold_ = GF.get("access", {}).get("talkCancelNpcHold", {})
+    if hold_.get("mode") != "remaining_tell" or hold_.get("minSec", 0) < rules["tell"]["minSec"]:
+        err("genderFacilities.access.talkCancelNpcHold: mode remaining_tell, minSec ≥ rules.tell.minSec(T-157)")
     # T-152 S-02·S-03·S-05
     W_ = T["layout"]["legendAdd"].get("W", {})
     if W_.get("steamIcon") is not False or W_.get("drawOccupantInside") is not False or W_.get("occupiedDisplay") != "closed_door_in_use":
@@ -1063,6 +1142,8 @@ else:
         sc_ev = next((e for e in T["events"]["events"] if e["id"] == eid), {}).get("shareCard", {})
         if sc_ev.get("trigger") is not False or sc_ev.get("eventVarAllowed") is not False:
             err(f"events.{eid}.shareCard: trigger·eventVarAllowed false 필요(T-152)")
+if ROT_REPORT:
+    print(ROT_REPORT)
 print("출연 여성 비율(직급별, 회전 = 0.5): " + ", ".join(share_report) + f" / 전체 {ov:.2f}" + (f" / 동료 집합 {cw_share:.2f}" if cw_share is not None else ""))
 
 print(f"tables: {', '.join(T)}")

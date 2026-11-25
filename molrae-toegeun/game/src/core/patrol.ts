@@ -94,6 +94,10 @@ export interface StepContext {
   readonly playerTalkable: boolean;
   /** 플레이어가 위장(멈춤) 중인가 — talk.skipIfPlayerDisguised용 */
   readonly playerDisguised?: boolean;
+  /** 말걸기 전조 끝 판정용 위장 덮어쓰기(D-107: 전조 중 게이트 도착 = 도착 전 이동 상태). 없으면 playerDisguised */
+  talkDisguisedFor?(npc: PatrolNpc): boolean | undefined;
+  /** 붙잡는 반경 가산(carry 변형 carryTalkCatchRadiusAdd). 실제 = min(catchRadius + 이 값, radius × 2) */
+  readonly talkCatchRadiusAdd?: number;
 }
 
 /** 컨텍스트 없이 step을 부를 때: 모든 전환에 전조(보수적) */
@@ -504,8 +508,11 @@ export class PatrolNpc {
     const dx = ctx.player.x - this.x, dy = ctx.player.y - this.y;
     const dist = Math.hypot(dx, dy);
     if (dist <= t.radius) this.talkArmed = true;
-    const catchR = t.catchRadius ?? t.noticeRadius ?? t.radius * TALK_DEFAULTS.catchRadiusMul;
-    const disguisedSkip = t.skipIfPlayerDisguised === true && ctx.playerDisguised === true;
+    const catchR0 = t.catchRadius ?? t.noticeRadius ?? t.radius * TALK_DEFAULTS.catchRadiusMul;
+    const add = ctx.talkCatchRadiusAdd ?? 0;
+    const catchR = add > 0 ? Math.max(catchR0, Math.min(catchR0 + add, t.radius * TALK_DEFAULTS.catchRadiusMul)) : catchR0;
+    const disg = ctx.talkDisguisedFor?.(this) ?? ctx.playerDisguised;
+    const disguisedSkip = t.skipIfPlayerDisguised === true && disg === true;
     this.pendingFacing = null;
     this.tellKind = null;
     if (ctx.playerTalkable && this.talkArmed && !disguisedSkip && dist <= catchR) {

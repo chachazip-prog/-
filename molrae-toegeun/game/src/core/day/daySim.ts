@@ -21,7 +21,7 @@ import { PrintJob, createActivity, createGrabActivity, emptyEffects, type Activi
 import { evaluateMissionConditions } from './modifiers';
 import type { CameraView } from '../camera';
 import type {
-  BossTourDef, DayContent, DayInterruptDef, DayOutcome, DayPhase, DayResult, LeaveStage, MissionDef, MissionState,
+  BossTourDef, DayContent, DayInterruptDef, DayOutcome, DayPhase, DayResult, LeaveStage, MissionDef, MissionState, TalkZoneDef,
 } from './types';
 
 export type CeoVisitState = 'none' | 'skipped' | 'pending' | 'tell' | 'freeze' | 'qte' | 'talk' | 'exit' | 'resume' | 'done' | 'cancelled';
@@ -78,6 +78,8 @@ export interface MissionRuntime {
   run?: { susAtStart: number; seenSec: number; seenSecBy: Record<string, number>; noise: number; cover: Set<number>; closeCalls: number; tlAway: boolean };
   /** 원격 출력 작업(remote_start_fetch) */
   job?: PrintJob;
+  /** zone_only: 정확한 장소가 드러남(그날 끝까지 유지, T-155) */
+  revealed?: boolean;
 }
 
 export interface DaySimOptions {
@@ -247,6 +249,8 @@ export class DaySim {
         playerRate: (base) => this.playerRate(base),
         gazeAllowed: (npc) => this.gazeAllowed(npc),
         talkAllowed: (npc) => this.talkAllowed(npc),
+        talkDisguisedFor: (npc) => this.talkDisguisedFor(npc),
+        talkCatchRadiusAdd: () => this.carryTalkCatchAdd(),
         settleExempt: () => this.atGateWaiting(),
         blockedForPlayer: (x, y) => this.gateBlocked(x, y),
         onNpcEnded: (npc) => this.onNpcEnded(npc),
@@ -454,10 +458,30 @@ export class DaySim {
     const detour = this.cleaningDetourFor(m);
     if (detour === null) { this.cleaningToast(); return false; }
     if (!this.playerAtSeat && m.startedAt === null) m.startedAt = this.leftSeatAt ?? this.time;
-    const t = detour ?? m.def.spot;
+    const t = detour ?? this.missionTarget(m);
     const here = this.floor.player.tile;
-    if (here.x === t.x && here.y === t.y && this.floor.player.mode !== 'moving') { this.startActivity(m); return true; }
+    if (here.x === t.x && here.y === t.y && this.floor.player.mode !== 'moving') {
+      if (t === m.def.zoneEntry) return true; // 구역 입구에 이미 있음: 장소가 드러날 때까지 둘러보기
+      this.startActivity(m); return true;
+    }
     return this.floor.moveTo(t);
+  }
+
+  /** zone_only(gdd-v3 §10): 드러나기 전에는 칩·화살표 목표 = 구역 입구, 드러난 뒤 = 장소 */
+  missionTarget(m: MissionRuntime): Tile {
+    return m.def.zoneEntry && !m.revealed ? m.def.zoneEntry : m.def.spot;
+  }
+
+  /** zone_only: 장소와 직선 거리 ≤ revealRadiusTiles(시선 가림 무시)면 드러남 */
+  private zoneRevealStep(): void {
+    const p = this.floor.player;
+    for (const m of this.missions) {
+      const r = m.def.zoneOnlyRevealTiles;
+      if (r === undefined || m.revealed || !m.def.zoneEntry) continue;
+      if (Math.hypot(p.x - (m.def.spot.x + 0.5), p.y - (m.def.spot.y + 0.5)) > r + 1e-9) continue;
+      m.revealed = true;
+      this.push({ t: this.time, type: 'missionStage', id: m.def.id, stage: 'revealed' });
+    }
   }
 
   // ── 진행 ─────────────────────────────────────────────
@@ -502,12 +526,13 @@ export class DaySim {
     const s0 = this.floor.suspicion.value;
     const wasMoving = this.floor.player.mode === 'moving';
     this.facilityTalkCancel();
+    if (!this.playerOnGate()) this.offGateStill = this.floor.playerStill && !this.floor.player.paused;
     this.floor.step();
     this.collectFloorEvents();
     if (this.floor.outcome === 'caught') { this.end('caught'); return; }
 
     this.trackSeat();
-    if (this.phase === 'day') this.dayAfterStep(dt);
+    if (this.phase === 'day') { this.zoneRevealStep(); this.dayAfterStep(dt); }
     else if (this.phase === 'leave') this.leaveAfterStep(dt);
     if ((this.phase as DayPhase) === 'ended') return;
     this.afterInterrupts(dt);
@@ -579,6 +604,8 @@ export class DaySim {
     const actor = npc.def.actorId ? this.content.actors[npc.def.actorId] : undefined;
     const intId = actor?.talkEnabledBy;
     if (!intId) return false;
+    // D-107 경비 말걸기 구역(gate_approach): 게이트 칸 대기 중엔 새 전조 없음, 경로상 게이트까지 1~6칸에서 움직이는 중일 때만
+    if (actor.talkZone && !this.inTalkZone(actor.talkZone)) return false;
     const phase = this.phase === 'leave' ? 'leave' : 'day';
     const int = this.content.interrupts.find((i) => i.id === intId && i.phase === phase);
     if (!int) return false;
@@ -597,6 +624,66 @@ export class DaySim {
     if (st && st.count >= int.maxPerDay) return false;
     if (st && this.time - st.lastAt < int.cooldownSec) return false;
     return true;
+  }
+
+  /** 플레이어가 게이트 사용 칸 위에 있는가 */
+  private playerOnGate(): boolean {
+    const t = this.floor.player.tile, g = this.content.leave.gate.spot;
+    return t.x === g.x && t.y === g.y;
+  }
+
+  /** 경로상 게이트 사용 칸까지 남은 칸 수(게이트 칸 포함 걸음 수). 경로에 게이트가 없으면 null */
+  private pathStepsToGate(): number | null {
+    const p = this.floor.player;
+    const g = this.content.leave.gate.spot;
+    const here = p.tile;
+    let steps = 0, last = `${here.x},${here.y}`;
+    for (const v of p.remainingPath()) {
+      const t = tileOf(v);
+      const k = `${t.x},${t.y}`;
+      if (k === last) continue;
+      last = k;
+      steps++;
+      if (t.x === g.x && t.y === g.y) return steps;
+    }
+    return null;
+  }
+
+  /** D-107: 경비 말걸기 전조를 지금 시작할 수 있는 구역인가 */
+  private inTalkZone(z: TalkZoneDef): boolean {
+    if (z.type !== 'gate_approach') return true;
+    if (z.noStartWhileAtGate && this.playerOnGate()) return false;
+    if (!z.startOnlyInZone) return true;
+    if (this.floor.player.mode !== 'moving') return false;
+    const n = this.pathStepsToGate();
+    // 남은 칸 = 게이트까지 걸음 수(게이트 칸에 서 있으면 0 = 구역 밖). 6칸 = 3.0타일/초로 2.0초(gdd-v3 §3-6 근거와 같은 셈)
+    return n !== null && n >= z.pathTilesToGateUse[0] && n <= z.pathTilesToGateUse[1];
+  }
+
+  /** D-107: 전조 중 게이트에 도착했으면 위장 판정은 도착 전 마지막 이동 상태 */
+  private offGateStill = false;
+  private talkDisguisedFor(npc: PatrolNpc): boolean | undefined {
+    const z = npc.def.actorId ? this.content.actors[npc.def.actorId]?.talkZone : undefined;
+    if (!z || this.phase !== 'leave') return undefined;
+    // [해석] 길막 자동 대기(경로 보관 중 일시정지, 말을 걸려고 멈춘 경비 자신에게 막힌 경우 포함)는 '멈춤 = 위장'이 아니라 이동 중으로 봄
+    if (this.floor.player.paused) return false;
+    if (!z.tellSurvivesGateArrival || !this.playerOnGate()) return undefined;
+    return this.offGateStill;
+  }
+
+  /** 말걸기 성립 후 게이트 단계 보류(막대 정지·시도 미소모) */
+  private gateHeldByTalk(): boolean {
+    const n = this.floor.talkingNpc;
+    if (!n || this.floor.player.mode !== 'talked') return false;
+    const z = n.def.actorId ? this.content.actors[n.def.actorId]?.talkZone : undefined;
+    return !!z?.gateStageHoldWhileTalk;
+  }
+
+  /** carry 변형(carryTalkCatchRadiusAdd): 물건을 집은 뒤 ~ 자리 완료까지 모든 말걸기 액터의 붙잡는 반경 가산(여럿이면 최댓값) */
+  private carryTalkCatchAdd(): number {
+    let k = 0;
+    for (const m of this.missions) if (m.state === 'carry' && typeof m.def.params['carryTalkCatchRadiusAdd'] === 'number') k = Math.max(k, m.def.params['carryTalkCatchRadiusAdd'] as number);
+    return k;
   }
 
   /** BUG-012(§19-3 ③): 퇴근 중 게이트 사용 칸에 멈춰 있음 = 위장(안착 시간 없음). 정체 규칙은 그대로 */
@@ -841,6 +928,8 @@ export class DaySim {
   }
 
   private startActivity(m: MissionRuntime): void {
+    // zone_only: 드러나기 전 장소를 직접 톡해 도착해도 정상 시작(찾은 것으로 침)
+    if (m.def.zoneEntry && !m.revealed) { m.revealed = true; this.push({ t: this.time, type: 'missionStage', id: m.def.id, stage: 'revealed' }); }
     this.floor.player.halt();
     m.state = 'active';
     if (m.startedAt === null) m.startedAt = this.time;
@@ -910,7 +999,7 @@ export class DaySim {
       m.state = 'open';
       this.pendingMission = m;
       this.push({ t: this.time, type: 'missionStage', id: m.def.id, stage: 'printStart' });
-      this.floor.moveTo(m.def.spot);
+      this.floor.moveTo(this.missionTarget(m));
       return;
     }
     this.push({ t: this.time, type: 'missionSuccess', id: m.def.id });
@@ -984,6 +1073,7 @@ export class DaySim {
       case 'gate': {
         const t = p.tile, g = L.gate.spot;
         if (t.x !== g.x || t.y !== g.y) { this.setLeaveStage('walk'); break; }
+        if (this.gateHeldByTalk()) break; // D-107: 말걸기 중 막대 정지(탭은 맞장구로 가므로 시도 소모 없음)
         this.gateTime += dt;
         const ph = (this.gateTime / L.gate.markerCycleSec) % 1;
         this.gateMarker = ph < 0.5 ? ph * 2 : 2 - ph * 2;
@@ -1673,7 +1763,7 @@ export class DaySim {
     const seatWp = npc.def.waypoints[npc.def.waypoints.length - 1]!;
     const here = tileOf(npc);
     const path = findPath(this.floor.map, here, { x: seatWp.x, y: seatWp.y });
-    const ret = (path ? path.length - 1 : 0) / Math.max(0.1, npc.def.speedTilesPerSec) + 0.5;
+    const ret = (path ? path.length - 1 : 0) / Math.max(0.1, npc.def.speedTilesPerSec) + (def.sitSec ?? 0.5);
     if (left > must + ret) return;
     const back: NpcDef = { ...npc.def, id: `${npc.def.id}_back`, waypoints: [{ x: here.x, y: here.y, waitSec: 0, lookChance: 0 }, seatWp] };
     try { st.npc = this.floor.replaceNpc(npc, back); st.cutShort = true; st.route = []; } catch { /* 경로 없음: 그대로 */ }
@@ -1786,7 +1876,8 @@ export class DaySim {
         // 복귀 전조(endTell): 같은 칸에서 sec 동안 시선 없이 서 있음
         if (s.endTell) wps.push({ x: s.tile.x, y: s.tile.y, waitSec: s.endTell.sec, lookChance: 0, coneOff: true, stopId: `stop_tour_end_${s.id}`, ...(s.facing ? { facing: s.facing } : {}) });
       }
-      wps.push({ x: sw.x, y: sw.y, waitSec: 0, lookChance: 0 });
+      // 자리 도착 → 앉기(sitSec, 콘 없음, T-155). 없으면 바로 앉은 순찰로 교체
+      wps.push({ x: sw.x, y: sw.y, waitSec: def.sitSec ?? 0, lookChance: 0, ...(def.sitSec ? { coneOff: true, stopId: 'stop_tour_sit', ...(sw.facing ? { facing: sw.facing } : {}) } : {}) });
       const { phone: _p, coneActiveIn: _c, idleSecRange: _i, ...base } = seat.def;
       const tour: NpcDef = {
         ...base, id: `${seat.def.id}_tour`, patrolId: `${def.seatPatrolId}_tour`, seated: false, loop: false,

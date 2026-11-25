@@ -600,7 +600,7 @@
             "same": "restroom.mine",
             "other": "restroom.other"
           },
-          "at": "rest_meet_g 길목 노드(n_d_top·n_d_bot) 중 본부장 경로가 먼저 닿는 곳. 그날 경로가 rest_meet_g를 지나지 않으면 생략",
+          "at": "rest_meet_g 길목 노드(n_d_top·n_d_bot) 칸에 본부장이 처음 들어선 스텝(노드 중심 통과 여부 무관, trigger). 그날 경로가 rest_meet_g를 지나지 않으면 생략",
           "tellSec": 1.0,
           "tell": {
             "visual": "door_shadow_facility",
@@ -640,7 +640,27 @@
             "overHead": "icon_door_alert",
             "minSec": 0.4,
             "_note": "콘 대신 쓰는 시각 신호. 문 위 '!'와 같은 그림 재사용(아트 추가 없음). 0.4초 이상 표시(rules.tell.minSec)"
-          }
+          },
+          "trigger": {
+            "mode": "enter_node_tile",
+            "nodes": [
+              "n_d_top",
+              "n_d_bot"
+            ],
+            "requireMode": "walk",
+            "_note": "T-157: 기존 구현은 노드 중심 ±(속도×스텝) 안을 지날 때만 걸려, 경로가 칸 가장자리를 스치면 빠짐. 칸 기준(floor(x), floor(y) == 노드)으로 판정"
+          },
+          "scheduleGuard": {
+            "enabled": true,
+            "appliesWhen": "facility_pair_day",
+            "latestAtSec": "dayPhaseSec − (spawnTellSec + 출발점→가장 먼저 닿는 길목 노드 경로 타일 ÷ 본부장 속도 + tellSec + insideSec + marginSec)",
+            "marginSec": 2.0,
+            "minAtSec": 8,
+            "onConflict": "keep_original",
+            "_note": "T-157: 근무 단계 본부장 순찰이 늦게 출발하면 길목에 퇴근 단계에 도착해 들름이 생략됨(3~200일 기준 들름 예정 60일 중 21일). 그날 화장실 쌍이 있는 날만 INT-10 근무 atSec을 위 상한으로 당김(경로 길이는 조립된 맵에서 계산, 결정적). 당기면 다른 방해와 10초 간격·대표님 H7 간격이 깨질 때는 원래 값 유지(onConflict). 성별 시설 off 날·수작업 맵 날에는 적용 안 함 → 기존 밸런스 불변"
+          },
+          "insideFacing": "toward_door",
+          "_t157Note": "T-157: ① 세면대 자세 = 문 쪽(layout mid_rest_meet_g restroom_*_sink facing right). 3초 동안 바닥·문 칸(시설 안, 칸 S 제외)이 판정 범위 → 본부장이 안에 있을 때 들어오거나 칸에서 나오면 마주침. 전조 1.0초(발소리·문 그림자·문 위 '!', 칸 안에서도 들림)는 그대로라 '칸 안에서 기다리기 vs 지금 나가기' 판단이 생김. ② trigger 칸 기준 + scheduleGuard로 들름이 실제로 일어나는 날을 늘림(모의 측정: 예정 60일 중 32일 → 약 54일). maxPerDay 1 유지"
         }
       },
       "counters": [

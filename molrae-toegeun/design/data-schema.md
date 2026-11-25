@@ -546,6 +546,7 @@ interface AdsTable {
 | 3-draft (T-142) | 2026-11-23 | 새 테이블 `layout.json`·`missions.json`(schemaVersion 3) 추가. 상세 스키마는 `design/data-schema-v3-draft.md`. **v2 테이블은 변경 없음**(키·값 그대로). 검사기는 테이블별 버전 확인(layout·missions = 3, 나머지 = 2)과 v3 기본 검사를 추가 |
 | 2 (T-148) | 2026-11-24 | 성별 다양화(REQ-016, D-087·D-088). **필드 추가만, 키 이름·계층·기존 값 변경 없음 → schemaVersion 2 유지**(v3 테이블도 3 유지). 아래 상세 |
 | 2 (T-152) | 2026-11-24 | 컴플라이언스 성별 검토(T-150) 반영, D-090·D-095. **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**(v3 테이블도 3 유지). 아래 상세 |
+| 2 (T-157) | 2026-11-25 | 개발 T-151 결과의 기획 사항 4건(회전 해시·문 취소 정지·본부장 들름·성별 시설 폴백). **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**(layout 3 유지). 아래 상세 |
 
 ### v1 → v2 상세
 - **신규 테이블**: `maps`, `patrols`, `interrupts`, `ads`.
@@ -661,6 +662,18 @@ interface AdsTable {
   - 데이터만으로 동작이 바뀌는 것: 위 값 수정 전부. 특히 대표님 날 근무 44초, 18:05 기준(보너스와 INT-07 조건이 함께 바뀜), 대표님 퇴장 중 시선 없음.
   - 코드 구현이 필요한 것: `budgetCheck`, `missionTimersPausedWhileFrozen`, `cancelOnLeaveStart` 3건. 구현 전에는 무시돼도 크래시가 없는 추가 필드입니다.
 - **QA 테스트 기대값 영향**: `t131-rules` '쇼핑 방치 → 시간초과(13초)'를 15초로 바꿔야 합니다. '18:00 전 탈출 보너스' 항목명은 18:05로 바꿔야 합니다.
+
+### T-157 상세 (v2 유지)
+- **필드 추가**
+  - rules.json `characters.casting.rotation.hash`(`id` fnv1a32, `offsetBasis` "0x811c9dc5", `prime` "0x01000193", `input` seed_ascii_bytes, `step`, `firstDaySameIf` "hash % 2 == 0", `otherDaysInBlock` alternate, `slotIdCharset` "[a-z0-9_]", `testVectors` 3개). 개발 `gender.ts` `fnv1a32`와 같은 알고리즘을 기획 기준으로 확정.
+  - interrupts.json INT-10 `effect.facilityStop.trigger`(`mode` enter_node_tile, `nodes`, `requireMode` walk), `scheduleGuard`(`enabled`, `appliesWhen` facility_pair_day, `latestAtSec` 식, `marginSec` 2.0, `minAtSec` 8, `onConflict` keep_original), `insideFacing` toward_door.
+  - layout.json `repair.protectFacilityTiles` true, `genderFacilities.access.talkCancelNpcHold`(`mode` remaining_tell, `minSec` 0.6).
+- **값 수정**
+  - rules.json `rotation.rule` 문구(해시 이름 명시, 슬롯 목록에 buddy·locker_side 추가). 동작 변화 없음.
+  - interrupts.json `facilityStop.at` 문구(칸 기준).
+  - layout.json `mid_rest_meet_g.spots.restroom_a_sink.facing` up → right, `restroom_b_sink.facing` down → right. `mid_rest_meet_g.ports.doorOpenChance` [1.0, 0.6] → [1.0, 1.0]. `validators.maxAttempts` 24 → 32.
+- **개발 영향**: 세면대 facing은 지금 코드가 그대로 읽음. 구현 필요 = ① 수리 보호 ② trigger 칸 기준 ③ scheduleGuard ④ 문 취소 정지 최소 0.6초(`design/gender-design.md` §8-10). 모듈·검증 수치가 생성 버전 태그 해시(D-085)에 들어가 **성별 시설 off 맵도 바뀜**(3~200일 폴백 0, 평균 시도 3.6 → 2.9) → QA 맵 스냅샷 재생성.
+- **검사기(§10 T-157)**: 회전 해시 상수·testVectors를 직접 계산해 대조, 회전 슬롯 id 문자 집합, 슬롯별 1~200일 7일 창 same/other 차 ≤ 1, `repair.protectFacilityTiles`, facilityStop `trigger`·`scheduleGuard`, 세면대 facing이 문 쪽이고 칸 S 쪽이 아님, `talkCancelNpcHold.minSec` ≥ rules.tell.minSec.
 
 ### T-148 상세 (v2 유지)
 - **bosses.json** 각 상사: `variants`(`[{id: "m"|"f", gender: "male"|"female", spriteKey}]`, spriteKey = `<기존 spriteKey>_m|_f`), `casting`(`{mode: "fixed", variant}` | `{mode: "fixed", byInstance: {"1": .., "2": ..}}` | `{mode: "rotate", rule: "relation_block2"}`). 최상위 `_t148Note`. 기존 `spriteKey`는 변형 그림이 없을 때 대체로 유지.

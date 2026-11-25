@@ -6,7 +6,7 @@
  */
 import { createRng } from '../core/rng';
 import type { FloorRules, LevelDef } from '../core/floorSim';
-import { buildGridMap, nearestWalkable, type Tile } from '../core/grid';
+import { buildGridMap, nearestWalkable, type GridMap, type Tile } from '../core/grid';
 import { findPath } from '../core/pathfinding';
 import type { ConeState, NpcDef, TalkDef, WaypointDef } from '../core/patrol';
 import type { Dir } from '../core/vision';
@@ -18,7 +18,7 @@ import { applyMissionModifiers } from '../core/day/modifiers';
 import { applyInterpScaling, applyOverrideScaling, rankProgress } from './scaling';
 import { createLevelProvider, layoutEnabledInData, remapWaypoints, type LevelProvider } from './levelProvider';
 import { buildDevTour } from './devTour';
-import { buildLeadTour, longTourCount } from './leadRoaming';
+import { buildLeadTour, longTourCount, type TourWalkerTiming } from './leadRoaming';
 import { parseLayoutV3 } from './layoutGen/v3data';
 import { bfsDist, occupiedSet } from './layoutGen/v3gen';
 import { missionRaw } from './levelV3';
@@ -30,7 +30,7 @@ import { mergedStrings } from './strings';
 import { castRelation, dayCasting, genderDayCtx, genderFacilityConfig, renderSkins, type GenderDayCtx, type PlayerVariant } from './gender';
 import { facilityTiles } from './levelV3';
 import { genderModifierLib, isFacilityMission } from './missionsV3';
-import type { FacilityDef, FacilitySideDef, FacilityStopDef } from '../core/day/types';
+import type { FacilityDef, FacilitySideDef, FacilityStopDef, TalkZoneDef } from '../core/day/types';
 
 /** 데이터 미정 기본값 (D-054). 데이터에 같은 이름의 값이 생기면 그쪽이 우선 */
 export const DEFAULTS = {
@@ -45,6 +45,10 @@ export const DEFAULTS = {
   ceoAtFrac: 0.55,
   /** [임시 추정] 낮잠·회의 시각 조정에서 팀장이 회의실까지 걷는 시간(초). 기획이 데이터로 주면 교체 */
   meetingWalkEstSec: 4,
+  /** [임시] 팀장 순회 복귀 후 앉기(초, GDD v3 §3-1 '앉기 0.5초'). leadRoaming.sitSec가 생기면 그쪽 우선(T-155) */
+  tourSitSec: 0.5,
+  /** [임시 추정] 순회 자리 비움 추정에서 모퉁이 전조가 실제로 나는 비율(D-044 조건부 전조라 플레이어 위치에 달림). T-155 런타임 실측으로 보정 */
+  tourCornerTellShare: 0.25,
 } as const;
 
 type O = Record<string, unknown>;
@@ -66,6 +70,41 @@ function accompliceEffectOf(e: O): NonNullable<MissionDef['accompliceEffect']> {
 
 import { hhmm } from './time';
 export { hhmm };
+
+/** sim.talk.zone(D-107): 지금은 gate_approach 하나 */
+function talkZoneOf(v: unknown): TalkZoneDef | undefined {
+  const z = obj(v);
+  if (z['type'] !== 'gate_approach') return undefined;
+  const r = range2(z['pathTilesToGateUse']) ?? [1, 6];
+  return {
+    type: 'gate_approach', pathTilesToGateUse: r,
+    startOnlyInZone: z['startOnlyInZone'] !== false, noStartWhileAtGate: z['noStartWhileAtGate'] !== false,
+    tellSurvivesGateArrival: z['tellSurvivesGateArrival'] === true, gateStageHoldWhileTalk: z['gateStageHoldWhileTalk'] === true,
+  };
+}
+
+/** 순회 자리 비움 추정 재료(T-155): 앉은 순찰 액터 sim(직급 보간)·rules.sight·rules.fake */
+function tourWalkerTiming(tables: Tables, roam: O, rankId: string, t: number, rules: O): TourWalkerTiming {
+  const seatPatrolId = str(roam['seatPatrolId'], 'p_tl_seat');
+  const actorId = str(arr(obj(tables['patrols'])['patrols']).map(obj).find((p) => p['id'] === seatPatrolId)?.['actorId'], str(roam['actorId'], 'team_lead'));
+  const raw = arr(obj(tables['bosses'])['bosses']).map(obj).find((a) => a['id'] === actorId) ?? arr(obj(tables['npcs'])['npcs']).map(obj).find((a) => a['id'] === actorId);
+  const sim = obj(raw ? obj(applyInterpScaling(raw, rankId, t))['sim'] : {});
+  const mean = (r: [number, number] | undefined, d: number) => (r ? (r[0] + r[1]) / 2 : d);
+  const tellSec = num(sim['tellSec'], 0.5);
+  const fake = obj(sim['fake']);
+  const fakeRules = obj(rules['fake']);
+  const sight = obj(rules['sight']);
+  return {
+    lookTellSec: num(sim['stopLookTellSec'], mean(range2(sim['tellSecRange']), tellSec)),
+    lookSec: mean(range2(sim['lookSecRange']), num(sim['lookSec'], 1)),
+    fakeProb: fake['type'] === 'recheck' ? 0 : Math.min(num(fake['chance'], 0), num(fake['capChance'], 1), num(fakeRules['absoluteCapProb'], 1)),
+    afterFakeSec: num(fake['afterFakeSec'], 0.3),
+    glanceBackChancePerTile: num(sim['glanceBackChancePerTile'], 0),
+    turnTellSec: num(sight['cornerTurnTellSec'], tellSec),
+    cornerTellShare: num(roam['cornerTellShare'], DEFAULTS.tourCornerTellShare),
+    sitSec: num(roam['sitSec'], DEFAULTS.tourSitSec),
+  };
+}
 
 /** rules.day의 'HH:MM' 시각(분). 없거나 형식이 틀리면 예외(시각 기본값을 코드에 두지 않음, BUG-011) */
 function clockOf(day: O, key: string): number {
@@ -409,6 +448,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
         ...(str(plan['ceo'], 'none') !== 'none' ? { ceoAtSec: num(plan['ceoAtSec'], dayPhaseSecFinal * DEFAULTS.ceoAtFrac) } : {}),
         directorAtSec: arr(plan['dayInterrupts']).map(obj).filter((d) => d['id'] === 'INT-10').map((d) => num(d['atSec'], 0)),
         meetings: arr(plan['dayInterrupts']).map(obj).filter((d) => d['id'] === 'INT-08').map((d) => ({ atSec: num(d['atSec'], 0), waitSec: num(obj(i08?.['effect'])['meetingSec'], 10) })),
+        walker: tourWalkerTiming(tables, v3.leadRoaming, rankId, t, rules),
       });
     } else tour = buildDevTour(day, dayPhaseSecFinal, tellMin0, map.spots);
   }
@@ -460,6 +500,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       ...(typeof talk['enabledBy'] === 'string' ? { talkEnabledBy: talk['enabledBy'] as string } : {}),
       ...(talk['onlyWhilePlayerAway'] === true ? { talkOnlyWhilePlayerAway: true } : {}),
       ...(typeof talk['onlyWhen'] === 'string' ? { talkOnlyWhen: talk['onlyWhen'] as string } : {}),
+      ...(talkZoneOf(talk['zone']) ? { talkZone: talkZoneOf(talk['zone'])! } : {}),
       ...(typeof talk['warnLineKey'] === 'string' ? { warnLineKey: talk['warnLineKey'] as string } : {}),
       ...(typeof talk['dodgedLineKey'] === 'string' ? { dodgedLineKey: talk['dodgedLineKey'] as string } : {}),
       ...(a['hierarchy'] ? { hierarchy: obj(a['hierarchy']) } : {}),
@@ -663,6 +704,28 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   const W = map.rows[0]?.length ?? 11;
   const seatDist = bfsDist(map.rows, map.legend, playerSeat, occupiedSet(spots, W));
   const oneWay = (t: Tile): number => seatDist[t.y * W + t.x] ?? -1;
+  // zone_only(gdd-v3 §10 보충): 목표 스폿이 속한 구역(가장 작은 rect). 구역이 없거나 내 자리도 같은 구역이면 '구역 입구'가 없어 변형을 붙이지 않음
+  const inRect = (r: readonly [number, number, number, number], t: Tile) => t.x >= r[0] && t.y >= r[1] && t.x < r[0] + r[2] && t.y < r[1] + r[3];
+  const zoneRectOf = (t: Tile) => map.zones.filter((z) => inRect(z.rect, t)).sort((a, b) => a.rect[2] * a.rect[3] - b.rect[2] * b.rect[3])[0]?.rect;
+  const missionSpotOf = (id: string): Tile | undefined => {
+    const e = missionRaw(tables, id, mv3) ?? events.find((x) => x['id'] === id);
+    if (!e) return undefined;
+    const nm = [str(obj(e['location'])['spot']), str(obj(e['params'])['fallbackSpot'])].find((n) => n && spots[n]);
+    return nm ? spots[nm]?.tile : undefined;
+  };
+  const zoneOnlyOk = (id: string): boolean => {
+    const t = missionSpotOf(id);
+    const r = t ? zoneRectOf(t) : undefined;
+    return !!r && !inRect(r, playerSeat);
+  };
+  let zoneGrid: GridMap | null = null;
+  const zoneEntryOf = (spot: Tile): Tile | undefined => {
+    const r = zoneRectOf(spot);
+    if (!r || inRect(r, playerSeat)) return undefined;
+    zoneGrid ??= buildGridMap(map.rows, map.legend);
+    const path = findPath(zoneGrid, playerSeat, spot);
+    return path?.find((t) => inRect(r, t));
+  };
   const speed = floorRules.playerSpeedTilesPerSec;
   const refOW = v3?.missionRefOneWayTiles ?? {};
   const isGen = map.source === 'generated';
@@ -688,7 +751,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     const history = modifierHistory((d) => (d <= lastAuthored ? null : mk(d, dayPlan(tables, d, planOpts))), day);
     drawn = drawModifiers({
       ...mk(day, plan), plan: { ...plan, dayPhaseSec: dayPhaseSecFinal }, clockAt: clockAt(dayPhaseSecFinal),
-      hasSpot: (n) => !!spots[n], longTourCount: longTourCount(tour), history,
+      hasSpot: (n) => !!spots[n], longTourCount: longTourCount(tour), history, zoneOnlyOk,
     }).byMission;
   }
   const genderLib = gd ? genderModifierLib(tables, gd.mine, gd.lockerMine) : [];
@@ -733,7 +796,14 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       params, ...(typeof e['tutorialId'] === 'string' ? { tutorialId: e['tutorialId'] as string } : {}),
       ...(e['accompliceAllowed'] === true && e['accompliceEffect'] ? { accompliceEffect: accompliceEffectOf(obj(e['accompliceEffect'])) } : {}),
     };
-    const md0 = applyMissionModifiers(def, mods, spots, warn);
+    const md1 = applyMissionModifiers(def, mods, spots, warn);
+    // zone_only: 구역 입구(내 자리 → 스폿 최단 경로가 구역에 처음 들어가는 칸). 없으면 변형의 '찾기' 부분을 끔
+    let md0: MissionDef = md1;
+    if (md1.zoneOnlyRevealTiles !== undefined) {
+      const entry = md1.awayFromDesk ? zoneEntryOf(md1.spot) : undefined;
+      if (entry && (entry.x !== md1.spot.x || entry.y !== md1.spot.y)) md0 = { ...md1, zoneEntry: entry };
+      else { const { zoneOnlyRevealTiles: _z, ...rest } = md1; md0 = rest; warn.push(`미션 ${id}: zone_only 구역 입구 없음(찾기 끔)`); }
+    }
     const md: MissionDef = {
       ...md0, ...(facilityMission ? { facilityMission: true } : {}),
       ...(mods.length > 0 ? { modifierLabels: mods.map((mm) => ({ ...(mm.labelKey ? { labelKey: mm.labelKey } : {}), ...(mm.facilityLabelKey ? { facilityLabelKey: mm.facilityLabelKey } : {}) })) } : {}),

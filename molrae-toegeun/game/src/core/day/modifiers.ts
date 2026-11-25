@@ -98,7 +98,10 @@ export function applyMissionModifiers(
       if (sa === 'arrive_spot' || sa === 'chip_tap_at_seat') startsAt = sa;
       if (ca === 'return_to_seat' || ca === 'on_success') completeAt = ca;
       if (typeof af === 'boolean') awayFromDesk = af;
+      // carry 변형 carryMovingMul은 미션 기본값(택배 1.15 등)을 곱하지 않고 큰 쪽으로 대체(gdd-v3 §10 보충)
+      const cm0 = params['carryMovingMul'], cm1 = rest['carryMovingMul'];
       params = { ...params, ...rest };
+      if (typeof cm0 === 'number' && typeof cm1 === 'number') params['carryMovingMul'] = Math.max(cm0, cm1);
       if (typeof rest['revealRadiusTiles'] === 'number' && rest['hint'] === 'zone_only') zoneOnly = rest['revealRadiusTiles'] as number;
     }
     if (m.availability) availability = m.availability;

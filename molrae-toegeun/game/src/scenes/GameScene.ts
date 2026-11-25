@@ -115,6 +115,8 @@ export class GameScene extends Phaser.Scene {
   private routeLeft = 0;
   private demo: { actor: string; left: number } | null = null;
   private missionArrows: Phaser.GameObjects.Image[] = [];
+  /** zone_only 장소 반짝임(fx/zone_hint, 드러난 뒤 그 미션이 끝날 때까지) */
+  private zoneHints = new Map<string, Phaser.GameObjects.Sprite>();
   private qteDownAt: number | null = null;
   private snackDown: { at: number; tx: number; ty: number } | null = null;
   private prevMode = new Map<PatrolNpc, string>();
@@ -157,6 +159,7 @@ export class GameScene extends Phaser.Scene {
     this.buttons = [];
     this.routeDots = [];
     this.missionArrows = [];
+    this.zoneHints = new Map();
     this.follower = null;
     this.demo = null;
     this.qteDownAt = null;
@@ -644,7 +647,7 @@ export class GameScene extends Phaser.Scene {
         const rise = sd ? `${v.base}/rise_${sd}` : '';
         if (npc.stopId === 'stop_tour_stand' && sd && this.anims.exists(rise)) {
           if (v.sprite.anims.currentAnim?.key !== rise) v.sprite.play(rise);
-        } else if (npc.def.seated && sd && this.anims.exists(`${v.base}/sit_${sd}`)) {
+        } else if ((npc.def.seated || npc.stopId === 'stop_tour_sit') && sd && this.anims.exists(`${v.base}/sit_${sd}`)) {
           this.playAnim(v.sprite, `${v.base}/sit_${sd}`);
           v.sprite.setY(sy - 3);
         } else if (stop?.pose && npc.mode === 'wait' && this.anims.exists(stop.pose)) this.playAnim(v.sprite, stop.pose);
@@ -810,7 +813,12 @@ export class GameScene extends Phaser.Scene {
     // 자리 비움 = 의자를 떠난 뒤(일어나기 전조 중에는 아직 자리)
     const away = sim.phase === 'day' && sim.touringNpcs().some((n) => !(n.stopId === 'stop_tour_stand' && n.mode !== 'walk'));
     this.awayBadge.setVisible(away);
-    if (away) { placeText(this.awayBadge, LOGICAL_WIDTH - 6, HUD_TOP_PX + 6, 1, 0); fitPanel(this.awayBadgeBg, this.awayBadge, 3, 2); } else this.awayBadgeBg.setVisible(false);
+    // T-155: 튜토리얼·안내 상자(같은 HUD_TOP_PX + 6 줄, 화면 폭 전체)가 떠 있으면 그 아래로 내려 겹치지 않게
+    if (away) {
+      const hb = this.hud.hintBottomPx();
+      placeText(this.awayBadge, LOGICAL_WIDTH - 6, hb !== null ? Math.ceil(hb) + 5 : HUD_TOP_PX + 6, 1, 0);
+      fitPanel(this.awayBadgeBg, this.awayBadge, 3, 2);
+    } else this.awayBadgeBg.setVisible(false);
     // 들고 오는 소품(아트 player/carry_* 전 임시: 미션 아이콘을 머리 위에)
     const prop = sim.phase === 'day' ? sim.carryProp() : null;
     const carryM = prop ? sim.missions.find((m) => m.state === 'carry') : undefined;
@@ -861,6 +869,18 @@ export class GameScene extends Phaser.Scene {
     else this.centerBg.setVisible(false);
     // 경로 힌트 점선(dot/hint = 우회, dot/caution = 지름길)
     if (this.routeLeft > 0) { this.routeLeft -= dt; if (this.routeLeft <= 0) for (const d of this.routeDots) d.img.setVisible(false); }
+    // zone_only(T-155): 드러난 장소 반짝임(하늘색 점선 링)
+    for (const m of sim.missions) {
+      if (!m.def.zoneEntry) continue;
+      const on = sim.phase === 'day' && !!m.revealed && (m.state === 'open' || m.state === 'locked');
+      let zh = this.zoneHints.get(m.def.id);
+      if (on && !zh && this.atlasHas('fx/zone_hint')) {
+        zh = this.add.sprite(this.offsetX + m.def.spot.x * TILE + TILE / 2, m.def.spot.y * TILE + TILE / 2, ATLAS_KEY, 'fx/zone_hint').setDepth(D.cover + 3);
+        if (this.anims.exists('fx/zone_hint')) zh.play('fx/zone_hint');
+        this.zoneHints.set(m.def.id, zh);
+      }
+      zh?.setVisible(on);
+    }
     // 화면 밖 미션 장소(흰 화살표, offscreenWarning.missionMarkerArrows)
     let ai = 0;
     const cam = floor.camera;
@@ -868,7 +888,7 @@ export class GameScene extends Phaser.Scene {
       const targets: { x: number; y: number }[] = [];
       for (const m of sim.missions) {
         if (m.state === 'carry') targets.push(sim.content.playerSeat);
-        else if ((m.state === 'open' && !m.blocked && m.def.startsAt === 'arrive_spot') || sim.pendingMission === m) targets.push(m.def.spot);
+        else if ((m.state === 'open' && !m.blocked && m.def.startsAt === 'arrive_spot') || sim.pendingMission === m) targets.push(sim.missionTarget(m));
       }
       for (const tg of targets) {
         if (ai >= this.missionArrows.length) break;

@@ -53,6 +53,8 @@ export interface MissionDef {
   readonly availability?: { readonly type: 'while_actor_away'; readonly actorId: string };
   /** 장소가 정확히 안 보이는 변형(zone_only): 이 반경 안에서만 장소 반짝임 */
   readonly zoneOnlyRevealTiles?: number;
+  /** zone_only: 칩을 누르면 가는 '구역 입구'(드러나기 전, T-155) */
+  readonly zoneEntry?: Tile;
   /** T-151: 시설 미션(화장실 피신, 시설이 목적지가 된 relocate). 칩 변형 라벨은 facilityLabelKey 우선(S-04) */
   readonly facilityMission?: boolean;
   /** 칩 표시용 변형 라벨(정적 변형 포함, 붙은 순서) */
@@ -153,6 +155,8 @@ export interface BossTourDef {
   readonly awayBadgeKey?: string;
   /** 첫 출발 때 띄울 튜토리얼 id(6일차 tut_tour) */
   readonly firstTutorialId?: string;
+  /** 자리에 도착한 뒤 앉기(콘 없음, 초, T-155). 없으면 0 */
+  readonly sitSec?: number;
 }
 
 export interface GateDef {
@@ -212,6 +216,8 @@ export interface ActorInfo {
   readonly talkEnabledBy?: string;
   readonly talkOnlyWhilePlayerAway?: boolean;
   readonly talkOnlyWhen?: string;
+  /** 말걸기 성립 구역(npcs.*.sim.talk.zone, D-107·T-155). 없으면 기존(반경만) */
+  readonly talkZone?: TalkZoneDef;
   /** 말걸기 전조 말풍선 문구 키 / 피했을 때 혼잣말 키 (sim.talk, T-132) */
   readonly warnLineKey?: string;
   readonly dodgedLineKey?: string;
@@ -220,6 +226,21 @@ export interface ActorInfo {
   readonly spriteKey?: string;
   /** 외형 변형(T-145: 액터 + variant 구조, D-088 대비). 데이터 spriteVariant. 판정과 무관 */
   readonly spriteVariant?: string;
+}
+
+/** 경비 말걸기 '게이트 앞 접근 구간'(D-107, gdd-v3 §3-6) */
+export interface TalkZoneDef {
+  readonly type: 'gate_approach';
+  /** 플레이어 이동 경로상 gate_use까지 남은 칸(게이트 칸 제외) [최소, 최대] */
+  readonly pathTilesToGateUse: readonly [number, number];
+  /** 구역 안에서 움직이는 중일 때만 전조 시작 */
+  readonly startOnlyInZone: boolean;
+  /** 게이트 칸에 서 있는 동안 새 전조 없음 */
+  readonly noStartWhileAtGate: boolean;
+  /** 전조 중 게이트 도착해도 취소하지 않고, 위장 판정은 도착 전 마지막 이동 상태로 */
+  readonly tellSurvivesGateArrival: boolean;
+  /** 성립하면 게이트 단계(막대·시도 횟수)를 말걸기가 끝날 때까지 보류 */
+  readonly gateStageHoldWhileTalk: boolean;
 }
 
 /** 배경 동료(D-049). 메카닉 없음(시선·말걸기 없음), 표시 전용 */
