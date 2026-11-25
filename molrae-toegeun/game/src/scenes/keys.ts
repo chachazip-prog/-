@@ -3,5 +3,6 @@ export const SceneKey = {
   Audio: 'Audio',
   Title: 'Title',
   Prep: 'Prep',
+  CharSelect: 'CharSelect',
   Game: 'Game',
 } as const;

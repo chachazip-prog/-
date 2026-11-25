@@ -14,7 +14,8 @@
     "smoke": "esbuild scripts/smoke-core.ts --bundle --platform=node --format=esm --log-level=warning --outfile=node_modules/.cache/smoke-core.mjs && node node_modules/.cache/smoke-core.mjs && esbuild scripts/smoke-day.ts --bundle --platform=node --format=esm --log-level=warning --outfile=node_modules/.cache/smoke-day.mjs && node node_modules/.cache/smoke-day.mjs 20 && esbuild scripts/smoke-layout.ts --bundle --platform=node --format=esm --log-level=warning --outfile=node_modules/.cache/smoke-layout.mjs && node node_modules/.cache/smoke-layout.mjs",
     "fonts": "esbuild scripts/build-fonts.ts --bundle --platform=node --format=esm --packages=external --log-level=warning --outfile=node_modules/.cache/build-fonts.mjs && node node_modules/.cache/build-fonts.mjs",
     "gen-preview": "esbuild scripts/gen-preview.ts --bundle --platform=node --format=esm --log-level=warning --outfile=node_modules/.cache/gen-preview.mjs && node node_modules/.cache/gen-preview.mjs",
-    "gen-survey": "esbuild scripts/gen-survey.ts --bundle --platform=node --format=esm --log-level=warning --outfile=node_modules/.cache/gen-survey.mjs && node node_modules/.cache/gen-survey.mjs"
+    "gen-survey": "esbuild scripts/gen-survey.ts --bundle --platform=node --format=esm --log-level=warning --outfile=node_modules/.cache/gen-survey.mjs && node node_modules/.cache/gen-survey.mjs",
+    "sym-gender": "esbuild scripts/sym-gender.ts --bundle --platform=node --format=esm --log-level=warning --outfile=node_modules/.cache/sym-gender.mjs && node node_modules/.cache/sym-gender.mjs"
   },
   "dependencies": {
     "@apps-in-toss/web-framework": "3.10.0",

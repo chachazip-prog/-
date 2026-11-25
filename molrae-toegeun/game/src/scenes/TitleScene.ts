@@ -1,17 +1,28 @@
 import Phaser from 'phaser';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
-import { getStrings } from '../content';
+import { devPlayerVariant, getStrings } from '../content';
+import type { PlayerVariant } from '../content/gender';
 import { getPlatform } from '../platform';
 import { color } from '../render/palette';
+import { loadPlayerVariant } from '../state/playerVariant';
 import { loadProgress } from '../state/progress';
-import { addPixelText, placeText, setPixelText } from '../ui/pixelText';
+import { UiButton } from '../ui/button';
+import { addPixelText, fitPanel, placeText, setPixelText, setWrap } from '../ui/pixelText';
+import type { CharSelectData } from './CharSelectScene';
 import { SceneKey } from './keys';
 import type { PrepSceneData } from './PrepScene';
 
+export interface TitleSceneData { toastKey?: string | undefined }
+
 export class TitleScene extends Phaser.Scene {
   private day = 1;
+  private variant: PlayerVariant | null = null;
+  private ready = false;
+  private toastKey: string | undefined;
 
   constructor() { super(SceneKey.Title); }
+
+  init(data: TitleSceneData): void { this.toastKey = data?.toastKey; this.ready = false; }
 
   create(): void {
     const str = getStrings();
@@ -23,13 +34,35 @@ export class TitleScene extends Phaser.Scene {
     placeText(start, cx, LOGICAL_HEIGHT * 0.65, 0.5, 0.5);
     let forced = 0;
     try { forced = Number(new URLSearchParams(window.location.search).get('day')) || 0; } catch { /* noop */ }
-    void loadProgress(getPlatform().storage).then((p) => {
+    // 설정 > 내 캐릭터(D-088: 다음 판부터 적용). 외형을 고른 뒤에만 보임
+    let settings: UiButton | null = null;
+    const storage = getPlatform().storage;
+    void Promise.all([loadProgress(storage), loadPlayerVariant(storage)]).then(([p, v]) => {
+      if (!this.scene.isActive()) return;
       this.day = forced > 0 ? forced : p.unlockedDay;
-      if (this.day > 1 && this.scene.isActive()) {
+      this.variant = devPlayerVariant() ?? v;
+      this.ready = true;
+      if (this.day > 1) {
         setPixelText(start, str.t('ui.continue_day', { n: this.day }));
         placeText(start, cx, LOGICAL_HEIGHT * 0.65, 0.5, 0.5);
       }
+      if (v) settings = new UiButton(this, 40, LOGICAL_HEIGHT - 44, LOGICAL_WIDTH - 80, 22, str.t('settings.character'), { depth: 10, style: 'normal', role: 'label' });
     });
-    this.input.once('pointerup', () => this.scene.start(SceneKey.Prep, { day: this.day } satisfies PrepSceneData));
+    if (this.toastKey && str.has(this.toastKey)) {
+      const bg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.95).setStrokeStyle(1, color('dark'));
+      const t = addPixelText(this, 0, 0, str.t(this.toastKey), { role: 'label', color: color('outline'), align: 'center' });
+      setWrap(t, LOGICAL_WIDTH - 40); placeText(t, cx, LOGICAL_HEIGHT * 0.8, 0.5, 0.5); fitPanel(bg, t, 4, 3);
+      this.time.delayedCall(2200, () => { bg.destroy(); t.destroy(); });
+    }
+    this.input.on(Phaser.Input.Events.POINTER_UP, (ptr: Phaser.Input.Pointer) => {
+      if (!this.ready) return;
+      if (settings && settings.contains(ptr.x, ptr.y)) {
+        this.scene.start(SceneKey.CharSelect, { mode: 'change', current: this.variant } satisfies CharSelectData);
+        return;
+      }
+      // 첫 출근 전 필수 선택(playerSelection.requiredBeforeFirstDay, 기본값 없음)
+      if (!this.variant) this.scene.start(SceneKey.CharSelect, { mode: 'first', day: this.day } satisfies CharSelectData);
+      else this.scene.start(SceneKey.Prep, { day: this.day, playerVariant: this.variant } satisfies PrepSceneData);
+    });
   }
 }

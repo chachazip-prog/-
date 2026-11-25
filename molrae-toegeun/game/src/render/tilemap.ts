@@ -96,6 +96,13 @@ export function buildTileLayout(c: DayContent, has: (frame: string) => boolean =
     return best?.id;
   };
   const wallish = (x: number, y: number) => { const k = kind(x, y); return k === 'wall' || k === 'elevator'; };
+  // T-151: 성별 시설 문 표지(mine = 하늘색 테두리 + 내 성별 픽토그램, other = 회색). 표지 그림만 플레이어 성별을 따름(판정 무관)
+  const signAt = new Map<number, string>();
+  const fac = c.facility, sk = c.skins;
+  if (fac && sk) {
+    for (const sd of [fac.restroom.mine, fac.locker?.mine]) if (sd) signAt.set(sd.door.y * W + sd.door.x, sk.doorSign.mine);
+    for (const sd of [fac.restroom.other, fac.locker?.other]) if (sd) signAt.set(sd.door.y * W + sd.door.x, sk.doorSign.other);
+  }
   const spotAt = (x: number, y: number): string | undefined =>
     Object.entries(c.spots).find(([, s]) => s.tile.x === x && s.tile.y === y)?.[0];
 
@@ -120,6 +127,7 @@ export function buildTileLayout(c: DayContent, has: (frame: string) => boolean =
         case 'wall': {
           const southOpen = y + 1 < H && !wallish(x, y + 1);
           if (y === 0) g = 'tile/wall_cap';
+          else if (southOpen && (kind(x, y + 1) === 'locker_floor' || kind(x, y + 1) === 'shower_stall') && has('tile2/wall_locker')) g = 'tile2/wall_locker';
           else if (southOpen) {
             faceCount++;
             const inOffice = !(zoneOf(x, y + 1) === 'lobby');
@@ -142,8 +150,17 @@ export function buildTileLayout(c: DayContent, has: (frame: string) => boolean =
         case 'door_busy': g = orFallback('tile2/wall_door_busy', 'tile/wall_face'); break;
         case 'stairs_deco': g = pickArt([x < W / 2 ? 'tile2/floor_stairs_l' : 'tile2/floor_stairs_r'], x, y, floor); break;
         case 'door':
-          // 이음 행의 문(좌우가 벽) = 열린 문 그림
-          g = wallish(x - 1, y) && wallish(x + 1, y) && !isGlassy(x, y) ? orFallback('tile2/wall_door_free', floor) : floor;
+          // 이음 행의 문(좌우가 벽) = 열린 문 그림. T-151: 수작업 맵 화장실 문(성별 시설 켜짐) = 내 쪽 표지
+          if (signAt.has(y * W + x)) g = orFallback(signAt.get(y * W + x)!, floor);
+          else g = wallish(x - 1, y) && wallish(x + 1, y) && !isGlassy(x, y) ? orFallback('tile2/wall_door_free', floor) : floor;
+          break;
+        case 'door_screened':
+          // T-148 가림막 문(+): 표지 = 그날 내 쪽/다른 쪽. 표지를 모르면(시설 꺼짐) 열린 문 그림
+          g = orFallback(signAt.get(y * W + x) ?? 'tile2/wall_door_free', floor);
+          break;
+        case 'shower_stall':
+          // 탈의실 구석 칸(W): 바닥은 탈의실, 칸 문은 오브젝트(닫힌 문 + 표시창, S-02 김 아이콘 없음)
+          g = orFallback('tile2/floor_locker', floor);
           break;
         default: {
           g = floor;
@@ -224,6 +241,9 @@ export function buildTileLayout(c: DayContent, has: (frame: string) => boolean =
         }
         case 'restroom_stall':
           objects.push({ frame: 'tall/stall', x: cx(x), y: bottom(y) + 1, tile: { x, y } });
+          break;
+        case 'shower_stall':
+          objects.push({ frame: orFallback('tile2/shower_stall', 'tall/stall'), x: cx(x), y: bottom(y) + 1, tile: { x, y } });
           break;
         case 'glass': {
           const up = isGlassy(x, y - 1), down = isGlassy(x, y + 1);

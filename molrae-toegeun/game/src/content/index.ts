@@ -8,6 +8,7 @@ import { authoredDayCount, buildDayContent, type BuildOptions } from './buildDay
 import { createLevelProvider, layoutEnabledInData } from './levelProvider';
 import { missionsEnabledInData } from './missionsV3';
 import { Strings, mergedStrings } from './strings';
+import { isPlayerVariant, type PlayerVariant } from './gender';
 
 export { buildDayContent, generateDay, dayPlan, authoredDayCount, DEFAULTS, hhmm, type Tables, type BuildOptions } from './buildDay';
 export { createLevelProvider, authoredMapBundle, rankComplexity, layoutEnabledInData, type LevelProvider, type MapBundle, type LevelRequest } from './levelProvider';
@@ -16,13 +17,15 @@ export { Strings, mergedStrings, type StringsTable, type Vars } from './strings'
 /**
  * 개발 파라미터(T-144·T-145): ?gen=1 생성 층 강제(0 = 끔) · ?missions=1 missions.json(v3) 강제(0 = 끔) · ?v3=1 둘 다
  * · ?genseed=문자열 생성 시드 덮어쓰기 · ?tour=1 팀장 순회 강제(0 = 끔). ?day=N과 함께 쓴다.
+ * T-151: ?gender=1 성별 시설 강제(0 = 끔, 기본 = layout.genderFacilities.enabled false, D-092·D-096). ?v3=1과 같이 써야 3일차부터 화장실 쌍이 나옴.
+ *        ?pv=m|f 플레이어 외형 덮어쓰기(스크린샷·QA용, 저장값보다 우선, 저장하지 않음)
  * 앱인토스 실행 환경에서는 URL 파라미터가 없으므로 데이터 기본값(D-086: layout·missions enabled false)으로 동작한다.
  */
 function devBuildOptions(): { key: string; opts: BuildOptions } {
   let q: URLSearchParams;
   try { q = new URLSearchParams(typeof location !== 'undefined' ? location.search : ''); } catch { q = new URLSearchParams(''); }
   const v3 = q.get('v3') === '1';
-  const gen = v3 ? '1' : q.get('gen'), seed = q.get('genseed'), tour = q.get('tour'), mis = v3 ? '1' : q.get('missions');
+  const gen = v3 ? '1' : q.get('gen'), seed = q.get('genseed'), tour = q.get('tour'), mis = v3 ? '1' : q.get('missions'), gf = q.get('gender');
   const tables = getDataTables();
   const generate = gen === '1' ? true : gen === '0' ? false : layoutEnabledInData(tables);
   const missionsV3 = mis === '1' ? true : mis === '0' ? false : missionsEnabledInData(tables);
@@ -30,19 +33,26 @@ function devBuildOptions(): { key: string; opts: BuildOptions } {
     levelProvider: createLevelProvider({ generate, ...(seed ? { seedOverride: seed } : {}) }),
     missionsV3,
     ...(tour === '1' ? { tours: true } : tour === '0' ? { tours: false } : {}),
+    ...(gf === '1' ? { genderFacilities: true } : gf === '0' ? { genderFacilities: false } : {}),
   };
-  return { key: `${generate ? 1 : 0}|${missionsV3 ? 1 : 0}|${seed ?? ''}|${tour ?? ''}`, opts };
+  return { key: `${generate ? 1 : 0}|${missionsV3 ? 1 : 0}|${seed ?? ''}|${tour ?? ''}|${gf ?? ''}`, opts };
+}
+
+/** 개발 파라미터 ?pv=m|f (없으면 null) */
+export function devPlayerVariant(): PlayerVariant | null {
+  try { const v = new URLSearchParams(typeof location !== 'undefined' ? location.search : '').get('pv'); return isPlayerVariant(v) ? v : null; } catch { return null; }
 }
 
 const cache = new Map<string, DayContent>();
 
-export function loadDayContent(day: number): DayContent {
+/** pv = 플레이어 외형(그림 전용 content.skins). 판정 재료는 pv와 무관 */
+export function loadDayContent(day: number, pv: PlayerVariant | null = null): DayContent {
   const dev = devBuildOptions();
-  const key = `${day}|${dev.key}`;
+  const key = `${day}|${dev.key}|${pv ?? ''}`;
   const hit = cache.get(key);
   if (hit) return hit;
   const warnings: string[] = [];
-  const c = buildDayContent(getDataTables(), day, warnings, dev.opts);
+  const c = buildDayContent(getDataTables(), day, warnings, { ...dev.opts, playerVariant: pv });
   for (const w of warnings) console.warn(`[content] ${w}`);
   if (import.meta.env.DEV && c.layout) console.info(`[content] ${day}일차 층: ${c.layout.source} ${c.layout.mapId}${c.layout.modules ? ` [${c.layout.modules.join(', ')}] 시도 ${c.layout.attempts}` : ''}${c.bossTours ? ` · 순회 ${c.bossTours[0]?.atSec.length ?? 0}회` : ''}`);
   cache.set(key, c);

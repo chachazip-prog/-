@@ -61,7 +61,10 @@ export type DayEvent =
   | { t: number; type: 'tourEndTell'; npc: string; lineKey?: string; sfx?: readonly string[] }
   /** 미션 세부 단계(사운드·연출): printStart·printPause·printResume·printGrab·cupReady·cupPicked·cafeMiss·parcelPicked·trayExposed */
   | { t: number; type: 'missionStage'; id: string; stage: string }
-  | { t: number; type: 'couponStamp'; total: number };
+  | { t: number; type: 'couponStamp'; total: number }
+  // ── T-151 성별 시설 ──
+  /** 본부장 화장실 들름(C2·C3): tell = 들어가기 전조(same일 때만 경고 문구·소리), enter, seen = 세면대·바닥에서 마주침, exit. cleaning = C4 청소 시작 */
+  | { t: number; type: 'facility'; stage: 'tell' | 'enter' | 'seen' | 'exit' | 'cleaning'; relation?: 'same' | 'other'; npc?: string };
 
 /** 미션 런타임 상태 */
 export interface MissionRuntime {
@@ -117,6 +120,9 @@ const TUTORIAL_ON: Readonly<Record<string, string>> = {
   tut_ceo: 'ceoTell',
   tut_ceo_2: 'ceoTalk',
   tut_ceo_elevator: 'int:INT-11',
+  // T-151 성별 시설(layout.genderFacilities.debuts)
+  tut_gender_restroom: 'unlock:restroom',
+  tut_director_restroom: 'facilityTell:same',
 };
 
 /** 공범 망보기 헛기침 대상(상사) */
@@ -218,6 +224,16 @@ export class DaySim {
   /** 오늘 받은 카페 쿠폰 도장 */
   couponStamps = 0;
   private coverSet = new Set<number>();
+  // ── T-151 성별 시설 ──
+  private facMine = new Set<number>();
+  private facOther = new Set<number>();
+  private facOtherDoors = new Set<number>();
+  private facMineDoor = -1;
+  /** C4 청소 끝 시각(floor.time). null = 없음 */
+  private cleaningUntil: number | null = null;
+  private facRun: { npc: PatrolNpc; stage: 'tell' | 'walk' | 'inside'; seen: boolean } | null = null;
+  private facStops = 0;
+  private facCueLeft = 0;
   // ── 이어하기(D-050) ──
   continued = false;
   private endedFrom: { phase: DayPhase; leaveStage: LeaveStage } | null = null;
@@ -244,6 +260,13 @@ export class DaySim {
     this.snackStock = content.scoring.snackStockStart;
     this.missions = content.missions.map((def) => ({ def, state: 'locked' as MissionState, startedAt: null, blocked: false }));
     for (const c of content.coverSpots) this.coverSet.add(c.y * this.floor.map.width + c.x);
+    const fac = content.facility;
+    if (fac) {
+      const W = this.floor.map.width, ix = (t: Tile) => t.y * W + t.x;
+      for (const sd of [fac.restroom.mine, fac.locker?.mine]) if (sd) for (const t of sd.tiles) this.facMine.add(ix(t));
+      for (const sd of [fac.restroom.other, fac.locker?.other]) if (sd) { for (const t of sd.tiles) this.facOther.add(ix(t)); this.facOtherDoors.add(ix(sd.door)); }
+      this.facMineDoor = ix(fac.restroom.mine.door);
+    }
     this.push({ t: 0, type: 'phase', phase: 'intro' });
   }
 
@@ -409,6 +432,7 @@ export class DaySim {
       if (this.leaveStage === 'gate') { this.gateTap(); return 'gate'; }
       if (this.leaveStage === 'elevator' || this.leaveStage === 'done') return 'ignored';
     }
+    if (p.mode !== 'moving' && !p.paused && this.facilityTapBlocked(tx, ty)) return 'facility';
     return this.floor.tap(tx, ty);
   }
 
@@ -426,8 +450,11 @@ export class DaySim {
       if (this.playerAtSeat && this.floor.player.mode !== 'moving') { this.startActivity(m); return true; }
       return this.floor.moveTo(this.content.playerSeat);
     }
+    // T-151 C4: 청소 중이면 내 쪽 탈의실 구석 칸으로 우회(있을 때). 없으면 안내만
+    const detour = this.cleaningDetourFor(m);
+    if (detour === null) { this.cleaningToast(); return false; }
     if (!this.playerAtSeat && m.startedAt === null) m.startedAt = this.leftSeatAt ?? this.time;
-    const t = m.def.spot;
+    const t = detour ?? m.def.spot;
     const here = this.floor.player.tile;
     if (here.x === t.x && here.y === t.y && this.floor.player.mode !== 'moving') { this.startActivity(m); return true; }
     return this.floor.moveTo(t);
@@ -474,6 +501,7 @@ export class DaySim {
 
     const s0 = this.floor.suspicion.value;
     const wasMoving = this.floor.player.mode === 'moving';
+    this.facilityTalkCancel();
     this.floor.step();
     this.collectFloorEvents();
     if (this.floor.outcome === 'caught') { this.end('caught'); return; }
@@ -483,6 +511,8 @@ export class DaySim {
     else if (this.phase === 'leave') this.leaveAfterStep(dt);
     if ((this.phase as DayPhase) === 'ended') return;
     this.afterInterrupts(dt);
+    this.facilityStopStep();
+    if (this.facCueLeft > 0) this.facCueLeft = Math.max(0, this.facCueLeft - dt);
     this.ceoPostStep(dt, wasMoving);
     this.elevatorCeoStep();
     this.accompliceStep(dt);
@@ -555,6 +585,8 @@ export class DaySim {
     if (this.activity) return false;
     if (this.gateOpen) return false;
     if (this.frozenAll || this.qteActive) return false;
+    // T-151: 내 쪽 시설 안·문에서는 아무도 말을 걸지 않음(access.talkCancelAtMineDoor)
+    if (this.playerInMineFacility()) return false;
     if (actor.talkOnlyWhilePlayerAway && this.playerAtSeat) return false;
     const cond = actor.talkOnlyWhen ?? (typeof int.triggerDef['condition'] === 'string' ? int.triggerDef['condition'] as string : undefined);
     // BUG-011: 조건 이름의 '1800'은 데이터 식별자일 뿐이고 기준 시각은 항상 rules.day.earlyLeaveBefore(데이터)
@@ -577,8 +609,14 @@ export class DaySim {
   }
 
   private gateBlocked(x: number, y: number): boolean {
-    if (this.gateOpen) return false;
     const m = this.floor.map;
+    // T-151: 다른 쪽 시설 문 = 플레이어 경로에서 벽(access.otherDoorForPlayer), 청소 중인 내 화장실 문 = 밖에서 못 들어감(C4)
+    if (this.facOtherDoors.size > 0 || this.cleaningUntil !== null) {
+      const i = y * m.width + x;
+      if (this.facOtherDoors.has(i)) return true;
+      if (i === this.facMineDoor && this.cleaningActive && !this.facMine.has(this.floor.player.tile.y * m.width + this.floor.player.tile.x)) return true;
+    }
+    if (this.gateOpen) return false;
     return x >= 0 && y >= 0 && x < m.width && y < m.height && m.gateOnly[y * m.width + x] === 1;
   }
 
@@ -682,6 +720,12 @@ export class DaySim {
       if (m.state === 'locked' && this.dayTime >= m.def.unlockAtSec) {
         m.state = 'open';
         this.push({ t: this.time, type: 'missionUnlocked', id: m.def.id });
+        if (m.def.facilityMission) this.tutorial(`unlock:${m.def.id}`);
+        const cl = this.content.facility?.cleaning;
+        if (cl && cl.missionId === m.def.id && this.cleaningUntil === null) {
+          this.cleaningUntil = this.time + cl.windowSec;
+          this.push({ t: this.time, type: 'facility', stage: 'cleaning' });
+        }
       }
       // 회의 중 잠김(INT-08 blocksMissions)
       m.blocked = this.missionBlocked(m.def.id);
@@ -787,6 +831,8 @@ export class DaySim {
   private matchesSpot(m: MissionRuntime, t: Tile): boolean {
     const atSeat = m.def.startsAt === 'chip_tap_at_seat' || (m.def.mechanic === 'remote_start_fetch' && !m.job);
     const s = atSeat ? this.content.playerSeat : m.def.spot;
+    const cl = this.content.facility?.cleaning;
+    if (cl?.detourStall && cl.missionId === m.def.id && cl.detourStall.x === t.x && cl.detourStall.y === t.y) return true;
     return s.x === t.x && s.y === t.y;
   }
 
@@ -1801,6 +1847,126 @@ export class DaySim {
       if (inZ) { this.greetTimer = 0; return; }
       this.greetTimer += dt;
       if (this.greetTimer >= g.resumeDelaySec && greeter.mode === 'hold') { greeter.release(); this.greetState = 'returning'; }
+    }
+  }
+
+  // ── T-151 성별 시설 ─────────────────────────────────────
+
+  private playerInMineFacility(): boolean {
+    if (this.facMine.size === 0) return false;
+    const t = this.floor.player.tile;
+    return this.facMine.has(t.y * this.floor.map.width + t.x);
+  }
+
+  /** C4 청소 중인가 */
+  get cleaningActive(): boolean { return this.cleaningUntil !== null && this.time < this.cleaningUntil; }
+  /** C4 청소 남은 초(표지·칩 표시) */
+  get cleaningLeftSec(): number { return this.cleaningUntil === null ? 0 : Math.max(0, this.cleaningUntil - this.time); }
+
+  /** 청소 중 이 미션의 목적지: 우회 칸 / undefined = 평소대로 / null = 갈 곳 없음(기다리기) */
+  private cleaningDetourFor(m: MissionRuntime): Tile | undefined | null {
+    const cl = this.content.facility?.cleaning;
+    if (!cl || cl.missionId !== m.def.id || !this.cleaningActive || this.playerInMineFacility()) return undefined;
+    return cl.detourStall ?? null;
+  }
+
+  private cleaningToast(): void {
+    const cl = this.content.facility?.cleaning;
+    if (cl) this.push({ t: this.time, type: 'toast', key: cl.signKey });
+  }
+
+  /** 다른 쪽 시설(문·안) 탭 = 안내만, 경로 없음. 청소 중인 내 화장실 탭 = 표지 안내 */
+  private facilityTapBlocked(tx: number, ty: number): boolean {
+    const fac = this.content.facility;
+    if (!fac) return false;
+    const i = ty * this.floor.map.width + tx;
+    if (this.facOther.has(i)) { this.push({ t: this.time, type: 'toast', key: fac.otherDoorHintKey }); return true; }
+    if (this.cleaningActive && !this.playerInMineFacility() && fac.restroom.mine.tiles.some((t) => t.x === tx && t.y === ty)) { this.cleaningToast(); return true; }
+    return false;
+  }
+
+  /** 말걸기 전조 중 내 쪽 시설 문을 지나면 취소(D-054 시설 버전, S-05: 말 걸던 인물은 제자리 정지 후 원래 경로) */
+  private facilityTalkCancel(): void {
+    const fac = this.content.facility;
+    if (!fac?.talkCancelAtMineDoor || !this.playerInMineFacility()) return;
+    for (const n of this.floor.npcs) {
+      if (n.mode === 'tell' && n.tellKind === 'talk' && n.cancelTalkInPlace()) {
+        this.floor.pushEvent({ t: this.time, type: 'talkCancel', npc: n.def.id, reason: 'door' });
+        this.push({ t: this.time, type: 'say', npc: n.def.id, key: fac.talkCancelLineKey, sec: 1.4 });
+      }
+    }
+  }
+
+  /** 지금 본부장 화장실 들름 중인 NPC와 상태(표시: 같은/다른 성별 표식, 머리 위 '!', 문 '!') */
+  facilityStopView(): { npc: PatrolNpc; relation: 'same' | 'other'; stage: 'tell' | 'walk' | 'inside'; cue: boolean; door: Tile } | null {
+    const st = this.content.facility?.stop;
+    if (!st || !this.facRun) return null;
+    return { npc: this.facRun.npc, relation: st.relation, stage: this.facRun.stage, cue: this.facCueLeft > 0, door: st.target.door };
+  }
+
+  /** INT-10 facilityStop: 길목 노드 → (전조 tellSec) → 문 → 세면대 insideSec → 문 → 노드 → 원래 경로 */
+  private facilityStopStep(): void {
+    const st = this.content.facility?.stop;
+    if (!st) return;
+    const inTarget = (t: Tile) => st.target.tiles.some((q) => q.x === t.x && q.y === t.y);
+    const run = this.facRun;
+    if (run) {
+      const npc = run.npc;
+      if (!this.floor.npcs.includes(npc)) { this.facRun = null; return; }
+      const nt = tileOf(npc);
+      const inside = inTarget(nt);
+      if (run.stage === 'tell' && npc.waypointIndex >= 1) run.stage = 'walk';
+      if (inside && run.stage !== 'inside') {
+        run.stage = 'inside';
+        npc.suppressed = true; // 시설 안: 층 콘 끔 + 콘 그래픽 없음(S-01, insideCone.renderCone false)
+        this.push({ t: this.time, type: 'facility', stage: 'enter', relation: st.relation, npc: npc.def.id });
+        if (st.relation === 'other' && st.awayToastKey) this.push({ t: this.time, type: 'toast', key: st.awayToastKey });
+      } else if (!inside && run.stage === 'inside') {
+        npc.suppressed = false;
+        this.push({ t: this.time, type: 'facility', stage: 'exit', relation: st.relation, npc: npc.def.id });
+        this.facRun = null;
+        return;
+      }
+      // C3 판정만(콘 그래픽 없음): 같은 성별 날, 내 화장실 세면대·바닥(칸 제외)에서 판정용 시선에 걸리면 한 번만
+      if (run.stage === 'inside' && st.relation === 'same' && !run.seen) {
+        const p = this.floor.player;
+        const pt = p.tile;
+        const inStall = pt.x === st.target.stall.x && pt.y === st.target.stall.y;
+        if (inTarget(pt) && !inStall && canSee(this.floor.map, npc.pos, npc.facing, st.cone, p.pos)) {
+          run.seen = true;
+          if (st.suspicionOnce > 0) addSuspicion(this.floor.suspicion, this.content.floor.rules.suspicion, st.suspicionOnce);
+          this.facCueLeft = Math.max(st.cueMinSec, st.stopSec);
+          if (st.stopSec > 0) p.forceTalk(st.stopSec);
+          this.push({ t: this.time, type: 'facility', stage: 'seen', relation: 'same', npc: npc.def.id });
+          if (st.meetLineKey) this.push({ t: this.time, type: 'say', npc: npc.def.id, key: st.meetLineKey, sec: Math.max(st.stopSec, st.cueMinSec) });
+          if (st.reactionKey) this.push({ t: this.time, type: 'toast', key: st.reactionKey });
+          if (this.floor.suspicion.value >= this.content.floor.rules.suspicion.max) this.caughtBy = 'director';
+        }
+      }
+      return;
+    }
+    if (this.phase !== 'day' || this.facStops >= st.maxPerDay || this.frozenAll) return;
+    if (st.skipIfCeo && this.ceoOnFloor) return;
+    const dt = this.content.floor.rules.fixedStepSec;
+    for (const npc of this.floor.npcs) {
+      if (npc.def.actorId !== 'director' || npc.mode !== 'walk' || npc.def.seated) continue;
+      const node = st.nodes.find((q) => Math.hypot(npc.x - (q.x + 0.5), npc.y - (q.y + 0.5)) <= npc.def.speedTilesPerSec * dt + 1e-6);
+      if (!node) continue;
+      const d = npc.def;
+      const rest = d.waypoints.slice(npc.waypointIndex + 1);
+      const sink = st.target.sink ?? st.target.stall;
+      const at = (t: Tile, waitSec: number, extra: Partial<WaypointDef> = {}): WaypointDef => ({ x: t.x, y: t.y, waitSec, lookChance: 0, ...extra });
+      const wps: WaypointDef[] = [
+        at(node, st.tellSec), at(st.target.door, 0), at(sink, st.insideSec, st.sinkFacing ? { facing: st.sinkFacing } : {}), at(st.target.door, 0), at(node, 0), ...rest,
+      ];
+      const { spawnTellSec: _s, ...base } = d;
+      const nd: NpcDef = { ...base, waypoints: wps, loop: false, despawnAtEnd: d.despawnAtEnd === true || d.loop === false };
+      const nn = this.floor.replaceNpc(npc, nd);
+      this.facRun = { npc: nn, stage: 'tell', seen: false };
+      this.facStops++;
+      this.push({ t: this.time, type: 'facility', stage: 'tell', relation: st.relation, npc: nn.def.id });
+      if (st.relation === 'same') this.tutorial('facilityTell:same');
+      return;
     }
   }
 

@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import { AdFlow } from '../ads/adFlow';
 import { LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
-import { getStrings, loadDayContent } from '../content';
+import { devPlayerVariant, getStrings, loadDayContent } from '../content';
+import type { PlayerVariant } from '../content/gender';
 import { getPlatform } from '../platform';
 import { color } from '../render/palette';
 import { ATLAS_KEY } from '../render/sprites';
@@ -11,7 +12,7 @@ import { addPixelText, fitPanel, placeText, setPixelText, setWrap, type UIText }
 import type { GameSceneData } from './GameScene';
 import { SceneKey } from './keys';
 
-export interface PrepSceneData { day?: number }
+export interface PrepSceneData { day?: number; playerVariant?: PlayerVariant | null }
 
 /**
  * 출근 준비 화면(GDD §3, D-027): 오늘 정보 + 대표님 순시 예보. CEO 순시 패스(보상형 광고)는 여기서만 고른다.
@@ -26,11 +27,14 @@ export class PrepScene extends Phaser.Scene {
   private toastBg!: Phaser.GameObjects.Rectangle;
   private toastLeft = 0;
   private seenHints: string[] = [];
+  /** 이번 판 외형(판 시작 시점 값 고정 = 설정 변경은 다음 판부터) */
+  private variant: PlayerVariant | null = null;
 
   constructor() { super(SceneKey.Prep); }
 
   init(data: PrepSceneData): void {
     this.day = Math.max(1, Math.floor(data.day ?? 1));
+    this.variant = devPlayerVariant() ?? data.playerVariant ?? null;
     this.skipCeo = false;
     this.busy = false;
     this.buttons = [];
@@ -38,7 +42,7 @@ export class PrepScene extends Phaser.Scene {
 
   create(): void {
     const str = getStrings();
-    const c = loadDayContent(this.day);
+    const c = loadDayContent(this.day, this.variant);
     const ink = color('outline');
     const cx = LOGICAL_WIDTH / 2;
     this.cameras.main.setBackgroundColor(color('wall'));
@@ -64,6 +68,8 @@ export class PrepScene extends Phaser.Scene {
       placeText(ceoLine, 32, y, 0, 0);
     } else placeText(ceoLine, 16, y, 0, 0);
     y += 22;
+    // T-151 C1: 오늘 내 화장실 위치(화장실 쌍이 있는 날, 화장실 피신이 있을 때)
+    if (c.facility?.mineHintKey && c.missions.some((m) => m.facilityMission) && str.has(c.facility.mineHintKey)) { line(str.t(c.facility.mineHintKey), color('dark')); y += 4; }
 
     const go = new UiButton(this, 30, LOGICAL_HEIGHT - 70, LOGICAL_WIDTH - 60, 30, str.t('prep.go'), { depth: 10, style: 'primary' });
     this.buttons.push(go);
@@ -97,7 +103,7 @@ export class PrepScene extends Phaser.Scene {
     this.input.on(Phaser.Input.Events.POINTER_DOWN, (ptr: Phaser.Input.Pointer) => {
       if (this.busy) return;
       if (go.contains(ptr.x, ptr.y)) {
-        this.scene.start(SceneKey.Game, { day: this.day, skipCeo: this.skipCeo, seenHints: this.seenHints } satisfies GameSceneData);
+        this.scene.start(SceneKey.Game, { day: this.day, skipCeo: this.skipCeo, seenHints: this.seenHints, playerVariant: this.variant } satisfies GameSceneData);
         return;
       }
       if (pass && pass.contains(ptr.x, ptr.y)) {

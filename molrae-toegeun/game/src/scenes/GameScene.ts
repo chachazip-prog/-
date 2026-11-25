@@ -14,8 +14,9 @@ import { color, overlay, pulseAlpha } from '../render/palette';
 import { ATLAS_KEY, coneOverlayKeys, edgeArrowKey, facing4, spriteKeyFor, type Facing4 } from '../render/sprites';
 import { TILE, buildTileLayout, missingArt } from '../render/tilemap';
 import { iconFallback } from '../render/sprites';
-import { Hud, type BorderStage } from '../ui/hud';
-import { addPixelText, fitPanel, placeText, setPixelText, setWrap, type UIText } from '../ui/pixelText';
+import { Hud, missionChipLabel, type BorderStage } from '../ui/hud';
+import type { PlayerVariant } from '../content/gender';
+import { addPixelText, fitPanel, placeText, setPixelText, setWrap, textBox, type UIText } from '../ui/pixelText';
 import { SceneKey } from './keys';
 
 /** 렌더링 기준값 (게임플레이 수치 아님) */
@@ -32,7 +33,7 @@ const OV = 12000;
 /** 의심 루프 시작 임계·rate 식(sound-list: 0.5부터, rate = 1 + (의심 − 0.5) × 0.8, 최대 1.4) */
 const SUSP_LOOP_FROM = 0.5;
 
-export interface GameSceneData { day?: number; skipCeo?: boolean; seenHints?: readonly string[] }
+export interface GameSceneData { day?: number; skipCeo?: boolean; seenHints?: readonly string[]; playerVariant?: PlayerVariant | null }
 
 type Overlay = 'none' | 'cutin' | 'offer' | 'result' | 'busy';
 
@@ -69,7 +70,7 @@ export class GameScene extends Phaser.Scene {
   private pathDots: Phaser.GameObjects.Image[] = [];
   private dest!: Phaser.GameObjects.Sprite;
   private arrows: Phaser.GameObjects.Image[] = [];
-  private stalls: { img: Phaser.GameObjects.Image; x: number; y: number }[] = [];
+  private stalls: { img: Phaser.GameObjects.Image; x: number; y: number; base: string; hiding: string }[] = [];
   /** 전높이 칸막이·큐비클(D-080): 플레이어가 뒤(rect)에 서면 알파 0.5 */
   private occluders: { img: Phaser.GameObjects.Image; rect: readonly [number, number, number, number] }[] = [];
   /** 회의실 문 '사용 중' 덮개(순회 meeting 중) */
@@ -128,11 +129,20 @@ export class GameScene extends Phaser.Scene {
     this.day = Math.max(1, Math.floor(data.day ?? (Number.isFinite(q) && q > 0 ? q : 1)));
     this.skipCeo = data.skipCeo === true;
     this.seenHints = new Set(data.seenHints ?? []);
+    this.variant = data.playerVariant ?? null;
   }
+
+  /** 이번 판 외형(그림 전용). 판 도중에는 바뀌지 않음(D-088 다음 판부터) */
+  private variant: PlayerVariant | null = null;
+  /** T-151 시설 표시: 화장실 문 위 '!'·그림자(C3 전조), 청소 중 표지·남은 초 */
+  private doorAlert!: Phaser.GameObjects.Image;
+  private cleanSign: Phaser.GameObjects.Image | null = null;
+  private cleanLabel!: UIText;
+  private cleanLabelBg!: Phaser.GameObjects.Rectangle;
 
   create(): void {
     const str = getStrings();
-    const content = loadDayContent(this.day);
+    const content = loadDayContent(this.day, this.variant);
     this.sim = new DaySim(content, { view: CAMERA_VIEW, skipCeoVisit: this.skipCeo, seenHints: this.seenHints }, urlParam('seed') ?? content.seed);
     this.cues = buildSoundCues(getDataTables());
     // 위험 단계 임계(rules.visualCues: suspicionHigh.threshold·dangerBorder.alertSuspicionMin, T-136). 없으면 경고 후 단계 상승 없음(적발 1.0만)
@@ -179,7 +189,9 @@ export class GameScene extends Phaser.Scene {
     this.dest = this.add.sprite(0, 0, ATLAS_KEY, 'fx/dest_0').setDepth(D.path + 1).setVisible(false);
     if (this.anims.exists('fx/dest')) this.dest.play('fx/dest');
 
-    this.playerKey = content.playerSpriteKey ?? 'player';
+    // T-151: 선택한 외형(content.skins.player). 아틀라스에 없으면 대체 그림(playerSelection.fallbackSprite)
+    const sk = content.skins;
+    this.playerKey = sk && this.atlasHas(`${sk.player}/idle_down`) ? sk.player : (sk?.playerFallback ?? content.playerSpriteKey ?? 'player');
     this.player = this.add.sprite(0, 0, ATLAS_KEY, `${this.playerKey}/idle_up`).setOrigin(0.5, 1);
     for (let i = 0; i < 96; i++) this.routeDots.push({ img: this.img(0, 0, 'dot/hint').setDepth(D.path).setVisible(false) });
     for (let i = 0; i < 4; i++) this.missionArrows.push(this.img(0, 0, 'ui/edge_down').setScrollFactor(0).setDepth(9000).setVisible(false));
@@ -187,6 +199,8 @@ export class GameScene extends Phaser.Scene {
     this.playerLabel = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 1);
     this.toastBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.9).setDepth(D.overhead + 2);
     this.toast = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 3);
+    // T-151: 긴 반응 문구(시설 리액션 등)가 화면 폭을 넘지 않게 줄바꿈
+    setWrap(this.toast, LOGICAL_WIDTH - 24);
     this.gateIcon = this.img(0, 0, 'ui/gate_fail').setDepth(D.overhead + 4).setVisible(false);
     this.followerBubbleBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.92).setDepth(D.overhead + 1).setStrokeStyle(1, color('dark')).setVisible(false);
     this.followerBubble = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 2).setVisible(false);
@@ -195,6 +209,13 @@ export class GameScene extends Phaser.Scene {
     this.tourIcon = this.img(0, 0, 'ui/suspect').setDepth(D.overhead + 3).setVisible(false);
     this.carryIcon = this.img(0, 0, 'ui/suspect').setDepth(D.overhead).setVisible(false);
     this.awayBadgeBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.92).setScrollFactor(0).setDepth(9001).setStrokeStyle(1, color('dark')).setVisible(false);
+    this.doorAlert = this.img(0, 0, this.atlasHas('icon_door_alert') ? 'icon_door_alert' : 'ui/alert').setDepth(D.overhead + 3).setVisible(false);
+    this.cleanLabelBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.92).setDepth(D.overhead + 1).setStrokeStyle(1, color('dark')).setVisible(false);
+    this.cleanLabel = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 2).setVisible(false);
+    if (content.facility?.cleaning && this.atlasHas('furn2/sign_wet')) {
+      const d = content.facility.restroom.mine.door;
+      this.cleanSign = this.img(this.offsetX + d.x * TILE + TILE / 2, (d.y + 1) * TILE, 'furn2/sign_wet').setOrigin(0.5, 1).setDepth((d.y + 1) * TILE + 1).setVisible(false);
+    }
     this.awayBadge = addPixelText(this, 0, 0, str.t('hud.tl_away'), { role: 'label', color: color('outline') }).setScrollFactor(0).setDepth(9002).setVisible(false);
 
     this.hud = new Hud(this, this.sim, str);
@@ -242,7 +263,7 @@ export class GameScene extends Phaser.Scene {
     for (const o of layout.objects) {
       const im = this.img(this.offsetX + o.x, o.y, o.frame).setOrigin(0.5, 1).setFlipX(o.flipX === true);
       im.setDepth(o.y + (o.depthBias ?? 0));
-      if (o.frame === 'tall/stall' && o.tile) this.stalls.push({ img: im, x: o.tile.x, y: o.tile.y });
+      if ((o.frame === 'tall/stall' || o.frame === 'tile2/shower_stall') && o.tile) this.stalls.push({ img: im, x: o.tile.x, y: o.tile.y, base: o.frame, hiding: o.frame === 'tall/stall' ? 'tall/stall_hiding' : 'tile2/shower_stall_hiding' });
       if (o.occlude) this.occluders.push({ img: im, rect: o.occlude });
       if (o.meetingDoor && tex?.has('tall2/glass_door_busy')) {
         this.busyDoors.push(this.img(this.offsetX + o.x, o.y, 'tall2/glass_door_busy').setOrigin(0.5, 1).setDepth(o.y + 0.5).setVisible(false));
@@ -390,6 +411,21 @@ export class GameScene extends Phaser.Scene {
         break;
       }
       case 'couponStamp': audio.sfx('sfx_stamp'); break;
+      case 'missionUnlocked': {
+        // 변형이 붙은 미션: '미션 이름 · 변형 라벨'(시설 미션은 facilityLabelKey, S-04)
+        const m = this.sim.content.missions.find((x) => x.id === e.id);
+        if (m?.modifierLabels?.length) this.showToast(missionChipLabel(str, m));
+        break;
+      }
+      case 'facility': {
+        // C3 전조: 발소리 크레셴도(칸 안에서도 들림, audibleInsideStall) + 문구. other 날은 경고 없음(누가 쓰는지 알리지 않음, T-17)
+        const st = this.sim.content.facility?.stop;
+        if (e.stage === 'tell' && e.relation === 'same') {
+          audio.sfx('sfx_footsteps_crescendo');
+          if (st?.tellTextKey) this.showToast(str.t(st.tellTextKey));
+        }
+        break;
+      }
       case 'phase': if (e.phase === 'day') { this.banner.setVisible(false); this.bannerBg.setVisible(false); } break;
       case 'result': this.onResult(); break;
       default: break;
@@ -458,7 +494,11 @@ export class GameScene extends Phaser.Scene {
     // 외형 = 액터 + 변형(T-145). 변형 키가 아틀라스에 없으면 기본 외형
     const has = (f: string) => this.atlasHas(f);
     const info = this.sim.content.actors[actorId];
-    const base = bg ? spriteKeyFor(undefined, bg.sprite, bg.variant, has) : spriteKeyFor(actorId, info?.spriteKey, info?.spriteVariant, has);
+    const base0 = bg ? spriteKeyFor(undefined, bg.sprite, bg.variant, has) : spriteKeyFor(actorId, info?.spriteKey, info?.spriteVariant, has);
+    // T-151 남녀 변형(D-103: <역할>_<m|f>/<프레임>, 데이터 spriteKey 우선). 그림이 없으면 기존 외형
+    const sk = this.sim.content.skins;
+    const want = sk ? (bg ? sk.background[npc.def.id] : sk.byPatrol[npc.def.patrolId ?? ''] ?? sk.byActor[actorId]) : undefined;
+    const base = want && has(`${want}/idle_down`) ? want : base0;
     const lanyard = bg ? 'background' : (this.sim.content.actors[actorId]?.lanyard ?? 'background');
     const sprite = this.add.sprite(0, 0, ATLAS_KEY, `${base}/idle_down`).setOrigin(0.5, 1);
     const mark = this.add.sprite(0, 0, ATLAS_KEY, 'ui/suspect').setOrigin(0.5, 1).setDepth(D.overhead).setVisible(false);
@@ -528,12 +568,14 @@ export class GameScene extends Phaser.Scene {
     setPixelText(this.playerLabel, label).setVisible(label !== '' && !hidden);
     placeText(this.playerLabel, pw.x, Math.round(pw.y) + FOOT_PX - 22, 0.5, 1);
     fitPanel(this.playerLabelBg, this.playerLabel, 2, 1);
-    for (const s of this.stalls) s.img.setFrame(hidden && p.tile.x === s.x && p.tile.y === s.y ? 'tall/stall_hiding' : 'tall/stall');
+    // 칸 안 플레이어는 그리지 않고 닫힌 문 + '사용 중'(하늘색 표시창)으로(S-02·artRules.occupantInStall)
+    for (const s of this.stalls) { const on = hidden && p.tile.x === s.x && p.tile.y === s.y; s.img.setFrame(on && this.atlasHas(s.hiding) ? s.hiding : s.base); }
 
     // 토스트(플레이어 머리 위)
     if (this.toastLeft > 0) this.toastLeft -= dt;
     this.toast.setVisible(this.toastLeft > 0 && sim.phase !== 'ended');
-    placeText(this.toast, Math.min(LOGICAL_WIDTH - 50, Math.max(50, pw.x)), Math.round(pw.y) - 26 - (label ? 12 : 0), 0.5, 1);
+    const tw = textBox(this.toast).w / 2 + 5;
+    placeText(this.toast, Math.min(LOGICAL_WIDTH - tw, Math.max(tw, pw.x)), Math.round(pw.y) - 26 - (label ? 12 : 0), 0.5, 1);
     fitPanel(this.toastBg, this.toast, 3, 2);
 
     // ── 경로 점선·목적지 ──
@@ -655,6 +697,12 @@ export class GameScene extends Phaser.Scene {
       } else if (npc.mode === 'talk' || npc.mode === 'phone') {
         v.mark.anims.stop(); v.mark.setFrame(npc.mode === 'phone' ? 'hud/hey' : 'hud/talk_2').setVisible(npc.mode === 'talk').setPosition(sx, headY);
       } else v.mark.setVisible(false);
+      // T-151 본부장 화장실 들름: 판정에 걸리는 순간 머리 위 '!'(insideCue ≥ 0.4초, 콘 대신), 들름 동안 같은/다른 성별 표식(D-093)
+      const fsv = sim.facilityStopView();
+      if (fsv && fsv.npc === npc && !isFrozen) {
+        const mk = fsv.cue ? (this.atlasHas('icon_door_alert') ? 'icon_door_alert' : 'ui/alert') : sim.content.skins?.mark[fsv.relation];
+        if (mk && this.atlasHas(mk)) { v.mark.anims.stop(); v.mark.setFrame(mk).setVisible(true).setPosition(sx, headY); }
+      }
       // 대사 말풍선
       const say = this.sayLeft.get(npc);
       if (say !== undefined) { const left = say - dt; if (left <= 0) this.sayLeft.delete(npc); else this.sayLeft.set(npc, left); }
@@ -720,6 +768,27 @@ export class GameScene extends Phaser.Scene {
 
   private syncExtras(dt: number, pw: { x: number; y: number }): void {
     const sim = this.sim, floor = sim.floor;
+    // T-151 C3 전조(same 날): 내 화장실 문 위 '!' + 문 그림자(칸 안에서도 보임). other 날은 경고 없음
+    const fsv = sim.facilityStopView();
+    const alertOn = !!fsv && fsv.relation === 'same' && fsv.stage !== 'inside';
+    this.doorAlert.setVisible(alertOn && Math.floor(this.t / 0.25) % 2 === 0);
+    if (alertOn) {
+      const d = fsv!.door;
+      this.doorAlert.setPosition(this.offsetX + d.x * TILE + TILE / 2, d.y * TILE - 2);
+      const sh = overlay('shadow');
+      this.fx.fillStyle(sh.color, Math.min(0.6, sh.alpha * 2)).fillRect(this.offsetX + d.x * TILE + 2, d.y * TILE + 10, TILE - 4, 5);
+    }
+    // T-151 C4: 청소 중 표지 + 남은 초(미화팀 인물 없음, tone-guide #9)
+    const cl = sim.content.facility?.cleaning;
+    const clOn = !!cl && sim.cleaningActive && sim.phase === 'day';
+    this.cleanSign?.setVisible(clOn);
+    this.cleanLabel.setVisible(clOn);
+    if (clOn) {
+      const d = sim.content.facility!.restroom.mine.door;
+      setPixelText(this.cleanLabel, getStrings().t(cl!.signKey, { n: Math.ceil(sim.cleaningLeftSec) }));
+      placeText(this.cleanLabel, Math.min(LOGICAL_WIDTH - 40, Math.max(40, this.offsetX + d.x * TILE + TILE / 2)), d.y * TILE - 4, 0.5, 1);
+      fitPanel(this.cleanLabelBg, this.cleanLabel, 2, 1);
+    } else this.cleanLabelBg.setVisible(false);
     // D-080: 전높이 칸막이·큐비클 뒤에 선 플레이어 → 칸막이 알파 0.5
     const pt = floor.player.tile;
     for (const o of this.occluders) {
@@ -1080,6 +1149,6 @@ export class GameScene extends Phaser.Scene {
       this.time.delayedCall(sec * 1000, () => res());
     }));
     const next = r.stars >= 1 ? Math.min(this.day + 1, Math.max(lastAuthoredDay() + 50, this.day + 1)) : this.day;
-    this.scene.start(SceneKey.Prep, { day: next });
+    this.scene.start(SceneKey.Prep, { day: next, playerVariant: this.variant });
   }
 }

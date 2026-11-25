@@ -7,6 +7,9 @@ import { V3_PROSE_KEYS, V3_PROSE_TABLES } from './src/content/layoutGen/proseKey
  * T-140: ?url로 내보내는 JSON 에셋(아트 산출물 sheet.json·anims.json)은 들여쓰기된 원본 그대로 복사되어
  * 약 55KB가 공백이었다. 원본(game/assets, 아트 소유)은 건드리지 않고 빌드 산출물에서만 공백을 없앤다(내용 동일).
  */
+/** 아틀라스 텍스처 키(src/render/sprites.ts ATLAS_KEY와 같아야 함) */
+const ATLAS_KEY_BUILD = 'sprites';
+
 function minifyJsonAssets(): Plugin {
   return {
     name: 'mt-minify-json-assets',
@@ -22,6 +25,20 @@ function minifyJsonAssets(): Plugin {
           for (const f of Object.values(json.frames as Record<string, Record<string, unknown>>)) {
             if (f['trimmed'] === false) { delete f['trimmed']; delete f['sourceSize']; delete f['spriteSourceSize']; }
             if (f['rotated'] === false) delete f['rotated'];
+          }
+        }
+        // T-151(D-102 한도 유지): 애니메이션 JSON에서 Phaser 3.90 기본값과 같은 필드·아틀라스 키 반복을 뺀다(원본 그대로, 빌드 산출물만).
+        // 빠진 아틀라스 키는 BootScene이 defaultTextureKey = ATLAS_KEY로 되돌린다. 프레임 순서·이름·frameRate·repeat는 그대로
+        const an = (json as { anims?: unknown }).anims;
+        if (Array.isArray(an)) {
+          const DEF: Record<string, unknown> = { delay: 0, repeatDelay: 0, yoyo: false, showOnStart: false, hideOnComplete: false, skipMissedFrames: true, type: 'frame' };
+          for (const a of an as Record<string, unknown>[]) {
+            for (const [k, v] of Object.entries(DEF)) if (a[k] === v) delete a[k];
+            if (a['defaultTextureKey'] === ATLAS_KEY_BUILD) delete a['defaultTextureKey'];
+            if (Array.isArray(a['frames'])) for (const f of a['frames'] as Record<string, unknown>[]) {
+              if (f['duration'] === 0) delete f['duration'];
+              if (f['key'] === ATLAS_KEY_BUILD) delete f['key'];
+            }
           }
         }
         out.source = JSON.stringify(json);

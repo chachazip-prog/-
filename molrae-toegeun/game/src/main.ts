@@ -7,6 +7,7 @@ import { AudioScene } from './scenes/AudioScene';
 import { BootScene } from './scenes/BootScene';
 import { GameScene } from './scenes/GameScene';
 import { PrepScene } from './scenes/PrepScene';
+import { CharSelectScene } from './scenes/CharSelectScene';
 import { TitleScene } from './scenes/TitleScene';
 
 const PARENT_ID = 'game';
@@ -33,7 +34,7 @@ async function start(): Promise<void> {
       autoCenter: Phaser.Scale.CENTER_BOTH,
       zoom: integerZoomFor(parent.clientWidth || window.innerWidth, parent.clientHeight || window.innerHeight),
     },
-    scene: [BootScene, AudioScene, TitleScene, PrepScene, GameScene],
+    scene: [BootScene, AudioScene, TitleScene, CharSelectScene, PrepScene, GameScene],
   });
   // 소리 설정(꺼도 시각 신호는 그대로, rules.visualCues.alwaysOn)
   void loadProgress(platform.storage).then((p) => audio.setMuted(!p.soundOn || new URLSearchParams(location.search).get('sound') === 'off'));

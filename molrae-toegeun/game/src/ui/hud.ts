@@ -7,6 +7,7 @@ import Phaser from 'phaser';
 import { HUD_BOTTOM_PX, HUD_TOP_PX, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
 import type { Strings } from '../content/strings';
 import type { DaySim } from '../core/day/daySim';
+import type { MissionDef } from '../core/day/types';
 import { color, overlay, pulseAlpha } from '../render/palette';
 import { ATLAS_KEY, iconFallback } from '../render/sprites';
 import { addPixelText, fitPanel, placeText, setPixelText, setWrap, type UIText } from './pixelText';
@@ -78,7 +79,11 @@ export class Hud {
     this.offerText = fixed(addPixelText(scene, 0, 0, '', { role: 'label', color: ink }));
     setWrap(this.offerText, LOGICAL_WIDTH - 40);
     this.offerIcon = this.hasAtlas ? fixed(scene.add.image(0, 0, ATLAS_KEY, 'hud/offer')).setVisible(false) : null;
+    // T-151 C4: 청소 남은 초(missions.genderModifiers facility.cleaning showCountdownOnChip)
+    this.cleanText = fixed(addPixelText(scene, 0, 0, '', { role: 'num', color: color('outline') })).setDepth(DEPTH + 3).setVisible(false);
   }
+
+  private readonly cleanText: UIText;
 
   /** 지금 떠 있는 안내를 닫음(모든 안내는 건너뛸 수 있음, GDD §13) */
   dismissHint(): void { this.hintLeft = 0; }
@@ -152,6 +157,10 @@ export class Hud {
     g.fillStyle(color('light'), 1).fillRect(0, by, LOGICAL_WIDTH, 1);
     const leaving = sim.phase === 'leave' || (sim.phase === 'ended' && sim.result?.outcome !== 'caught' && sim.leaveTime > 0);
     this.leaveIcon?.setVisible(leaving);
+    const cl = sim.content.facility?.cleaning;
+    const ci = cl && sim.cleaningActive && !leaving && cl.missionId ? sim.missions.findIndex((m) => m.def.id === cl.missionId) : -1;
+    this.cleanText.setVisible(ci >= 0);
+    if (ci >= 0) { setPixelText(this.cleanText, String(Math.ceil(sim.cleaningLeftSec))); placeText(this.cleanText, 4 + ci * (CHIP + CHIP_GAP) + 3, by + 3, 0, 0); }
     sim.missions.forEach((m, i) => {
       this.chipIcons[i]?.setVisible(!leaving);
       if (!leaving) for (const d of this.modDots) g.fillStyle(color('point'), 1).fillRect(d.x - 1, d.y - 1, 3, 3);
@@ -316,4 +325,15 @@ export class Hud {
 function fmtClock(clockMin: number): string {
   const min = Math.floor(clockMin);
   return `${String(Math.floor(min / 60)).padStart(2, '0')}:${String(min % 60).padStart(2, '0')}`;
+}
+
+/**
+ * 미션 칩 한 줄 문구 '미션 이름 · 변형 라벨'(T-152 S-04): 시설 미션(화장실 피신·시설 목적지 relocate)은 facilityLabelKey를 먼저 쓴다.
+ * 판정·비용·보상은 같고 문구만 다름
+ */
+export function missionChipLabel(str: Strings, def: MissionDef): string {
+  const labels = (def.modifierLabels ?? [])
+    .map((l) => (def.facilityMission && l.facilityLabelKey ? l.facilityLabelKey : l.labelKey))
+    .filter((k): k is string => !!k && str.has(k)).map((k) => str.t(k));
+  return [str.t(def.nameKey), ...labels].join(' · ');
 }
