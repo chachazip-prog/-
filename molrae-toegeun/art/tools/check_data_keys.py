@@ -5,6 +5,7 @@
 
 필드별 해석 규칙(개발 연동 관례)
   iconSprite, bubbleIcon        → flat 프레임 키 그대로
+  doorIcon, overHead (T-158)    → flat 프레임 키 그대로(시설 문 위·머리 위 경고 아이콘)
   art, floorMark                → 프레임 키('|' 로 여러 개, '<mask>' 는 16종 중 'o' 로 대표 검사,
                                   '<sign>' 은 m_mine·m_other·f_mine·f_other 4종 모두 검사)
                                   T-149: 값이 설명 문장이면('+', 괄호, 한글 등) 문장 전체를 키로 보지 않고
@@ -69,7 +70,7 @@ def main():
                 walk(fn, v, parent)
 
     def field(fn, k, v):
-        if k in ("iconSprite", "bubbleIcon"):
+        if k in ("iconSprite", "bubbleIcon", "doorIcon", "overHead"):
             need(fn, k, v, [("frame", v)])
         elif k in ("art", "floorMark") and "/" in v:
             need(fn, k, v, [("frame", x) for x in art_keys(v)])

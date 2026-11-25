@@ -84,7 +84,7 @@ HEADS["player_f"] = dict(body="A", length="L", note="플레이어 여: 어깨에
     ".OHHHHHHSSSSSO..",
     ".OHHHHOsssOOO...",
 ], ext=EXT_A_FLIP, extra=[
-    {"frames": ["disguise"], "clear": True, "x": 0, "y": 0, "_note": "위장(서류로 얼굴 아래 가림): 머리 0~7행만", "rows": [
+    {"frames": ["disguise"], "clear": True, "x": 0, "y": 0, "_note": "위장(서류로 얼굴 아래 가림, T-158: 서류가 9행부터): 머리 0~8행 = 정면 머리 그대로(옆머리가 얼굴 양옆에 보임)", "rows": [
         "......O..OOO....",
         ".....OOOOHHO....",
         "...OOHHHHHHOO...",
@@ -92,11 +92,15 @@ HEADS["player_f"] = dict(body="A", length="L", note="플레이어 여: 어깨에
         "OHHHHDHHHHHHHHO.",
         ".OHHHHHHHHHHHHO.",
         ".OHHSSSHSSSSHHO.",
-        ".OHHSSOSSSSOHHO.",
+        ".OHHSOSSSSOSHHO.",
+        ".OHHSOSSSSOSHHO.",
     ]},
-    {"frames": ["disguise"], "x": 0, "y": 8, "_note": "위장: 서류 양옆으로 뻗친 머리끝", "rows": [
-        "O..............O",
-        "O..............O",
+    {"frames": ["disguise"], "x": 0, "y": 9, "_note": "위장: 서류 양옆으로 내려온 머리(손 위·아래로 보임, 끝이 바깥으로 뻗침)", "rows": [
+        "OH............HO",
+        "................",
+        "................",
+        "OH............HO",
+        ".O............O.",
     ]},
     {"frames": ["caught"], "clear": True, "x": 0, "y": 0, "_note": "들킴: 머리카락 곤두섬 + 흰자 눈 + 벌린 입(손은 원본 그대로). 옆머리는 10행까지", "rows": [
         "...O..O..OOO.O..",
