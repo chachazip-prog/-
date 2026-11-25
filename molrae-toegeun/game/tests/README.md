@@ -16,3 +16,13 @@ QA(mt-qa-tester) 소유: 자동 플레이·밸런스 시뮬레이션 테스트�
 - `bash tests/run-t131.sh trace <일차> <straight|disguise|novice> <시드> [시작초] [끝초]` — 한 판 틱별 재현(버그 재현 절차용)
 - `node tests/browser/t131-browser.cjs [devUrl] [prodUrl]` — 스냅샷 폴더에서 `npx vite --port 5179`, `npx vite preview --outDir <빌드> --port 5180`을 먼저 띄울 것. 스크린샷 → `qa/screenshots/t131-*.png`
 - 참고: `run-balance.sh`·`t124-browser.cjs`는 T-123 프로토(FloorSim 단판·`window.__mtSim`) 기준이라 지금 앱에는 맞지 않음(보존만 함)
+
+## T-141 (최신 커밋, 미리보기 빌드 설정: 생성 맵·미션 v3·성별 시설·순회) — game/ 에서 실행
+- 항상 작업 트리 그대로 번들(스냅샷 없음). 조립 옵션은 `lib/t141content.ts`(`?v3=1&gender=1`과 같음). 하니스는 `lib/t141.ts`(T-131 사본 + 새 미션 봇·zone_only 탐색·예산 맞는 미션 선택)
+- `bash tests/run-t141.sh balance [1~15일 시드=200] [16~60일=60] [대표님 날=120] [61~200일=12] [워커=8] [성별 짝=20]` → `tests/.out/t141/bal-*.jsonl`, 집계 `python3 -I tests/sim/t141-tables.py`
+- `bash tests/run-t141.sh tour [시작=6] [끝=200] [시드=5]` — 앉은 봇 순회(계획 대비 출발·도착, 실측−추정, 인사 hold, 반복, INT-08) → `tests/.out/t141/tour.json`
+- `bash tests/run-t141.sh maps [--write]` — 3~200일 맵 해시 스냅샷(`qa/t141-map-hashes.json`)·폴백(G17)·남/여 동일·G4·G10·G15 → `tests/.out/t141/facility.json`
+- `bash tests/run-t141.sh gap` — minGapSec 6/10/14/18 배치 간격 추종
+- `bash tests/run-t141.sh trace <일차> <straight|disguise|novice|sit> <시드> [시작초] [끝초]` — 한 판 재현
+- `bash tests/run-t141.sh phonecut [시드 수]` / `phonecut2` / `chipcaught` — 브라우저 장면 선정용 탐색
+- 브라우저(프로덕션, D-114): `npx vite build --outDir tests/.out/t141/dist --emptyOutDir && npx vite preview --outDir tests/.out/t141/dist --port 5180` 후 `node tests/browser/t141-browser.cjs http://localhost:5180/ [all|load|char|phone|ad|inter|layout]`, 타이틀 복귀는 `node tests/browser/t141-title-return.cjs`(실제 rAF)

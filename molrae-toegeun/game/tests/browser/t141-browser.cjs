@@ -46,6 +46,8 @@ async function boot(s) {
 async function box(page) { return page.evaluate(() => { const c = document.querySelector('canvas'); const b = c.getBoundingClientRect(); return { x: b.left, y: b.top, w: b.width, h: b.height }; }); }
 async function tap(page, lx, ly) { const r = await box(page); const z = r.w / 180; await page.mouse.click(r.x + lx * z, r.y + ly * z); await page.waitForTimeout(30); }
 async function shot(page, name) { const b = await box(page); await page.screenshot({ path: path.join(SHOTS, `t141-${name}.png`), clip: { x: b.x, y: b.y, width: b.w, height: b.h } }); }
+// 설치일(11-01)이 아닌 '오늘' 카운터여야 D-068 설치일 이월 초기화를 피함
+const TODAY = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
 const STORE = (variant, day = 1) => ({
   'mt-mock:mt.player.variant': variant,
   'mt-mock:mt.progress.v1': JSON.stringify({ unlockedDay: day }),
@@ -137,7 +139,7 @@ const STORE = (variant, day = 1) => ({
         const adBeforePlay = s.logs.filter((l) => /\[mock ads\]/.test(l.text)).length;
         // 헤드리스 탐색(tests/sim/t141-chipcaught.ts): 8일차 기본 시드, 게임 시작 프레임 362에 칩 0(쇼핑) 탭만 하면 12초에 팀장에게 적발
         await tap(s.page, 16, 320 - 14); // 칩 0
-        await step(s.page, 60 * 14);
+        await step(s.page, 60 * 14); await s.page.waitForTimeout(300); await step(s.page, 240); await s.page.waitForTimeout(300); await step(s.page, 30);
         await shot(s.page, `12-${mode}-offer`);
         const adDuringPlay = s.logs.filter((l) => /\[mock ads\]/.test(l.text)).length;
         summary[`ad_${mode}_beforeTap`] = { adBeforePlay, adDuringPlay };
@@ -157,7 +159,7 @@ const STORE = (variant, day = 1) => ({
     }
     // ── 5. 전면광고 예고(3판째) — 판을 세 번 끝까지 진행 ──
     if (ONLY === 'all' || ONLY === 'inter') {
-      const st = { ...STORE('m', 3), 'mt-mock:mt.adCounters.v1': JSON.stringify({ installDate: '2026-11-01', gamesPlayedLifetime: 10, gamesSinceLastInterstitial: 2, interstitialShownToday: 0, lastInterstitialAt: 0, rewardedShownToday: 0, rewardedByPlacementToday: {}, countersDate: '2026-11-01' }) };
+      const st = { ...STORE('m', 3), 'mt-mock:mt.adCounters.v1': JSON.stringify({ installDate: '2026-11-01', gamesPlayedLifetime: 10, gamesSinceLastInterstitial: 2, interstitialShownToday: 0, lastInterstitialAt: 0, rewardedShownToday: 0, rewardedByPlacementToday: {}, countersDate: TODAY }) };
       const s = await open(browser, 'platform=mock&sound=off&day=3', { storage: st });
       await boot(s);
       await tap(s.page, 90, 200); await step(s.page, 40);
@@ -173,7 +175,9 @@ const STORE = (variant, day = 1) => ({
       summary.inter = { adLogs, adAtFrame };
       check('플레이 중(결과 전) 전면광고 0회', adLogs.length === 0 || adAtFrame >= 0, `${adLogs.join(' | ') || '광고 없음(결과 화면 탭 전)'}`);
       // 결과 화면 '다음' 탭 → 예고 → 광고
-      for (let k = 0; k < 6; k++) { await tap(s.page, 90, 250 + k * 8); await step(s.page, 20); await shot(s.page, `15-inter-after-tap-${k}`); }
+      await shot(s.page, '15a-inter-result'); await step(s.page, 60);
+      await tap(s.page, 90, 228); // 결과 화면 '다시 출근'
+      for (let k = 0; k < 6; k++) { await step(s.page, 15); await s.page.waitForTimeout(150); await shot(s.page, `15-inter-after-tap-${k}`); }
       await s.page.waitForTimeout(400); await step(s.page, 60);
       const adLogs2 = s.logs.slice(mark).filter((l) => /\[mock ads\]|\[ads\]/.test(l.text)).map((l) => l.text);
       summary.inter2 = adLogs2;
