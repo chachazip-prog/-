@@ -44,14 +44,22 @@ export class CharSelectScene extends Phaser.Scene {
     const key = (k: string, d: string) => (typeof ps[k] === 'string' ? ps[k] as string : d);
     const order = (Array.isArray(ps['displayOrder']) ? ps['displayOrder'] : ['m', 'f']).filter(isPlayerVariant);
     const labelOf = (v: PlayerVariant) => {
-      const pv = (sel.playerVariants ?? []).find((x) => x.id === v);
+      const pv = (sel.playerVariants ?? []).find((x) => x.id === v) as { labelKey?: unknown; settingsLabelKey?: unknown } | undefined;
+      // T-159: 설정(타이틀 '내 캐릭터')에서는 직급 없는 라벨('남성'/'여성'). 키 = playerVariants[].settingsLabelKey → settings.character_option.<v>.
+      // 문구가 아직 데이터에 없으면 첫 출근 라벨로(기획에 strings.ko 추가 요청)
+      if (this.data0.mode === 'change') {
+        const sk = typeof pv?.settingsLabelKey === 'string' ? pv.settingsLabelKey : `settings.character_option.${v}`;
+        if (str.has(sk)) return sk;
+      }
       return typeof pv?.labelKey === 'string' ? pv.labelKey : `charsel.option.${v}`;
     };
     const ink = color('outline');
     const cx = LOGICAL_WIDTH / 2;
     this.cameras.main.setBackgroundColor(color('wall'));
     this.add.rectangle(6, 16, LOGICAL_WIDTH - 12, LOGICAL_HEIGHT - 32, 0xffffff, 0.96).setOrigin(0, 0).setStrokeStyle(1, color('dark'));
-    const title = addPixelText(this, 0, 0, str.t(key('titleKey', 'charsel.title')), { role: 'label', color: ink, align: 'center', lineSpacing: 2 });
+    // 설정에서 열면 '첫 출근' 문구 대신 설정용 제목(settings.character_title, 데이터에 있을 때만)
+    const titleKey = this.data0.mode === 'change' && str.has('settings.character_title') ? 'settings.character_title' : key('titleKey', 'charsel.title');
+    const title = addPixelText(this, 0, 0, str.t(titleKey), { role: 'label', color: ink, align: 'center', lineSpacing: 2 });
     setWrap(title, LOGICAL_WIDTH - 28); placeText(title, cx, 28, 0.5, 0);
 
     const tex = this.textures.exists(ATLAS_KEY) ? this.textures.get(ATLAS_KEY) : null;

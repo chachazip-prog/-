@@ -32,6 +32,8 @@ const D = { ground: -1000, cover: -950, shadow: -900, cone: -800, path: -700, ov
 const OV = 12000;
 /** 의심 루프 시작 임계·rate 식(sound-list: 0.5부터, rate = 1 + (의심 − 0.5) × 0.8, 최대 1.4) */
 const SUSP_LOOP_FROM = 0.5;
+/** 화면 안에 들어오는 가운데 x(토스트 폭 기준) */
+function textBoxCenterX(t: UIText, cx: number): number { const hw = textBox(t).w / 2 + 5; return Math.min(LOGICAL_WIDTH - hw, Math.max(hw, cx)); }
 
 export interface GameSceneData { day?: number; skipCeo?: boolean; seenHints?: readonly string[]; playerVariant?: PlayerVariant | null }
 
@@ -504,7 +506,8 @@ export class GameScene extends Phaser.Scene {
     const base = want && has(`${want}/idle_down`) ? want : base0;
     const lanyard = bg ? 'background' : (this.sim.content.actors[actorId]?.lanyard ?? 'background');
     const sprite = this.add.sprite(0, 0, ATLAS_KEY, `${base}/idle_down`).setOrigin(0.5, 1);
-    const mark = this.add.sprite(0, 0, ATLAS_KEY, 'ui/suspect').setOrigin(0.5, 1).setDepth(D.overhead).setVisible(false);
+    // T-159 K-02: 머리 위 표식('!'·말풍선 아이콘·같은/다른 성별 표식)은 모든 말풍선·토스트(D.overhead + 1~3)보다 위
+    const mark = this.add.sprite(0, 0, ATLAS_KEY, 'ui/suspect').setOrigin(0.5, 1).setDepth(D.overhead + 4).setVisible(false);
     const bubbleBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.92).setDepth(D.overhead + 1).setStrokeStyle(1, color('dark')).setVisible(false);
     const bubble = addPixelText(this, 0, 0, '', { role: 'label', color: color('outline') }).setDepth(D.overhead + 2).setVisible(false);
     setWrap(bubble, 110);
@@ -559,7 +562,12 @@ export class GameScene extends Phaser.Scene {
     const pk = this.playerKey;
     if (sim.phase === 'ended' && sim.result?.outcome === 'caught') this.playAnim(this.player, `${pk}/caught`, `${pk}/caught`);
     else if (p.mode === 'moving') this.playAnim(this.player, `${pk}/walk_${pdir}`);
-    else if (p.mode === 'talked') { this.playAnim(this.player, `${pk}/idle_${pdir}`); label = str.t('player.mode.talked'); }
+    else if (p.mode === 'talked') {
+      this.playAnim(this.player, `${pk}/idle_${pdir}`);
+      // T-159 K-02: 화장실 마주침 정지(본부장 대사 + 반응 토스트가 이미 있음)에는 '듣는 중…' 라벨을 더하지 않음
+      const fsv0 = sim.facilityStopView();
+      if (!(fsv0 && fsv0.relation === 'same' && fsv0.stage === 'inside')) label = str.t('player.mode.talked');
+    }
     else if (sim.activity || sim.seatedWorking || (sim.phase === 'leave' && sim.leaveStage === 'pack' && sim.playerAtSeat)) this.playAnim(this.player, `${pk}/idle_up`);
     else if (floor.playerStill && !(sim.gateOpen)) {
       const pose = this.poseId();
@@ -709,7 +717,9 @@ export class GameScene extends Phaser.Scene {
       // 대사 말풍선
       const say = this.sayLeft.get(npc);
       if (say !== undefined) { const left = say - dt; if (left <= 0) this.sayLeft.delete(npc); else this.sayLeft.set(npc, left); }
-      const bubbleOn = this.sayLeft.has(npc) || talkWarn || qteHere;
+      // T-159 K-02: 본부장 화장실 들름 장면에서는 본부장 말풍선만(+ 플레이어 토스트 = 최대 2개). 다른 인물의 말걸기 전조는 머리 위 아이콘(mark)으로 남음
+      const facQuiet = !!fsv && fsv.npc !== npc && fsv.relation === 'same' && fsv.stage !== 'walk';
+      const bubbleOn = (this.sayLeft.has(npc) || talkWarn || qteHere) && !facQuiet;
       v.bubble.setVisible(bubbleOn);
       if (bubbleOn) {
         placeText(v.bubble, Math.min(LOGICAL_WIDTH - 58, Math.max(58, sx)), headY - 13, 0.5, 1);
@@ -733,6 +743,16 @@ export class GameScene extends Phaser.Scene {
       void camTop;
     }
     for (let k = arrowIdx; k < this.arrows.length; k++) this.arrows[k]!.setVisible(false);
+    // T-159 K-02: 화장실 마주침에서 반응 토스트(플레이어 머리 위)가 본부장 말풍선과 겹치면 토스트를 말풍선 위로 올림(말풍선 2개가 포개지지 않게)
+    const fsvT = sim.facilityStopView();
+    const dv = fsvT && fsvT.relation === 'same' ? this.views.get(fsvT.npc) : undefined;
+    if (dv && dv.bubbleBg.visible && this.toast.visible) {
+      const a = this.toastBg.getBounds(), b = dv.bubbleBg.getBounds();
+      if (a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom) { // (Phaser.Geom은 커스텀 빌드에 없음)
+        placeText(this.toast, textBoxCenterX(this.toast, a.centerX), Math.floor(b.top) - 4, 0.5, 1);
+        fitPanel(this.toastBg, this.toast, 3, 2);
+      }
+    }
     if (this.demo) { this.demo.left -= dt; if (this.demo.left <= 0) this.demo = null; }
     this.syncExtras(dt, pw);
     // 사라진 NPC 정리

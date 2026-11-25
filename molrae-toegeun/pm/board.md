@@ -82,12 +82,13 @@
 | T-152 | mt-game-designer | D-090 반영: 옆 팀 동기 성별 회전, 컴플라이언스(T-150) 수정 사항 반영 | T-150 | 완료 |
 | T-153 | mt-marketer | 마케팅 문서 성별 기준 갱신(M-01·M-02·M-05) | T-150 | 완료 |
 | T-154 | mt-pixel-artist | 남녀 머리 구분 강화(D-101), 용량 한도(D-102) 안에서 | T-149 | 완료 |
-| T-155 | mt-client-dev | Phaser 커스텀 빌드로 초기 로드 2,000,000B 이하 회수(D-102) + T-156 개발 항목(leadRoaming 새 필드 5개, 경비 talk.zone(D-107), carry·zone_only 보충 명세, 자리 비움 추정식 보정) | T-151 | 진행 |
+| T-155 | mt-client-dev | Phaser 커스텀 빌드로 초기 로드 2,000,000B 이하 회수(D-102) + T-156 개발 항목(leadRoaming 새 필드 5개, 경비 talk.zone(D-107), carry·zone_only 보충 명세, 자리 비움 추정식 보정) | T-151 | 완료 |
 | T-156 | mt-game-designer | 순회 횟수 실제 실행 보정(byRank·minGapSec·경유지), 경비 말걸기-게이트 규칙 결정, 새 미션 튜토리얼 문자열 6개, 개발 해석 7건 확인 | T-145 | 완료 |
 | T-157 | mt-game-designer | 성별 시설 보정: 회전 해시 명시, 문 취소 정지 시간, 본부장 들름 체감, 성별 시설 폴백 0 | T-151 | 완료 |
 | T-158 | mt-pixel-artist | 화장실 문 표지 남녀 구분 강화, icon_door_alert, 위장 포즈 머리 노출 | T-151 | 완료 |
 | T-159 | mt-compliance | 남녀 변형 그림·선택 화면·문 표지 정책 재검토(T-150 후속) | T-154, T-158 | 완료 (출시 차단 0) |
-| T-160 | mt-marketer | 마케팅 문서(console-copy §5, tone-guide §5)를 D-111 머리 표현 기준으로 정합성 확인, tone-guide의 공유 리워드 잔여 문구 정리(D-021) | T-159 | 대기 |
+| T-160 | mt-marketer | 마케팅 문서(console-copy §5, tone-guide §5)를 D-111 머리 표현 기준으로 정합성 확인, tone-guide의 공유 리워드 잔여 문구 정리(D-021) | T-159 | 진행 |
+| T-161 | mt-game-designer | 순회 계획 표 실측 기준 재조정(D-113), sitSec·cornerTellShare·방해 간격 필드, 설정 화면 문구 | T-155 | 진행 |
 | T-124 | mt-qa-tester | 탑다운 프로토타입 스모크 테스트와 밸런스 시뮬레이터 틀(경로·시선 기반) | T-123 | 완료 (P1 1건) |
 
 - 일정 영향: 탑다운 전환으로 아트(4방향 걷기)와 개발(경로탐색·카메라) 작업량이 늘어 **약 1~2주 늘어날 것으로 예상** [추정]
