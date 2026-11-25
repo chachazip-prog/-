@@ -5,8 +5,8 @@
  *  - castRelation(): 회전 인물·시설 슬롯의 같은/다른 성별을 일차 시드(relation_block2)로 정한다. 플레이어 성별을 입력으로 받지 않는다
  *  - playerVariant는 그림(스킨·문 표지)에만 쓴다(renderSkins). DayContent의 판정 필드는 variant와 무관
  *
- * [추측] 'cast-{block}-{slot}' 시드의 '정수 해시'는 데이터·기획서에 알고리즘이 정해져 있지 않아 FNV-1a 32비트(생성기 버전 태그와 같은 함수)로 둠.
- * 기획 검사기와 다른 해시를 쓰면 same/other 날 배치가 달라지므로 기획 확인 요청.
+ * 'cast-{block}-{slot}' 시드의 해시 = FNV-1a 32비트(fnv1a32, T-157 확정). 기준: rules.characters.casting.rotation.hash
+ * (offsetBasis 0x811c9dc5, prime 0x01000193, ASCII 바이트, 블록 첫날 same = hash % 2 == 0). testVectors는 smoke-core에서 대조한다.
  */
 
 import type { RenderSkins } from '../core/day/types';
@@ -71,6 +71,8 @@ export interface GenderFacilityConfig {
   readonly otherDoorHintKey: string;
   readonly talkCancelAtMineDoor: boolean;
   readonly talkCancelLineKey: string;
+  /** access.talkCancelNpcHold.minSec(T-157) */
+  readonly talkCancelNpcHoldMinSec: number;
   readonly hintKeys: Readonly<Record<Side, string>>;
   readonly v15MaxDiff: number;
   readonly raw: O;
@@ -102,6 +104,7 @@ export function genderFacilityConfig(tables: Tables, enabledOverride?: boolean):
     otherDoorHintKey: str(acc['otherDoorTapHintKey'], 'hint.restroom.not_mine'),
     talkCancelAtMineDoor: acc['talkCancelAtMineDoor'] === true,
     talkCancelLineKey: str(acc['talkCancelLineKey'], 'int.talk.cancel_at_door'),
+    talkCancelNpcHoldMinSec: typeof obj(acc['talkCancelNpcHold'])['minSec'] === 'number' ? obj(acc['talkCancelNpcHold'])['minSec'] as number : 0,
     hintKeys: { a: str(hk['a'], 'hint.restroom.mine_a'), b: str(hk['b'], 'hint.restroom.mine_b') },
     v15MaxDiff: num(v15?.['maxOneWayDiffTiles'], 4),
     raw: g,

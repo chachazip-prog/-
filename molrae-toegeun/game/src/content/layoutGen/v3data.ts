@@ -120,7 +120,7 @@ export interface LayoutV3 {
     readonly ceoLower: number;
     readonly missionRequiresProvides: Readonly<Record<string, string>>;
   };
-  readonly repair: { readonly enabled: boolean; readonly maxOpenings: number };
+  readonly repair: { readonly enabled: boolean; readonly maxOpenings: number; readonly protectFacilityTiles: boolean };
   readonly ranks: Readonly<Record<string, RankComplexityV3>>;
   readonly missionRefOneWayTiles: Readonly<Record<string, number>>;
   readonly maxAttempts: number;
@@ -282,7 +282,7 @@ export function parseLayoutV3(tables: Readonly<Record<string, unknown>>): Layout
       maxNonRequiredOptionalAboveTeam: num(asm['maxNonRequiredOptionalAboveTeam'], 1),
       ceoOptional: num(ceo['optionalModules'], 0), ceoLower: num(ceo['lowerModules'], 0), missionRequiresProvides: mrp,
     },
-    repair: { enabled: obj(L['repair'])['enabled'] !== false, maxOpenings: num(obj(L['repair'])['maxOpenings'], 3) },
+    repair: { enabled: obj(L['repair'])['enabled'] !== false, maxOpenings: num(obj(L['repair'])['maxOpenings'], 3), protectFacilityTiles: obj(L['repair'])['protectFacilityTiles'] === true },
     ranks, missionRefOneWayTiles: ref, maxAttempts: num(obj(L['validators'])['maxAttempts'], 24), validators,
     patrolTemplates: obj(L['patrolTemplates']), leadRoaming: obj(L['leadRoaming']),
   };

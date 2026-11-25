@@ -16,7 +16,7 @@ import { PatrolNpc } from '../src/core/patrol';
 import { createRng } from '../src/core/rng';
 import { buildDayContent, type Tables } from '../src/content/buildDay';
 import { createLevelProvider } from '../src/content/levelProvider';
-import { sanitizeShareText, shareExcludedEventIds, type PlayerVariant } from '../src/content/gender';
+import { fnv1a32, sanitizeShareText, shareExcludedEventIds, type PlayerVariant } from '../src/content/gender';
 import type { DayContent } from '../src/core/day/types';
 
 function findRoot(start: string): string {
@@ -85,7 +85,7 @@ function play(c: DayContent): string[] {
 }
 
 const ABS = /"(male|female)"|player_[mf]\b|_m\/|_f\//;
-const stat = { days: 0, pair: 0, same: 0, other: 0, enter: 0, seen: 0, cleaning: 0, doorCancel: 0, locker: 0, events: 0 };
+const stat = { days: 0, pair: 0, same: 0, other: 0, enter: 0, seen: 0, cleaning: 0, doorCancel: 0, locker: 0, events: 0, hashVectors: 0 };
 for (let day = from; day <= to; day++) {
   const cm = build(day, 'm'), cf = build(day, 'f');
   stat.days++;
@@ -155,6 +155,35 @@ for (let day = from; day <= to; day++) {
   let minX = npc.x, holdSteps = 0;
   for (let i = 0; i < 200; i++) { npc.step(1 / 60, rng); minX = Math.min(minX, npc.x); if (npc.mode === 'wait') holdSteps++; }
   check('문 취소: 제자리 정지 후 원래 방향으로 계속(문 쪽 이동 0)', holdSteps > 0 && minX >= x0 - 1e-6 && npc.x > x0 + 0.5, `x ${x0.toFixed(2)} → ${npc.x.toFixed(2)}, 정지 ${holdSteps}스텝`);
+}
+// T-157 access.talkCancelNpcHold: 남은 전조가 거의 0이어도 최소 0.6초 제자리 정지
+{
+  const rows = ['#########', '#.......#', '#########'];
+  const legend = { '#': { kind: 'wall', walkable: false, blocksSight: true }, '.': { kind: 'floor', walkable: true, blocksSight: false } } as never;
+  const map = buildGridMap(rows, legend);
+  const rng = createRng('door-cancel-min');
+  const npc = new PatrolNpc({
+    id: 'n', name: '', role: 'npc', cone: { range: 3, halfAngleDeg: 30 }, speedTilesPerSec: 1.5, gazeMultiplier: 1, tellSec: 0.5, lookSec: 1, lookChance: 0,
+    glanceBackChancePerTile: 0, waypoints: [{ x: 1, y: 1, waitSec: 0 }, { x: 7, y: 1, waitSec: 0 }], loop: false,
+    talk: { radius: 1.5, durationSec: 1.5, cooldownSec: 10, tellSec: 0.8 },
+  }, map, rng);
+  for (let i = 0; i < 30; i++) npc.step(1 / 60, rng);
+  npc.startTalk(Math.PI);
+  for (let i = 0; i < 46; i++) npc.step(1 / 60, rng); // 전조 0.8초 중 약 0.77초 경과
+  const minHold = num0(((((tables['layout'] as Record<string, any>)['genderFacilities'] ?? {})['access'] ?? {})['talkCancelNpcHold'] ?? {})['minSec']);
+  const ok = npc.cancelTalkInPlace(minHold);
+  let hold = 0;
+  for (let i = 0; i < 200 && npc.mode === 'wait'; i++) { npc.step(1 / 60, rng); hold += 1 / 60; }
+  check('문 취소 최소 정지(talkCancelNpcHold.minSec)', ok && minHold > 0 && hold >= minHold - 1 / 60 - 1e-9 && hold <= minHold + 2 / 60, `minSec ${minHold}, 정지 ${hold.toFixed(2)}초`);
+}
+function num0(v: unknown): number { return typeof v === 'number' ? v : 0; }
+// 회전 해시 기준값(rules.characters.casting.rotation.hash.testVectors, T-157)
+{
+  const hv = (((((tables['rules'] as Record<string, any>)['characters'] ?? {})['casting'] ?? {})['rotation'] ?? {})['hash'] ?? {}) as { testVectors?: { seed: string; hash: number; firstSame: boolean }[] };
+  const tv = hv.testVectors ?? [];
+  check('회전 해시 testVectors 있음', tv.length > 0);
+  for (const v of tv) check(`회전 해시 ${v.seed}`, fnv1a32(v.seed) === v.hash && (fnv1a32(v.seed) % 2 === 0) === v.firstSame, `${fnv1a32(v.seed)} vs ${v.hash}`);
+  stat['hashVectors'] = tv.length;
 }
 // 공유 카드 가드
 const ex = shareExcludedEventIds(tables as Tables);

@@ -421,6 +421,13 @@ function repair(L: V3Layout, ctx: V3GenContext): number {
   }
   const sv = S['elevator_service_spawn'], cg = S['ceo_greet_spot'];
   const rows = L.rows.map((r) => [...r]);
+  // T-157 repair.protectFacilityTiles: 위·아래 칸이 시설 칸이면 열지 않음('시설 안을 지나는 지름길' 방지). 성별 시설이 켜진 날만(끈 맵 불변)
+  const FAC_KINDS = ['restroom_floor', 'restroom_stall', 'locker_floor', 'shower_stall', 'door_screened'];
+  const protect = v3.repair.protectFacilityTiles && !!ctx.gender;
+  const isFac = (ch: string | undefined): boolean => {
+    const e = ch !== undefined ? legend[ch] as (LegendEntry & { facilityDoor?: boolean }) | undefined : undefined;
+    return !!e && (FAC_KINDS.includes(e.kind) || e.facilityDoor === true);
+  };
   const over = (): number => {
     const G = rows.map((r) => r.join(''));
     const d = bfsDist(G, legend, seat.tile, occ);
@@ -438,6 +445,7 @@ function repair(L: V3Layout, ctx: V3GenContext): number {
       for (let x = 1; x < W - 1; x++) {
         if (rows[sm.y]![x] !== '#' || sm.open.includes(x)) continue;
         if (!(walk(legend, rows[sm.y - 1]![x]) && walk(legend, rows[sm.y + 1]![x]))) continue;
+        if (protect && (isFac(rows[sm.y - 1]![x]) || isFac(rows[sm.y + 1]![x]))) continue;
         if (sm.open.some((o) => Math.abs(x - o) < 2)) continue;
         rows[sm.y]![x] = '.';
         const v = over();

@@ -402,6 +402,10 @@ export interface FacilityStopDef {
   readonly cueMinSec: number;
   readonly sinkFacing?: Dir;
   readonly skipIfCeo: boolean;
+  /** 발동 판정(T-157 trigger.mode): 'tile' = 노드 칸에 들어선 스텝(floor(x),floor(y)), 'center' = 노드 중심 통과(기존) */
+  readonly triggerMode?: 'tile' | 'center';
+  /** T-157 scheduleGuard(buildDay가 INT-10 근무 atSec을 당길 때 씀) */
+  readonly scheduleGuard?: { readonly marginSec: number; readonly minAtSec: number; readonly otherGapSec: number; readonly ceoGapSec: number };
 }
 
 /** 성별 시설 판정 재료(플레이어 성별 없음, '내 쪽/다른 쪽'만) */
@@ -413,6 +417,8 @@ export interface FacilityDef {
   readonly otherDoorHintKey: string;
   readonly talkCancelAtMineDoor: boolean;
   readonly talkCancelLineKey: string;
+  /** 문 취소 시 말 걸던 인물의 최소 제자리 정지(access.talkCancelNpcHold.minSec, T-157). 실제 = max(남은 전조, 이 값) */
+  readonly talkCancelNpcHoldMinSec?: number;
   /** 출근 준비·칩 안내 '오늘 내 화장실은 위쪽/아래쪽' */
   readonly mineHintKey?: string;
   readonly stop?: FacilityStopDef;

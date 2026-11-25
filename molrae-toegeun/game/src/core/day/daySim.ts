@@ -1981,7 +1981,7 @@ export class DaySim {
     const fac = this.content.facility;
     if (!fac?.talkCancelAtMineDoor || !this.playerInMineFacility()) return;
     for (const n of this.floor.npcs) {
-      if (n.mode === 'tell' && n.tellKind === 'talk' && n.cancelTalkInPlace()) {
+      if (n.mode === 'tell' && n.tellKind === 'talk' && n.cancelTalkInPlace(this.content.facility?.talkCancelNpcHoldMinSec ?? 0)) {
         this.floor.pushEvent({ t: this.time, type: 'talkCancel', npc: n.def.id, reason: 'door' });
         this.push({ t: this.time, type: 'say', npc: n.def.id, key: fac.talkCancelLineKey, sec: 1.4 });
       }
@@ -2041,7 +2041,10 @@ export class DaySim {
     const dt = this.content.floor.rules.fixedStepSec;
     for (const npc of this.floor.npcs) {
       if (npc.def.actorId !== 'director' || npc.mode !== 'walk' || npc.def.seated) continue;
-      const node = st.nodes.find((q) => Math.hypot(npc.x - (q.x + 0.5), npc.y - (q.y + 0.5)) <= npc.def.speedTilesPerSec * dt + 1e-6);
+      // T-157 trigger enter_node_tile: 노드 칸(floor) 기준. 'center'면 기존(노드 중심 통과)
+      const node = st.triggerMode === 'tile'
+        ? st.nodes.find((q) => Math.floor(npc.x) === q.x && Math.floor(npc.y) === q.y)
+        : st.nodes.find((q) => Math.hypot(npc.x - (q.x + 0.5), npc.y - (q.y + 0.5)) <= npc.def.speedTilesPerSec * dt + 1e-6);
       if (!node) continue;
       const d = npc.def;
       const rest = d.waypoints.slice(npc.waypointIndex + 1);

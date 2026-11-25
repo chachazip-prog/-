@@ -557,9 +557,9 @@ export class PatrolNpc {
    * 플레이어 쪽으로 돌아보지 않고(문 쪽 시선·접근 없음) 그 자리에서 남은 전조 시간만큼 멈췄다가 원래 경로로 돌아간다.
    * 반환: 취소했는가
    */
-  cancelTalkInPlace(): boolean {
+  cancelTalkInPlace(minHoldSec = 0): boolean {
     if (this.mode !== 'tell' || this.tellKind !== 'talk' || !this.def.talk) return false;
-    const hold = Math.max(0, this.timer);
+    const hold = Math.max(0, this.timer, minHoldSec);
     this.pendingFacing = null;
     this.tellKind = null;
     this.talkArmed = false;

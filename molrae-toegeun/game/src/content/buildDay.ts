@@ -6,7 +6,7 @@
  */
 import { createRng } from '../core/rng';
 import type { FloorRules, LevelDef } from '../core/floorSim';
-import { buildGridMap, nearestWalkable, type GridMap, type Tile } from '../core/grid';
+import { buildGridMap, nearestWalkable, type GridMap, type LegendEntry, type Tile } from '../core/grid';
 import { findPath } from '../core/pathfinding';
 import type { ConeState, NpcDef, TalkDef, WaypointDef } from '../core/patrol';
 import type { Dir } from '../core/vision';
@@ -70,6 +70,49 @@ function accompliceEffectOf(e: O): NonNullable<MissionDef['accompliceEffect']> {
 
 import { hhmm } from './time';
 export { hhmm };
+
+/**
+ * T-157 facilityStop.scheduleGuard: 화장실 쌍 날 INT-10(근무) 출발이 늦어 길목에 퇴근 단계에 닿으면 들름이 생략되므로,
+ * atSec ≤ dayPhaseSec − (spawnTellSec + 출발점→처음 닿는 길목 노드 경로 타일 ÷ 속도 + tellSec + insideSec + marginSec)로 당긴다.
+ * 순찰 변형이 여럿이면 가장 늦게 닿는 변형 기준(보수적). 최소 minAtSec, 다른 근무 방해와 10초 간격·대표님 H7 간격이 깨지면 원래 값(keep_original).
+ */
+function scheduleGuardDirector(
+  stop: FacilityStopDef, interrupts: DayInterruptDef[], patrols: Readonly<Record<string, NpcDef>>, map: { rows: readonly string[]; legend: Readonly<Record<string, LegendEntry>> },
+  dayPhaseSec: number, ceoAtSec: number | undefined,
+): void {
+  const g = stop.scheduleGuard;
+  if (!g) return;
+  const i = interrupts.findIndex((x) => x.id === 'INT-10' && x.phase === 'day');
+  if (i < 0) return;
+  const int = interrupts[i]!;
+  const variants = arr(int.effect['patrolVariants']).map((x) => str(x)).concat(typeof int.effect['patrolId'] === 'string' ? [int.effect['patrolId'] as string] : []);
+  const grid = buildGridMap(map.rows, map.legend);
+  let need = -1;
+  for (const id of variants) {
+    const d = patrols[id];
+    if (!d || d.waypoints.length === 0) continue;
+    let tiles = 0, hit = false;
+    for (let k = 0; k + 1 < d.waypoints.length && !hit; k++) {
+      const a = d.waypoints[k]!, b = d.waypoints[k + 1]!;
+      const path = findPath(grid, { x: a.x, y: a.y }, { x: b.x, y: b.y });
+      if (!path) break;
+      for (let j = 1; j < path.length; j++) {
+        tiles++;
+        if (stop.nodes.some((q) => q.x === path[j]!.x && q.y === path[j]!.y)) { hit = true; break; }
+      }
+    }
+    if (!hit) continue;
+    need = Math.max(need, (d.spawnTellSec ?? 0) + tiles / Math.max(0.1, d.speedTilesPerSec) + stop.tellSec + stop.insideSec + g.marginSec);
+  }
+  if (need < 0) return; // 길목을 지나는 변형이 없음
+  const latest = Math.round((dayPhaseSec - need) * 10) / 10;
+  if (int.atSec <= latest) return;
+  const at = Math.max(g.minAtSec, latest);
+  const others = interrupts.filter((x, k) => k !== i && x.phase === 'day' && x.atSec > 0);
+  const clash = others.some((x) => Math.abs(x.atSec - at) < g.otherGapSec) || (ceoAtSec !== undefined && Math.abs(at - ceoAtSec) < g.ceoGapSec);
+  if (clash || at >= int.atSec) return; // onConflict keep_original
+  interrupts[i] = { ...int, atSec: at };
+}
 
 /** sim.talk.zone(D-107): 지금은 gate_approach 하나 */
 function talkZoneOf(v: unknown): TalkZoneDef | undefined {
@@ -975,7 +1018,9 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   // ── T-151 성별 시설·회전 관계·그림 ──
   const relations: Record<string, 'same' | 'other'> = {};
   for (const [k, e] of Object.entries(dayCasting(tables, day))) if (e.mode === 'rotate') relations[k] = e.relation;
+  const ceoDayAt = str(plan['ceo'], 'none') !== 'none' ? num(plan['ceoAtSec'], dayPhaseSecFinal * DEFAULTS.ceoAtFrac) : undefined;
   const facility = gcfg.enabled ? buildFacility(tables, gcfg, gd, map, spots, missions, interrupts, day, relations) : undefined;
+  if (facility?.stop) scheduleGuardDirector(facility.stop, interrupts, patrols, map, dayPhaseSecFinal, ceoDayAt);
   const tutorialIds = arr(plan['tutorialIds']).map((x) => str(x));
   if (facility?.kind === 'pair' && !tutorialIds.includes('tut_gender_restroom') && missions.some((m) => m.facilityMission)) tutorialIds.push('tut_gender_restroom');
   if (facility?.stop?.relation === 'same' && !tutorialIds.includes('tut_director_restroom')) tutorialIds.push('tut_director_restroom');
@@ -1077,7 +1122,7 @@ function buildFacility(
   spots: Readonly<Record<string, { tile: Tile; facing?: Dir }>>, missions: readonly MissionDef[], interrupts: readonly DayInterruptDef[], day: number,
   relations: Readonly<Record<string, 'same' | 'other'>>,
 ): FacilityDef | undefined {
-  const base = { otherDoorHintKey: cfg.otherDoorHintKey, talkCancelAtMineDoor: cfg.talkCancelAtMineDoor, talkCancelLineKey: cfg.talkCancelLineKey };
+  const base = { otherDoorHintKey: cfg.otherDoorHintKey, talkCancelAtMineDoor: cfg.talkCancelAtMineDoor, talkCancelLineKey: cfg.talkCancelLineKey, talkCancelNpcHoldMinSec: cfg.talkCancelNpcHoldMinSec };
   const ra = sideDef(map, 'restroom', 'a'), rb = sideDef(map, 'restroom', 'b');
   let fac: FacilityDef | undefined;
   if (gd && ra && rb) {
@@ -1115,6 +1160,12 @@ function buildFacility(
         cueMinSec: Math.max(num(cue['minSec'], 0.4), num(obj(obj(tables['rules'])['tell'])['minSec'], 0.4)),
         ...(spots[sinkName]?.facing ? { sinkFacing: spots[sinkName]!.facing! } : {}),
         skipIfCeo: arr(fs['skipIf']).includes('ceo_on_floor'),
+        triggerMode: obj(fs['trigger'])['mode'] === 'enter_node_tile' ? 'tile' : 'center',
+        ...(obj(fs['scheduleGuard'])['enabled'] === true ? { scheduleGuard: {
+          marginSec: num(obj(fs['scheduleGuard'])['marginSec'], 2), minAtSec: num(obj(fs['scheduleGuard'])['minAtSec'], 8),
+          otherGapSec: num(obj(obj(obj(tables['days'])['generator'])['dayInterrupts'])['minGapSec'], 10),
+          ceoGapSec: num(obj(obj(obj(obj(tables['days'])['generator'])['dayInterrupts'])['h7'])['ceoDirectorMinGapSec'], 0),
+        } } : {}),
       };
       fac = { ...fac, stop };
     }
