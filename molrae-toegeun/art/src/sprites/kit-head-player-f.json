@@ -1,7 +1,7 @@
 {
  "name": "kit-head-player-f",
  "kit": true,
- "note": "T-149 머리 키트(바디 A): 플레이어 여 변형: 턱선 단발 + 정수리 갈고리 삐침·옆머리 삐침(플레이어 표지) 유지. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "note": "T-154 머리 키트(바디 A, 머리 길이 L): 플레이어 여: 어깨에 닿는 단발(끝이 바깥으로 뻗침) + 정수리 갈고리 삐침·옆머리 삐침(플레이어 표지) 유지. D-101: 남녀가 머리 모양으로 한눈에 갈리게. D-093: 체형·피부·옷·소품·줄 색은 역할 원본과 같음",
  "stamps": [
   {
    "dir": "down",
@@ -19,7 +19,46 @@
     ".OHHSOSSSSOSHHO.",
     ".OHHSOSSSSOSHHO.",
     ".OHHSSSssSSSHHO.",
-    ".OOOOOssssOOOOO."
+    ".OHHOOssssOOHHO."
+   ]
+  },
+  {
+   "frames": [
+    "idle_down",
+    "walk_down_0",
+    "walk_down_1",
+    "pose_drink_water_down_0",
+    "pose_drink_water_down_1",
+    "pose_copying_down_0",
+    "pose_copying_down_1",
+    "pose_water_plant_down_0",
+    "pose_water_plant_down_1",
+    "pose_check_phone_down_0",
+    "pose_check_phone_down_1",
+    "carry_box_down",
+    "carry_box_down_0",
+    "carry_box_down_1",
+    "pose_hold_box_down_0",
+    "pose_hold_box_down_1",
+    "carry_paper_down",
+    "carry_paper_down_0",
+    "carry_paper_down_1",
+    "pose_hold_paper_down_0",
+    "pose_hold_paper_down_1",
+    "carry_cup_down",
+    "carry_cup_down_0",
+    "carry_cup_down_1",
+    "pose_hold_cup_down_0",
+    "pose_hold_cup_down_1",
+    "pose_nap_on_sofa_down_0",
+    "pose_nap_on_sofa_down_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    "OHHH........HHHO",
+    ".OOO........OOO."
    ]
   },
   {
@@ -38,7 +77,32 @@
     ".OHHHHHHHHHHHHO.",
     ".OHHHHHHHHHHHHO.",
     ".OHHHHHHHHHHHHO.",
-    "..OOOOOOOOOOOO.."
+    ".OHHHHHHHHHHHHO."
+   ]
+  },
+  {
+   "frames": [
+    "idle_up",
+    "walk_up_0",
+    "walk_up_1",
+    "carry_box_up",
+    "carry_box_up_0",
+    "carry_box_up_1",
+    "carry_paper_up",
+    "carry_paper_up_0",
+    "carry_paper_up_1",
+    "carry_cup_up",
+    "carry_cup_up_0",
+    "carry_cup_up_1",
+    "pose_nod_up_0",
+    "pose_nod_up_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    "OHHH........HHHO",
+    ".OOO........OOO."
    ]
   },
   {
@@ -57,7 +121,47 @@
     ".OHHHHHHSSSOSO..",
     ".OHHHHHHsSSOSO..",
     ".OHHHHHHSSSSSO..",
-    ".OOOOOOsssOOO..."
+    ".OHHHHOsssOOO..."
+   ]
+  },
+  {
+   "frames": [
+    "idle_right",
+    "walk_right_0",
+    "walk_right_1",
+    "pose_read_document_right",
+    "pose_drink_water_right_0",
+    "pose_drink_water_right_1",
+    "pose_copying_right_0",
+    "pose_copying_right_1",
+    "pose_water_plant_right_0",
+    "pose_water_plant_right_1",
+    "pose_check_phone_right_0",
+    "pose_check_phone_right_1",
+    "carry_box_right",
+    "carry_box_right_0",
+    "carry_box_right_1",
+    "pose_hold_box_right_0",
+    "pose_hold_box_right_1",
+    "carry_paper_right",
+    "carry_paper_right_0",
+    "carry_paper_right_1",
+    "pose_hold_paper_right_0",
+    "pose_hold_paper_right_1",
+    "carry_cup_right",
+    "carry_cup_right_0",
+    "carry_cup_right_1",
+    "pose_hold_cup_right_0",
+    "pose_hold_cup_right_1",
+    "pose_breath_right_0",
+    "pose_breath_right_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    "OHHHH...........",
+    ".OOOO..........."
    ]
   },
   {
@@ -81,12 +185,24 @@
   },
   {
    "frames": [
+    "disguise"
+   ],
+   "x": 0,
+   "y": 8,
+   "_note": "위장: 서류 양옆으로 뻗친 머리끝",
+   "rows": [
+    "O..............O",
+    "O..............O"
+   ]
+  },
+  {
+   "frames": [
     "caught"
    ],
    "clear": true,
    "x": 0,
    "y": 0,
-   "_note": "들킴: 머리카락 곤두섬 + 흰자 눈 + 벌린 입(손은 원본 그대로)",
+   "_note": "들킴: 머리카락 곤두섬 + 흰자 눈 + 벌린 입(손은 원본 그대로). 옆머리는 10행까지",
    "rows": [
     "...O..O..OOO.O..",
     "....OOOOOHHOO...",
@@ -98,7 +214,18 @@
     ".OHHWWSSSSWWHHO.",
     ".OHHWOSSSSOWHHO.",
     ".OHHSSSOOSSSHHO.",
-    "OOOOOOssssOOOOOO"
+    "OOHHOOssssOOHHOO"
+   ]
+  },
+  {
+   "frames": [
+    "caught"
+   ],
+   "x": 0,
+   "y": 11,
+   "rows": [
+    "...H........H...",
+    "...O........O..."
    ]
   }
  ]

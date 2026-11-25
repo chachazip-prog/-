@@ -1,7 +1,7 @@
 {
  "name": "kit-head-accomplice-f",
  "kit": true,
- "note": "T-149 머리 키트(바디 A): 공범 여 변형: 초록 헤드폰 유지 + 높이 묶은 포니테일(정면 오른쪽 위로 삐져나옴, 뒷모습 가운데로 늘어짐(짙은 회남색 D 결 + 회색 끈), 옆모습 뒤로). D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "note": "T-154 머리 키트(바디 A, 머리 길이 T): 공범 여: 헤드폰 + 정수리 뒤로 높이 묶은 큰 포니테일(옆모습 뒤로 튀어나옴, 뒷모습 목 아래까지). D-101: 남녀가 머리 모양으로 한눈에 갈리게. D-093: 체형·피부·옷·소품·줄 색은 역할 원본과 같음",
  "stamps": [
   {
    "dir": "down",
@@ -9,8 +9,8 @@
    "x": 0,
    "y": 0,
    "rows": [
-    "................",
-    ".....OOOOOO..OO.",
+    "..............O.",
+    ".....OOOOOO..OHO",
     "...OOGGGGGGOOHHO",
     "..OGHHHDDHHHGOHO",
     ".OGHHHHHHHHHHGOO",
@@ -33,12 +33,26 @@
     "...OOGGGGGGOO...",
     "..OGHHHHHHHHGO..",
     ".OGHHHHMMHHHHGO.",
-    "OGGOHHHDDHHHOGGO",
-    "OGgOHHHDDHHHOgGO",
-    "OGgOHHHDDHHHOgGO",
-    ".OOSHHHDDHHHSOO.",
+    "OGGOHHODDOHHOGGO",
+    "OGgOHHODDOHHOgGO",
+    "OGgOHHODDOHHOgGO",
+    ".OOSHHODDOHHSOO.",
     "..OHHHODDOHHHO..",
-    "...OOOOHHOOOO..."
+    "...OOOODDOOOO..."
+   ]
+  },
+  {
+   "frames": [
+    "idle_up",
+    "walk_up_0",
+    "walk_up_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    ".......DD.......",
+    ".......OO......."
    ]
   },
   {
@@ -48,14 +62,14 @@
    "y": 0,
    "rows": [
     "................",
-    "....OOOOOO......",
-    "OOOMHHGGHHOO....",
-    "OHOHHHGGHDDHO...",
-    "OHOHHHGGHHHDHO..",
-    "OHOHOOOOOHHHHO..",
-    ".OHHOGGgOHSSSO..",
-    ".OHHOGGgOSSOSO..",
-    ".OHHHOOOsSSOSO..",
+    "OOOO.OOOOOO.....",
+    "ODDMOHHGGHHOO...",
+    "ODDOHHHGGHDDHO..",
+    "ODDOHHHGGHHHDHO.",
+    "ODDOHOOOOOHHHHO.",
+    "ODOHOGGgOHSSSO..",
+    "ODOHOGGgOSSOSO..",
+    "OO.HHOOOsSSOSO..",
     "..OHHHHSSSSSSO..",
     "...OOOOsssOOO..."
    ]

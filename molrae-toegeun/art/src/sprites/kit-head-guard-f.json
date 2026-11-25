@@ -1,7 +1,7 @@
 {
  "name": "kit-head-guard-f",
  "kit": true,
- "note": "T-149 머리 키트(바디 B): 경비 여 변형: 챙 모자(노란 배지) 원본 그대로 + 모자 뒤 구멍으로 뺀 포니테일(회색 끈), 관자놀이 옆머리. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "note": "T-154 머리 키트(바디 B, 머리 길이 T): 경비 여: 챙 모자 + 목 아래까지 내려오는 포니테일, 정면 귀 옆 옆머리(챙 모자·손전등은 역할 표지). D-101: 남녀가 머리 모양으로 한눈에 갈리게. D-093: 체형·피부·옷·소품·줄 색은 역할 원본과 같음",
  "stamps": [
   {
    "dir": "down",
@@ -18,7 +18,7 @@
     ".OHHSSSSSSSSHHO.",
     ".OHSSOSSSSOSSHO.",
     ".OHSSOSSSSOSSHO.",
-    ".OSSSSSssSSSSSO.",
+    ".OHSSSSssSSSSHO.",
     "..OOOOssssOOOO.."
    ]
   },
@@ -34,11 +34,25 @@
     ".ODDDDDDDDDDDDO.",
     ".OOOOOOOOOOOOOO.",
     ".OHHHHHMMHHHHHO.",
-    ".OHHHHHDDHHHHHO.",
-    ".OHHHHHDDHHHHHO.",
-    ".OSHHHHDDHHHHSO.",
     ".OHHHHODDOHHHHO.",
-    "..OOOOOHHOOOOO.."
+    ".OHHHHODDOHHHHO.",
+    ".OSHHHODDOHHHSO.",
+    ".OHHHHODDOHHHHO.",
+    "..OOOOODDOOOOO.."
+   ]
+  },
+  {
+   "frames": [
+    "idle_up",
+    "walk_up_0",
+    "walk_up_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    ".......DD.......",
+    ".......OO......."
    ]
   },
   {
@@ -53,11 +67,25 @@
     ".ODDDDDDDDDDDO..",
     ".OOOOOOOOOOOOOOO",
     "OMOHHHHHHHHHHO..",
-    "OHOHHHHHHSSSSO..",
-    "OHOHHHHSSSSOSO..",
-    "OHOHHHHsSSSOSO..",
-    ".OOHHHHSSSSSSO..",
-    "..OOOOOsssOOO..."
+    "ODOHHHHHHSSSSO..",
+    "ODOHHHHSSSSOSO..",
+    "ODOHHHHsSSSOSO..",
+    "ODOHHHHSSSSSSO..",
+    "ODOOOOOsssOOO..."
+   ]
+  },
+  {
+   "frames": [
+    "idle_right",
+    "walk_right_0",
+    "walk_right_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    "ODO.............",
+    ".O.............."
    ]
   }
  ]

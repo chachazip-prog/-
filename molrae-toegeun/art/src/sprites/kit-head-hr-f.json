@@ -1,7 +1,7 @@
 {
  "name": "kit-head-hr-f",
  "kit": true,
- "note": "T-149 머리 키트(바디 A): 인사팀 여 변형: 가운데 가르마 짧은 커트(귀·목선이 보임). 남 변형(원본)이 더 긴 커튼 앞머리. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "note": "T-154 머리 키트(바디 A, 머리 길이 L): 인사팀 여: 가운데 가르마 + 어깨까지 내려오는 긴 머리(명부·보라 띠 카드는 역할 표지). D-101: 남녀가 머리 모양으로 한눈에 갈리게. D-093: 체형·피부·옷·소품·줄 색은 역할 원본과 같음",
  "stamps": [
   {
    "dir": "down",
@@ -13,13 +13,27 @@
     ".....OOOOOO.....",
     "...OOHHMHHHOO...",
     "..OHHHHMHHHHHO..",
-    ".OHHHHMHHHHHHHO.",
+    ".OHHHHMMHHHHHHO.",
+    ".OHHHSSSSSHHHHO.",
     ".OHHSSSSSSSSHHO.",
-    ".OHSSSSSSSSSSHO.",
-    ".OSSSOSSSSOSSSO.",
-    ".OSSSOSSSSOSSSO.",
-    "..OSSSSssSSSSO..",
-    "...OOOssssOOO..."
+    ".OHHSOSSSSOSHHO.",
+    ".OHHSOSSSSOSHHO.",
+    ".OHHSSSssSSSHHO.",
+    ".OHHOOssssOOHHO."
+   ]
+  },
+  {
+   "frames": [
+    "idle_down",
+    "walk_down_0",
+    "walk_down_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    ".OHH........HHO.",
+    "..OO........OO.."
    ]
   },
   {
@@ -35,10 +49,24 @@
     ".OHHHHHHMHHHHHO.",
     ".OHHHHHHHHHHHHO.",
     ".OHHHHHHHHHHHHO.",
-    ".OSHHHHHHHHHHSO.",
-    ".OSHHHHHHHHHHSO.",
-    "..OSSHHHHHHSSO..",
-    "...OOOssssOOO..."
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO.",
+    ".OHHHHHHHHHHHHO."
+   ]
+  },
+  {
+   "frames": [
+    "idle_up",
+    "walk_up_0",
+    "walk_up_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    ".OHH........HHO.",
+    "..OO........OO.."
    ]
   },
   {
@@ -53,11 +81,25 @@
     "..OHHHHHHMHHO...",
     ".OHHHHHHHHMHHO..",
     ".OHHHHHHHHHHHO..",
-    ".OHHHHHHSSSSSO..",
-    ".OHHHSSSSSSOSO..",
-    ".OHHHSsSSSSOSO..",
-    "..OHHSSSSSSSSO..",
-    "...OOOOsssOOO..."
+    ".OHHHHHHHSSSSO..",
+    ".OHHHHHSSSSOSO..",
+    ".OHHHHHsSSSOSO..",
+    ".OHHHHHSSSSSSO..",
+    ".OHHHHOsssOOO..."
+   ]
+  },
+  {
+   "frames": [
+    "idle_right",
+    "walk_right_0",
+    "walk_right_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    ".OHHH...........",
+    "..OOO..........."
    ]
   }
  ]

@@ -1,7 +1,7 @@
 {
  "name": "kit-head-teamlead-f",
  "kit": true,
- "note": "T-149 머리 키트(바디 B): 팀장 여 변형(1번 팀장): 볼륨 있는 옆 가르마 단발 + 굵은 눈썹 2px(팀장 표지). 옆 팀 팀장(남 = 원본 짧은 가르마)과 머리 실루엣으로 구분. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "note": "T-154 머리 키트(바디 B, 머리 길이 L): 팀장 여: 볼륨 옆 가르마 + 어깨까지 내려오는 머리(굵은 눈썹·결재판은 역할 표지). D-101: 남녀가 머리 모양으로 한눈에 갈리게. D-093: 체형·피부·옷·소품·줄 색은 역할 원본과 같음",
  "stamps": [
   {
    "dir": "down",
@@ -19,7 +19,24 @@
     ".OHHSOSSSSOSHHO.",
     ".OHHSOSSSSOSHHO.",
     ".OHHSSSssSSSHHO.",
-    ".OOOOOssssOOOOO."
+    ".OHHOOssssOOHHO."
+   ]
+  },
+  {
+   "frames": [
+    "idle_down",
+    "walk_down_0",
+    "walk_down_1",
+    "sit_down",
+    "rise_down_0",
+    "rise_down_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    "OHH..........HHO",
+    "OO............OO"
    ]
   },
   {
@@ -38,7 +55,26 @@
     ".OHHHHHHHHHHHHO.",
     ".OHHHHHHHHHHHHO.",
     ".OHHHHHHHHHHHHO.",
-    "..OOOOOOOOOOOO.."
+    ".OHHHHHHHHHHHHO."
+   ]
+  },
+  {
+   "frames": [
+    "idle_up",
+    "walk_up_0",
+    "walk_up_1",
+    "sit_up",
+    "rise_up_0",
+    "rise_up_1",
+    "wait_up_0",
+    "wait_up_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    "OHH..........HHO",
+    "OO............OO"
    ]
   },
   {
@@ -57,7 +93,21 @@
     ".OHHHHHHSSSOSO..",
     ".OHHHHHHsSSOSO..",
     ".OHHHHHHSSSSSO..",
-    ".OOOOOOsssOOO..."
+    ".OHHHHOsssOOO..."
+   ]
+  },
+  {
+   "frames": [
+    "idle_right",
+    "walk_right_0",
+    "walk_right_1"
+   ],
+   "x": 0,
+   "y": 11,
+   "_note": "머리 아래(11행~) 옆머리·묶음 끝. '.'은 몸·소품 그대로",
+   "rows": [
+    "OHHH............",
+    "OOO............."
    ]
   }
  ]

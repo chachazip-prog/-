@@ -1,7 +1,7 @@
 {
  "name": "kit-head-bg-c-f",
  "kit": true,
- "note": "T-149 머리 키트(바디 A): 배경 동료 C 여 변형: 정수리 똥머리 올림머리(앞머리 없음). 목 뒤 후드는 남녀 같음. D-093: 머리 모양·실루엣만 바꿈(체형·피부·옷·소품·줄 색은 역할 원본과 같음)",
+ "note": "T-154 머리 키트(바디 A, 머리 길이 T): 배경 C 여: 정수리 위로 크게 올린 똥머리(모든 방향에서 위로 2px 튀어나옴). D-101: 남녀가 머리 모양으로 한눈에 갈리게. D-093: 체형·피부·옷·소품·줄 색은 역할 원본과 같음",
  "stamps": [
   {
    "dir": "down",
@@ -9,9 +9,9 @@
    "x": 0,
    "y": 0,
    "rows": [
-    ".....OOOOOO.....",
-    ".....OHHMHO.....",
-    "...OOOHHHHOOO...",
+    "....OOOOOO......",
+    "...OHHDHHHO.....",
+    "...OOHHMHOOOO...",
     "..OHHHHHHHHHHO..",
     ".OHHHHHHHHHHHHO.",
     ".OHHSSSSSSSSHHO.",
@@ -28,9 +28,9 @@
    "x": 0,
    "y": 0,
    "rows": [
-    ".....OOOOOO.....",
-    ".....OHHMHO.....",
-    "...OOOHHHHOOO...",
+    "......OOOOOO....",
+    ".....OHHHDHHO...",
+    "...OOOOHMHHOOO..",
     "..OHHHHHHHHHHO..",
     ".OHHHHHHHHHHHHO.",
     ".OHHHHHHHHHHHHO.",
@@ -50,11 +50,11 @@
    "x": 0,
    "y": 0,
    "rows": [
-    "...OOOOO........",
-    "...OHHMOOO......",
-    "...OHHHHHHOO....",
-    "..OHHHHHHHHHO...",
-    ".OHHHHHHHHHHHO..",
+    ".OOOOO..........",
+    "OHHDHHO.........",
+    "OHHHHHOOOO......",
+    ".OOMHHHHHHOO....",
+    ".OHHHHHHHHHHO...",
     ".OHHHHHHHHSSSO..",
     ".OHHHHHHSSSSSO..",
     ".OHHHHHSSSSOSO..",
