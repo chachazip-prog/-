@@ -546,6 +546,7 @@ interface AdsTable {
 | 3-draft (T-142) | 2026-11-23 | 새 테이블 `layout.json`·`missions.json`(schemaVersion 3) 추가. 상세 스키마는 `design/data-schema-v3-draft.md`. **v2 테이블은 변경 없음**(키·값 그대로). 검사기는 테이블별 버전 확인(layout·missions = 3, 나머지 = 2)과 v3 기본 검사를 추가 |
 | 2 (T-148) | 2026-11-24 | 성별 다양화(REQ-016, D-087·D-088). **필드 추가만, 키 이름·계층·기존 값 변경 없음 → schemaVersion 2 유지**(v3 테이블도 3 유지). 아래 상세 |
 | 2 (T-152) | 2026-11-24 | 컴플라이언스 성별 검토(T-150) 반영, D-090·D-095. **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**(v3 테이블도 3 유지). 아래 상세 |
+| 2 (T-161) | 2026-11-25 | 개발 T-155 코드 기본값 → 데이터, 설정 화면 문구. **필드 추가만, 키 이름·계층·기존 값 변경 없음 → schemaVersion 2 유지**(layout 3 유지, 변경은 `data-schema-v3-draft.md` §8 T-161). 아래 상세 |
 | 2 (T-157) | 2026-11-25 | 개발 T-151 결과의 기획 사항 4건(회전 해시·문 취소 정지·본부장 들름·성별 시설 폴백). **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**(layout 3 유지). 아래 상세 |
 
 ### v1 → v2 상세
@@ -662,6 +663,13 @@ interface AdsTable {
   - 데이터만으로 동작이 바뀌는 것: 위 값 수정 전부. 특히 대표님 날 근무 44초, 18:05 기준(보너스와 INT-07 조건이 함께 바뀜), 대표님 퇴장 중 시선 없음.
   - 코드 구현이 필요한 것: `budgetCheck`, `missionTimersPausedWhileFrozen`, `cancelOnLeaveStart` 3건. 구현 전에는 무시돼도 크래시가 없는 추가 필드입니다.
 - **QA 테스트 기대값 영향**: `t131-rules` '쇼핑 방치 → 시간초과(13초)'를 15초로 바꿔야 합니다. '18:00 전 탈출 보너스' 항목명은 18:05로 바꿔야 합니다.
+
+### T-161 상세 (v2 유지)
+- **필드 추가**
+  - days.json `generator.dayInterrupts.minGapSec` 10: 시각을 정하는 방해끼리 최소 간격(초). 기존 `placement` 문장의 '10초 이상'을 데이터로 옮김. 지금 코드는 INT-10 `scheduleGuard.otherGapSec`에서만 읽고(없으면 10), `buildDay` 배치 루프는 상수 10. 🔧 배치 루프도 이 필드를 읽게(값이 같아 동작 변화 없음). 주석 키 `_minGapNote`.
+  - strings.ko.json `settings.character_title` "내 캐릭터 바꾸기", `settings.character_hint` "바꾼 모습은 다음 판부터 적용돼요. 난이도와 보상은 똑같아요.", `settings.character_option.m` "남성", `settings.character_option.f` "여성". 첫 출근 화면(`charsel.option.*` "남자 사원/여자 사원")과 달리 설정 화면은 짧은 라벨. 바꾼 뒤 안내는 기존 `settings.character_changed`.
+- **개발 영향**: 새 키는 무시해도 크래시 없음. 설정 화면이 이 키를 쓰면 됨.
+- **검사기(§10 T-161)**: `minGapSec` ≥ 6, 직급별 dayInterrupts 상한 개수가 이 간격으로 [8, dayPhaseSec − 10]에 들어가는지(경고).
 
 ### T-157 상세 (v2 유지)
 - **필드 추가**

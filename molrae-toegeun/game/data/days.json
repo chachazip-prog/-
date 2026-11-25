@@ -944,6 +944,8 @@
       "count": "rank.dayInterrupts.countRange에서 정수 추첨",
       "selection": "pool 가중치 비복원, unlockDay ≤ day 인 것만. INT-10(본부장)은 director.patrols.perDayRange만큼 별도 배치(카운트에 포함)",
       "placement": "atSec ∈ [8, dayPhaseSec - 10], 서로 10초 이상 간격. 근접형(INT-01·INT-02·INT-03)은 atSec 0으로 하루 종일 활성(카운트 미포함)",
+      "minGapSec": 10,
+      "_minGapNote": "T-161: placement의 '서로 10초 이상 간격'을 데이터로(개발 T-155 코드 기본 10초). 시각을 정하는 방해(근접형 atSec 0 제외)끼리 최소 간격. 10초 = 방해 하나의 전조 + 효과(대부분 3~6초) + 다음 전조를 읽을 여유 4초. INT-10 scheduleGuard(otherGapSec)도 이 값을 읽음. 🔧 개발: buildDay 배치 루프(lastAt + 10)도 이 필드를 읽게. 검사기: ≥ 6(방해가 붙어 나오면 전조를 못 읽음), 근무 구간 [8, dayPhaseSec − 10] 안에 countRange 상한 개수가 들어가는지",
       "hrAttendance": "INT-05는 npcs.hr_inspector.spawn.dayChance로 별도 판정(stream npc), minDayTimeSec 이후",
       "constraints": [
         "본부장 순찰과 대표님 순시는 겹치지 않음(H7): 대표님 순시 시작 ±25초 안에 INT-10 배치 금지",

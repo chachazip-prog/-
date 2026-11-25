@@ -532,6 +532,15 @@ elif os.path.exists(AUDIO):
 h7 = T["days"]["generator"]["dayInterrupts"].get("h7", {})
 if not isinstance(h7.get("ceoDirectorMinGapSec"), (int, float)) or h7["ceoDirectorMinGapSec"] < 20:
     err("days.generator.dayInterrupts.h7.ceoDirectorMinGapSec 없음 또는 < 20(순시 전체 ≈20초, T-136)")
+_dig = T["days"]["generator"]["dayInterrupts"].get("minGapSec")
+if not isinstance(_dig, (int, float)) or _dig < 6:
+    err("days.generator.dayInterrupts.minGapSec 없음 또는 < 6(방해 전조를 읽을 간격, T-161)")
+else:
+    for _r in T["ranks"]["ranks"]:
+        _c = _r.get("dayInterrupts", {}).get("countRange", [0, 0])[1]
+        _dp = _r.get("dayPhaseSec")
+        if isinstance(_dp, (int, float)) and _c > 1 and 8 + (_c - 1) * _dig > _dp - 10:
+            warns.append(f"ranks.{_r['id']}: dayInterrupts 상한 {_c}개가 minGapSec {_dig}초 간격으로 [8, dayPhaseSec−10]에 다 안 들어감(T-161)")
 ceo_ = next(b for b in T["bosses"]["bosses"] if b["id"] == "ceo")
 fk = ceo_["sim"].get("fake", {})
 if fk.get("type") == "recheck":
@@ -642,6 +651,18 @@ if "layout" in T:
             err(f"layout.leadRoaming.byRank.{rk}: 하루 2~4회(D-075) 밖")
         if v["speedTilesPerSec"] >= T["rules"]["playerSpeedTilesPerSec"]:
             err(f"layout.leadRoaming.byRank.{rk}: 팀장 순회 속도가 플레이어 이상")
+        # T-161: 대표님 날 회차 ≤ 평소, 상한은 전역 범위 안(근무 구간 절반 이하)
+        cdr = v.get("ceoDayCountRange")
+        if cdr and not (1 <= cdr[0] <= cdr[1] <= v["countRange"][1]):
+            err(f"layout.leadRoaming.byRank.{rk}.ceoDayCountRange: 1 ≤ 범위 ≤ countRange 상한 위반(T-161)")
+        amx = v.get("awayMaxSec")
+        if amx is not None and not (LR["awaySecRange"][0] < amx <= LR["awaySecRange"][1]):
+            err(f"layout.leadRoaming.byRank.{rk}.awayMaxSec {amx}: awaySecRange 밖(T-161)")
+    # T-161: 자리 비움 추정 재료
+    if not (0 <= LR.get("sitSec", -1) <= 1.0):
+        err("layout.leadRoaming.sitSec 없음 또는 0~1.0초 밖(T-161, GDD v3 §3-1 앉기 0.5초)")
+    if not (0 <= LR.get("cornerTellShare", -1) <= 1):
+        err("layout.leadRoaming.cornerTellShare 없음 또는 0~1 밖(T-161)")
     for tr in LY["complexityByRank"]:
         c0, c1 = tr["complexity"]
         if not (0 <= c0 <= c1 <= 1):

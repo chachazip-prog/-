@@ -234,11 +234,13 @@ interface LeadRoaming {
               ceoClearance?: { returnBeforeSec: 2.0; departAfterSec: 3.0 };   // 🔧 T-156: 코드 상수 ±20초 대체
               fitToWindow?: { enabled: true } };                               // 🔧 T-156: 계획 회차 = 실제 출발 회차
   standTell: { sec: 1.0; minSec: 0.8; visual: string; sfxNew: string; sfxFallback: string; bubble: 'destination_icon' };
+  sitSec?: Sec;                          // T-161: 자리 도착 후 앉기(콘 없음). 0.5. 없으면 코드 기본값(T-155 0.5)
+  cornerTellShare?: number;              // T-161: 자리 비움 추정에서 모퉁이 조건부 전조가 나는 비율 0~1. 0.25
   coneActiveIn: ('walk'|'look')[];       // = BossTourDef.coneActiveIn (wait·tell 제외)
   walk: { glanceBackChancePerTile: 0.03; talkEnabled: true; avoidTiles: ['player_seat']; pathTieBreak: string };
   destinations: {
     id: 'printer'|'pantry'|'meeting'|'next_team'|'exec_report';
-    spots: string[];                     // 앞에서부터 이 층에 있는 첫 스팟 (= DEV_TOUR.destinations[].spots)
+    spots: string[];                     // 앞에서부터 이 층에 있는 첫 스팟 (= DEV_TOUR.destinations[].spots). T-161: printer = [tour_copier, tour_printer]
     waitSecRange: [Sec, Sec]; lookChance: number; weight: number; minDay: number;
     bubbleIcon: string; lineKey: string; pose?: string; floorMark?: string;
     locksMissions?: MissionId[]; endTell?: { sec: Sec; sfx?: string; sfxNew?: string; sfxFallback?: string; lineKey: string };
@@ -410,5 +412,6 @@ interface CombinationRules {
 | 3-draft (T-148) | 2026-11-24 | **필드 추가만(키 이름·계층·기존 값 변경 없음)**. layout: `legendAdd` 3종(`+` 가림막 문·`W` 샤워 칸·`l` 탈의실 바닥), 모듈 2종 추가(`mid_rest_meet_g` 그룹 `rest_meet_g`, `mid_fitness` 그룹 `fitness` — 둘 다 기존 requiredGroups·optionalPool에 없는 새 그룹이라 `genderFacilities.enabled` false면 생성기가 고르지 않음), 모듈 필드 `genderFacility`·`spotAliases`·`zoneAliases`, 최상위 `genderFacilities`(enabled false, groupReplace·fitnessModule·mineSide·access·missionTargets·cases 5·validators V15·V16·debuts). missions: `existing.restroom.targetFacility`, `modifiers[relocate.bank_stall].targetFacility`, 새 배열 `genderModifiers`(facility.cleaning — 새 type `facility_closed`, relocate.restroom_locker). 상세는 `design/gender-design.md` §3·§8 |
 | 3-draft (T-152) | 2026-11-24 | **필드 추가만**. layout: `legendAdd.W` 표시 필드 4(`occupiedDisplay`·`inUseLabelKey`·`steamIcon` false·`drawOccupantInside` false), `genderFacilities.access.talkCancelNpcBehavior`·`talkCancelNpcApproachDoor`, `genderFacilities.artRules`. missions: avoid 5종·bonus.cover의 `facilityLabelKey`, `stringsKo` 6키, `_facilityLabelNote`. 상세 `design/data-schema.md` §11 T-152 |
 | 3-draft (T-156) | 2026-11-25 | **값 수정·필드 추가만(키 이름·계층 변경 없음, 개발 T-151 동시 작업 보호)**. layout `leadRoaming`: `schedule.firstAtFrac` 0.15→0.10·`lastAtFrac` 0.8→0.7·`minGapSec` 8→3, 새 필드 `schedule.ceoClearance`·`schedule.fitToWindow`, `byRank` 값(과장~ 속도·waitMul, 임원 stopsPerTour [1,1]) + 새 필드 `awayMaxSec`·`minGapSec`(임원)·`ceoDayCountRange`, `destinations.meeting.waitSecRange` 8~10→6~8. npcs `security_guard.sim.talk.zone`(gate_approach) 신규. strings.ko `tutorial.tut_bank·tut_chat·tut_parcel·tut_print·tut_cafe·tut_window`. 상세 gdd-v3 §3-5·§3-6·§10 |
+| 3-draft (T-161) | 2026-11-25 | **값 수정·필드 추가만(키 이름·계층 변경 없음)**, D-113. layout `leadRoaming`: 새 필드 `sitSec` 0.5·`cornerTellShare` 0.25(T-155 코드 임시값 → 데이터, 코드가 이미 읽음), `destinations.printer.spots` 순서 [tour_printer, tour_copier] → [tour_copier, tour_printer](생성 맵 1/195 변경), `byRank.countRange` 대리 [2,3]→[2,2]·과장 [3,3]→[2,3]·차장·부장 [3,4]→[2,3]·임원 [4,4]→[2,3], `ceoDayCountRange` 부장·임원 [2,3]→[2,2], `awayMaxSec` 사원 22(신규 명시)·대리 18→22, `awayRule` 문구(🔧 다시 고르기 규칙 요청). 주석 키 `_t161Note`·`_t161EstimateNote`. 검사기: sitSec 0~1, cornerTellShare 0~1, awayMaxSec가 awaySecRange 안, ceoDayCountRange ≤ countRange 상한. 상세 gdd-v3 §3-7 |
 | 3-draft (T-152b) | 2026-11-24 | D-100. **값 수정·필드 추가만**. layout: `mid_printer`·`bottom_storage`에 `spots.storage_corner_use`. missions: `relocate.bank_stall` 목적지 창고 구석·보상 1.1·`targetFacility` 삭제, `appliesTo.bank` 같은 값, `facility.cleaning.missions` restroom만. 상세 `design/data-schema.md` §11 T-152 |
 | 3-draft (T-157) | 2026-11-25 | **값 수정·필드 추가만**. layout: `repair.protectFacilityTiles` true, `validators.maxAttempts` 24 → 32, `mid_rest_meet_g` 세면대 facing right·`doorOpenChance` [1.0, 1.0], `genderFacilities.access.talkCancelNpcHold`. 생성 버전 태그 해시가 바뀌어 성별 시설 off 맵도 달라짐. 상세 `design/data-schema.md` §11 T-157 |
