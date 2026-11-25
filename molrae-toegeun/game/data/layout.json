@@ -3366,9 +3366,10 @@
         "minDay": 28,
         "bubbleIcon": "icon_tour_board",
         "lineKey": "tour.tl.whiteboard",
-        "pose": "teamlead/wait_side",
+        "pose": "teamlead/wait_side_left",
         "teamShort": true,
-        "_note": "T-165(D-120): 팀 옆 벽 주간 일정판을 보며 마커로 한 줄 고침. 등이 팀 쪽. 대기 4~5초(읽고 쓰는 동작). 일정판 글씨는 장식(읽히는 글자 없음)"
+        "_note": "T-165(D-120): 팀 옆 벽 주간 일정판을 보며 마커로 한 줄 고침. 등이 팀 쪽. 대기 4~5초(읽고 쓰는 동작). 일정판 글씨는 장식(읽히는 글자 없음)",
+        "_poseNote": "T-165: 아트 T-166 키(wait_side_left/right, 남녀 변형 _m/_f 있음). 값은 반전하지 않은 모듈의 스팟 facing 기준. 🔧 개발: 반전 모듈(facing이 바뀜)에서는 _left↔_right를 스팟 facing에 맞춰 바꿔 씀"
       },
       {
         "id": "water",
@@ -3384,9 +3385,10 @@
         "minDay": 28,
         "bubbleIcon": "icon_tour_water",
         "lineKey": "tour.tl.water",
-        "pose": "teamlead/wait_side",
+        "pose": "teamlead/wait_side_right",
         "teamShort": true,
-        "_note": "T-165(D-120): 팀장이 자기 물을 받아 마심(누구에게 떠다 주는 연출 금지). 둘러보기 0.3 = next_team과 같은 값, 전조 0.5초 + 점선 콘. 탕비실(컵)과 아이콘·대사를 다르게"
+        "_note": "T-165(D-120): 팀장이 자기 물을 받아 마심(누구에게 떠다 주는 연출 금지). 둘러보기 0.3 = next_team과 같은 값, 전조 0.5초 + 점선 콘. 탕비실(컵)과 아이콘·대사를 다르게",
+        "_poseNote": "T-165: 아트 T-166 키(wait_side_left/right, 남녀 변형 _m/_f 있음). 값은 반전하지 않은 모듈의 스팟 facing 기준. 🔧 개발: 반전 모듈(facing이 바뀜)에서는 _left↔_right를 스팟 facing에 맞춰 바꿔 씀"
       },
       {
         "id": "desk_memo",
@@ -3402,9 +3404,9 @@
         "minDay": 28,
         "bubbleIcon": "icon_tour_memo",
         "lineKey": "tour.tl.desk_memo",
-        "pose": "teamlead/wait_up",
         "teamShort": true,
-        "_note": "T-165(D-120): 외근 중인 팀원 빈 책상에 메모지를 붙이고 돌아옴. 사람을 추가로 세우지 않음(V11·H6). 메모 내용은 보이지 않음. 대기 3~4초(제안서 4~5초에서 낮춤: team_back 스팟이 편도 7이 되어 임원 상한 11초 여유 확보)"
+        "_note": "T-165(D-120): 외근 중인 팀원 빈 책상에 메모지를 붙이고 돌아옴. 사람을 추가로 세우지 않음(V11·H6). 메모 내용은 보이지 않음. 대기 3~4초(제안서 4~5초에서 낮춤: team_back 스팟이 편도 7이 되어 임원 상한 11초 여유 확보)",
+        "_poseNote": "T-165: 전용 포즈 없음(스팟 facing의 기본 서기). team_front는 left, team_back은 down"
       }
     ],
     "byRank": {
