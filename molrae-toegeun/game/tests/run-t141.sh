@@ -10,6 +10,9 @@ case "$what" in
   maps) entry=sim/t141-maps.ts ;;
   gap) entry=sim/t141-gap.ts ;;
   trace) entry=sim/t141-trace.ts ;;
+  phonecut) entry=sim/t141-phonecut.ts ;;
+  phonecut2) entry=sim/t141-phonecut2.ts ;;
+  chipcaught) entry=sim/t141-chipcaught.ts ;;
   *) echo "unknown $what"; exit 2 ;;
 esac
 mkdir -p tests/.out/t141
