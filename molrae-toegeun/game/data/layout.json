@@ -3136,13 +3136,22 @@
     "seatPatrolId": "p_tl_seat",
     "seed": "day-{day}-tour",
     "schedule": {
-      "firstAtFrac": 0.15,
-      "lastAtFrac": 0.8,
+      "firstAtFrac": 0.1,
+      "lastAtFrac": 0.7,
       "latestStartFrac": 0.85,
-      "minGapSec": 8,
+      "minGapSec": 3,
       "mustBeSeatedBeforeLeaveSec": 4,
-      "rule": "근무 구간 × [firstAtFrac, lastAtFrac]를 회차 수로 등분, 각 칸 안 10~60% 지점에서 출발(시드). 앞 회차 복귀 + minGapSec 전이면 뒤로 밀고, latestStartFrac를 넘기면 취소. 퇴근 시작 4초 전에 목적지에 있으면 체류를 줄이고 바로 복귀",
-      "_designNote": "개발 임시(10~80%, 88% 취소)에서 첫 출발을 15%로 늦춤: 하루 시작 직후 첫 미션 칩이 열리는 3초 근처에 자리를 비우면 '공짜 시간'이 됨. 85% 취소 = 50초 근무 기준 42.5초, 복귀까지 최소 6초 + 퇴근 전 4초 여유"
+      "rule": "근무 구간 × [firstAtFrac, lastAtFrac]를 회차 수로 등분, 각 칸 안 10~60% 지점에서 출발(시드). 앞 회차 복귀 + minGapSec(직급 값 우선) 전이면 뒤로 밀고, 대표님 날은 ceoClearance로 밀고, fitToWindow로 마감 안에 들게 줄인 뒤에도 latestStartFrac를 넘기면 취소. 퇴근 시작 4초 전에 목적지에 있으면 체류를 줄이고 바로 복귀",
+      "_designNote": "T-156 개정. 15%→10%: 첫 칩이 열리는 3초보다 뒤(50초 근무 기준 5초)라 '공짜 시간' 우려는 유지된 채, 회차를 넣을 창이 넓어짐. lastAtFrac 0.8→0.7: 회차가 밀리는 것이 기본이라 마지막 칸을 앞당겨 마감 직전에 몰리지 않게. minGapSec 8→3: 복귀 직후 첫 돌아보기는 정상 전조 고정(firstLookPlain)이라 짧아도 불공정하지 않음, 8초는 4회 일정을 구조적으로 막았음(T-145 실측 과장~ 1.1~1.5회의 주원인). 85% 취소 = 57초 근무 기준 48.5초. 물리 상한: 실제 회차 ≈ 1 + (latest − first − 첫 지터) ÷ (평균 자리 비움 + 간격) → 임원 일반 날 1 + (48.5 − 5.7 − 3) ÷ (13 + 2.5) ≈ 3.6",
+      "ceoClearance": {
+        "returnBeforeSec": 2.0,
+        "departAfterSec": 3.0,
+        "_note": "T-156 🔧 신규(개발 코드의 ±20초 상수를 대체). 순회가 [출발, 출발+자리 비움 추정]에서 대표님 예정 시각 −returnBeforeSec까지 끝나지 않으면 출발을 '대표님 예정 시각 + departAfterSec'로 민다. 대표님 순시 중에는 근무 시계가 멈추므로(ceoVisitPausedSec) ±20초 근무 시계 완충은 필요 없음. 팀장이 늦으면 기존 ceoWaitsForSeat가 받쳐 줌. 실측: 대표님 날 실제 출발 0.0~0.4회 → 1.7~2.0회"
+      },
+      "fitToWindow": {
+        "enabled": true,
+        "_note": "T-156 🔧 신규. 회차를 정한 뒤 '실제 밀기 규칙(앞 회차 복귀 + minGapSec, ceoClearance)'으로 출발 시각을 계산해 latestStartFrac를 넘는 회차가 있으면 ① 가장 긴 회차(근무 INT-08 회의 제외)를 '가장 가까운 목적지 1곳(meeting·exec_report 제외, 직전 회차 첫 목적지와 다르게) + 최소 대기'로 줄이고 ② 더 줄일 회차가 없으면 마지막 회차(INT-08 아님)를 계획에서 뺀다. 줄일 때마다 다시 계산. 목적: 계획 회차 = 실제 출발 회차(예정만 있고 못 나가는 '유령 회차' 0). 회차 수 기반 판단(during_tour 자격, longTourCount)이 실제와 일치"
+      }
     },
     "standTell": {
       "sec": 1.0,
@@ -3210,8 +3219,8 @@
           "meeting_inside"
         ],
         "waitSecRange": [
-          8.0,
-          10.0
+          6.0,
+          8.0
         ],
         "lookChance": 0.0,
         "weight": 0.9,
@@ -3227,7 +3236,8 @@
           "lineKey": "int.tl_meeting.letout"
         },
         "meetingRoomDoor": "busy_while_inside",
-        "_note": "기존 INT-08 근무판과 같음(9일차 데뷔 유지). 회의 중 낮잠 잠김, 회의실 문 표시 '사용 중'(tile2/wall_door_busy 그림, 통행은 유지)"
+        "_note": "기존 INT-08 근무판과 같음(9일차 데뷔 유지). 회의 중 낮잠 잠김, 회의실 문 표시 '사용 중'(tile2/wall_door_busy 그림, 통행은 유지)",
+        "_t156Note": "T-156: 8~10초 → 6~8초. 근무 INT-08 흡수 회차는 awayMax 검사를 받지 않아 최대 약 34초(근무 구간의 60%)까지 비었음. 회의 중 낮잠 잠김도 그만큼 짧아져 낮잠 미션과의 충돌이 줄어듦"
       },
       {
         "id": "next_team",
@@ -3291,7 +3301,8 @@
           1
         ],
         "speedTilesPerSec": 1.9,
-        "waitMul": 1.0
+        "waitMul": 1.0,
+        "awayMaxSec": 18
       },
       "manager": {
         "countRange": [
@@ -3302,8 +3313,13 @@
           1,
           2
         ],
-        "speedTilesPerSec": 2.0,
-        "waitMul": 0.9
+        "speedTilesPerSec": 2.1,
+        "waitMul": 0.8,
+        "awayMaxSec": 15,
+        "ceoDayCountRange": [
+          2,
+          2
+        ]
       },
       "deputy_general_manager": {
         "countRange": [
@@ -3314,8 +3330,13 @@
           1,
           2
         ],
-        "speedTilesPerSec": 2.0,
-        "waitMul": 0.9
+        "speedTilesPerSec": 2.2,
+        "waitMul": 0.7,
+        "awayMaxSec": 13,
+        "ceoDayCountRange": [
+          2,
+          2
+        ]
       },
       "general_manager": {
         "countRange": [
@@ -3326,8 +3347,13 @@
           1,
           2
         ],
-        "speedTilesPerSec": 2.1,
-        "waitMul": 0.85
+        "speedTilesPerSec": 2.3,
+        "waitMul": 0.6,
+        "awayMaxSec": 12,
+        "ceoDayCountRange": [
+          2,
+          3
+        ]
       },
       "executive": {
         "countRange": [
@@ -3336,12 +3362,19 @@
         ],
         "stopsPerTour": [
           1,
-          2
+          1
         ],
-        "speedTilesPerSec": 2.1,
-        "waitMul": 0.85
+        "speedTilesPerSec": 2.4,
+        "waitMul": 0.6,
+        "awayMaxSec": 11,
+        "minGapSec": 2.5,
+        "ceoDayCountRange": [
+          2,
+          3
+        ]
       },
-      "_note": "속도는 항상 플레이어 3.0보다 느림(앞질러 피할 수 있음). 과장부터 한 번에 두 곳(예: 프린터 → 탕비실). 6일차 첫 순회는 printer 고정 + 튜토리얼 tut_tour"
+      "_note": "속도는 항상 플레이어 3.0보다 느림(최대 2.4 = 80%, 앞질러 피할 수 있음). 과장부터 한 번에 두 곳(예: 프린터 → 탕비실), 임원은 1곳만(두 곳 경유는 자리 비움이 약 2배라 4회가 들어가지 않음). 6일차 첫 순회는 printer 고정 + 튜토리얼 tut_tour",
+      "_t156Note": "T-156: 직급이 오를수록 '드물고 길게' → '잦고 짧게'(사원 2회 × 평균 18초, 임원 3~4회 × 평균 13초). 순회 경로(움직이는 콘)가 자주 지나가 고직급 난도가 오르고, 자리 비움 한 번의 길이는 줄어 '한 번에 크게 땡땡이'는 하위 직급의 맛으로 남김. 🔧 신규 필드(개발 반영 필요): awayMaxSec = 그 직급의 자리 비움 상한(전역 awaySecRange[1] 대신, '가장 먼 목적지 빼고 다시 고르기' 기준), minGapSec = schedule.minGapSec 대체, ceoDayCountRange = 대표님 날 회차 수(min(평소 추첨, 이 범위 추첨)). 기존 필드(speed·waitMul·stopsPerTour·countRange)는 현재 코드가 바로 읽음"
     },
     "selection": "목적지 가중치 추첨, 같은 회차 안 중복 금지, 직전 회차 첫 목적지와 다르게, minDay 미만·스팟 없는 목적지 제외",
     "awaySecRange": [
