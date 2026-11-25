@@ -19,6 +19,7 @@ import {
 } from './layoutGen';
 import { parseLayoutV3, type SpotV3 } from './layoutGen/v3data';
 import { generateV3Day, makePatrolMover, type PatrolMover } from './levelV3';
+import type { GenderDayCtx } from './gender';
 
 type O = Record<string, unknown>;
 const obj = (v: unknown): O => (typeof v === 'object' && v !== null && !Array.isArray(v) ? v as O : {});
@@ -96,6 +97,9 @@ export interface LevelRequest {
   readonly planFor?: (day: number) => O;
   /** 팀장 순회가 켜지는 날(v3 V09·V11) */
   readonly toursActive?: boolean;
+  /** T-151 성별 시설(그날 켜졌을 때만, 플레이어 성별 없음) */
+  readonly gender?: GenderDayCtx | null;
+  readonly genderFor?: (day: number, rankId: string) => GenderDayCtx | null;
 }
 
 /**
@@ -245,7 +249,7 @@ function levelForV3(req: LevelRequest, opts: LevelProviderOptions): MapBundle | 
   if (req.day <= authoredDays) return authoredMapBundle(req.tables, planMap);
   const r = generateV3Day({
     tables: req.tables, day: req.day, plan: req.plan, rankId: req.rankId, requiredPatrols: req.requiredPatrols ?? [],
-    toursActive: req.toursActive === true,
+    toursActive: req.toursActive === true, gender: req.gender ?? null, ...(req.genderFor ? { genderFor: req.genderFor } : {}),
     ...(req.planFor ? { planFor: req.planFor } : {}), ...(opts.seedOverride ? { seedOverride: opts.seedOverride } : {}),
   });
   if (!r) return null;

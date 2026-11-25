@@ -145,7 +145,9 @@ export type GenFailCode =
   | 'patrol_unmappable'
   /** v3 검증(T-145, layout.json validators[].code) */
   | 'distance_out_of_band' | 'choke_too_long' | 'dead_end_trap' | 'lead_cannot_see_seat' | 'gate_unfair'
-  | 'too_crowded' | 'over_time_budget' | 'same_as_yesterday' | 'row_budget' | 'orphan_floor';
+  | 'too_crowded' | 'over_time_budget' | 'same_as_yesterday' | 'row_budget' | 'orphan_floor'
+  /** T-151 성별 시설 V15·V16 */
+  | 'facility_asymmetric' | 'facility_over_budget';
 
 export interface GenFailure {
   readonly code: GenFailCode;

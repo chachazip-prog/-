@@ -11,6 +11,7 @@
 import { createRng, type Rng } from '../../core/rng';
 import type { LegendEntry, Tile } from '../../core/grid';
 import type { Dir } from '../../core/vision';
+import type { GenderDayCtx } from '../gender';
 import { mirrorModule, type LayoutV3, type ModuleV3, type RankComplexityV3, type SpotV3, type WildOpt, type ZoneV3 } from './v3data';
 
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
@@ -30,6 +31,8 @@ export interface V3GenContext {
   readonly missions: readonly string[];
   /** 자리 밖 미션의 장소 스팟 후보(앞에서부터 층에 있는 첫 스팟). 수리·V03·V04 대상 */
   readonly awayMissionSpots: Readonly<Record<string, readonly string[]>>;
+  /** T-151 성별 시설(genderFacilities.enabled + 그날 fromDay 이상). 없으면 기존과 완전히 같은 생성 */
+  readonly gender?: GenderDayCtx | null;
 }
 
 export interface V3Seam { readonly y: number; readonly open: readonly number[] }
@@ -153,10 +156,16 @@ export function generateV3(ctx: V3GenContext, attemptSeed: string): V3GenResult 
   const cx = complexityFor(v3, ctx.rankId, ctx.t);
   if (!cx) return { layout: null, fail: { code: 'no_module', detail: `직급 ${ctx.rankId} 복잡도 없음` } };
   const { c, tier } = cx;
-  const rng = createRng(`layout:${v3.versionTag}:${attemptSeed}`);
+  const A0 = v3.assembly;
+  const gd = ctx.gender ?? null;
+  // D-085: 성별 시설이 켜진 날은 규칙 해시를 버전 태그에 붙임(꺼진 날의 시드·맵은 그대로)
+  const rng = createRng(`layout:${v3.versionTag}${gd ? gd.tag : ''}:${attemptSeed}`);
+  const G = (g: string): string => (gd ? gd.groupReplace[g] ?? g : g);
+  const optionalPool = gd?.fitnessGroup ? [...A0.optionalPool, gd.fitnessGroup] : A0.optionalPool;
+  const belowAllowed = [...A0.belowTeamAllowedGroups.map(G), ...(gd?.fitnessGroup && gd.fitnessBelow ? [gd.fitnessGroup] : [])];
   const byGroup = new Map<string, ModuleV3[]>();
   for (const m of v3.modules) { const g = byGroup.get(m.group) ?? []; g.push(m); byGroup.set(m.group, g); }
-  const A = v3.assembly;
+  const A = { ...A0, optionalPool, belowTeamAllowedGroups: belowAllowed };
   const need = new Set<string>();
   for (const id of ctx.missions) { const p = A.missionRequiresProvides[id]; if (p) need.add(p); }
 
@@ -167,7 +176,7 @@ export function generateV3(ctx: V3GenContext, attemptSeed: string): V3GenResult 
     const cands = (byGroup.get(group) ?? []).filter((m) => m.minComplexity <= c + 1e-9);
     return rng.weighted(cands, (m) => lerp2(m.weightByComplexity, c));
   };
-  const top = pickVar('lobby_exit'), ex = pickVar('exec'), nt = pickVar('next_team'), rm = pickVar('rest_meet');
+  const top = pickVar('lobby_exit'), ex = pickVar('exec'), nt = pickVar('next_team'), rm = pickVar(G('rest_meet'));
   const team = pickVar('team'), bot = pickVar('service_end');
   if (!top || !ex || !nt || !rm || !team || !bot) return { layout: null, fail: { code: 'no_module', detail: '필수 그룹 모듈 없음' } };
   const provided = new Set<string>();
@@ -316,6 +325,18 @@ export function generateV3(ctx: V3GenContext, attemptSeed: string): V3GenResult 
     placed.push({ id: m.id, y: y0, height: rows.length, mirrored: m.mirrored, group: m.group });
     for (const [k, s] of Object.entries(m.spots)) if (!spots[k]) spots[k] = { ...s, tile: { x: s.tile.x, y: s.tile.y + y0 } };
     for (const [k, t] of Object.entries(m.routeNodes)) if (!nodes[k]) nodes[k] = { x: t.x, y: t.y + y0 };
+    // T-151: '{mine}' 별칭(events.restroom의 restroom_stall·zone restroom이 그대로 동작). 시설 모듈만 해당
+    if (gd && m.genderFacility) {
+      const mine = m.genderFacility.type === 'locker_room' ? gd.lockerMine : gd.mine;
+      for (const [alias, tgt] of Object.entries(m.spotAliases ?? {})) {
+        const s0 = m.spots[tgt.replace('{mine}', mine)];
+        if (s0 && !spots[alias]) spots[alias] = { ...s0, tile: { x: s0.tile.x, y: s0.tile.y + y0 } };
+      }
+      for (const [alias, tgt] of Object.entries(m.zoneAliases ?? {})) {
+        const z0 = m.zones.find((z) => z.id === tgt.replace('{mine}', mine));
+        if (z0) zones.push({ ...z0, id: alias, rect: [z0.rect[0], z0.rect[1] + y0, z0.rect[2], z0.rect[3]] });
+      }
+    }
     for (const z of m.zones) zones.push({ ...z, rect: [z.rect[0], z.rect[1] + y0, z.rect[2], z.rect[3]] });
     for (const ch of m.chokepoints) chokes.push({ id: ch.id, bypass: ch.bypass, tiles: ch.tiles.map((t) => ({ x: t.x, y: t.y + y0 })) });
     grid.push(...rows);

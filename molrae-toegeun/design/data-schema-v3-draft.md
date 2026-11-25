@@ -230,7 +230,9 @@ interface PatrolTemplate {
 interface LeadRoaming {
   enabled: boolean; appliesFromDay: 6; actorId: 'team_lead'; seatPatrolId: 'p_tl_seat';
   seed: 'day-{day}-tour';
-  schedule: { firstAtFrac: 0.15; lastAtFrac: 0.80; latestStartFrac: 0.85; minGapSec: 8; mustBeSeatedBeforeLeaveSec: 4; rule: string };
+  schedule: { firstAtFrac: 0.10; lastAtFrac: 0.70; latestStartFrac: 0.85; minGapSec: 3; mustBeSeatedBeforeLeaveSec: 4; rule: string;
+              ceoClearance?: { returnBeforeSec: 2.0; departAfterSec: 3.0 };   // 🔧 T-156: 코드 상수 ±20초 대체
+              fitToWindow?: { enabled: true } };                               // 🔧 T-156: 계획 회차 = 실제 출발 회차
   standTell: { sec: 1.0; minSec: 0.8; visual: string; sfxNew: string; sfxFallback: string; bubble: 'destination_icon' };
   coneActiveIn: ('walk'|'look')[];       // = BossTourDef.coneActiveIn (wait·tell 제외)
   walk: { glanceBackChancePerTile: 0.03; talkEnabled: true; avoidTiles: ['player_seat']; pathTieBreak: string };
@@ -242,7 +244,10 @@ interface LeadRoaming {
     locksMissions?: MissionId[]; endTell?: { sec: Sec; sfx?: string; sfxNew?: string; sfxFallback?: string; lineKey: string };
     meetingRoomDoor?: 'busy_while_inside';
   }[];
-  byRank: Record<RankId, { countRange: IntRange; stopsPerTour: IntRange; speedTilesPerSec: number; waitMul: number }>;
+  byRank: Record<RankId, { countRange: IntRange; stopsPerTour: IntRange; speedTilesPerSec: number; waitMul: number;
+                           awayMaxSec?: Sec;          // 🔧 T-156: 없으면 awaySecRange[1]
+                           minGapSec?: Sec;           // 🔧 T-156: 없으면 schedule.minGapSec
+                           ceoDayCountRange?: IntRange }>;  // 🔧 T-156: 대표님 날 n = min(평소 추첨, 이 범위 추첨)
   selection: string; awaySecRange: [6, 22]; awayRule: string;
   conflicts: string[]; budget: { dayInterruptReserveSec: 0; meetingUsesReserveOf: 'INT-08' };
   emptySeatCheck: { enabled: false; suspicion: 0.08; radiusTiles: 2 };   // PM 결정 대기
@@ -269,6 +274,12 @@ speedTilesPerSec = B.speedTilesPerSec; coneActiveIn = R.coneActiveIn;
   - 앉은 직후 첫 look 정상 전조 강제
   - 자리 비움 6~22초 보정
   - 퇴근 4초 전 복귀
+- 🔧 T-156 추가 규칙(개발 `leadRoaming.ts` 반영 필요, 기획 참조 구현으로 검증함)
+  1. `awayMax = B.awayMaxSec ?? awaySecRange[1]`. '가장 먼 목적지 빼고 다시 고르기'와 '최소 대기' 보정이 이 값을 씀
+  2. `minGap = B.minGapSec ?? schedule.minGapSec`
+  3. 대표님 날: `n = min(rng.int(...countRange), rng.int(...ceoDayCountRange))`(필드 없으면 평소 n). 시드 소비는 대표님 날에만 1회 추가
+  4. 대표님 충돌: `at + away > ceoAt − returnBeforeSec && at < ceoAt + departAfterSec`면 `at = ceoAt + departAfterSec`. 앞 회차 밀기 **다음에** 적용(밀린 뒤 겹칠 수 있으므로). 필드가 없으면 지금처럼 ±20초
+  5. `fitToWindow`: 회차 확정 뒤 3·4를 포함한 실제 밀기로 출발 시각을 계산 → `latestStartFrac` 초과 회차가 있으면 가장 긴 회차(INT-08 흡수 회차 제외, 이미 줄인 회차 제외)를 '가장 가까운 목적지 1곳(meeting·exec_report 제외, 직전 회차 첫 목적지와 다르게) + `waitSecRange[0] × waitMul`'로 바꿈(더 짧아질 때만) → 다시 계산. 줄일 회차가 없으면 마지막 비INT-08 회차 삭제. 6일차 첫 회차 printer 고정은 유지
 
 ---
 
@@ -398,4 +409,5 @@ interface CombinationRules {
 | 3-draft | 2026-11-23 | T-142 신규: layout.json(모듈 16종, 와일드카드 3, 이음 행, 조립·수리, 직급별 복잡도, 검증 14, 순찰 템플릿, 팀장 순회), missions.json(새 미션 6, 변형 템플릿 10·구체 28, 조건 10, 조합 규칙, 저작일 얹기, 문자열). 기존 v2 테이블 변경 없음. 아트 T-143 키·D-080(P 전높이 / i 반높이)·개발 T-144 이름 반영 |
 | 3-draft (T-148) | 2026-11-24 | **필드 추가만(키 이름·계층·기존 값 변경 없음)**. layout: `legendAdd` 3종(`+` 가림막 문·`W` 샤워 칸·`l` 탈의실 바닥), 모듈 2종 추가(`mid_rest_meet_g` 그룹 `rest_meet_g`, `mid_fitness` 그룹 `fitness` — 둘 다 기존 requiredGroups·optionalPool에 없는 새 그룹이라 `genderFacilities.enabled` false면 생성기가 고르지 않음), 모듈 필드 `genderFacility`·`spotAliases`·`zoneAliases`, 최상위 `genderFacilities`(enabled false, groupReplace·fitnessModule·mineSide·access·missionTargets·cases 5·validators V15·V16·debuts). missions: `existing.restroom.targetFacility`, `modifiers[relocate.bank_stall].targetFacility`, 새 배열 `genderModifiers`(facility.cleaning — 새 type `facility_closed`, relocate.restroom_locker). 상세는 `design/gender-design.md` §3·§8 |
 | 3-draft (T-152) | 2026-11-24 | **필드 추가만**. layout: `legendAdd.W` 표시 필드 4(`occupiedDisplay`·`inUseLabelKey`·`steamIcon` false·`drawOccupantInside` false), `genderFacilities.access.talkCancelNpcBehavior`·`talkCancelNpcApproachDoor`, `genderFacilities.artRules`. missions: avoid 5종·bonus.cover의 `facilityLabelKey`, `stringsKo` 6키, `_facilityLabelNote`. 상세 `design/data-schema.md` §11 T-152 |
+| 3-draft (T-156) | 2026-11-25 | **값 수정·필드 추가만(키 이름·계층 변경 없음, 개발 T-151 동시 작업 보호)**. layout `leadRoaming`: `schedule.firstAtFrac` 0.15→0.10·`lastAtFrac` 0.8→0.7·`minGapSec` 8→3, 새 필드 `schedule.ceoClearance`·`schedule.fitToWindow`, `byRank` 값(과장~ 속도·waitMul, 임원 stopsPerTour [1,1]) + 새 필드 `awayMaxSec`·`minGapSec`(임원)·`ceoDayCountRange`, `destinations.meeting.waitSecRange` 8~10→6~8. npcs `security_guard.sim.talk.zone`(gate_approach) 신규. strings.ko `tutorial.tut_bank·tut_chat·tut_parcel·tut_print·tut_cafe·tut_window`. 상세 gdd-v3 §3-5·§3-6·§10 |
 | 3-draft (T-152b) | 2026-11-24 | D-100. **값 수정·필드 추가만**. layout: `mid_printer`·`bottom_storage`에 `spots.storage_corner_use`. missions: `relocate.bank_stall` 목적지 창고 구석·보상 1.1·`targetFacility` 삭제, `appliesTo.bank` 같은 값, `facility.cleaning.missions` restroom만. 상세 `design/data-schema.md` §11 T-152 |

@@ -41,7 +41,7 @@ export interface PortsV3 {
   readonly doorOpenChance: readonly [number, number];
 }
 
-export interface ZoneV3 { readonly id: string; readonly nameKey: string; readonly rect: readonly [number, number, number, number]; readonly outsideOffice?: boolean }
+export interface ZoneV3 { readonly id: string; readonly nameKey: string; readonly rect: readonly [number, number, number, number]; readonly outsideOffice?: boolean; readonly facility?: string; readonly side?: string }
 export interface ChokeV3 { readonly id: string; readonly tiles: readonly Tile[]; readonly bypass: string }
 
 export interface ModuleV3 {
@@ -62,6 +62,10 @@ export interface ModuleV3 {
   readonly chokepoints: readonly ChokeV3[];
   /** 좌우 반전된 사본인가 */
   readonly mirrored: boolean;
+  /** T-151 성별 시설(genderFacility·spotAliases·zoneAliases, '{mine}' 치환 전) */
+  readonly genderFacility?: { readonly type: string; readonly sides: Readonly<Record<string, Readonly<Record<string, string>>>> };
+  readonly spotAliases?: Readonly<Record<string, string>>;
+  readonly zoneAliases?: Readonly<Record<string, string>>;
 }
 
 export interface WildOpt { readonly ch: string; readonly weight: readonly [number, number] }
@@ -187,10 +191,22 @@ function parseModule(m: O): ModuleV3 {
     zones: arr(m['zones']).map(obj).map((z) => ({
       id: str(z['id']), nameKey: str(z['nameKey'], `zone.${str(z['id'])}`),
       rect: pair4(z['rect']), ...(z['outsideOffice'] === true ? { outsideOffice: true } : {}),
+      ...(typeof z['facility'] === 'string' ? { facility: z['facility'] as string } : {}), ...(typeof z['side'] === 'string' ? { side: z['side'] as string } : {}),
     })),
     chokepoints: arr(m['chokepoints']).map(obj).map((c) => ({ id: str(c['id']), tiles: arr(c['tiles']).map(tileOfArr), bypass: str(c['bypass']) })),
     mirrored: false,
+    ...(m['genderFacility'] ? { genderFacility: {
+      type: str(obj(m['genderFacility'])['type']),
+      sides: Object.fromEntries(Object.entries(obj(obj(m['genderFacility'])['sides'])).map(([k, v]) => [k, Object.fromEntries(Object.entries(obj(v)).filter(([kk]) => !kk.startsWith('_')).map(([kk, vv]) => [kk, str(vv)]))])),
+    } } : {}),
+    ...(m['spotAliases'] ? { spotAliases: strMap(m['spotAliases']) } : {}),
+    ...(m['zoneAliases'] ? { zoneAliases: strMap(m['zoneAliases']) } : {}),
   };
+}
+function strMap(v: unknown): Record<string, string> {
+  const o: Record<string, string> = {};
+  for (const [k, x] of Object.entries(obj(v))) if (!k.startsWith('_') && typeof x === 'string') o[k] = x;
+  return o;
 }
 function pair4(v: unknown): [number, number, number, number] {
   const a = nums(v);

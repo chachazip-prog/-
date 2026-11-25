@@ -348,6 +348,12 @@
     "hint.restroom.not_mine": "여긴 내 쪽 문이 아니에요. 표지를 확인해요!",
     "tutorial.tut_gender_restroom": "화장실 문이 두 개예요. 내 표지가 붙은 문으로 가요. 위치는 날마다 바뀌어요.",
     "tutorial.tut_director_restroom": "발소리가 화장실로 다가오면 칸 안에서 잠깐 기다려요. 칸 안은 언제나 안전해요.",
+    "tutorial.tut_bank": "톡 하면 고지서 앱과 스프레드시트가 바뀌어요. 로그인, 입력, 확인 세 단계! 마지막 확인 중엔 톡 하지 마세요.",
+    "tutorial.tut_chat": "동기 이야기에 맞춰 링이 초록색일 때 톡, 조용히 맞장구. 급하게 누르면 웃음이 빵 터져요.",
+    "tutorial.tut_parcel": "보관함 앞에서 잠깐 기다리면 택배가 나와요. 상자는 눈에 잘 띄니까 자리까지 조심조심. 멈추면 그냥 짐 든 사람!",
+    "tutorial.tut_print": "자리에서 인쇄를 걸어 두고 프린터로 가요. 다 나온 종이를 오래 두면 누가 집어 볼 수 있어요.",
+    "tutorial.tut_cafe": "주문하고 기다리다가 '컵 나왔어요!'가 뜨면 바로 톡. 놓치면 조금 더 기다려야 해요.",
+    "tutorial.tut_window": "숨이 차오르면 초록 선 안에서 톡! 세 번이면 개운해요. 끝까지 들이마시면 '에취!'",
     "int.talk.cancel_at_door": "(문 앞에서 멈칫) 아, 이따 얘기해요~",
     "int.director_restroom.tell": "(누군가 화장실로 들어오는 발소리…)",
     "int.director_restroom.meet": [

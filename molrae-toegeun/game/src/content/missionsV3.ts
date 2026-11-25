@@ -123,6 +123,8 @@ export interface ModDrawContext {
   readonly clockAt: (daySec: number) => number;
   /** 최근 생성일 기록(오래된 것부터): 미션별 붙은 type */
   readonly history?: readonly Readonly<Record<string, readonly string[]>>[];
+  /** T-151: 그날 풀에 합류하는 추가 변형(genderModifiers, '{mine}' 치환 완료). 없으면 기존과 같은 추첨 */
+  readonly extraModifiers?: readonly O[];
 }
 
 export interface DrawnModifiers {
@@ -138,7 +140,7 @@ const fmtClock = (min: number): string => `${String(Math.floor(min / 60)).padSta
 export function drawModifiers(ctx: ModDrawContext): DrawnModifiers {
   const T = missionsTable(ctx.tables);
   const comb = obj(T['combination']);
-  const mods = arr(T['modifiers']).map(obj);
+  const mods = [...arr(T['modifiers']).map(obj), ...(ctx.extraModifiers ?? [])];
   const rank = ctx.rankId;
   const out: DrawnModifiers = { byMission: {}, types: {} };
   const range = arr(obj(comb['modifiedMissionsPerDay'])[rank]).map((v) => num(v, 0));
@@ -249,6 +251,24 @@ export function modifierHistory(make: (day: number) => ModDrawContext | null, da
     out.push(c ? drawModifiers({ ...c, history: [] }).types : {});
   }
   return out;
+}
+
+/**
+ * T-151: missions.genderModifiers(genderFacilities.enabled일 때만 풀 합류). spot의 '{mine}'은 그날 내 쪽(탈의실은 locker_side)으로 치환.
+ * 반환 객체는 modifiers[]와 같은 모양(parseModifiers·drawModifiers 공용)
+ */
+export function genderModifierLib(tables: Tables, mine: 'a' | 'b', lockerMine: 'a' | 'b'): O[] {
+  return arr(missionsTable(tables)['genderModifiers']).map(obj).map((m) => {
+    if (typeof m['spot'] !== 'string') return m;
+    const sp = m['spot'] as string;
+    return { ...m, spot: sp.replace('{mine}', sp.startsWith('locker_') ? lockerMine : mine) };
+  });
+}
+
+/** 시설 미션인가(missionPool.existing[].targetFacility) */
+export function isFacilityMission(tables: Tables, id: string): boolean {
+  const m = arr(obj(missionsTable(tables)['missionPool'])['existing']).map(obj).find((x) => x['id'] === id);
+  return typeof m?.['targetFacility'] === 'string';
 }
 
 export { hhmm, fmtClock };

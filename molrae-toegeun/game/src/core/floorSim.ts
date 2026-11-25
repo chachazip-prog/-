@@ -114,7 +114,7 @@ export type SimEvent =
   | { t: number; type: 'talk'; npc: string }
   | { t: number; type: 'tell'; npc: string }
   | { t: number; type: 'spotted'; npc: string }
-  | { t: number; type: 'talkCancel'; npc: string; reason: 'disguised' | 'escaped' | 'missed' }
+  | { t: number; type: 'talkCancel'; npc: string; reason: 'disguised' | 'escaped' | 'missed' | 'door' }
   | { t: number; type: 'talkEnd'; npc: string }
   | { t: number; type: 'closeCall' }
   | { t: number; type: 'blocked' }

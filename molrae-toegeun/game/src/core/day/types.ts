@@ -53,6 +53,10 @@ export interface MissionDef {
   readonly availability?: { readonly type: 'while_actor_away'; readonly actorId: string };
   /** 장소가 정확히 안 보이는 변형(zone_only): 이 반경 안에서만 장소 반짝임 */
   readonly zoneOnlyRevealTiles?: number;
+  /** T-151: 시설 미션(화장실 피신, 시설이 목적지가 된 relocate). 칩 변형 라벨은 facilityLabelKey 우선(S-04) */
+  readonly facilityMission?: boolean;
+  /** 칩 표시용 변형 라벨(정적 변형 포함, 붙은 순서) */
+  readonly modifierLabels?: readonly { readonly labelKey?: string; readonly facilityLabelKey?: string }[];
 }
 
 /**
@@ -83,6 +87,8 @@ export interface MissionModifier {
   /** 시간 예산 보정(초) 또는 'travel_diff'(바뀐 장소 편도로 다시 계산) */
   readonly budgetSecDelta?: number | 'travel_diff';
   readonly availability?: { readonly type: 'while_actor_away'; readonly actorId: string };
+  /** T-152: 시설 미션 칩에서 labelKey 대신 쓰는 문구 키 */
+  readonly facilityLabelKey?: string;
 }
 
 /** 팀장 순회 한 지점(D-075) */
@@ -329,6 +335,70 @@ export interface RouteDef {
   readonly via: readonly { readonly x: number; readonly y: number }[];
 }
 
+/** T-151 그림 전용 스킨(content/gender.ts renderSkins) */
+export interface RenderSkins {
+  /** 플레이어 스킨 키(아틀라스에 `<키>/idle_down`이 없으면 fallback) */
+  readonly player: string;
+  readonly playerFallback: string;
+  /** actorId → 스킨 키 */
+  readonly byActor: Readonly<Record<string, string>>;
+  /** patrolId → 스킨 키(인스턴스 2 등 액터와 다른 경우) */
+  readonly byPatrol: Readonly<Record<string, string>>;
+  /** 배경 동료 id → 스킨 키 */
+  readonly background: Readonly<Record<string, string>>;
+  readonly buddy?: string;
+  /** 성별 시설 문 표지(아트 §15-3: tile2/wall_door_restroom_<m|f>_<mine|other>) */
+  readonly doorSign: { readonly mine: string; readonly other: string };
+  /** 같은/다른 성별 표식(D-093) */
+  readonly mark: Readonly<Record<'same' | 'other', string>>;
+}
+
+/** T-151 성별 시설 한 면(판정용 칸). side 'authored' = 수작업 맵 화장실(항상 내 쪽) */
+export interface FacilitySideDef {
+  readonly side: 'a' | 'b' | 'authored';
+  readonly door: Tile;
+  readonly stall: Tile;
+  readonly sink?: Tile;
+  /** 시설 안 칸 + 문 */
+  readonly tiles: readonly Tile[];
+}
+
+/** INT-10 facilityStop(C2·C3): 본부장 화장실 들름 */
+export interface FacilityStopDef {
+  readonly relation: 'same' | 'other';
+  readonly nodes: readonly Tile[];
+  readonly target: FacilitySideDef;
+  readonly maxPerDay: number;
+  readonly tellSec: number;
+  readonly insideSec: number;
+  readonly cone: { readonly range: number; readonly halfAngleDeg: number };
+  readonly suspicionOnce: number;
+  readonly stopSec: number;
+  readonly meetLineKey?: string;
+  readonly reactionKey?: string;
+  readonly tellTextKey?: string;
+  readonly awayToastKey?: string;
+  readonly cueMinSec: number;
+  readonly sinkFacing?: Dir;
+  readonly skipIfCeo: boolean;
+}
+
+/** 성별 시설 판정 재료(플레이어 성별 없음, '내 쪽/다른 쪽'만) */
+export interface FacilityDef {
+  readonly kind: 'pair' | 'authored';
+  readonly mineSide: 'a' | 'b' | null;
+  readonly restroom: { readonly mine: FacilitySideDef; readonly other?: FacilitySideDef };
+  readonly locker?: { readonly mine: FacilitySideDef; readonly other: FacilitySideDef };
+  readonly otherDoorHintKey: string;
+  readonly talkCancelAtMineDoor: boolean;
+  readonly talkCancelLineKey: string;
+  /** 출근 준비·칩 안내 '오늘 내 화장실은 위쪽/아래쪽' */
+  readonly mineHintKey?: string;
+  readonly stop?: FacilityStopDef;
+  /** C4 facility_closed: 화장실 피신 해금 순간부터 windowSec 동안 내 화장실 문 막힘 */
+  readonly cleaning?: { readonly missionId: string; readonly windowSec: number; readonly signKey: string; readonly detourStall?: Tile; readonly failReactionKey?: string };
+}
+
 export interface DayContent {
   readonly day: number;
   readonly seed: string;
@@ -389,6 +459,12 @@ export interface DayContent {
   readonly prep?: { readonly ceoPassAvailable: boolean };
   /** 플레이어 아트 키(rules.characters.playerSpriteKey, T-134) */
   readonly playerSpriteKey?: string;
+  /** T-151 성별 시설(genderFacilities.enabled일 때만). 판정 재료 — 플레이어 성별 없음 */
+  readonly facility?: FacilityDef;
+  /** T-151 회전 인물 관계(same/other). 판정에 쓰는 것은 이것뿐(rules.characters.casting.gameplayMayDependOn) */
+  readonly relations?: Readonly<Record<string, 'same' | 'other'>>;
+  /** T-151 그림 전용(플레이어 성별 반영). DaySim은 읽지 않음 — 성별 대칭 테스트는 이 필드를 빼고 비교 */
+  readonly skins?: RenderSkins;
   /** 이어하기(rules.continueAd) */
   readonly continueAd?: { readonly resumeSuspicion: number; readonly submitScoreToLeaderboard: boolean };
   /** 적발 컷인 길이(초, rules.caughtCutin.durationSec, T-136). 플레이 상태라 광고 없음 */

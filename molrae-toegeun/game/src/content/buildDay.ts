@@ -27,6 +27,10 @@ import {
   overlayPlan, poolForRank, type ModDrawContext,
 } from './missionsV3';
 import { mergedStrings } from './strings';
+import { castRelation, dayCasting, genderDayCtx, genderFacilityConfig, renderSkins, type GenderDayCtx, type PlayerVariant } from './gender';
+import { facilityTiles } from './levelV3';
+import { genderModifierLib, isFacilityMission } from './missionsV3';
+import type { FacilityDef, FacilitySideDef, FacilityStopDef } from '../core/day/types';
 
 /** 데이터 미정 기본값 (D-054). 데이터에 같은 이름의 값이 생기면 그쪽이 우선 */
 export const DEFAULTS = {
@@ -88,6 +92,10 @@ export interface BuildOptions {
   readonly tours?: boolean | 'auto';
   /** missions.json(v3) 사용: 미션 풀·새 미션 6종·변형 추첨·저작일 얹기. 없으면 missions.enabled(D-086: false) */
   readonly missionsV3?: boolean;
+  /** T-151: 성별 시설 강제(true/false). 없으면 layout.genderFacilities.enabled(D-092: false) */
+  readonly genderFacilities?: boolean;
+  /** T-151: 플레이어 외형(그림 전용 content.skins에만 반영, 판정 무관). 없으면 기본 그림 */
+  readonly playerVariant?: PlayerVariant | null;
 }
 
 export interface PlanOptions { readonly missionsV3?: boolean }
@@ -96,8 +104,8 @@ export interface PlanOptions { readonly missionsV3?: boolean }
  * 미션 변형 파싱([추측] T-142 스키마 전): 계획 항목의 modifiers = 변형 객체 또는 id 문자열 배열.
  * id는 tables.missions.modifiers[] (id 일치)에서 찾는다
  */
-function parseModifiers(tables: Tables, raw: unknown, warn: BuildWarnings, rankId = ''): MissionModifier[] {
-  const lib = arr(obj(tables['missions'])['modifiers']).map(obj);
+function parseModifiers(tables: Tables, raw: unknown, warn: BuildWarnings, rankId = '', extraLib: readonly O[] = []): MissionModifier[] {
+  const lib = [...arr(obj(tables['missions'])['modifiers']).map(obj), ...extraLib];
   const out: MissionModifier[] = [];
   for (const r of arr(raw)) {
     const m = typeof r === 'string' ? lib.find((x) => x['id'] === r) : obj(r);
@@ -113,6 +121,7 @@ function parseModifiers(tables: Tables, raw: unknown, warn: BuildWarnings, rankI
       ...(m['kind'] === 'hard' || m['kind'] === 'soft' || m['kind'] === 'bonus' ? { kind: m['kind'] as 'hard' | 'soft' | 'bonus' } : {}),
       ...(av['type'] === 'while_actor_away' ? { availability: { type: 'while_actor_away' as const, actorId: str(av['actorId'], 'team_lead') } } : {}),
       ...(typeof m['labelKey'] === 'string' ? { labelKey: m['labelKey'] as string } : {}),
+      ...(typeof m['facilityLabelKey'] === 'string' ? { facilityLabelKey: m['facilityLabelKey'] as string } : {}),
       ...(m['timeLimit'] ? { timeLimit: {
         ...(typeof tl['set'] === 'number' ? { set: tl['set'] as number } : {}),
         ...(typeof tl['mul'] === 'number' ? { mul: tl['mul'] as number } : {}),
@@ -344,6 +353,10 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   }
   const provider = opts.levelProvider ?? createLevelProvider({ generate: layoutEnabledInData(tables) });
   const v3 = parseLayoutV3(tables);
+  // ── T-151 성별 시설: 그날 켜졌는가 + 내 쪽(플레이어 기준 회전). 플레이어 성별은 들어가지 않음 ──
+  const gcfg = genderFacilityConfig(tables, opts.genderFacilities);
+  const genderFor = (d: number, r: string): GenderDayCtx | null => genderDayCtx(tables, gcfg, d, r, v3?.ranks[r]?.authoredOrder === true);
+  const gd = genderFor(day, rankId);
   const roam = obj(v3?.leadRoaming);
   const castHasTl = arr(plan['castPatrols']).includes(str(roam['seatPatrolId'], 'p_tl_seat'));
   const toursWanted = opts.tours === true || (opts.tours ?? 'auto') === 'auto';
@@ -351,6 +364,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   const map = provider.levelFor({
     tables, day, plan, rankId, t, extraRequiredSpots, requiredPatrols: [...requiredPatrols],
     planFor: (d) => dayPlan(tables, d, planOpts), toursActive,
+    ...(gd ? { gender: gd, genderFor } : {}),
   });
   if (map.source === 'fallback') warn.push(`days.${day}: 생성 층 검증 실패 ${map.gen?.attempts ?? 0}회 → 수작업 맵 폴백 (${(map.gen?.failures ?? []).slice(-3).join(' / ')})`);
 
@@ -662,10 +676,14 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   // 변형 추첨(missions.combination, 생성일 + missions.appliesFromDay 이후): ① 미션 ② 층 ③ 순회 ④ 변형 ⑤ budgetCheck
   let drawn: Record<string, (string | O)[]> = {};
   if (mv3 && plan['generated'] === true && day >= num(missionsTable(tables)['appliesFromDay'], 6)) {
-    const mk = (d: number, p: O): ModDrawContext => ({
-      tables, day: d, rankId: str(p['rankId'], rankId), ceoDay: str(p['ceo'], 'none') !== 'none', plan: p,
-      missionInfo: infoOf(p), clockAt: clockAt(num(p['dayPhaseSec'], 50)),
-    });
+    const mk = (d: number, p: O): ModDrawContext => {
+      const g = genderFor(d, str(p['rankId'], rankId));
+      return {
+        tables, day: d, rankId: str(p['rankId'], rankId), ceoDay: str(p['ceo'], 'none') !== 'none', plan: p,
+        missionInfo: infoOf(p), clockAt: clockAt(num(p['dayPhaseSec'], 50)),
+        ...(g ? { extraModifiers: genderModifierLib(tables, g.mine, g.lockerMine) } : {}),
+      };
+    };
     const lastAuthored = authoredDayCount(tables);
     const history = modifierHistory((d) => (d <= lastAuthored ? null : mk(d, dayPlan(tables, d, planOpts))), day);
     drawn = drawModifiers({
@@ -673,6 +691,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       hasSpot: (n) => !!spots[n], longTourCount: longTourCount(tour), history,
     }).byMission;
   }
+  const genderLib = gd ? genderModifierLib(tables, gd.mine, gd.lockerMine) : [];
   const expected: Record<string, number> = {};
   for (const m of arr(plan['missions']).map(obj)) {
     const id = str(m['eventId']);
@@ -685,7 +704,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     const params = applyOverrideScaling(rawParams, obj(e['rankScaling']) as Record<string, Record<string, unknown>>, rankId);
     const reward = obj(e['reward']);
     let rawMods: unknown[] = [...arr(m['modifiers']), ...(drawn[id] ?? [])];
-    const lib = arr(missionsTable(tables)['modifiers']).map(obj);
+    const lib = [...arr(missionsTable(tables)['modifiers']).map(obj), ...genderLib];
     const spotOfMod = (r: unknown): string | undefined => { const o = typeof r === 'string' ? lib.find((x) => x['id'] === r) : obj(r); return typeof o?.['spot'] === 'string' ? o['spot'] as string : undefined; };
     // 장소 바꾸기 'a|b' = 그날 층에 있는 첫 스팟. 하나도 없으면 그 변형은 건너뜀(ifSpotExists·relocate 공통)
     rawMods = rawMods.flatMap((r) => {
@@ -696,7 +715,9 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       const base = typeof r === 'string' ? lib.find((x) => x['id'] === r) ?? {} : obj(r);
       return [{ ...base, spot: hit }];
     });
-    const mods = parseModifiers(tables, rawMods, warn, rankId);
+    const mods = parseModifiers(tables, rawMods, warn, rankId, genderLib);
+    // T-151(S-04): 시설 미션 = 화장실 피신(targetFacility) 또는 시설이 목적지가 된 relocate
+    const facilityMission = isFacilityMission(tables, id) || rawMods.some((r) => typeof (typeof r === 'string' ? lib.find((x) => x['id'] === r) : obj(r))?.['targetFacility'] === 'string');
     const def: MissionDef = {
       id: str(e['id']), nameKey: str(e['nameKey']), descKey: str(e['descKey']), iconSprite: str(e['iconSprite']),
       mechanic: str(e['mechanic']) as Mechanic, unlockAtSec: num(m['unlockAtSec'], 0), spot,
@@ -712,7 +733,11 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       params, ...(typeof e['tutorialId'] === 'string' ? { tutorialId: e['tutorialId'] as string } : {}),
       ...(e['accompliceAllowed'] === true && e['accompliceEffect'] ? { accompliceEffect: accompliceEffectOf(obj(e['accompliceEffect'])) } : {}),
     };
-    const md = applyMissionModifiers(def, mods, spots, warn);
+    const md0 = applyMissionModifiers(def, mods, spots, warn);
+    const md: MissionDef = {
+      ...md0, ...(facilityMission ? { facilityMission: true } : {}),
+      ...(mods.length > 0 ? { modifierLabels: mods.map((mm) => ({ ...(mm.labelKey ? { labelKey: mm.labelKey } : {}), ...(mm.facilityLabelKey ? { facilityLabelKey: mm.facilityLabelKey } : {}) })) } : {}),
+    };
     missions.push(md);
     // 시간 예산 예상 시간(gdd-v3 §4-6): 기본 + 생성 맵 거리 보정 + Σ budgetSecDelta('travel_diff' = 바뀐 장소로 보정)
     const ref = refOW[id];
@@ -877,6 +902,14 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   if (typeof cutin['durationSec'] !== 'number') warn.push('rules.caughtCutin.durationSec 없음');
   const h7 = obj(obj(obj(obj(tables['days'])['generator'])['dayInterrupts'])['h7']);
 
+  // ── T-151 성별 시설·회전 관계·그림 ──
+  const relations: Record<string, 'same' | 'other'> = {};
+  for (const [k, e] of Object.entries(dayCasting(tables, day))) if (e.mode === 'rotate') relations[k] = e.relation;
+  const facility = gcfg.enabled ? buildFacility(tables, gcfg, gd, map, spots, missions, interrupts, day, relations) : undefined;
+  const tutorialIds = arr(plan['tutorialIds']).map((x) => str(x));
+  if (facility?.kind === 'pair' && !tutorialIds.includes('tut_gender_restroom') && missions.some((m) => m.facilityMission)) tutorialIds.push('tut_gender_restroom');
+  if (facility?.stop?.relation === 'same' && !tutorialIds.includes('tut_director_restroom')) tutorialIds.push('tut_director_restroom');
+
   const dayCfg = obj(rules['day']);
   const camera = map.camera;
   const salary = obj(rules['salary']);
@@ -915,7 +948,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     ambientActors: ambient,
     background,
     scripted: arr(plan['scripted']).map(obj) as unknown as ScriptedBeat[],
-    tutorialIds: arr(plan['tutorialIds']).map((x) => str(x)),
+    tutorialIds,
     scoring: {
       closeCallBonusPoints: num(disguise['closeCallBonusPoints'], 0),
       snackStockStart: num(snack['startPerDay'], 1), snackStockMax: num(snack['max'], 3),
@@ -940,6 +973,9 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       directorStartWaitsWhileCeoOnFloor: h7['directorStartWaitsWhileCeoOnFloor'] === true,
     },
     playerSpriteKey: str(obj(rules['characters'])['playerSpriteKey'], 'player'),
+    ...(facility ? { facility } : {}),
+    relations,
+    skins: renderSkins(tables, day, opts.playerVariant ?? null),
     ...(tour ? { bossTours: [tour] } : {}),
     layout: {
       source: map.source, mapId: map.id,
@@ -950,4 +986,80 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       ...(trimSec > 0 ? { trimSec } : {}), ...(map.versionTag ? { versionTag: map.versionTag } : {}),
     },
   };
+}
+
+// ── T-151 성별 시설 판정 재료 ─────────────────────────────
+
+function sideDef(map: { zones: readonly { id: string; rect: readonly [number, number, number, number] }[]; spots: Readonly<Record<string, { tile: Tile }>> }, type: string, side: 'a' | 'b'): FacilitySideDef | undefined {
+  const door = map.spots[`${type}_${side}_door`]?.tile, stall = map.spots[`${type}_${side}_stall`]?.tile;
+  if (!door || !stall) return undefined;
+  const sink = map.spots[`${type}_${side}_sink`]?.tile ?? map.spots[`${type}_${side}_bench`]?.tile;
+  return { side, door, stall, ...(sink ? { sink } : {}), tiles: facilityTiles(map, `${type}_${side}`, `${type}_${side}_door`) };
+}
+
+/**
+ * layout.genderFacilities + INT-10 facilityStop + genderModifiers(facility_closed) → FacilityDef.
+ * 생성 층(rest_meet_g) = pair, 수작업 맵(1~2일차·폴백) = authored(화장실 1곳 = 항상 내 쪽, authoredMap.restroomIsMine)
+ */
+function buildFacility(
+  tables: Tables, cfg: ReturnType<typeof genderFacilityConfig>, gd: GenderDayCtx | null,
+  map: { zones: readonly { id: string; rect: readonly [number, number, number, number] }[]; spots: Readonly<Record<string, { tile: Tile; facing?: Dir }>>; nodes?: Readonly<Record<string, Tile>> },
+  spots: Readonly<Record<string, { tile: Tile; facing?: Dir }>>, missions: readonly MissionDef[], interrupts: readonly DayInterruptDef[], day: number,
+  relations: Readonly<Record<string, 'same' | 'other'>>,
+): FacilityDef | undefined {
+  const base = { otherDoorHintKey: cfg.otherDoorHintKey, talkCancelAtMineDoor: cfg.talkCancelAtMineDoor, talkCancelLineKey: cfg.talkCancelLineKey };
+  const ra = sideDef(map, 'restroom', 'a'), rb = sideDef(map, 'restroom', 'b');
+  let fac: FacilityDef | undefined;
+  if (gd && ra && rb) {
+    const mine = gd.mine === 'a' ? ra : rb, other = gd.mine === 'a' ? rb : ra;
+    const la = sideDef(map, 'locker', 'a'), lb = sideDef(map, 'locker', 'b');
+    fac = {
+      kind: 'pair', mineSide: gd.mine, restroom: { mine, other }, ...base, mineHintKey: cfg.hintKeys[gd.mine],
+      ...(la && lb ? { locker: gd.lockerMine === 'a' ? { mine: la, other: lb } : { mine: lb, other: la } } : {}),
+    };
+  } else {
+    const door = spots['restroom_door']?.tile, stall = spots['restroom_stall']?.tile;
+    if (!door || !stall) return undefined;
+    const tiles = facilityTiles(map, 'restroom', 'restroom_door');
+    fac = { kind: 'authored', mineSide: null, restroom: { mine: { side: 'authored', door, stall, tiles } }, ...base };
+  }
+  // C2·C3: 본부장(INT-10) 화장실 들름 — 생성 층 화장실 쌍 + 그날 INT-10(근무) + fromDay 이상
+  const i10 = interrupts.find((i) => i.id === 'INT-10' && i.phase === 'day');
+  const fs = obj(i10?.effect['facilityStop']);
+  if (fac.kind === 'pair' && i10 && fs['tellSec'] !== undefined && day >= num(fs['fromDay'], 18) && arr(fs['phases']).includes('day')) {
+    const rel = relations[str(fs['relationOf'], 'director')] ?? castRelation(tables, day, 'director');
+    const tgt = str(obj(fs['target'])[rel]);
+    const target = tgt === 'restroom.mine' ? fac.restroom.mine : tgt === 'restroom.other' ? fac.restroom.other : undefined;
+    const nodes = ['n_d_top', 'n_d_bot'].map((k) => map.nodes?.[k]).filter((t): t is Tile => !!t);
+    if (target && nodes.length > 0) {
+      const ic = obj(fs['insideCone']), se = obj(fs['seenInsideEffect']), wi = obj(fs['whileInside']), tl = obj(fs['tell']), cue = obj(fs['insideCue']);
+      const sinkName = `restroom_${target.side}_sink`;
+      const stop: FacilityStopDef = {
+        relation: rel, nodes, target, maxPerDay: num(fs['maxPerDay'], 1), tellSec: num(fs['tellSec'], 1), insideSec: num(fs['insideSec'], 3),
+        cone: { range: num(ic['range'], 3), halfAngleDeg: num(ic['halfAngleDeg'], 60) },
+        suspicionOnce: num(se['suspicionOnce'], 0), stopSec: num(se['stopSec'], 0),
+        ...(typeof se['lineKey'] === 'string' ? { meetLineKey: se['lineKey'] as string } : {}),
+        ...(typeof se['reactionKey'] === 'string' ? { reactionKey: se['reactionKey'] as string } : {}),
+        ...(typeof tl['textKey'] === 'string' ? { tellTextKey: tl['textKey'] as string } : {}),
+        ...(typeof wi['otherSideToastKey'] === 'string' ? { awayToastKey: wi['otherSideToastKey'] as string } : {}),
+        cueMinSec: Math.max(num(cue['minSec'], 0.4), num(obj(obj(tables['rules'])['tell'])['minSec'], 0.4)),
+        ...(spots[sinkName]?.facing ? { sinkFacing: spots[sinkName]!.facing! } : {}),
+        skipIfCeo: arr(fs['skipIf']).includes('ceo_on_floor'),
+      };
+      fac = { ...fac, stop };
+    }
+  }
+  // C4: 화장실 피신 '청소 시간'(facility_closed)
+  const rm = missions.find((m) => m.modifierTypes?.includes('facility_closed'));
+  if (rm && typeof rm.params['windowSec'] === 'number') {
+    const detour = rm.params['detourTo'] === 'locker.mine' ? fac.locker?.mine.stall : undefined;
+    fac = {
+      ...fac, cleaning: {
+        missionId: rm.id, windowSec: rm.params['windowSec'] as number, signKey: str(rm.params['signKey'], 'facility.cleaning.sign'),
+        ...(detour ? { detourStall: detour } : {}),
+        ...(typeof rm.params['failReactionKey'] === 'string' ? { failReactionKey: rm.params['failReactionKey'] as string } : {}),
+      },
+    };
+  }
+  return fac;
 }

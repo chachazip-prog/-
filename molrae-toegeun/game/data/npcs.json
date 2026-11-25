@@ -68,7 +68,16 @@
           "catchRadius": 1.6,
           "releaseSec": 1.0,
           "warnLineKey": "int.guard_early_question.tell",
-          "dodgedLineKey": "talk.dodged_guard"
+          "dodgedLineKey": "talk.dodged_guard",
+          "zone": {
+            "type": "gate_approach",
+            "pathTilesToGateUse": [1, 6],
+            "startOnlyInZone": true,
+            "noStartWhileAtGate": true,
+            "tellSurvivesGateArrival": true,
+            "gateStageHoldWhileTalk": true,
+            "_t156Note": "T-156 규칙 결정(경비 말걸기 = 게이트 '앞 접근 구간' 전용). ① 시작 조건: 플레이어가 현재 이동 경로상 gate_use까지 남은 칸 1~6칸(4방향 A*, gate_use 칸 제외) 안에서 움직이는 중 + 경비가 noticeRadius 안. 그 밖에서는 경비 말걸기 전조를 시작하지 않음 ② 게이트 대기(gate_use에 서서 막대를 보는 중 = 위장, BUG-012)에는 새 전조를 시작하지 않음 — 게이트 타이밍 미니게임과 말걸기가 겹치면 두 입력이 충돌해 불공정 ③ 접근 구간에서 시작한 전조는 플레이어가 전조 중 gate_use에 도착해도 취소하지 않고 기존 전조 끝 판정(rules.talk._resolveRule)을 그대로 함. 이때 위장 판정은 '게이트 도착 = 위장'을 쓰지 않고 도착 전 마지막 이동 상태로 봄(전조를 보고도 그냥 걸어 들어온 것이므로) ④ 성립하면 게이트 단계(막대 시작·시도 횟수)는 말걸기가 끝날 때까지 보류, 시도 횟수 소모 없음. 📐 6칸 = 3.0타일/초로 2.0초. 전조 0.5초가 끝나기 전에 게이트에 닿지 않으려면 전조 시작 시 남은 거리 ≥ 1.5칸이 필요하고, noticeRadius 2.0 안에서 경비가 알아챌 시간 1.5초를 더한 값. V10 ②(게이트 2~5타일 안 엄폐 칸)와 겹쳐서 '엄폐 칸에서 멈추면 안 붙잡힘(skipIfPlayerDisguised)'이 그대로 대응 수단. 🧪 QA: 18시 전 접근 무반응 성립률 ≥ 75%(rules.talk.catchRadiusRule), 0.3초 반응 회피 취소율 ≥ 35%, 게이트 대기 중 경비 전조 시작 0회"
+          }
         }
       },
       "gate": {

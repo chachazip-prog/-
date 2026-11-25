@@ -218,7 +218,7 @@ export class PatrolNpc {
   /** 외부(DaySim)에서 시선을 끔(통화·회의·얼음 등). true면 콘 없음 */
   suppressed = false;
   /** 마지막 말걸기 전조가 취소된 이유(표시용) */
-  lastTalkCancel: 'disguised' | 'escaped' | 'missed' | null = null;
+  lastTalkCancel: 'disguised' | 'escaped' | 'missed' | 'door' | null = null;
   /** 현재 대기 중인 웨이포인트의 stopId (hold·도착 판정용) */
   get stopId(): string | undefined { return this.def.waypoints[this.wpIndex]?.stopId; }
 
@@ -546,6 +546,28 @@ export class PatrolNpc {
   private escapeLookPending = false;
 
   /**
+   * T-151(S-05, genderFacilities.access.talkCancelNpcBehavior 'stop_in_place'): 말걸기 전조를 시설 문에서 취소.
+   * 플레이어 쪽으로 돌아보지 않고(문 쪽 시선·접근 없음) 그 자리에서 남은 전조 시간만큼 멈췄다가 원래 경로로 돌아간다.
+   * 반환: 취소했는가
+   */
+  cancelTalkInPlace(): boolean {
+    if (this.mode !== 'tell' || this.tellKind !== 'talk' || !this.def.talk) return false;
+    const hold = Math.max(0, this.timer);
+    this.pendingFacing = null;
+    this.tellKind = null;
+    this.talkArmed = false;
+    this.facing = this.talkPrevFacing;
+    this.talkCooldown = this.def.talk.cooldownSec;
+    this.lastTalkCancel = 'door';
+    if (this.talkResume === 'walk') { this.resume = 'walk'; this.waitLeft = hold; this.doorHold = true; this.setMode('wait'); return true; }
+    this.waitLeft = Math.max(this.waitLeft, hold);
+    this.setMode('wait');
+    return true;
+  }
+  /** 문 취소 정지 뒤 걷기 재개(웨이포인트 도착 처리 없이 같은 구간을 이어 걸음) */
+  private doorHold = false;
+
+  /**
    * 진행 중인 전조·돌아보기를 끊고 원래 상태로(대표님 얼음 해제·위계 연쇄 복귀 H2). 다음 시선은 반드시 전조부터 시작한다.
    * 앉은 사람은 새 대기 주기, 걷는 사람은 걷기·대기로 재개.
    */
@@ -656,6 +678,7 @@ export class PatrolNpc {
         return;
       case 'wait':
         this.waitLeft -= dt;
+        if (this.waitLeft <= 0 && this.doorHold) { this.doorHold = false; this.setMode('walk'); return; }
         if (this.waitLeft <= 0) {
           if (this.def.seated && this.seatLookPending) { this.endSeatWait(rng); return; }
           this.proceed();

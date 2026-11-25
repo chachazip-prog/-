@@ -15,6 +15,8 @@ import type { GenFailure, V3Metrics } from './layoutGen/types';
 import { parseLayoutV3, v3RankT, type LayoutV3, type SpotV3 } from './layoutGen/v3data';
 import { generateV3, type V3Layout } from './layoutGen/v3gen';
 import { validateV3 } from './layoutGen/v3validate';
+import { bfsDist, occupiedSet } from './layoutGen/v3gen';
+import type { GenderDayCtx } from './gender';
 
 type O = Record<string, unknown>;
 const obj = (v: unknown): O => (typeof v === 'object' && v !== null && !Array.isArray(v) ? v as O : {});
@@ -36,6 +38,10 @@ export interface V3Request {
   readonly seedOverride?: string;
   /** 팀장 순회가 켜지는 날인가(V09 순회 목적지 검사) */
   readonly toursActive: boolean;
+  /** T-151 성별 시설(그날 켜졌을 때만). 플레이어 성별은 들어가지 않음 */
+  readonly gender?: GenderDayCtx | null;
+  /** V13 어제 맵 재계산용(그날 내 쪽은 날마다 다름) */
+  readonly genderFor?: (day: number, rankId: string) => GenderDayCtx | null;
 }
 
 export interface V3Signature { readonly order: string; readonly variant: string; readonly openings: string }
@@ -298,6 +304,65 @@ function crowdCheck(tables: Tables, req: V3Request, L: V3Layout, legend: Readonl
   return null;
 }
 
+// ── V15·V16 성별 시설 대칭(T-151) ───────────────────────
+
+/** 레이아웃의 시설 면(type → side → 역할 → 스팟 이름) */
+function facilitySidesOf(L: V3Layout): { type: string; side: string; stall: string; door: string; zone?: string }[] {
+  const out: { type: string; side: string; stall: string; door: string; zone?: string }[] = [];
+  for (const t of ['restroom', 'locker']) for (const side of ['a', 'b']) {
+    const stall = `${t}_${side}_stall`, door = `${t}_${side}_door`;
+    if (L.spots[stall] && L.spots[door]) out.push({ type: t, side, stall, door, zone: `${t}_${side}` });
+  }
+  return out;
+}
+
+/** 시설 칸(구역 사각형 + 문) */
+export function facilityTiles(L: { zones: readonly { id: string; rect: readonly [number, number, number, number] }[]; spots: Readonly<Record<string, { tile: Tile }>> }, zoneId: string, doorSpot: string): Tile[] {
+  const out: Tile[] = [];
+  const z = L.zones.find((q) => q.id === zoneId);
+  if (z) for (let y = z.rect[1]; y < z.rect[1] + z.rect[3]; y++) for (let x = z.rect[0]; x < z.rect[0] + z.rect[2]; x++) out.push({ x, y });
+  const d = L.spots[doorSpot]?.tile;
+  if (d) out.push(d);
+  return out;
+}
+
+export function facilityValidate(L: V3Layout, legend: Readonly<Record<string, LegendEntry>>, g: GenderDayCtx, revalidate: (L2: V3Layout) => GenFailure[]): GenFailure[] {
+  const fails: GenFailure[] = [];
+  const seat = L.spots['player_seat']?.tile, gate = L.spots['gate_use']?.tile;
+  if (!seat || !gate) return fails;
+  const W = L.rows[0]!.length;
+  const occ = occupiedSet(L.spots, W);
+  const sides = facilitySidesOf(L);
+  for (const type of ['restroom', 'locker']) {
+    const ss = sides.filter((x) => x.type === type);
+    if (ss.length === 0) continue;
+    if (ss.length !== 2) { fails.push({ code: 'facility_asymmetric', detail: `V15 ${type} 면 ${ss.length}개` }); continue; }
+    const d = ss.map((s) => {
+      const other = ss.find((o) => o !== s)!;
+      const bl = new Set(occ); const od = L.spots[other.door]!.tile; bl.add(od.y * W + od.x);
+      const st = L.spots[s.stall]!.tile;
+      return bfsDist(L.rows, legend, seat, bl)[st.y * W + st.x]!;
+    });
+    if (d.some((x) => x < 0)) fails.push({ code: 'facility_asymmetric', detail: `V15 ${type} 도달 불가 ${d.join('/')}` });
+    else if (Math.abs(d[0]! - d[1]!) > g.v15MaxDiff) fails.push({ code: 'facility_asymmetric', detail: `V15 ${type} 편도 차 ${Math.abs(d[0]! - d[1]!)} > ${g.v15MaxDiff}` });
+  }
+  // 자리→게이트 최단 경로가 시설 안을 지나지 않음(시설 칸을 막아도 거리 같음)
+  const fbl = new Set(occ);
+  for (const s of sides) for (const t of facilityTiles(L, s.zone ?? '', s.door)) fbl.add(t.y * W + t.x);
+  const g0 = bfsDist(L.rows, legend, seat, occ)[gate.y * W + gate.x]!, g1 = bfsDist(L.rows, legend, seat, fbl)[gate.y * W + gate.x]!;
+  if (g1 !== g0) fails.push({ code: 'facility_asymmetric', detail: `V15 자리→게이트가 시설 안을 지남 (${g0} → ${g1})` });
+  // V16: 화장실 내 쪽을 반대로 바꿔도 V01·V03·V04·V12 통과
+  const rs = sides.filter((x) => x.type === 'restroom');
+  if (rs.length === 2 && L.spots['restroom_stall']) {
+    const other = g.mine === 'a' ? 'b' : 'a';
+    const spots = { ...L.spots, restroom_stall: L.spots[`restroom_${other}_stall`]!, restroom_door: L.spots[`restroom_${other}_door`]! };
+    const oz = L.zones.find((z) => z.id === `restroom_${other}`);
+    const zones = L.zones.map((z) => (z.id === 'restroom' && oz ? { ...z, rect: oz.rect } : z));
+    for (const f of revalidate({ ...L, spots, zones })) fails.push({ code: 'facility_over_budget', detail: `V16(내 쪽=${other}) ${f.code} ${f.detail}` });
+  }
+  return fails;
+}
+
 // ── 생성 ─────────────────────────────────────────────
 
 const baseCache = new WeakMap<object, Map<string, V3Result>>();
@@ -316,7 +381,7 @@ function cacheFor(tables: Tables): Map<string, V3Result> {
 export function generateV3Day(req: V3Request, withVariety = true): V3Result | null {
   const v3 = parseLayoutV3(req.tables);
   if (!v3) return null;
-  const key = `${req.day}|${req.seedOverride ?? ''}|${withVariety ? 1 : 0}|${req.toursActive ? 1 : 0}|${req.requiredPatrols.join(',')}|${planMissionIds(req.plan).join(',')}|${str(req.plan['ceo'])}|${num(req.plan['dayPhaseSec'], 0)}`;
+  const key = `${req.day}|${req.seedOverride ?? ''}|${withVariety ? 1 : 0}|${req.toursActive ? 1 : 0}|${req.requiredPatrols.join(',')}|${planMissionIds(req.plan).join(',')}|${str(req.plan['ceo'])}|${num(req.plan['dayPhaseSec'], 0)}|${req.gender ? `${req.gender.tag}${req.gender.mine}${req.gender.lockerMine}${req.gender.fitnessGroup ?? ''}` : ''}`;
   const cache = cacheFor(req.tables);
   const hit = cache.get(key);
   if (hit) return hit;
@@ -328,12 +393,13 @@ export function generateV3Day(req: V3Request, withVariety = true): V3Result | nu
   const missions = planMissionIds(req.plan);
   const away = awaySpotsOf(req.tables, missions);
   const dests = req.toursActive ? tourDestinations(v3, req.day) : [];
-  const genCtx = { v3, legend, rankId: req.rankId, t, ceoDay, missions, awayMissionSpots: away };
+  const genCtx = { v3, legend, rankId: req.rankId, t, ceoDay, missions, awayMissionSpots: away, gender: req.gender ?? null };
   const valCtx = { v3, legend, ceoDay, awayMissionSpots: away, budget: budgetCtx(req.tables, req.plan, req.rankId), tourDestinations: dests };
   let yesterday: V3Signature | undefined;
   if (withVariety && req.planFor && req.day - 1 > v3.authoredMapDays) {
     const yp = req.planFor(req.day - 1);
-    const yr = generateV3Day({ ...req, day: req.day - 1, plan: yp, rankId: str(yp['rankId'], req.rankId) }, false);
+    const yRank = str(yp['rankId'], req.rankId);
+    const yr = generateV3Day({ ...req, day: req.day - 1, plan: yp, rankId: yRank, gender: req.genderFor ? req.genderFor(req.day - 1, yRank) : null }, false);
     yesterday = yr?.signature;
   }
   const base = req.seedOverride ?? `layout-day-${req.day}`;
@@ -346,6 +412,8 @@ export function generateV3Day(req: V3Request, withVariety = true): V3Result | nu
     const L = g.layout;
     const v = validateV3(L, valCtx);
     const extra: GenFailure[] = [];
+    // T-151 V15·V16(genderFacilities.validators): 남녀 화장실 편도 차·다른 쪽이 내 쪽이어도 유효
+    if (v.ok && req.gender) extra.push(...facilityValidate(L, legend, req.gender, (L2) => validateV3(L2, valCtx).failures));
     if (v.ok) {
       const mover = makePatrolMover(req.tables, v3, L, legend);
       const patrols = arr(obj(req.tables['patrols'])['patrols']).map(obj).filter((p) => p['mapId'] === v3.sourceMapId);
