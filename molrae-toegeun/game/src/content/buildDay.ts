@@ -45,10 +45,6 @@ export const DEFAULTS = {
   ceoAtFrac: 0.55,
   /** [임시 추정] 낮잠·회의 시각 조정에서 팀장이 회의실까지 걷는 시간(초). 기획이 데이터로 주면 교체 */
   meetingWalkEstSec: 4,
-  /** [임시] 팀장 순회 복귀 후 앉기(초, GDD v3 §3-1 '앉기 0.5초'). leadRoaming.sitSec가 생기면 그쪽 우선(T-155) */
-  tourSitSec: 0.5,
-  /** [임시 추정] 순회 자리 비움 추정에서 모퉁이 전조가 실제로 나는 비율(D-044 조건부 전조라 플레이어 위치에 달림). T-155 런타임 실측으로 보정 */
-  tourCornerTellShare: 0.25,
 } as const;
 
 type O = Record<string, unknown>;
@@ -127,7 +123,7 @@ function talkZoneOf(v: unknown): TalkZoneDef | undefined {
 }
 
 /** 순회 자리 비움 추정 재료(T-155): 앉은 순찰 액터 sim(직급 보간)·rules.sight·rules.fake */
-function tourWalkerTiming(tables: Tables, roam: O, rankId: string, t: number, rules: O): TourWalkerTiming {
+function tourWalkerTiming(tables: Tables, roam: O, rankId: string, t: number, rules: O, warn: BuildWarnings): TourWalkerTiming {
   const seatPatrolId = str(roam['seatPatrolId'], 'p_tl_seat');
   const actorId = str(arr(obj(tables['patrols'])['patrols']).map(obj).find((p) => p['id'] === seatPatrolId)?.['actorId'], str(roam['actorId'], 'team_lead'));
   const raw = arr(obj(tables['bosses'])['bosses']).map(obj).find((a) => a['id'] === actorId) ?? arr(obj(tables['npcs'])['npcs']).map(obj).find((a) => a['id'] === actorId);
@@ -144,9 +140,47 @@ function tourWalkerTiming(tables: Tables, roam: O, rankId: string, t: number, ru
     afterFakeSec: num(fake['afterFakeSec'], 0.3),
     glanceBackChancePerTile: num(sim['glanceBackChancePerTile'], 0),
     turnTellSec: num(sight['cornerTurnTellSec'], tellSec),
-    cornerTellShare: num(roam['cornerTellShare'], DEFAULTS.tourCornerTellShare),
-    sitSec: num(roam['sitSec'], DEFAULTS.tourSitSec),
+    // T-161 데이터화(T-162: 코드 기본값 제거). 없으면 경고 + 0(추정·런타임 앉기에 더하지 않음)
+    cornerTellShare: roamNum(roam, 'cornerTellShare', warn),
+    sitSec: roamNum(roam, 'sitSec', warn),
   };
+}
+
+function roamNum(roam: O, key: string, warn: BuildWarnings): number {
+  const v = roam[key];
+  if (typeof v === 'number' && Number.isFinite(v)) return v;
+  warn.push(`layout.leadRoaming.${key} 없음 → 0`);
+  return 0;
+}
+
+/**
+ * 대표님 순시가 근무 시계로 차지하는 시간(T-162 ②). 얼음·QTE·대화 구간은 시계가 멈추고(clockPaused),
+ * 대화 지점을 떠난 뒤 퇴장 걷기(대화 지점 → 마지막 웨이포인트, 대기 포함) + exitResumeDelaySec 동안은 흐르며 순회 출발도 막힌다.
+ * 순찰을 이 층에 옮겨(patrolFor, 순수) 경로 타일 ÷ 속도로 계산. 못 구하면 0(기존 동작).
+ */
+function ceoClockSecOf(tables: Tables, map: { rows: readonly string[]; legend: Readonly<Record<string, LegendEntry>>; patrolFor?: (p: O) => O | null }, rankId: string, t: number): number {
+  const ceoRaw = arr(obj(tables['bosses'])['bosses']).map(obj).find((b) => b['id'] === 'ceo');
+  if (!ceoRaw) return 0;
+  const ceo = applyInterpScaling(ceoRaw, rankId, t);
+  const visit = obj(ceo['visit']);
+  const pid = str(visit['patrolId'], 'p_ceo_visit');
+  const p0 = arr(obj(tables['patrols'])['patrols']).map(obj).find((p) => p['id'] === pid);
+  if (!p0) return 0;
+  const p = map.patrolFor ? map.patrolFor(p0) : p0;
+  if (!p) return 0;
+  const wps = arr(p['waypoints']).map(obj);
+  const talkStop = str(obj(visit['talkWindow'])['atStop'], 'stop_ceo_talk');
+  const ti = wps.findIndex((w) => w['stopId'] === talkStop);
+  if (ti < 0) return 0;
+  const speed = Math.max(0.1, num(p['speedOverride'], num(obj(ceo['sim'])['speedTilesPerSec'], 1.5)));
+  const grid = buildGridMap(map.rows, map.legend);
+  let tiles = 0, waits = 0;
+  for (let i = ti; i + 1 < wps.length; i++) {
+    tiles += Math.max(0, (findPath(grid, tile2(wps[i]), tile2(wps[i + 1]))?.length ?? 1) - 1);
+    waits += num(wps[i + 1]!['waitSec'], 0);
+  }
+  const resume = num(visit['exitResumeDelaySec'], num(obj(ceo['hierarchy'])['resumeDelaySec'], 1));
+  return Math.round((tiles / speed + waits + resume) * 10) / 10;
 }
 
 /** rules.day의 'HH:MM' 시각(분). 없거나 형식이 틀리면 예외(시각 기본값을 코드에 두지 않음, BUG-011) */
@@ -296,14 +330,16 @@ export function generateDay(tables: Tables, day: number, opts: PlanOptions = {})
   const di = obj(rank['dayInterrupts']);
   const dcount = plan.int(num(arr(di['countRange'])[0], 0), num(arr(di['countRange'])[1], 0));
   const dpool = arr(di['pool']).map(obj).filter((p) => unlocked(str(p['id'])));
-  let lastAt = 8 - 10;
+  // T-161: 시각을 정하는 방해끼리 최소 간격(days.generator.dayInterrupts.minGapSec)
+  const intGap = num(obj(obj(obj(tables['days'])['generator'])['dayInterrupts'])['minGapSec'], 10);
+  let lastAt = 8 - intGap;
   for (let i = 0; i < dcount && dpool.length > 0; i++) {
     const p = plan.weighted(dpool, (x) => num(x['weight'], 1));
     if (!p) break;
     dpool.splice(dpool.indexOf(p), 1);
     const id = str(p['id']);
     if (proximity.includes(id)) { dayInterrupts.push({ id, atSec: 0 }); continue; }
-    const lo = Math.max(8, lastAt + 10), hi = dayPhaseSec - 10;
+    const lo = Math.max(8, lastAt + intGap), hi = dayPhaseSec - 10;
     if (lo > hi) continue;
     lastAt = plan.range(lo, hi);
     dayInterrupts.push({ id, atSec: Math.round(lastAt * 10) / 10 });
@@ -488,14 +524,14 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       tour = buildLeadTour({
         leadRoaming: v3.leadRoaming, day, rankId, dayPhaseSec: dayPhaseSecFinal, tellMinSec: tellMin0, spots: map.spots,
         grid: buildGridMap(map.rows, map.legend), ...(map.tourOk ? { tourOk: map.tourOk } : {}),
-        ...(str(plan['ceo'], 'none') !== 'none' ? { ceoAtSec: num(plan['ceoAtSec'], dayPhaseSecFinal * DEFAULTS.ceoAtFrac) } : {}),
+        ...(str(plan['ceo'], 'none') !== 'none' ? { ceoAtSec: num(plan['ceoAtSec'], dayPhaseSecFinal * DEFAULTS.ceoAtFrac), ceoClockSec: ceoClockSecOf(tables, map, rankId, t) } : {}),
         directorAtSec: arr(plan['dayInterrupts']).map(obj).filter((d) => d['id'] === 'INT-10').map((d) => num(d['atSec'], 0)),
         meetings: arr(plan['dayInterrupts']).map(obj).filter((d) => d['id'] === 'INT-08').map((d) => ({ atSec: num(d['atSec'], 0), waitSec: num(obj(i08?.['effect'])['meetingSec'], 10) })),
-        walker: tourWalkerTiming(tables, v3.leadRoaming, rankId, t, rules),
+        walker: tourWalkerTiming(tables, v3.leadRoaming, rankId, t, rules, warn),
       });
     } else tour = buildDevTour(day, dayPhaseSecFinal, tellMin0, map.spots);
   }
-  const meetingAbsorbed = !!tour?.fromInterrupt?.includes('INT-08');
+  const meetingAbsorbed = !!tour?.fromInterrupt?.includes('INT-08') || !!tour?.droppedInterrupts?.includes('INT-08');
 
   // ── 방해 이벤트(이 날 켜진 것) ──
   const interrupts: DayInterruptDef[] = [];

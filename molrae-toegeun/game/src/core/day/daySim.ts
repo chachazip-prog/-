@@ -1541,6 +1541,9 @@ export class DaySim {
         break;
       case 'talk': {
         // 대화 구간: 대화 지점 도착 ~ 떠날 때. 시계는 대표님이 대화 지점을 떠날 때까지 멈춤
+        // T-162: 입장 지연으로 QTE가 안전장치(freezeMaxSec + 3)에서 먼저 시작되면 결과 처리의 release()가 걷는 중이라 무시됨 →
+        // 뒤늦게 인사 지점(holdForQte)에 닿아 영원히 멈추고 근무 시계도 멈췄음(대표님 날 순회 미출발의 원인 중 하나). QTE가 끝났으니 바로 놓아 줌
+        if (npc && npc.mode === 'hold') npc.release();
         const atTalk = !!npc && npc.stopId === v.talkStop && npc.mode !== 'walk';
         if (atTalk && !this.ceoTalkWindow) { this.ceoTalkWindow = true; this.tutorial('ceoTalk'); }
         if (!npc || (this.ceoTalkWindow && !atTalk)) { this.ceoTalkWindow = false; this.setCeo('exit'); }
@@ -1763,7 +1766,7 @@ export class DaySim {
     const seatWp = npc.def.waypoints[npc.def.waypoints.length - 1]!;
     const here = tileOf(npc);
     const path = findPath(this.floor.map, here, { x: seatWp.x, y: seatWp.y });
-    const ret = (path ? path.length - 1 : 0) / Math.max(0.1, npc.def.speedTilesPerSec) + (def.sitSec ?? 0.5);
+    const ret = (path ? path.length - 1 : 0) / Math.max(0.1, npc.def.speedTilesPerSec) + (def.sitSec ?? 0);
     if (left > must + ret) return;
     const back: NpcDef = { ...npc.def, id: `${npc.def.id}_back`, waypoints: [{ x: here.x, y: here.y, waitSec: 0, lookChance: 0 }, seatWp] };
     try { st.npc = this.floor.replaceNpc(npc, back); st.cutShort = true; st.route = []; } catch { /* 경로 없음: 그대로 */ }
@@ -1861,7 +1864,10 @@ export class DaySim {
       if (this.frozenAll || this.qteActive || this.greetState !== 'idle') continue;
       if (this.ceoState !== 'none' && this.ceoState !== 'pending' && this.ceoState !== 'skipped' && this.ceoState !== 'done' && this.ceoState !== 'cancelled') continue;
       const seat = this.floor.findNpc((n) => n.def.actorId === def.actorId && !!n.def.seated && n.def.patrolId === def.seatPatrolId);
-      if (!seat || seat.mode !== 'wait' || seat.suppressed) continue;
+      // T-162: 통화(phone, 시선 없음) 중이면 끝날 때까지 기다리되, 이번 스텝이 출발 마감의 마지막 기회면 통화를 끊고 출발(계획 = 출발).
+      // 돌아보기·전조 중에는 마감이어도 끊지 않음(시선 규칙 유지)
+      const lastChance = this.dayTime + this.content.floor.rules.fixedStepSec > latest;
+      if (!seat || seat.suppressed || !(seat.mode === 'wait' || (seat.mode === 'phone' && lastChance))) continue;
       const route = def.routes[st.next] ?? def.routes[def.routes.length - 1] ?? [];
       if (route.length === 0) { st.next++; continue; }
       const sw = seat.def.waypoints[0]!;

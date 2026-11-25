@@ -45,8 +45,8 @@ export class CharSelectScene extends Phaser.Scene {
     const order = (Array.isArray(ps['displayOrder']) ? ps['displayOrder'] : ['m', 'f']).filter(isPlayerVariant);
     const labelOf = (v: PlayerVariant) => {
       const pv = (sel.playerVariants ?? []).find((x) => x.id === v) as { labelKey?: unknown; settingsLabelKey?: unknown } | undefined;
-      // T-159: 설정(타이틀 '내 캐릭터')에서는 직급 없는 라벨('남성'/'여성'). 키 = playerVariants[].settingsLabelKey → settings.character_option.<v>.
-      // 문구가 아직 데이터에 없으면 첫 출근 라벨로(기획에 strings.ko 추가 요청)
+      // T-159·T-162: 설정(타이틀 '내 캐릭터')에서는 직급 없는 라벨('남성'/'여성'). 키 = playerVariants[].settingsLabelKey → settings.character_option.<v>.
+      // 키가 데이터에 없으면 첫 출근 라벨로(안전망)
       if (this.data0.mode === 'change') {
         const sk = typeof pv?.settingsLabelKey === 'string' ? pv.settingsLabelKey : `settings.character_option.${v}`;
         if (str.has(sk)) return sk;
@@ -57,8 +57,10 @@ export class CharSelectScene extends Phaser.Scene {
     const cx = LOGICAL_WIDTH / 2;
     this.cameras.main.setBackgroundColor(color('wall'));
     this.add.rectangle(6, 16, LOGICAL_WIDTH - 12, LOGICAL_HEIGHT - 32, 0xffffff, 0.96).setOrigin(0, 0).setStrokeStyle(1, color('dark'));
-    // 설정에서 열면 '첫 출근' 문구 대신 설정용 제목(settings.character_title, 데이터에 있을 때만)
-    const titleKey = this.data0.mode === 'change' && str.has('settings.character_title') ? 'settings.character_title' : key('titleKey', 'charsel.title');
+    // 설정에서 열면 '첫 출근' 문구 대신 설정용 제목·안내(settings.character_title / character_hint, T-162). 키가 없으면 첫 출근 문구(안전망)
+    const change = this.data0.mode === 'change';
+    const pick = (settingsKey: string, firstKey: string) => (change && str.has(settingsKey) ? settingsKey : firstKey);
+    const titleKey = pick('settings.character_title', key('titleKey', 'charsel.title'));
     const title = addPixelText(this, 0, 0, str.t(titleKey), { role: 'label', color: ink, align: 'center', lineSpacing: 2 });
     setWrap(title, LOGICAL_WIDTH - 28); placeText(title, cx, 28, 0.5, 0);
 
@@ -76,7 +78,7 @@ export class CharSelectScene extends Phaser.Scene {
       placeText(label, x + cw / 2, y + 47 * SCALE, 0.5, 0.5);
       this.cards.push({ v, x, y, w: cw, h: ch, card, label });
     });
-    const note = addPixelText(this, 0, 0, str.t(key('noteKey', 'charsel.note')), { role: 'label', color: color('dark'), lineSpacing: 2 });
+    const note = addPixelText(this, 0, 0, str.t(pick('settings.character_hint', key('noteKey', 'charsel.note'))), { role: 'label', color: color('dark'), lineSpacing: 2 });
     setWrap(note, LOGICAL_WIDTH - 28); placeText(note, 14, top + ch + 10, 0, 0);
     const go = new UiButton(this, 30, LOGICAL_HEIGHT - 62, LOGICAL_WIDTH - 60, 30, str.t(key('confirmKey', 'charsel.confirm')), { depth: 10, style: 'primary' });
     go.setEnabled(false);

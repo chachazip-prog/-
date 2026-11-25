@@ -4,6 +4,10 @@
  * 확장 8개: endTell(복귀 전조) · locksMissions(회의 중 낮잠) · bubbleIcon(출발 말풍선) · 회의실 문 '사용 중' ·
  *           대표님 순시는 팀장 자리에 있을 때만 · 복귀 직후 첫 돌아보기 정상 전조 · 자리 비움 6~22초 보정 · 퇴근 4초 전 복귀
  * 충돌 규칙: 대표님 예정 시각(schedule.ceoClearance, 없으면 ±20초) · 본부장 순찰 ±10초 exec_report 제외 · 근무 INT-08 = meeting 순회 1회로 흡수(횟수 포함)
+ * T-162: ① INT-08 흡수는 V09 후보 제외(tourOk)·minDay와 무관(회의는 어차피 열림 → 기존 방식으로 돌면 팀장이 하루 종일 못 나감, 14일차)
+ *        ② 대표님 순시의 '근무 시계가 흐르는 구간'(퇴장 걷기 + 복귀 지연, ceoClockSec)을 밀기·fitToWindow에 반영
+ *        ③ 다시 고르기는 후보가 다 빠질 때까지, 끝내 넘으면 허용 후보 중 가장 가까운 곳 + 최소 대기, 그래도 넘으면 직전 목적지 반복 허용(D-115)
+ *        ④ sitSec·cornerTellShare는 leadRoaming 데이터 값(코드 기본값 없음)
  * T-155(T-156 추가 규칙 1~5): byRank.awayMaxSec·minGapSec·ceoDayCountRange, schedule.ceoClearance(앞 회차 밀기 다음에 적용), schedule.fitToWindow(계획 = 실제 출발).
  * 자리 비움 추정 = 전조 + 걷기 + 대기 + 복귀 전조 + 앉기(sitSec) + 기대 둘러보기(목적지 lookChance) + 기대 뒤돌아보기(glanceBack) + 모퉁이 전조 × cornerTellShare
  */
@@ -32,6 +36,8 @@ export interface LeadTourInput {
   /** v3 V09 통과 목적지(없으면 전부 후보) */
   readonly tourOk?: readonly string[];
   readonly ceoAtSec?: number;
+  /** 대표님 순시가 근무 시계로 차지하는 시간(예정 시각부터: 퇴장 걷기 + 복귀 지연, T-162). 순시 중 얼음·대화 구간은 시계가 멈춰 0초 */
+  readonly ceoClockSec?: number;
   readonly directorAtSec: readonly number[];
   /** 근무 INT-08(회의) 시각과 회의 길이 */
   readonly meetings: readonly { readonly atSec: number; readonly waitSec: number }[];
@@ -51,9 +57,9 @@ export interface TourWalkerTiming {
   readonly glanceBackChancePerTile: number;
   /** 모퉁이 전조(rules.sight.cornerTurnTellSec) */
   readonly turnTellSec: number;
-  /** 모퉁이 중 실제로 전조가 나는 비율(조건부 D-044: 새 방향 콘에 플레이어가 있을 때만). [임시] 데이터 없음 */
+  /** 모퉁이 중 실제로 전조가 나는 비율(조건부 D-044: 새 방향 콘에 플레이어가 있을 때만). leadRoaming.cornerTellShare(T-161) */
   readonly cornerTellShare: number;
-  /** 자리 도착 후 앉기(콘 없음) */
+  /** 자리 도착 후 앉기(콘 없음). leadRoaming.sitSec(T-161) */
   readonly sitSec: number;
 }
 
@@ -68,12 +74,17 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
   const pseat = inp.spots['player_seat']?.tile;
   if (!seat) return null;
   const dests: Dest[] = [];
+  /** INT-08 흡수용 회의실(후보 제외와 무관, T-162 ①) */
+  let meetingDest: Dest | undefined;
   for (const d of arr(R['destinations']).map(obj)) {
-    if (num(d['minDay'], 0) > inp.day) continue;
-    if (inp.tourOk && !inp.tourOk.includes(str(d['id']))) continue;
     const name = arr(d['spots']).map((s) => str(s)).find((s) => inp.spots[s]);
     const sp = name ? inp.spots[name] : undefined;
-    if (sp) dests.push({ id: str(d['id']), tile: sp.tile, ...(sp.facing ? { facing: sp.facing } : {}), d });
+    if (!sp) continue;
+    const dest: Dest = { id: str(d['id']), tile: sp.tile, ...(sp.facing ? { facing: sp.facing } : {}), d };
+    if (dest.id === 'meeting') meetingDest = dest;
+    if (num(d['minDay'], 0) > inp.day) continue;
+    if (inp.tourOk && !inp.tourOk.includes(dest.id)) continue;
+    dests.push(dest);
   }
   if (dests.length === 0) return null;
   const sched = obj(R['schedule']);
@@ -88,6 +99,7 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
   const dp = inp.dayPhaseSec;
   const W = inp.walker;
   const sitSec = W?.sitSec ?? 0;
+  const minWaitOf = (d: Dest): number => round1(pair(d.d['waitSecRange'], [3, 4])[0] * waitMul);
   // 경로(팀장은 내 자리 칸을 피함, walk.avoidTiles)
   const blocked = pseat ? (x: number, y: number) => x === pseat.x && y === pseat.y : undefined;
   const pcache = new Map<string, readonly Tile[] | null>();
@@ -162,9 +174,12 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
     const [s0, s1] = pair(B['stopsPerTour'], [1, 1]);
     const k = rng.int(s0, s1);
     const nearDirector = nearDir(at);
-    let pool = dests.filter((d) => d.id !== prevFirst && !(d.id === 'exec_report' && nearDirector));
+    const allowed = dests.filter((d) => d.id !== prevFirst && !(d.id === 'exec_report' && nearDirector));
+    let pool = allowed.slice();
     let route: BossTourStop[] = [];
-    for (let tries = 0; tries < 3 && pool.length > 0; tries++) {
+    let fits = false;
+    // T-162 ③: 상한(awayMax) 초과면 가장 먼 목적지를 빼고 다시 고름 — 후보가 다 빠질 때까지
+    while (pool.length > 0) {
       const left = pool.slice();
       const picks: Dest[] = [];
       for (let j = 0; j < k && left.length > 0; j++) {
@@ -173,21 +188,31 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
         left.splice(left.indexOf(d), 1);
         picks.push(d);
       }
+      if (picks.length === 0) break;
       route = picks.map((d) => stopOf(d, rng));
-      if (awayOf(route) <= awayMax || route.length === 0) break;
-      // 상한(awayMax) 초과: 가장 먼 목적지를 빼고 다시 고름
+      if (awayOf(route) <= awayMax) { fits = true; break; }
       const far = picks.slice().sort((x, y) => pathLen(seat, y.tile) - pathLen(seat, x.tile))[0]!;
       pool = pool.filter((d) => d !== far);
     }
-    if (route.length === 0) continue;
-    // 그래도 상한 초과: 가장 가까운 목적지 하나만, 그래도 넘으면 대기를 최소(waitSecRange[0] × waitMul)로
-    if (awayOf(route) > awayMax && route.length > 1) route = [route.slice().sort((x, y) => pathLen(seat, x.tile) - pathLen(seat, y.tile))[0]!];
-    if (awayOf(route) > awayMax) {
-      route = route.map((st0) => {
-        const d = dests.find((q) => q.id === st0.id)!;
-        return { ...st0, waitSec: round1(pair(d.d['waitSecRange'], [3, 4])[0] * waitMul) };
-      });
+    if (!fits) {
+      // 끝내 넘음: 허용 후보 중 가장 가까운 곳(최소 대기 기준 자리 비움 추정이 가장 짧은 곳) + 최소 대기(waitSecRange[0] × waitMul)
+      let nearRoute: BossTourStop[] = [];
+      for (const d of allowed) {
+        const r = [stopOf(d, rng, minWaitOf(d))];
+        if (nearRoute.length === 0 || awayOf(r) < awayOf(nearRoute)) nearRoute = r;
+      }
+      route = nearRoute;
+      // D-115: 그래도 넘으면 직전 회차와 같은 목적지 반복 허용(상한 우선). 반복도 넘으면 둘 중 짧은 쪽
+      if (nearRoute.length === 0 || awayOf(nearRoute) > awayMax) {
+        const prev = dests.find((d) => d.id === prevFirst && !(d.id === 'exec_report' && nearDirector));
+        if (prev) {
+          let rep = [stopOf(prev, rng)];
+          if (awayOf(rep) > awayMax) rep = [{ ...rep[0]!, waitSec: minWaitOf(prev) }];
+          if (nearRoute.length === 0 || awayOf(rep) < awayOf(nearRoute)) route = rep;
+        }
+      }
     }
+    if (route.length === 0) continue;
     // 6초 미만: 마지막 목적지 대기를 늘림
     const aw = awayOf(route);
     if (aw < awayMin) { const last = route[route.length - 1]!; route[route.length - 1] = { ...last, waitSec: round1(last.waitSec + (awayMin - aw)) }; }
@@ -200,8 +225,7 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
     prevFirst = route[0]!.id;
     entries.push({ at, route, from: null, fixed, shrunk: false });
   }
-  // 근무 INT-08 = meeting 순회(가장 가까운 회차를 대체)
-  const meetingDest = dests.find((d) => d.id === 'meeting');
+  // 근무 INT-08 = meeting 순회(가장 가까운 회차를 대체). 회의실이 그날 후보(V09)에서 빠졌어도 흡수(T-162 ①)
   for (const m of inp.meetings) {
     if (!meetingDest) break;
     // 대기 = leadRoaming meeting.waitSecRange(INT-08 근무판 흡수). m.waitSec(INT-08 meetingSec)는 범위 밖일 때만 상한으로
@@ -215,6 +239,8 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
   const latestFrac = dp * num(sched['latestStartFrac'], 0.85);
   const cc = sched['ceoClearance'] !== undefined ? obj(sched['ceoClearance']) : null;
   const ceoBefore = num(cc?.['returnBeforeSec'], 20), ceoAfter = num(cc?.['departAfterSec'], 20);
+  // T-162 ②: 순시 뒤 근무 시계는 예정 시각 + ceoClockSec(퇴장 걷기 + 복귀 지연)에야 다시 순회를 허용 → 'departAfterSec'는 그 뒤부터 잰다
+  const ceoClock = Math.max(0, inp.ceoClockSec ?? 0);
   /** 실제 밀기 규칙으로 출발 시각 계산: 정렬 → 앞 회차 복귀 + minGap → (T-156 규칙 4) 대표님 충돌. ceoClearance가 없으면 기존 ±20초(밀기 전) */
   const resolve = (): { e: Entry; at: number; away: number }[] => {
     const sorted = entries.slice().sort((x, y) => x.at - y.at);
@@ -226,12 +252,13 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
       if (ceo !== undefined && !cc && Math.abs(at - ceo) < 20) at = round1(ceo + 20);
       const prev = out[out.length - 1];
       if (prev && at < prev.at + prev.away + minGap) at = round1(prev.at + prev.away + minGap);
-      if (ceo !== undefined && cc && at + away > ceo - ceoBefore && at < ceo + ceoAfter) at = round1(ceo + ceoAfter);
+      if (ceo !== undefined && cc && at + away > ceo - ceoBefore && at < ceo + ceoClock + ceoAfter) at = round1(ceo + ceoClock + ceoAfter);
       out.push({ e, at, away });
     }
     return out;
   };
   // T-156 규칙 5 fitToWindow: 마감(latestStartFrac)을 넘는 회차가 있으면 가장 긴 회차를 가까운 1곳 + 최소 대기로 줄이고, 줄일 게 없으면 마지막 비INT-08 회차 삭제
+  const dropped: string[] = [];
   if (obj(sched['fitToWindow'])['enabled'] === true) {
     const nearest = dests.filter((d) => d.id !== 'meeting' && d.id !== 'exec_report').sort((x, y) => pathLen(seat, x.tile) - pathLen(seat, y.tile));
     for (let guard = 0; guard < 40; guard++) {
@@ -246,15 +273,25 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
       if (li >= 0 && nearest.length > 0) {
         const r = res[li]!;
         const prevId = li > 0 ? res[li - 1]!.e.route[0]?.id : undefined;
-        const alt = nearest.find((d) => d.id !== prevId) ?? nearest[0]!;
-        const st = stopOf(alt, rng, round1(pair(alt.d['waitSecRange'], [3, 4])[0] * waitMul));
+        // 가까운 1곳 + 최소 대기. 직전과 다른 곳이 상한을 넘으면 같은 곳 반복 허용(D-115, 상한 우선)
+        const opts = nearest.map((d) => stopOf(d, rng, minWaitOf(d))).sort((x, y) => awayOf([x]) - awayOf([y]));
+        const st = opts.find((o) => o.id !== prevId && awayOf([o]) <= awayMax) ?? opts.find((o) => awayOf([o]) <= awayMax)
+          ?? opts.find((o) => o.id !== prevId) ?? opts[0]!;
         if (awayOf([st]) < r.away) r.e.route = [st];
         r.e.shrunk = true;
         continue;
       }
       let di = -1;
       for (let i = res.length - 1; i >= 0; i--) if (res[i]!.e.from === null) { di = i; break; }
-      if (di < 0) break;
+      // T-162: 일반 회차를 다 빼도 넘는 INT-08 회의 회차(대표님 순시 뒤로 밀린 경우 등)는 계획에서 빼고 '흡수됨'으로 기록
+      // (기존 방식 INT-08로 되돌리면 팀장이 마감 뒤까지 자리를 비움. 런타임에서도 어차피 출발 마감에 취소되던 회차)
+      if (di < 0) {
+        const over = res.filter((r) => r.at > latestFrac && r.e.from !== null).pop();
+        if (!over) break;
+        dropped.push(over.e.from!);
+        entries.splice(entries.indexOf(over.e), 1);
+        continue;
+      }
       entries.splice(entries.indexOf(res[di]!.e), 1);
     }
   }
@@ -267,6 +304,7 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
     // 출발 마감은 latestStartFrac 하나. '퇴근 4초 전 자리'는 출발을 막지 않고 런타임에 체류를 줄여 바로 복귀(schedule.rule)
     latestStartByTour: final.map(() => round1(latestFrac)), mustBeSeatedBeforeLeaveSec: seatedBefore,
     awaySec: final.map((t) => t.away), fromInterrupt: final.map((t) => t.e.from),
+    ...(dropped.length ? { droppedInterrupts: dropped } : {}),
     speedTilesPerSec: speed,
     ...(sitSec > 0 ? { sitSec } : {}),
     coneActiveIn: arr(R['coneActiveIn']).map((x) => str(x)) as BossTourDef['coneActiveIn'] & string[],

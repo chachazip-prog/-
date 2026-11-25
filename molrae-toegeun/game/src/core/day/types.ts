@@ -145,6 +145,8 @@ export interface BossTourDef {
   readonly awaySec?: readonly number[];
   /** 회차가 근무 INT-08(회의)을 흡수한 것이면 'INT-08' */
   readonly fromInterrupt?: readonly (string | null)[];
+  /** 순회로 흡수했지만 출발 마감 안에 못 들어 계획에서 뺀 방해 id(T-162). 이 방해는 기존 방식으로도 돌리지 않음 */
+  readonly droppedInterrupts?: readonly string[];
   /** 출발 전조 효과음 후보(앞에서부터 매니페스트에 있는 것, 화면 밖이어도 1회) */
   readonly standSfx?: readonly string[];
   /** 자리 복귀 직후 첫 돌아보기는 정상 전조(페이크·연속 보기 금지) */
