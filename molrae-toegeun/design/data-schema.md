@@ -548,6 +548,7 @@ interface AdsTable {
 | 2 (T-152) | 2026-11-24 | 컴플라이언스 성별 검토(T-150) 반영, D-090·D-095. **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**(v3 테이블도 3 유지). 아래 상세 |
 | 2 (T-161) | 2026-11-25 | 개발 T-155 코드 기본값 → 데이터, 설정 화면 문구. **필드 추가만, 키 이름·계층·기존 값 변경 없음 → schemaVersion 2 유지**(layout 3 유지, 변경은 `data-schema-v3-draft.md` §8 T-161). 아래 상세 |
 | 2 (T-157) | 2026-11-25 | 개발 T-151 결과의 기획 사항 4건(회전 해시·문 취소 정지·본부장 들름·성별 시설 폴백). **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**(layout 3 유지). 아래 상세 |
+| 2 (T-163) | 2026-11-25 | 설정 화면 확인 버튼 문구 키 1개 추가. **필드 추가만 → schemaVersion 2 유지**. 아래 상세 |
 
 ### v1 → v2 상세
 - **신규 테이블**: `maps`, `patrols`, `interrupts`, `ads`.
@@ -670,6 +671,11 @@ interface AdsTable {
   - strings.ko.json `settings.character_title` "내 캐릭터 바꾸기", `settings.character_hint` "바꾼 모습은 다음 판부터 적용돼요. 난이도와 보상은 똑같아요.", `settings.character_option.m` "남성", `settings.character_option.f` "여성". 첫 출근 화면(`charsel.option.*` "남자 사원/여자 사원")과 달리 설정 화면은 짧은 라벨. 바꾼 뒤 안내는 기존 `settings.character_changed`.
 - **개발 영향**: 새 키는 무시해도 크래시 없음. 설정 화면이 이 키를 쓰면 됨.
 - **검사기(§10 T-161)**: `minGapSec` ≥ 6, 직급별 dayInterrupts 상한 개수가 이 간격으로 [8, dayPhaseSec − 10]에 들어가는지(경고).
+
+### T-163 상세 (v2 유지)
+- **필드 추가**: strings.ko.json `settings.character_confirm` "바꾸기". 설정에서 연 캐릭터 화면의 확인 버튼 문구. 제목 `settings.character_title` "내 캐릭터 바꾸기"와 동사를 맞췄고, 첫 출근 화면의 `charsel.confirm` "출근하기"와 같은 '-기' 꼴입니다. '저장하기'는 이 게임에 다른 저장 동작이 없어 뜻이 흐려져서 쓰지 않았습니다.
+- **개발 영향**: 키가 없거나 무시해도 크래시 없음. 🔧 `CharSelectScene` 설정 모드에서 확인 버튼이 `pick('settings.character_confirm', key('confirmKey', 'charsel.confirm'))`처럼 이 키를 먼저 쓰면 됩니다(제목·안내와 같은 방식).
+- 순회 데이터(layout.json `leadRoaming`)는 바꾸지 않았습니다(D-118, QA T-141 측정 기준선 유지). 순회 목적지 추가안은 `design/tour-destinations-proposal.md`.
 
 ### T-157 상세 (v2 유지)
 - **필드 추가**

@@ -343,6 +343,7 @@
     "settings.character_changed": "다음 판부터 바뀐 모습으로 출근해요.",
     "settings.character_title": "내 캐릭터 바꾸기",
     "settings.character_hint": "바꾼 모습은 다음 판부터 적용돼요. 난이도와 보상은 똑같아요.",
+    "settings.character_confirm": "바꾸기",
     "settings.character_option.m": "남성",
     "settings.character_option.f": "여성",
     "zone.locker_room": "탈의실",
