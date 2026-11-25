@@ -87,7 +87,7 @@
 | T-157 | mt-game-designer | 성별 시설 보정: 회전 해시 명시, 문 취소 정지 시간, 본부장 들름 체감, 성별 시설 폴백 0 | T-151 | 완료 |
 | T-158 | mt-pixel-artist | 화장실 문 표지 남녀 구분 강화, icon_door_alert, 위장 포즈 머리 노출 | T-151 | 완료 |
 | T-159 | mt-compliance | 남녀 변형 그림·선택 화면·문 표지 정책 재검토(T-150 후속) | T-154, T-158 | 완료 (출시 차단 0) |
-| T-160 | mt-marketer | 마케팅 문서(console-copy §5, tone-guide §5)를 D-111 머리 표현 기준으로 정합성 확인, tone-guide의 공유 리워드 잔여 문구 정리(D-021) | T-159 | 진행 |
+| T-160 | mt-marketer | 마케팅 문서(console-copy §5, tone-guide §5)를 D-111 머리 표현 기준으로 정합성 확인, tone-guide의 공유 리워드 잔여 문구 정리(D-021) | T-159 | 완료 |
 | T-161 | mt-game-designer | 순회 계획 표 실측 기준 재조정(D-113), sitSec·cornerTellShare·방해 간격 필드, 설정 화면 문구 | T-155 | 진행 |
 | T-124 | mt-qa-tester | 탑다운 프로토타입 스모크 테스트와 밸런스 시뮬레이터 틀(경로·시선 기반) | T-123 | 완료 (P1 1건) |
 
