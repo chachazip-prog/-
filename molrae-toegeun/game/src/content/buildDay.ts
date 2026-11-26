@@ -840,7 +840,9 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     const pi = pm.findIndex((m) => m['eventId'] === 'parcel');
     if (map.source === 'generated' && typeof pcap === 'number' && V03['parcelOverCap'] === 'drop_mission' && pi >= 0) {
       const st = (() => { const e = missionRaw(tables, 'parcel', mv3); const n = [str(obj(e?.['location'])['spot']), str(obj(e?.['params'])['fallbackSpot'])].find((k) => k && spots[k]); return n ? spots[n]?.tile : undefined; })();
-      const ow = st ? oneWay(st) : -1;
+      // 거리 = 데이터 명세대로 4방향 A*(player_seat → parcel_use, 점유 좌석 무시). V03 bfs(점유 좌석 막힘)보다 0~수 칸 짧음
+      const pg = buildGridMap(map.rows, map.legend);
+      const ow = st ? (findPath(pg, playerSeat, st)?.length ?? 0) - 1 : -1;
       if (ow > pcap) {
         const cap = num(V03['missionOneWayCap'], 28);
         const taken = new Set(pm.map((m) => str(m['eventId'])));

@@ -722,3 +722,89 @@ interface AdsTable {
   - 필드 추가: layout `mid_printer`·`bottom_storage`의 `spots.storage_corner_use`(타일 (1,3), use, target storage_corner). rules `casting.balance.fixedRoster`(`approved` 6자리, `newFixedMustBe` female). strings.ko `copyRules.facilityLines`(`keyPrefixes`, `forbidPlaceholders` ["{name}"]).
   - 검사기: 고정 명부(D-098), 시설 문구 `{name}` 금지(D-099), 시설 밖 미션 변형의 시설 목적지 금지(D-100).
   - 개발 영향: 코드 변경 없음(`spotOk`가 창고 모듈이 없는 날 이 변형을 거름). 단 변형 후보가 바뀌어 생성 날의 변형 추첨 결과가 달라질 수 있음 → QA 기대값 재생성 필요.
+
+## 12. T-167 초안: 방향 패드 조작 필드 (미반영, schemaVersion 2 유지 예정)
+
+- 상태: **초안**. `game/data`에는 아직 넣지 않았습니다. 규칙과 근거는 `design/control-dpad.md`에 있습니다. 반영 시점은 그 문서 §11 Q1에서 정합니다.
+- 원칙: **필드 추가만** 합니다. 탭 이동 필드는 지우지 않고 `inputScheme: "dpad"`일 때 무시하며, v3 정리(D-060) 때 일괄 삭제합니다.
+
+### 12-1. rules.json
+
+```ts
+input: {
+  inputScheme: 'tap_to_move' | 'dpad';            // 새 값 'dpad'. 기본은 반영 때 'dpad'
+  dpad: {
+    directions: 4;                                // 4 고정(8·아날로그 미지원)
+    deadZonePx: 6;                                // 논리 px, 패드 중심 반경
+    axisHysteresisDeg: 10;                        // 45° 경계 ±10°
+    pointerCapture: true;                         // 패드에서 시작한 터치는 뗄 때까지 패드 입력
+    firstTileCommit: true;                        // M2: 첫 칸은 끝까지
+    releaseSnap: 'nearest_center';                // M3
+    releaseSnapMaxSec: 0.15;                      // = disguise settle. 붙는 속도 = max(speed, 거리 ÷ 이 값)
+    turnAssistAheadTiles: 1;                      // M5 (b)
+    bumpCountsAsStill: true;                      // M6
+    playerPassesThreatNpc: false;                 // M7
+    stopOnPointerCancel: true;                    // M10 (pointercancel·visibilitychange·blur)
+    heldResumeAfterTalkSec: 0.5;                  // §3-1, postTalkHoldSec와 같은 값
+    freezeStartHoldSec: 0.3;                      // §3-4 얼음 중 출발에 필요한 누름 시간
+    lockedDuringActivity: true;                   // §4-4 (화장실은 events.restroom.params.padExits)
+  };
+  action: {
+    playfieldTapCountsIn: ('qte' | 'talk' | 'activity' | 'gate' | 'pack')[];  // §4-1 ③
+    useSpotAssistTiles: 1;                        // §4-3 사용 칸 보정(맨해튼)
+    autoStartOnStop: ('seat' | 'restroom_stall' | 'gate')[];  // §4-3
+    mapTapHintDays: [1, 3]; mapTapHintMaxPerDay: 2;
+  };
+  chips: {
+    tapAction: 'guide';                           // §4-5
+    startIfAtStartSpot: true;
+    guideTrailTiles: 5; guideSec: 8;
+    leaveGuideAutoUntilDay: 5;
+  };
+  layout: {
+    deckHeightPx: 72;                             // config/display.ts HUD_BOTTOM_PX 대체(표시값이라 코드 상수여도 됨)
+    defaultHand: 'right'; handSetting: true;      // Storage 저장
+  };
+}
+```
+
+`movement` 추가: `manualPlayer: true`(true면 `tapNonWalkable`·`tapInteractable`·`rerouteMaxExtraTiles`·`rerouteRecheckSec`·`resumeAfterTalk`·`showPathPreviewSec`를 플레이어에게 쓰지 않음. NPC용 `blockedWaitSec`·`npcPassThroughPlayerAfterSec`는 그대로)
+
+`dpad` 모드에서 무시하는 기존 필드: `tapSnapRadius`, `input.tapWhileMoving`·`tapWhileStopped`·`tapOnSelfWhileStopped`·`hudTapDoesNotStop`. `tapMaxPressSec`·`inputGraceSec`·`resultInputGuardSec`는 그대로 씁니다.
+
+`visualCues`: `sfx_tap` 짝을 `fx/dest`에서 `fx/guide_step`로 바꿉니다(값 수정).
+
+### 12-2. maps.json `camera`
+
+| 필드 | 값 | 비고 |
+|---|---|---|
+| `visibleAboveTiles` | 11 → **9.5** | 값 수정. 조작대 4.5칸 가림 기준 위 8 / 아래 6칸 |
+| `lookAheadTiles` | **1.5** (새) | 세로 진행 방향 선행 |
+| `lookAheadAfterSec` | **0.3** (새) | 세로로 이만큼 걸은 뒤부터 |
+| `lookAheadLerpPerFrame` | **0.06** (새) | 1/60초 기준 |
+
+### 12-3. events.json / missions.json
+
+- 미션마다 `startBy: 'action' | 'auto_on_stop'`(새). 기본 `'action'`. `restroom`만 `'auto_on_stop'`. 자리 미션(`startsAt: chip_tap_at_seat`)은 앉은 상태에서 `'action'` 또는 칩.
+- `events.restroom.params.padExits: true`(새): 행동 중 패드 아무 방향 = 나가기 + 걷기.
+- `npcs.accomplice.offer.trigger`(새): `{ coffee: 'leave_seat', snack: 'start_activity', forced: 'unlock' }`.
+
+### 12-4. ranks.json `budgetModel` (밸런스, QA 측정 후 값 확정)
+
+| 필드 | 값 | 비고 |
+|---|---|---|
+| `manualPathEfficiency` | **0.85** (새) | 패드 봇·실기기 η로 교체 |
+| `actionStartSec` | **0.3** (새) | 버튼으로 시작하는 미션만 |
+| `missionExpectedSec` | 커피 14.5 / 화장실 19.5 / 낮잠 15.5 / 쇼핑 10 / 간식 7.5 | 값 수정 예정 |
+| `leaveBaseSec` | 16.3 → 18.2 | 값 수정 예정 |
+
+함께 바꿀 값(예정): `days[1].dayPhaseSec` 34→37, `days[2].dayPhaseSec` 44→48(`expectedDurationSec` 재계산), `missions.parcel.timeLimitSec` 36→40, `layout.validators.V03_distance.restroomTimeByDistance` 식의 분모에 η.
+
+### 12-5. days.json / strings.ko.json
+
+- `days[1].tutorialIds`: `tut_tap_move` → `tut_pad_move`, `tut_stop_disguise` → `tut_pad_release`, `tut_use`·`tut_sit`·`tut_hand_setting` 추가. 1일차 `boss_look_when.hintKey` → `tutorial.tut_pad_release`. `days[2].tutorialIds`에 `tut_guide`.
+- strings: 새 키 31개, 문구 수정 10개, 폐지 5개(`control-dpad.md` §10). `action.*` 라벨은 3자 이하로 검사합니다.
+
+### 12-6. 검사기 추가 예정 (`validate_data.py`)
+
+`releaseSnapMaxSec` ≤ `disguiseSettleSec`, `firstTileCommit`일 때 1칸 이동 시간(1 ÷ 속도) < 전조 최소 0.4초, `freezeStartHoldSec` ≥ 0.2, `action.*` 문구 길이 ≤ 3자, `guideTrailTiles` ≥ 1, 폐지 키가 어떤 `hintKey`·`tutorialIds`에서도 참조되지 않음.
