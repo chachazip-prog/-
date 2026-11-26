@@ -182,7 +182,8 @@ export function drawModifiers(ctx: ModDrawContext): DrawnModifiers {
     if (!spotOk(m)) return false;
     const info = ctx.missionInfo(id);
     const type = str(m['type']);
-    if (type === 'rush' && info.timeLimitSec < info.expectedSec + 4) return false;
+    // T-165: 급해는 제한 × timeLimit.mul(0.8) 뒤의 제한으로 비교(곱하기 전 제한과 비교하던 버그: 먼 화장실 20.8초)
+    if (type === 'rush' && info.timeLimitSec * num(obj(m['timeLimit'])['mul'], 1) < info.expectedSec + 4) return false;
     if (type === 'during_tour' && (ctx.longTourCount === undefined || ctx.longTourCount < 2)) return false;
     if (type === 'zone_only' && ctx.zoneOnlyOk && !ctx.zoneOnlyOk(id)) return false;
     if ((yesterday[id] ?? []).includes(type)) return false; // 같은 type 이틀 연속 같은 미션 금지

@@ -323,7 +323,7 @@ export function generateV3(ctx: V3GenContext, attemptSeed: string): V3GenResult 
     }
     const y0 = grid.length;
     placed.push({ id: m.id, y: y0, height: rows.length, mirrored: m.mirrored, group: m.group });
-    for (const [k, s] of Object.entries(m.spots)) if (!spots[k]) spots[k] = { ...s, tile: { x: s.tile.x, y: s.tile.y + y0 } };
+    for (const [k, s] of Object.entries(m.spots)) if (!spots[k]) spots[k] = { ...s, tile: { x: s.tile.x, y: s.tile.y + y0 }, ...(s.memoDesk ? { memoDesk: { x: s.memoDesk.x, y: s.memoDesk.y + y0 } } : {}) };
     for (const [k, t] of Object.entries(m.routeNodes)) if (!nodes[k]) nodes[k] = { x: t.x, y: t.y + y0 };
     // T-151: '{mine}' 별칭(events.restroom의 restroom_stall·zone restroom이 그대로 동작). 시설 모듈만 해당
     if (gd && m.genderFacility) {

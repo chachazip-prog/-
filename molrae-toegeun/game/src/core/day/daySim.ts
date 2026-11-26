@@ -546,6 +546,7 @@ export class DaySim {
     this.elevatorCeoStep();
     this.accompliceStep(dt);
     this.greetingStep(dt);
+    this.deferredStep();
     this.tourStep();
     this.scriptWatchers();
     if (this.ceoState !== 'none' && this.ceoState !== 'pending' && this.ceoState !== 'skipped' && this.ceoState !== 'done' && this.ceoState !== 'cancelled') {
@@ -1194,10 +1195,41 @@ export class DaySim {
   /** 오늘 말걸기 성립 횟수(QA·표시용) */
   talkCount(interruptId: string): number { return this.talkState.get(interruptId)?.count ?? 0; }
 
+  /** BUG-019(T-164): 같은 사람이 이미 층을 걷고 있어 미룬 방해(그 사람이 퇴장하면 같은 단계 안에서 시작) */
+  private deferredInts: DayInterruptDef[] = [];
+
+  /** 이 방해가 새로 등장시키는(addNpc) 사람이 이미 층에서 걷는 중인가 — 같은 인물(인사팀 등)이 두 곳에 동시에 나오지 않게 */
+  private spawnActorBusy(int: DayInterruptDef): boolean {
+    if (!['walker', 'walker_talk', 'countdown'].includes(int.category)) return false;
+    const e = int.effect;
+    const ids: string[] = [];
+    for (const k of ['patrolId', 'leaveVariant']) if (typeof e[k] === 'string') ids.push(e[k] as string);
+    for (const k of ['patrolVariants']) if (Array.isArray(e[k])) for (const x of e[k] as unknown[]) if (typeof x === 'string') ids.push(x);
+    const actors = new Set(ids.map((id) => this.content.patrols[id]?.actorId).filter((a): a is string => !!a));
+    return this.floor.npcs.some((n) => !!n.def.actorId && actors.has(n.def.actorId) && !n.def.seated && !n.ended);
+  }
+
+  private deferredStep(): void {
+    if (this.deferredInts.length === 0) return;
+    const ph = this.phase;
+    this.deferredInts = this.deferredInts.filter((int) => int.phase === ph);
+    for (const int of this.deferredInts.slice()) {
+      if (this.spawnActorBusy(int)) continue;
+      this.deferredInts.splice(this.deferredInts.indexOf(int), 1);
+      this.startInterrupt(int);
+    }
+  }
+
   private startInterrupt(int: DayInterruptDef): void {
     const pat = this.content.patrols;
     const e = int.effect;
     let started = true;
+    if (this.spawnActorBusy(int)) {
+      // 같은 사람이 아직 다른 순찰 중 → 퇴장 뒤로 미룸(intState는 그때 기록). 단계가 바뀌면 버림
+      if (!this.deferredInts.includes(int)) this.deferredInts.push(int);
+      if (!this.intState.has(int.id)) this.intState.set(int.id, { started: this.time, count: 0, lastAt: -Infinity });
+      return;
+    }
     switch (int.category) {
       case 'walker':
       case 'walker_talk': {

@@ -29,6 +29,8 @@ export interface SpotV3 {
   readonly glanceDir?: Dir;
   readonly stopId?: string;
   readonly floorMark?: boolean;
+  /** 순회 '메모 남기기' 대상 책상 칸(D-120, 모듈 좌표. 반전·배치 오프셋 적용) */
+  readonly memoDesk?: Tile;
   readonly pose?: string;
 }
 
@@ -176,6 +178,7 @@ function parseModule(m: O): ModuleV3 {
       ...(typeof s['target'] === 'string' ? { target: s['target'] as string } : {}),
       ...(typeof s['stopId'] === 'string' ? { stopId: s['stopId'] as string } : {}),
       ...(s['floorMark'] === true ? { floorMark: true } : {}),
+      ...(Array.isArray(s['memoDesk']) ? { memoDesk: tileOfArr(s['memoDesk']) } : {}),
       ...(typeof s['pose'] === 'string' ? { pose: s['pose'] as string } : {}),
     };
   }
@@ -304,9 +307,10 @@ export function mirrorModule(m: ModuleV3, W: number): ModuleV3 {
   const spots: Record<string, SpotV3> = {};
   for (const [k, s] of Object.entries(m.spots)) {
     const f = sw(s.facing), g = sw(s.glanceDir);
-    const { facing: _f, glanceDir: _g, lookDirs: _l, ...rest } = s;
+    const { facing: _f, glanceDir: _g, lookDirs: _l, memoDesk: _m, ...rest } = s;
     spots[k] = {
       ...rest, tile: { x: mx(s.tile.x), y: s.tile.y },
+      ...(s.memoDesk ? { memoDesk: { x: mx(s.memoDesk.x), y: s.memoDesk.y } } : {}),
       ...(f ? { facing: f } : {}), ...(g ? { glanceDir: g } : {}),
       ...(s.lookDirs ? { lookDirs: s.lookDirs.map((d) => sw(d)!) } : {}),
     };

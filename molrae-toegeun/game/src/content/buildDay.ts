@@ -87,27 +87,33 @@ function scheduleGuardDirector(
   for (const id of variants) {
     const d = patrols[id];
     if (!d || d.waypoints.length === 0) continue;
-    let tiles = 0, hit = false;
+    // T-165(BUG-021 잔여): 길목 앞 정지(waitSec)·정지 중 둘러보기(lookChance × (전조 + 유지))·모퉁이 전조(상한)도 셈
+    let tiles = 0, hit = false, stops = 0, corners = 0;
+    const lookCost = d.tellSec + d.lookSec;
     for (let k = 0; k + 1 < d.waypoints.length && !hit; k++) {
       const a = d.waypoints[k]!, b = d.waypoints[k + 1]!;
+      if (a.waitSec > 0) stops += a.waitSec + (a.lookChance ?? d.lookChance) * lookCost;
       const path = findPath(grid, { x: a.x, y: a.y }, { x: b.x, y: b.y });
       if (!path) break;
       for (let j = 1; j < path.length; j++) {
         tiles++;
+        if (j >= 2 && (path[j]!.x - path[j - 1]!.x !== path[j - 1]!.x - path[j - 2]!.x || path[j]!.y - path[j - 1]!.y !== path[j - 1]!.y - path[j - 2]!.y)) corners++;
         if (stop.nodes.some((q) => q.x === path[j]!.x && q.y === path[j]!.y)) { hit = true; break; }
       }
     }
     if (!hit) continue;
-    need = Math.max(need, (d.spawnTellSec ?? 0) + tiles / Math.max(0.1, d.speedTilesPerSec) + stop.tellSec + stop.insideSec + g.marginSec);
+    need = Math.max(need, (d.spawnTellSec ?? 0) + tiles / Math.max(0.1, d.speedTilesPerSec) + stops + corners * (d.turnTellSec ?? d.tellSec) + stop.tellSec + stop.insideSec + g.marginSec);
   }
   if (need < 0) return; // 길목을 지나는 변형이 없음
   const latest = Math.round((dayPhaseSec - need) * 10) / 10;
   if (int.atSec <= latest) return;
-  const at = Math.max(g.minAtSec, latest);
   const others = interrupts.filter((x, k) => k !== i && x.phase === 'day' && x.atSec > 0);
-  const clash = others.some((x) => Math.abs(x.atSec - at) < g.otherGapSec) || (ceoAtSec !== undefined && Math.abs(at - ceoAtSec) < g.ceoGapSec);
-  if (clash || at >= int.atSec) return; // onConflict keep_original
-  interrupts[i] = { ...int, atSec: at };
+  const clash = (at: number) => others.some((x) => Math.abs(x.atSec - at) < g.otherGapSec) || (ceoAtSec !== undefined && Math.abs(at - ceoAtSec) < g.ceoGapSec);
+  // T-165: 상한 시각이 다른 방해·대표님 간격과 부딪히면 0.5초씩 앞당겨 다시 시도(minAtSec까지). 끝내 없으면 원래 값(keep_original)
+  for (let at = Math.max(g.minAtSec, latest); at >= g.minAtSec - 1e-9; at = Math.round((at - 0.5) * 10) / 10) {
+    if (at >= int.atSec) return;
+    if (!clash(at)) { interrupts[i] = { ...int, atSec: at }; return; }
+  }
 }
 
 /** sim.talk.zone(D-107): 지금은 gate_approach 하나 */
@@ -479,7 +485,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   const rules = obj(tables['rules']);
   const mv3 = opts.missionsV3 ?? missionsEnabledInData(tables);
   const planOpts: PlanOptions = { missionsV3: mv3 };
-  const plan = dayPlan(tables, day, planOpts);
+  let plan = dayPlan(tables, day, planOpts);
   const ranks = arr(obj(tables['ranks'])['ranks']).map(obj);
   const rank = ranks.find((r) => r['id'] === plan['rankId']) ?? rankFor(tables, day);
   const rankId = str(rank['id'], 'intern');
@@ -825,6 +831,38 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   const W = map.rows[0]?.length ?? 11;
   const seatDist = bfsDist(map.rows, map.legend, playerSeat, occupiedSet(spots, W));
   const oneWay = (t: Tile): number => seatDist[t.y * W + t.x] ?? -1;
+  // T-165(D-125·D-129 ③): 택배 편도 상한(V03_distance.parcelOneWayCapTiles). 넘는 날은 층을 다시 만들지 않고(폴백 위험) 그날 택배만
+  // 같은 직급 후보 미션(아직 안 뽑힘·스팟이 이 층에 있음·편도 ≤ missionOneWayCap)으로 바꿈(parcelOverCap 'drop_mission', soft). 시드 day-{n}-parcel-swap
+  {
+    const V03 = obj(v3?.validators['V03_distance']);
+    const pcap = V03['parcelOneWayCapTiles'];
+    const pm = arr(plan['missions']).map(obj);
+    const pi = pm.findIndex((m) => m['eventId'] === 'parcel');
+    if (map.source === 'generated' && typeof pcap === 'number' && V03['parcelOverCap'] === 'drop_mission' && pi >= 0) {
+      const st = (() => { const e = missionRaw(tables, 'parcel', mv3); const n = [str(obj(e?.['location'])['spot']), str(obj(e?.['params'])['fallbackSpot'])].find((k) => k && spots[k]); return n ? spots[n]?.tile : undefined; })();
+      const ow = st ? oneWay(st) : -1;
+      if (ow > pcap) {
+        const cap = num(V03['missionOneWayCap'], 28);
+        const taken = new Set(pm.map((m) => str(m['eventId'])));
+        const pool = (mv3 ? poolForRank(tables, rankId, day) : arr(rank['eventPool']).map(obj)).filter((c) => {
+          const id = str(c['eventId']);
+          if (!id || taken.has(id)) return false;
+          const e = missionRaw(tables, id, mv3) ?? eventsAll.find((x) => x['id'] === id);
+          if (!e) return false;
+          const n = [str(obj(e['location'])['spot']), str(obj(e['params'])['fallbackSpot'])].find((k) => k && spots[k]);
+          if (e['awayFromDesk'] !== true) return true;
+          const d = n ? oneWay(spots[n]!.tile) : -1;
+          return d >= 0 && d <= cap;
+        });
+        const pick = createRng(`day-${day}-parcel-swap`).weighted(pool, (x) => num(x['weight'], 1));
+        if (pick) {
+          const nm = pm.slice();
+          nm[pi] = { eventId: str(pick['eventId']), unlockAtSec: num(pm[pi]!['unlockAtSec'], 0) };
+          plan = { ...plan, missions: nm, parcelSwapped: { from: 'parcel', to: str(pick['eventId']), oneWayTiles: ow } };
+        } else warn.push(`days.${day}: 택배 편도 ${ow} > ${pcap}인데 바꿀 미션 후보 없음 → 유지`);
+      }
+    }
+  }
   // zone_only(gdd-v3 §10 보충): 목표 스폿이 속한 구역(가장 작은 rect). 구역이 없거나 내 자리도 같은 구역이면 '구역 입구'가 없어 변형을 붙이지 않음
   const inRect = (r: readonly [number, number, number, number], t: Tile) => t.x >= r[0] && t.y >= r[1] && t.x < r[0] + r[2] && t.y < r[1] + r[3];
   const zoneRectOf = (t: Tile) => map.zones.filter((z) => inRect(z.rect, t)).sort((a, b) => a.rect[2] * a.rect[3] - b.rect[2] * b.rect[3])[0]?.rect;
@@ -852,10 +890,30 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   const isGen = map.source === 'generated';
   const clk = obj(rules['day']);
   const clockAt = (dps: number) => (sec: number) => hhmm(str(clk['clockStart'], '09:00')) + sec * (hhmm(str(clk['dayPhaseClockEnd'], '17:48')) - hhmm(str(clk['clockStart'], '09:00'))) / Math.max(1, dps);
+  /**
+   * T-165(BUG-022, layout V03_distance.restroomTimeByDistance): 화장실 피신 제한 += max(0, secPerExtraTile × (그날 편도 − 기준)), 0.1초 올림.
+   * 남녀·a/b 같은 식(D-087). 급해(×0.8)는 이 보정 뒤에 곱해짐(applyMissionModifiers). 생성 층만(수작업 맵 = 기준 편도)
+   */
+  const rtd = obj(v3?.validators['V03_distance']?.['restroomTimeByDistance']);
+  const rtdMission = str(rtd['refOneWayTiles'], 'missionRefOneWayTiles.restroom').split('.').pop() ?? 'restroom';
+  const restroomBonusAt = (id: string, t: Tile | undefined): number => {
+    if (rtd['enabled'] !== true || id !== rtdMission || !isGen || !t) return 0;
+    const ref = refOW[id], ow = oneWay(t);
+    if (ref === undefined || ow < 0) return 0;
+    const per = num(rtd['secPerExtraTile'], 2 / speed);
+    return Math.ceil(Math.max(0, per * (ow - ref)) * 10 - 1e-9) / 10;
+  };
+  const baseSpotOf = (id: string): Tile | undefined => {
+    const e = missionRaw(tables, id, mv3);
+    const n = [str(obj(e?.['location'])['spot']), str(obj(e?.['params'])['fallbackSpot'])].find((k) => k && spots[k]);
+    return n ? spots[n]?.tile : undefined;
+  };
   const infoOf = (p: O) => (id: string) => {
     const e = missionRaw(tables, id, mv3);
     const pm = arr(p['missions']).map(obj).find((x) => x['eventId'] === id);
-    return { expectedSec: baseExpectedSec(tables, id), timeLimitSec: num(e?.['timeLimitSec'], 30), unlockAtSec: num(pm?.['unlockAtSec'], 0) };
+    // 거리 보정은 제한·예상 시간에 같이 더함(급해 가드가 '먼 날 보정 뒤 × 0.8' 제한으로 비교하도록, T-165)
+    const bonus = p === plan ? restroomBonusAt(id, baseSpotOf(id)) : 0;
+    return { expectedSec: baseExpectedSec(tables, id) + bonus, timeLimitSec: num(e?.['timeLimitSec'], 30) + bonus, unlockAtSec: num(pm?.['unlockAtSec'], 0) };
   };
   // 변형 추첨(missions.combination, 생성일 + missions.appliesFromDay 이후): ① 미션 ② 층 ③ 순회 ④ 변형 ⑤ budgetCheck
   let drawn: Record<string, (string | O)[]> = {};
@@ -907,7 +965,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       mechanic: str(e['mechanic']) as Mechanic, unlockAtSec: num(m['unlockAtSec'], 0), spot,
       startsAt: e['startsAt'] === 'chip_tap_at_seat' ? 'chip_tap_at_seat' : 'arrive_spot',
       completeAt: e['completeAt'] === 'on_success' ? 'on_success' : 'return_to_seat',
-      awayFromDesk: e['awayFromDesk'] === true, timeLimitSec: num(e['timeLimitSec'], 30),
+      awayFromDesk: e['awayFromDesk'] === true, timeLimitSec: Math.round((num(e['timeLimitSec'], 30) + (e['awayFromDesk'] === true ? restroomBonusAt(id, spot) : 0)) * 10) / 10,
       reward: {
         slackPoints: num(reward['slackPoints'], 0), ...(typeof reward['snackStock'] === 'number' ? { snackStock: reward['snackStock'] as number } : {}),
         ...(typeof reward['couponStamp'] === 'number' ? { couponStamp: reward['couponStamp'] as number } : {}),

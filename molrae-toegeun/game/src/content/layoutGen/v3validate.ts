@@ -328,11 +328,15 @@ export function validateV3(L: V3Layout, ctx: V3ValidateContext): V3ValidationRes
   if (tl) {
     if (!inCone(g, tl.tile, ld, seat)) fail('lead_cannot_see_seat', 'V09 팀장 돌아보기 콘이 내 자리를 덮지 않음');
     const bl = new Set(occ); bl.delete(idx(tl.tile)); bl.add(idx(seat));
+    // T-165 (선택 7): 편도 범위 데이터화 — validators V09_lead_watch.tourOneWayTiles [하한, 상한], 없으면 기존 6~22
+    const V09 = v3.validators['V09_lead_watch'] ?? {};
+    const tw = Array.isArray(V09['tourOneWayTiles']) ? V09['tourOneWayTiles'] as unknown[] : [];
+    const tourMin = typeof tw[0] === 'number' ? tw[0] : 6, tourMax = typeof tw[1] === 'number' ? tw[1] : 22;
     for (const d of ctx.tourDestinations) {
       const n = firstSpot(S, d.spots);
       if (!n) continue;
       const p = dpath(g, tl.tile, S[n]!.tile, bl);
-      if (p && p.length - 1 >= 6 && p.length - 1 <= 22) tourOk.push(d.id);
+      if (p && p.length - 1 >= tourMin && p.length - 1 <= tourMax) tourOk.push(d.id);
     }
     if (ctx.tourDestinations.length > 0 && tourOk.length < 2) fail('lead_cannot_see_seat', `V09 순회 목적지 ${tourOk.length}곳(< 2)`);
   }

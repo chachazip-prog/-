@@ -140,7 +140,13 @@ export function buildTileLayout(c: DayContent, has: (frame: string) => boolean =
   const memoSp = c.spots[MEMO_SPOT];
   const memoDx = memoSp?.facing === 'left' ? -1 : memoSp?.facing === 'right' ? 1 : 0;
   const memoDy = memoSp?.facing === 'up' ? -1 : memoSp?.facing === 'down' ? 1 : 0;
-  const memoAt = memoSp && (memoDx || memoDy) ? (memoSp.tile.y + memoDy) * W + memoSp.tile.x + memoDx : -1;
+  // 데이터 memoDesk(반전·배치 반영된 책상 칸)를 우선, 없으면 스팟 facing 쪽 이웃 칸
+  const memoDesk = (memoSp as { memoDesk?: { x: number; y: number } } | undefined)?.memoDesk;
+  const memoT = memoDesk ?? (memoSp && (memoDx || memoDy) ? { x: memoSp.tile.x + memoDx, y: memoSp.tile.y + memoDy } : null);
+  // 가리킨 칸이 의자(팀원 자리)면 그 자리의 책상(위, 없으면 아래)
+  const memoFix = memoT && kind(memoT.x, memoT.y) !== 'desk'
+    ? [{ x: memoT.x, y: memoT.y - 1 }, { x: memoT.x, y: memoT.y + 1 }].find((t) => kind(t.x, t.y) === 'desk') ?? null : memoT;
+  const memoAt = memoFix ? memoFix.y * W + memoFix.x : -1;
   const cx = (x: number) => x * TILE + TILE / 2;
   let faceCount = 0;
 
