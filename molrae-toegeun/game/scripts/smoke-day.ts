@@ -7,6 +7,8 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CAMERA_VIEW } from '../src/config/display';
+import { PadBot } from '../src/dev/padBot';
 import { DaySim, type DayEvent } from '../src/core';
 import { buildDayContent, type Tables } from '../src/content/buildDay';
 
@@ -21,7 +23,8 @@ const ROOT = findRoot(dirname(fileURLToPath(import.meta.url)));
 const tables: Record<string, unknown> = {};
 for (const f of readdirSync(join(ROOT, 'data'))) if (f.endsWith('.json')) tables[f.replace(/\.json$/, '')] = JSON.parse(readFileSync(join(ROOT, 'data', f), 'utf8'));
 
-const VIEW = { viewHeightTiles: 20, insetTopTiles: 1.25, insetBottomTiles: 1.75 };
+// T-170: 조작대 72px = 4.5칸(config/display.ts)
+const VIEW = CAMERA_VIEW;
 let failures = 0;
 function check(name: string, ok: boolean, detail = ''): void {
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? `  — ${detail}` : ''}`);
@@ -34,46 +37,17 @@ function play(day: number, seed?: string, opts: { continueOnce?: boolean; skipCe
   const content = buildDayContent(tables as Tables, day, warnings);
   const sim = new DaySim(content, { view: VIEW, ...(opts.skipCeo ? { skipCeoVisit: true } : {}) }, seed);
   const log: string[] = [...warnings.map((w) => `warn ${w}`)];
-  const f = sim.floor;
-  let stoppedAt = -1;
+  const bot = new PadBot(sim, { workBeforeMission: 0.5 });
   for (let i = 0; i < 60 * 260; i++) {
     if (sim.phase === 'ended') {
-      if (opts.continueOnce && sim.canContinue) { sim.continueFromCheckpoint(); continue; }
+      if (opts.continueOnce && sim.canContinue) { sim.continueFromCheckpoint(); bot.pilot.stop(); continue; }
       break;
     }
+    bot.beforeStep();
     sim.step();
     for (const e of sim.drainEvents()) log.push(fmt(e));
     sim.drainFloorEvents();
-    const p = f.player;
-    // T-133: 인사 QTE는 '!' 창에서 짧게 톡, 얼음 중에는 움직이지 않음, 공범 제안은 수락
-    if (sim.qteActive) { if (sim.qte!.phase === 'window') sim.tapQte(0.1); continue; }
-    if (sim.frozen) continue;
-    if (sim.offer) sim.acceptOffer();
-    if (sim.leaveStage === 'gate' && Math.abs(sim.gateMarker - 0.5) < sim.gateWindow / 4) { sim.tapWorld(p.tile.x, p.tile.y); continue; }
-    if (sim.phase === 'intro' || i % 6 !== 0) continue;
-    const threatened = f.npcs.some((n) => { const th = f.threatOfNpc(n); return (th === 'seeing' || th === 'turning') && n.gazeMultiplier > 0; });
-    if (p.mode === 'moving' && threatened && !sim.gateOpen) { sim.tapWorld(p.tile.x, p.tile.y); stoppedAt = sim.time; continue; }
-    if (p.mode === 'disguised' && !threatened && sim.time - stoppedAt > 0.3 && f.resumeDestination) { sim.tapWorld(p.tile.x, p.tile.y); continue; }
-    const v = sim.activityView();
-    if (v) {
-      if (v.kind === 'pour' && !v.paused && v.level >= v.band[0] + 0.03) sim.tapWorld(0, 0);
-      else if (v.kind === 'restroom' && v.restLeft <= 0 && v.bonusSec >= v.bonusMax - 0.01) sim.tapWorld(0, 0);
-      else if (v.kind === 'nap' && ((!v.headUp && v.head > 0.75) || (v.headUp && v.head < 0.1))) sim.tapWorld(0, 0);
-      else if (v.kind === 'snack' && v.sinceLast >= 0.7) sim.tapWorld(0, 0);
-      continue;
-    }
-    if (sim.phase === 'day' && p.mode !== 'moving' && p.mode !== 'talked' && !threatened) {
-      const carry = sim.missions.find((m) => m.state === 'carry');
-      const open = sim.missions.find((m) => m.state === 'open' && !m.blocked);
-      if (carry && !sim.playerAtSeat) sim.tapMission(carry.def.id);
-      else if (!carry && open && sim.work >= content.work.quota * 0.5) sim.tapMission(open.def.id);
-      else if (!sim.playerAtSeat && !carry && !sim.pendingMission) f.moveTo(content.playerSeat);
-    }
-    if (sim.phase === 'leave' && p.mode !== 'moving' && p.mode !== 'talked' && !threatened) {
-      if (sim.leaveStage === 'walk') f.moveTo(content.leave.gate.spot);
-      else if (sim.leaveStage === 'pack' && !sim.playerAtSeat) f.moveTo(content.playerSeat);
-      else if (sim.leaveStage === 'lobby') f.moveTo(content.leave.exitSpot);
-    }
+    bot.afterStep(i);
   }
   return { sim, log };
 }

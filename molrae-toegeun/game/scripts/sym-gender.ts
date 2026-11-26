@@ -10,7 +10,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DaySim } from '../src/core';
+import { CAMERA_VIEW } from '../src/config/display';
+import { PadBot } from '../src/dev/padBot';
+import { DaySim, DIR_VEC } from '../src/core';
 import { buildGridMap } from '../src/core/grid';
 import { PatrolNpc } from '../src/core/patrol';
 import { createRng } from '../src/core/rng';
@@ -30,7 +32,8 @@ const ROOT = findRoot(dirname(fileURLToPath(import.meta.url)));
 const tables: Record<string, unknown> = {};
 for (const f of readdirSync(join(ROOT, 'data'))) if (f.endsWith('.json')) tables[f.replace(/\.json$/, '')] = JSON.parse(readFileSync(join(ROOT, 'data', f), 'utf8'));
 
-const VIEW = { viewHeightTiles: 20, insetTopTiles: 1.25, insetBottomTiles: 1.75 };
+// T-170: 조작대 72px = 4.5칸(config/display.ts)
+const VIEW = CAMERA_VIEW;
 const from = Number(process.argv[2] ?? 1), to = Number(process.argv[3] ?? 60);
 let failures = 0;
 const check = (name: string, ok: boolean, detail = '') => { if (!ok) { failures++; console.log(`FAIL  ${name}${detail ? `  — ${detail}` : ''}`); } };
@@ -44,41 +47,14 @@ function play(c: DayContent): string[] {
   const sim = new DaySim(c, { view: VIEW });
   const f = sim.floor;
   const log: string[] = [];
-  let stoppedAt = -1;
+  const bot = new PadBot(sim, { workBeforeMission: 0.3, preferFacility: true });
   for (let i = 0; i < 60 * 260 && sim.phase !== 'ended'; i++) {
+    bot.beforeStep();
     sim.step();
     for (const e of sim.drainEvents()) log.push(JSON.stringify(e));
     for (const e of sim.drainFloorEvents()) log.push(JSON.stringify(e));
     if (i % 30 === 0) log.push(`fp ${f.fingerprint()}`);
-    const p = f.player;
-    if (sim.qteActive) { if (sim.qte!.phase === 'window') sim.tapQte(0.1); continue; }
-    if (sim.frozen) continue;
-    if (sim.offer) sim.acceptOffer();
-    if (sim.leaveStage === 'gate' && Math.abs(sim.gateMarker - 0.5) < sim.gateWindow / 4) { sim.tapWorld(p.tile.x, p.tile.y); continue; }
-    if (sim.phase === 'intro' || i % 6 !== 0) continue;
-    const threatened = f.npcs.some((n) => { const th = f.threatOfNpc(n); return (th === 'seeing' || th === 'turning') && n.gazeMultiplier > 0; });
-    if (p.mode === 'moving' && threatened && !sim.gateOpen) { sim.tapWorld(p.tile.x, p.tile.y); stoppedAt = sim.time; continue; }
-    if (p.mode === 'disguised' && !threatened && sim.time - stoppedAt > 0.3 && f.resumeDestination) { sim.tapWorld(p.tile.x, p.tile.y); continue; }
-    const v = sim.activityView();
-    if (v) {
-      if (v.kind === 'pour' && !v.paused && v.level >= v.band[0] + 0.03) sim.tapWorld(0, 0);
-      else if (v.kind === 'restroom' && v.restLeft <= 0 && v.bonusSec >= v.bonusMax - 0.01) sim.tapWorld(0, 0);
-      else if (v.kind === 'nap' && ((!v.headUp && v.head > 0.75) || (v.headUp && v.head < 0.1))) sim.tapWorld(0, 0);
-      else if (v.kind === 'snack' && v.sinceLast >= 0.7) sim.tapWorld(0, 0);
-      continue;
-    }
-    if (sim.phase === 'day' && p.mode !== 'moving' && p.mode !== 'talked' && !threatened) {
-      const carry = sim.missions.find((m) => m.state === 'carry');
-      const open = sim.missions.filter((m) => m.state === 'open' && !m.blocked).sort((a, b) => Number(!!b.def.facilityMission) - Number(!!a.def.facilityMission))[0];
-      if (carry && !sim.playerAtSeat) sim.tapMission(carry.def.id);
-      else if (!carry && open && sim.work >= c.work.quota * 0.3) sim.tapMission(open.def.id);
-      else if (!sim.playerAtSeat && !carry && !sim.pendingMission) f.moveTo(c.playerSeat);
-    }
-    if (sim.phase === 'leave' && p.mode !== 'moving' && p.mode !== 'talked' && !threatened) {
-      if (sim.leaveStage === 'walk') f.moveTo(c.leave.gate.spot);
-      else if (sim.leaveStage === 'pack' && !sim.playerAtSeat) f.moveTo(c.playerSeat);
-      else if (sim.leaveStage === 'lobby') f.moveTo(c.leave.exitSpot);
-    }
+    bot.afterStep(i);
   }
   log.push(`result ${JSON.stringify(sim.result)}`);
   return log;
@@ -118,9 +94,19 @@ for (let day = from; day <= to; day++) {
       check(`${day}일차(${pv}) 다른 쪽 문은 플레이어 경로에서 벽`, sim.floor.pathTo(od) === null && sim.floor.pathTo(fac.restroom.other!.stall) === null);
       check(`${day}일차(${pv}) 내 쪽 문·칸은 갈 수 있음`, sim.floor.pathTo(md) !== null && sim.floor.pathTo(fac.restroom.mine.stall) !== null);
       for (let i = 0; i < 200; i++) sim.step();
-      const r = sim.tapWorld(od.x, od.y);
-      const ev = sim.drainEvents();
-      check(`${day}일차(${pv}) 다른 쪽 문 탭 = 안내만`, r === 'facility' && ev.some((e) => e.type === 'toast' && e.key === fac.otherDoorHintKey), r);
+      // T-170 M9: 다른 쪽 시설 문 옆 칸에서 그 문 쪽으로 패드를 밀면 범프(못 들어감) + 안내 토스트
+      sim.drainEvents();
+      const side = (['up', 'down', 'left', 'right'] as const).map((d) => ({ d, t: { x: od.x - DIR_VEC[d][0], y: od.y - DIR_VEC[d][1] } }))
+        .find((q) => sim.floor.playerCanEnter(q.t.x, q.t.y) && sim.floor.pathTo(q.t) !== null);
+      if (side) {
+        sim.floor.player.teleport(side.t);
+        sim.setPad(side.d);
+        for (let i = 0; i < 20; i++) sim.step();
+        sim.setPad(null);
+        const ev = sim.drainEvents();
+        const pt = sim.floor.player.tile;
+        check(`${day}일차(${pv}) 다른 쪽 문 밀기 = 범프 + 안내만`, pt.x === side.t.x && pt.y === side.t.y && ev.some((e) => e.type === 'toast' && e.key === fac.otherDoorHintKey), `${pt.x},${pt.y}`);
+      } else check(`${day}일차(${pv}) 다른 쪽 문 옆 칸 있음`, false);
     }
   }
   const cday = [...Array(to - from + 1).keys()].map((k) => k + from).find((d) => !!build(d, 'm').facility?.cleaning);

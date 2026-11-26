@@ -552,6 +552,7 @@ interface AdsTable {
 | 2 (T-157) | 2026-11-25 | 개발 T-151 결과의 기획 사항 4건(회전 해시·문 취소 정지·본부장 들름·성별 시설 폴백). **필드 추가·값 수정만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**(layout 3 유지). 아래 상세 |
 | 2 (T-163) | 2026-11-25 | 설정 화면 확인 버튼 문구 키 1개 추가. **필드 추가만 → schemaVersion 2 유지**. 아래 상세 |
 | 2 (T-165) | 2026-11-25 | QA T-141 반영(D-122·D-125, BUG-021). **값 수정·주석 키 추가만, 키 이름·계층 변경 없음 → schemaVersion 2 유지**(layout·missions 3 유지, 상세 `data-schema-v3-draft.md` §8 T-165). patrols `p_ceo_visit`: 입장 중간 웨이포인트 (5,41) 삭제(수작업 맵은 같은 직선이라 경로 동일, 생성 맵 재매핑에서 n_pantry로 튀던 문제 제거), `stop_ceo_talk.waitSec` 4.0→3.0. bosses `ceo.visit.talkWindow.durationSec` 4.0→3.0. interrupts `INT-10.effect.facilityStop.scheduleGuard.marginSec` 2.0→12.0. npcs `security_guard.rankScaling` 과장~임원 `gate.windowRatio` 각 +0.015. 주석 키 `_t165Note`·`_t165GateNote`. 검사기: scheduleGuard marginSec 상한 5→15, 팀 짧은 순회 목적지 검사(아래 §10) |
+| 2 (T-171) | 2026-11-26 | D-131(조작 사양 Q1~Q9 승인) §12 반영 + 개발 T-164 데이터 요청 + D-130 회의 검토. **필드 추가·값 수정만, 키 이름·계층 변경 없음, 폐지 필드·키는 남김(Q9 A) → schemaVersion 2 유지**(layout·missions 3 유지, 상세 `data-schema-v3-draft.md` §8 T-171). 아래 상세 |
 
 ### v1 → v2 상세
 - **신규 테이블**: `maps`, `patrols`, `interrupts`, `ads`.
@@ -723,9 +724,28 @@ interface AdsTable {
   - 검사기: 고정 명부(D-098), 시설 문구 `{name}` 금지(D-099), 시설 밖 미션 변형의 시설 목적지 금지(D-100).
   - 개발 영향: 코드 변경 없음(`spotOk`가 창고 모듈이 없는 날 이 변형을 거름). 단 변형 후보가 바뀌어 생성 날의 변형 추첨 결과가 달라질 수 있음 → QA 기대값 재생성 필요.
 
-## 12. T-167 초안: 방향 패드 조작 필드 (미반영, schemaVersion 2 유지 예정)
+### T-171 상세 (v2 유지)
 
-- 상태: **초안**. `game/data`에는 아직 넣지 않았습니다. 규칙과 근거는 `design/control-dpad.md`에 있습니다. 반영 시점은 그 문서 §11 Q1에서 정합니다.
+D-131(조작 사양 Q1~Q9 승인), 개발 T-164 데이터 요청, D-130 회의 검토. 원칙: **추가만**, 탭 이동 필드·문구는 `inputScheme: 'dpad'`일 때 무시하고 v3 정리(D-060) 때 삭제합니다.
+
+- **rules.json**: `input.inputScheme` 'dpad'(새), `input.dpad`(14필드)·`input.action`(5)·`input.chips`(5)·`input.layout`(3) §12-1 값 그대로, 주석 `input._t171Note`(무시하는 기존 필드 목록). `movement.manualPlayer` true(새). `visualCues.tapDestination.visual` fx/dest → fx/guide_step(값 수정, 코드가 이 값을 읽지 않아 지금 동작 변화 없음).
+- **maps.json `camera`**: `lookAheadTiles` 1.5·`lookAheadAfterSec` 0.3·`lookAheadLerpPerFrame` 0.06(새), `visibleAboveTiles` 11 → 9.5(값 수정). ⚠ 이 값은 지금 코드(buildDay → camera)가 바로 읽으므로 조작대가 아직 없는 빌드에서도 초점이 위로 1.5칸 덜 보입니다. 개발 T-170 조작대와 같은 커밋에 들어가는 값이라 함께 둡니다.
+- **events.json**: 미션 5종 `startBy`(새, restroom만 'auto_on_stop'), `restroom.params.padExits` true(새). `leave`는 startBy 없음(시각으로 시작, 가방·게이트는 `rules.input.action.autoStartOnStop`) — §12-3 초안의 '미션마다'를 퇴근 제외로 해석. **missions.json**: v3 미션 6종 `startBy` 'action'.
+- **npcs.json**: `accomplice.offer.trigger` { coffee 'leave_seat', snack 'start_activity', forced 'unlock' }(새). `acceptInput` 'tap_bubble'은 그대로(버튼 수락은 우선순위 6 규칙).
+- **ranks.json `budgetModel`**: `manualPathEfficiency` **1.0**·`actionStartSec` **0.0**(새, 현재 동작 유지 값). 예정값 0.85·0.3과 함께 바꿀 값 목록은 `_t171Note`. `missionExpectedSec`·`leaveBaseSec`·`days[1·2].dayPhaseSec`·`parcel.timeLimitSec`은 그대로(Q7 B, QA T-168 실측 뒤).
+- **days.json**: 1일차 `tutorialIds` [tut_pad_move, tut_pad_release, tut_tell, tut_work, tut_sit, tut_coffee, tut_use, tut_leave, tut_gate, tut_hand_setting], `boss_look_when.hintKey` → `tutorial.tut_pad_release`. 2일차 `tut_guide` 추가.
+- **strings.ko.json**: `control-dpad.md` §10 새 키 31개, 문구 수정 10개. 폐지 5개(`tutorial.tut_tap_move`·`hud.tap_move_hint`·`hud.tap_stop_hint`·`hud.resume_hint`·`hud.unreachable`)는 문자열을 남기고 `copyRules.deprecatedKeys`(새)에 목록만. `copyRules.actionLabels`(새, `action.` 3자 이하).
+- **bosses.json**: `team_lead.hierarchy.greetHoldMaxSec` 3.0(새, D-124, 코드 기본값과 같음).
+- **layout.json**(v3): `leadRoaming.returnTell` { sec 1.0, lineKey `tour.tl.return` }(새, sec는 지금 코드 기본값 = standTell.sec와 같음), `validators.list[V09_lead_watch].tourOneWayTiles` [6, 22](새, 코드 고정값과 같음), `team_front.spots.tour_desk_memo.memoDesk` [4,8] → [4,7](의자 → 책상), `destinations[desk_memo].pose` 'teamlead/wait_side'(새, 스팟 facing으로 _left·_right를 찾음, down은 idle), `destinations[printer].poseByFacing`(새, 🔧 개발 반영 필요). **missions.json** `stringsKo.tour.tl.return` '자, 그럼… 슬슬 들어가 볼까'.
+- **회의(D-130)**: `meeting.waitSecRange` 6~8초는 **유지**(중간 저장 커밋 96dea5f에 들어간 4~5초는 되돌림). 근거는 아래 측정, 결정은 PM 질문.
+  - 측정(기획 T-171, 6~200일, 앉아만 있는 봇, 작업 트리 코드): 대기 6~8 → 근무 INT-08 흡수 27회 / 4~5 → 27회 / 3~4 → 30회. 사원·대리 회의 날 5일 중 흡수 0~2회. 계획 대비 목적지 도착 95.6~96.6%(전부 ≥ 90%).
+  - 원인: 회의 회차 자리 비움의 대부분이 회의실까지 걷기(편도 약 20~29칸)라 대기를 줄여도 회차당 약 2~4초만 줄어듭니다. 사원 날(근무 50초) 회의 회차는 시간 맞춤을 끄면 36.9~42.6초라, 회의 1회 + 일반 1회가 들어갈 수 없고 일반 2회 안(안 B)이 이깁니다.
+  - 규칙 변형 측정(스크래치 사본 코드, 회의 회차를 2회차 몫으로 침 + 대기 3~4): 흡수 27 → 37회, 사원·대리 1·2회. 대신 그날 팀장 자리 비움이 33~37초로 길어져 직급 `awayMaxSec`(사원 22 / 과장 15초) 취지와 충돌합니다.
+- **검사기**: §12-6 항목 + `startBy` 값·auto_on_stop은 안전 구역 미션만·`heldResumeAfterTalkSec` = `postTalkHoldSec`·`returnTell.sec` ≥ 전조 최소·`tourOneWayTiles` 형식·`greetHoldMaxSec` 0~5초·폐지 키 hintKey/tutorialIds 참조 금지.
+
+## 12. T-167 방향 패드 조작 필드 (T-171 반영, schemaVersion 2 유지)
+
+- 상태: **반영됨(T-171, 2026-11-26, D-131 Q1 A)**. 규칙과 근거는 `design/control-dpad.md`. 밸런스 값(§12-4)은 필드만 넣고 현재 동작 값으로 두었습니다(Q7 B). 실제 반영 내용과 §12 초안과 다른 점은 §11 'T-171 상세'.
 - 원칙: **필드 추가만** 합니다. 탭 이동 필드는 지우지 않고 `inputScheme: "dpad"`일 때 무시하며, v3 정리(D-060) 때 일괄 삭제합니다.
 
 ### 12-1. rules.json

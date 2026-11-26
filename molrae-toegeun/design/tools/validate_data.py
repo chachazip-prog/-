@@ -1219,6 +1219,65 @@ else:
         sc_ev = next((e for e in T["events"]["events"] if e["id"] == eid), {}).get("shareCard", {})
         if sc_ev.get("trigger") is not False or sc_ev.get("eventVarAllowed") is not False:
             err(f"events.{eid}.shareCard: trigger·eventVarAllowed false 필요(T-152)")
+# ── T-171 방향 패드(design/control-dpad.md, data-schema.md §12-6) ──
+INP_ = rules.get("input", {})
+if INP_.get("inputScheme") not in ("tap_to_move", "dpad"):
+    err("rules.input.inputScheme: 'tap_to_move' | 'dpad' 필요(T-171)")
+if INP_.get("inputScheme") == "dpad":
+    DP_ = INP_.get("dpad", {})
+    AC_ = INP_.get("action", {})
+    CH_ = INP_.get("chips", {})
+    for f_ in ("deadZonePx", "axisHysteresisDeg", "releaseSnapMaxSec", "freezeStartHoldSec", "heldResumeAfterTalkSec"):
+        if not isinstance(DP_.get(f_), (int, float)):
+            err(f"rules.input.dpad.{f_}: 숫자 필요(T-171)")
+    if DP_.get("directions") != 4:
+        err("rules.input.dpad.directions: 4 고정(코어 4방향, T-171)")
+    if DP_.get("releaseSnapMaxSec", 1) > rules["suspicion"]["disguiseSettleSec"] + 1e-9:
+        err("rules.input.dpad.releaseSnapMaxSec > suspicion.disguiseSettleSec(칸 중심 붙기는 안착 시간 안, T-171)")
+    if DP_.get("firstTileCommit") and 1.0 / rules["playerSpeedTilesPerSec"] >= MIN_TELL:
+        err(f"첫 칸 보장 1칸 이동 {1.0 / rules['playerSpeedTilesPerSec']:.2f}초 ≥ 전조 최소 {MIN_TELL}초(T-171 §3-3)")
+    if DP_.get("freezeStartHoldSec", 0) < 0.2:
+        err("rules.input.dpad.freezeStartHoldSec < 0.2(스치는 터치와 구분, T-171 §3-4)")
+    if abs(DP_.get("heldResumeAfterTalkSec", 0) - rules["movement"].get("postTalkHoldSec", 0.5)) > 1e-9:
+        err("rules.input.dpad.heldResumeAfterTalkSec != movement.postTalkHoldSec(T-171 §3-1)")
+    if CH_.get("guideTrailTiles", 0) < 1:
+        err("rules.input.chips.guideTrailTiles < 1(T-171)")
+    bad_ctx = set(AC_.get("playfieldTapCountsIn", [])) - {"qte", "talk", "activity", "gate", "pack"}
+    if bad_ctx:
+        err(f"rules.input.action.playfieldTapCountsIn: 모르는 상황 {sorted(bad_ctx)}(T-171)")
+    for ev_ in T["events"]["events"] + T["missions"]["missionPool"]["new"]:
+        if ev_.get("id") == "leave":
+            continue
+        if ev_.get("startBy") not in ("action", "auto_on_stop"):
+            err(f"{ev_.get('id')}.startBy: 'action' | 'auto_on_stop' 필요(T-171)")
+        elif ev_["startBy"] == "auto_on_stop" and ev_.get("mechanic") != "trip_safe_zone":
+            err(f"{ev_.get('id')}.startBy auto_on_stop: 안전 구역 미션만(멈춤 = 안전 반사가 수상한 행동을 시작하면 안 됨, §4-1 ④)")
+LR_ = T["layout"].get("leadRoaming", {})
+if LR_.get("returnTell", {}).get("sec", MIN_TELL) < MIN_TELL:
+    err(f"layout.leadRoaming.returnTell.sec < 전조 최소 {MIN_TELL}(T-171, BUG-018)")
+V09_ = next((v for v in T["layout"]["validators"]["list"] if v["id"] == "V09_lead_watch"), {})
+tw_ = V09_.get("tourOneWayTiles")
+if tw_ is not None and not (isinstance(tw_, list) and len(tw_) == 2 and 1 <= tw_[0] <= tw_[1]):
+    err("layout.validators.V09_lead_watch.tourOneWayTiles: [하한, 상한] 필요(T-171)")
+gh_ = next(b for b in T["bosses"]["bosses"] if b["id"] == "team_lead").get("hierarchy", {}).get("greetHoldMaxSec")
+if gh_ is not None and not (0 < gh_ <= 5):
+    err("bosses.team_lead.hierarchy.greetHoldMaxSec: 0~5초 밖(D-124 = 3초)")
+CR_T171 = T["strings.ko"].get("copyRules", {})
+AL_ = CR_T171.get("actionLabels", {})
+for k_, v_ in S.items():
+    if k_.startswith(AL_.get("keyPrefix", "action.")) and isinstance(v_, str) and len(v_) > AL_.get("maxChars", 3):
+        err(f"strings.{k_}: 행동 버튼 라벨 '{v_}' {len(v_)}자 > {AL_.get('maxChars', 3)}자(T-171)")
+DEP_ = set(CR_T171.get("deprecatedKeys", {}).get("keys", []))
+for k_ in DEP_:
+    if k_ not in S:
+        err(f"copyRules.deprecatedKeys.{k_}: strings에 없음(v3 정리 전까지 남겨 둠)")
+for d_ in T["days"]["authoredDays"]:
+    for tid_ in d_.get("tutorialIds", []):
+        if f"tutorial.{tid_}" in DEP_:
+            err(f"days[{d_['day']}].tutorialIds: 폐지 키 {tid_}(T-171)")
+for p_, k_, v_ in walk_json({n_: t_ for n_, t_ in T.items() if n_ != "strings.ko"}):
+    if k_ == "hintKey" and v_ in DEP_:
+        err(f"{p_}: 폐지 키 {v_}(T-171)")
 if ROT_REPORT:
     print(ROT_REPORT)
 print("출연 여성 비율(직급별, 회전 = 0.5): " + ", ".join(share_report) + f" / 전체 {ov:.2f}" + (f" / 동료 집합 {cw_share:.2f}" if cw_share is not None else ""))

@@ -10,7 +10,7 @@
   0.5,
   0.5
  ],
- "note": "T-130 미션 칩·UI 아이콘(D-047 이모지 대체). flat 키 = events.json iconSprite / strings.uiIcons 값 그대로. 12x12, 원점 중앙. 빨강 없음, 로고·상표 없음",
+ "note": "T-130 미션 칩·UI 아이콘(D-047 이모지 대체). flat 키 = events.json iconSprite / strings.uiIcons 값 그대로. 12x12, 원점 중앙. 빨강 없음, 로고·상표 없음 T-172(D-132): icon_restroom = 변기 그림(글자·성별 기호 없음, 모든 플레이어 같은 그림)",
  "frames": [
   {
    "name": "icon_coffee",
@@ -32,18 +32,18 @@
   {
    "name": "icon_restroom",
    "rows": [
-    "............",
+    "..OOOOOOOO..",
+    "..OWWWWWWO..",
+    "..OLLLLLLO..",
     ".OOOOOOOOOO.",
-    "OCCCCCCCCCCO",
-    "OWCCCWCCWWCO",
-    "OWCCCWCWCCCO",
-    "OWCWCWCWCCCO",
-    "OWCWCWCWCCCO",
-    "OCWCWCCCWWCO",
-    "OCCCCCCCCCCO",
-    "OccccccccccO",
-    ".OOOOOOOOOO.",
-    "............"
+    "OWWWWWWWWWWO",
+    "OWOOOOOOOOWO",
+    "OWOCCCCCcOWO",
+    "OWWOccccOWWO",
+    ".OLWOOOOWLO.",
+    "..OLWWWWLO..",
+    "...OLLLLO...",
+    "...OOOOOO..."
    ]
   },
   {

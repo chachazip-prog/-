@@ -584,12 +584,12 @@ def down2(rows):
 
 # 축소 결과가 뭉개지는 것은 직접 그린 8x8로 바꿉니다(머리 위 0.6초, 버튼과 같은 모양·색).
 HEAD_FIX = {
-    "greet": ["........", "..OOOO..", ".OHHHHO.", "MOHHHHOM", ".OSSSSO.", "OPOOOOPO", "OPPSSPPO", ".OOOOOO."],
+    "greet": ["M.OOOO.M", ".OHHHHO.", "OHHDDHHO", "MOHHHHOM", ".OSSSSO.", "OPOOOOPO", "OPPSSPPO", ".OOOOOO."],  # T-172 보강
     "nod": [".OOOOOO.", "OHHHHHHO", "OSOSSOSO", "OSSSSSSO", ".OSOOSO.", "..OOOO..", "M......M", "........"],
     "stop": ["....OOOO", "....ODDO", "OOOOOOOO", "OTTTTOWO", "OWWWWOO.", "OWWWWO..", ".OOOO...", "........"],
     "exit": ["OOOOO...", "OTTTO.O.", "OTTTOOGO", "OTTYGGGO", "OTTTOOGO", "OTTTO.O.", "OOOOO...", "........"],
     "head": ["...OO...", "..ODDO..", ".OOOOOO.", "OHHHHHHO", "OSOOSOOO", "OSSSSSSO", ".OSSSSO.", "..OOOO.."],
-    "switch": ["OOOOO...", "OLLLO...", "OLOOOOO.", "OLOCWCO.", "OOOCCCO.", "..OCWCO.", "..OOOOO.", "........"],
+    "switch": [".OOOOOO.", "OCCCCWCO", "OWWWWWWO", "OCCCCWCO", "OCWCCCCO", "OWWWWWWO", "OCWCCCCO", ".OOOOOO."],  # T-172 보강
     "bite": ["..OOO...", ".OTTTO.T", "OTDTTO..", "OTTTTTO.", "OTTDTtO.", ".OTttO..", "..OOO...", "........"],
     "tag": [".O....O.", "..O..O..", "OOOOOOO.", "OHWMMWO.", "OPWWWWOC", "OCCCCCO.", "OOOOOOO.", "........"],
     "pack": ["..OOOO..", "..O..O..", "OOOOOOOO", "OTTTTTTO", "OttYYttO", "OTTTTTTO", "OOOOOOOO", "........"],

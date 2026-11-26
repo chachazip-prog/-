@@ -5,13 +5,17 @@
  * 결정성: 고정 스텝(rules.fixedStepSec) + 시드 RNG(FloorSim.rng 하나를 공유) + 고정된 갱신 순서.
  *  매 스텝: (1) 하루 규칙 전처리(시계·방해 시작·미션 해금) → (2) FloorSim.step → (3) 후처리(미션 진행·퇴근·결과)
  *
- * 입력:
- *  - tapWorld(tx, ty): 화면(지도) 탭. 미션 행동 중이면 미션 입력, 퇴근 가방·게이트 단계면 그 입력, 아니면 이동/정지(FloorSim.tap)
- *  - tapMission(id): HUD 미션 칩. 화면 탭이 아니므로 이동 중에도 멈추지 않고 목적지만 바꾼다(rules.input.hudTapDoesNotStop)
+ * 입력(T-170 방향 패드, design/control-dpad.md — 씬과 QA 봇이 같은 API):
+ *  - setPad(dir | null): 방향 패드. 행동 중 잠김(화장실 = 나가기), 얼음 중 freezeStartHoldSec 꾹, 자동 연출 중 잠김
+ *  - pressAction() / releaseAction(pressSec) / tapAction(): 행동 버튼(§4-2 우선순위 9단계, actionState())
+ *  - pressPlayfield() / releasePlayfield(pressSec) / tapPlayfield(): 게임 화면 톡. 집중 상황(QTE·말걸기·미션 행동·게이트·가방)이면 행동 버튼과 같음
+ *  - tapChip(id): 미션 칩 = 길 안내(§4-5). 시작 칸에 서 있으면 시작. 'leave' = 퇴근 아이콘
+ *  - tapWorld·tapMission: 옛 API 호환(화면 톡·칩 톡으로 연결, 이동하지 않음)
  */
 import { FloorSim, type SimEvent } from '../floorSim';
 import { tileOf, zoneAt, type Tile } from '../grid';
 import { DIR_ANGLE, canSee, type Dir } from '../vision';
+import { DIR_VEC } from '../player';
 import { Follower } from './follower';
 import { GreetQte, type QteResult } from './qte';
 import { findPath } from '../pathfinding';
@@ -64,7 +68,43 @@ export type DayEvent =
   | { t: number; type: 'couponStamp'; total: number }
   // ── T-151 성별 시설 ──
   /** 본부장 화장실 들름(C2·C3): tell = 들어가기 전조(same일 때만 경고 문구·소리), enter, seen = 세면대·바닥에서 마주침, exit. cleaning = C4 청소 시작 */
-  | { t: number; type: 'facility'; stage: 'tell' | 'enter' | 'seen' | 'exit' | 'cleaning'; relation?: 'same' | 'other'; npc?: string };
+  | { t: number; type: 'facility'; stage: 'tell' | 'enter' | 'seen' | 'exit' | 'cleaning'; relation?: 'same' | 'other'; npc?: string }
+  // ── T-170 방향 패드 ──
+  /** 길 안내 켜짐·꺼짐(칩 톡·자동). reason: chip(칩 톡) · auto(튜토리얼·퇴근) · arrive · timeout · toggle */
+  | { t: number; type: 'guide'; on: boolean; id: string; reason: 'chip' | 'auto' | 'arrive' | 'timeout' | 'toggle' | 'replaced' }
+  /** 행동 버튼 입력 결과(사운드·연출) */
+  | { t: number; type: 'action'; kind: ActionKind; source: 'button' | 'playfield' | 'chip' };
+
+/** 행동 버튼 상태(control-dpad §4-2, 위가 먼저) */
+export type ActionKind = 'greet' | 'nod' | 'activity' | 'gate' | 'pack' | 'accept' | 'use' | 'start' | 'none';
+
+export interface ActionState {
+  readonly kind: ActionKind;
+  /** 우선순위 1~9 */
+  readonly rank: number;
+  /** 아이콘 이름(ui/action_icon/<icon>, fx/head_icon/<icon>) */
+  readonly icon: string;
+  /** 버튼 아래 라벨 문구 키(없으면 null) */
+  readonly labelKey: string | null;
+  /** 아이콘이 없을 때 쓸 미션 아이콘(iconSprite) */
+  readonly missionIcon?: string;
+  readonly missionId?: string;
+  /** 집중 상황: 게임 화면 톡도 행동 버튼과 같음(§4-1 ③) */
+  readonly focus: boolean;
+  /** 사용 가능(아니면 흐리게) */
+  readonly enabled: boolean;
+  /** 사용 칸 1칸 보정이면 그 사물 칸(머리 위 화살표 fx/use_hint 표시용) */
+  readonly useTile?: Tile;
+}
+
+/** 길 안내(control-dpad §4-5): 발자국 trail(앞 guideTrailTiles칸) + 목적지 핀 */
+export interface GuideView {
+  readonly id: string;
+  readonly goal: Tile;
+  readonly trail: readonly Tile[];
+  /** 남은 시간(초, Infinity = 도착까지) */
+  readonly left: number;
+}
 
 /** 미션 런타임 상태 */
 export interface MissionRuntime {
@@ -103,7 +143,13 @@ function tutorialTrigger(id: string): string | undefined {
 
 const TUTORIAL_ON: Readonly<Record<string, string>> = {
   // tutorialId → 트리거 이름 (트리거가 오면 tutorial.<id> 문구를 한 번 띄움)
-  tut_tap_move: 'dayStart',
+  // T-170: tut_tap_move(폐지 키, control-dpad §10-4)는 띄우지 않음. 패드 튜토리얼(§6-1)
+  tut_tap_move: 'never',
+  tut_pad_move: 'firstUnlock',
+  tut_use: 'useAvailable',
+  tut_sit: 'carryStart',
+  tut_guide: 'chipGuide',
+  tut_hand_setting: 'never', // 결과 화면에서 씬이 띄움
   tut_work: 'firstSeatedWork',
   tut_coffee: 'start:coffee',
   tut_restroom: 'start:restroom',
@@ -240,6 +286,27 @@ export class DaySim {
   private facRun: { npc: PatrolNpc; stage: 'tell' | 'walk' | 'inside'; seen: boolean } | null = null;
   private facStops = 0;
   private facCueLeft = 0;
+  // ── T-170 방향 패드 ──
+  /** 씬·봇이 누른 원래 방향(잠금 적용 전) */
+  private padRaw: Dir | null = null;
+  /** 지금 방향을 누르고 있는 시간(얼음 중 꾹 판정) */
+  private padHeldSec = 0;
+  /** 1~3일차 '지금은 버튼을 톡!'(하루 1번) */
+  private padLockedHinted = false;
+  /** 1~3일차 '이동은 아래 패드로 해요'(하루 mapTapHintMaxPerDay번) */
+  private mapTapHints = 0;
+  /** 행동 버튼(또는 집중 상황 화면 톡)이 눌린 채인 입력: 뗄 때 판정할 대상 */
+  private actionDown: 'qte' | 'activity' | null = null;
+  /** 길 안내 */
+  private guideState: { id: string; goal: Tile; left: number; trail: Tile[]; at: string } | null = null;
+  /** 이동 구간 효율(디버그·QA): 출발 칸, 이동 시간 */
+  private trip: { from: Tile; moving: number } | null = null;
+  private lastStillTile: Tile | null = null;
+  /** η = Σ최단 시간 ÷ Σ실제 이동 시간(이동 구간: 멈춘 곳 → 미션 시작·자리 앉기·게이트) */
+  readonly padMetrics = { trips: 0, shortestSec: 0, movingSec: 0 };
+  private firstUnlockSeen = false;
+  private wasAtSeatStill = true;
+
   // ── 이어하기(D-050) ──
   continued = false;
   private endedFrom: { phase: DayPhase; leaveStage: LeaveStage } | null = null;
@@ -395,6 +462,7 @@ export class DaySim {
     this.floor.player.teleport(tile);
     this.floor.camera?.snap(this.floor.player.y);
     for (const n of this.floor.npcs) if (n.mode === 'talk' || n.mode === 'tell' || n.mode === 'look') n.interruptLook(this.floor.rng);
+    this.guideState = null; this.trip = null; this.actionDown = null;
     if (this.activeMission) { this.activeMission.state = 'open'; this.activeMission.startedAt = null; delete this.activeMission.run; }
     for (const m of this.missions) if (m.state === 'carry' || m.state === 'active') { m.state = 'open'; m.startedAt = null; delete m.run; }
     this.activity = null; this.activeMission = null; this.pendingMission = null;
@@ -415,60 +483,403 @@ export class DaySim {
     return true;
   }
 
-  // ── 입력 ─────────────────────────────────────────────
+  // ── 입력(T-170 방향 패드) ───────────────────────────────
 
-  tapWorld(tx: number, ty: number, pressSec?: number): string {
-    if (this.phase === 'intro' || this.phase === 'ended' || this.floor.outcome !== 'playing') return 'ignored';
-    if (this.qteActive) { this.tapQte(pressSec ?? 0.1); return 'qte'; }
-    const p = this.floor.player;
-    if (p.mode === 'talked') return this.floor.tap(tx, ty);
-    if (this.activity && this.activeMission) {
-      const fx = emptyEffects();
-      const ctx = pressSec !== undefined ? { ...this.activityCtx(), pressSec } : this.activityCtx();
-      if (this.commitRule(this.activeMission) === 'first_input') this.commitMission(this.activeMission);
-      const st = this.activity.tap(ctx, fx);
-      this.applyEffects(fx);
-      this.resolveActivity(st);
-      return 'mission';
-    }
-    if (this.phase === 'leave') {
-      if (this.leaveStage === 'pack' && this.playerAtSeat && this.floor.playerStill && this.content.leave.packTapPauses) {
-        const self = tx === p.tile.x && ty === p.tile.y;
-        // 자리 근처 탭 = 가방 멈춤/재개, 다른 곳 탭 = 이동(가방은 자리에서만 챙김)
-        if (self || Math.abs(tx - p.tile.x) + Math.abs(ty - p.tile.y) <= 1) { this.packPaused = !this.packPaused; return 'pack'; }
-      }
-      if (this.leaveStage === 'gate') { this.gateTap(); return 'gate'; }
-      if (this.leaveStage === 'elevator' || this.leaveStage === 'done') return 'ignored';
-    }
-    if (p.mode !== 'moving' && !p.paused && this.facilityTapBlocked(tx, ty)) return 'facility';
-    return this.floor.tap(tx, ty);
+  get controls(): DayContent['controls'] { return this.content.controls; }
+
+  /** 대표님 얼음(전조 ~ 대화 종료): 패드를 freezeStartHoldSec 꾹 눌러야 출발(control-dpad §3-4) */
+  get padFreezeGuard(): boolean {
+    const st = this.ceoState;
+    return st === 'tell' || st === 'freeze' || st === 'qte' || st === 'talk';
   }
 
-  /** HUD 미션 칩 */
-  tapMission(id: string): boolean {
+  /** 얼음 중 꾹 누름 진행(0~1, 표시용). 얼음이 아니면 null */
+  get padFreezeProgress(): number | null {
+    if (!this.padFreezeGuard) return null;
+    const h = this.controls.freezeStartHoldSec;
+    return this.padRaw ? Math.min(1, h > 0 ? this.padHeldSec / h : 1) : 0;
+  }
+
+  /** 패드 잠김: 미션 행동 중(화장실 제외), 자동 연출(게이트 → 엘리베이터, 사용 칸 1칸 보정) */
+  get padLocked(): boolean {
+    if (this.phase === 'intro' || this.phase === 'ended') return true;
+    if (this.phase === 'leave' && (this.gateOpen || this.leaveStage === 'lobby' || this.leaveStage === 'elevator' || this.leaveStage === 'done')) return true;
+    if (this.floor.player.onPath) return true;
+    if (this.activity && this.controls.lockedDuringActivity && !this.restroomPadExit()) return true;
+    return false;
+  }
+
+  /** 화장실 행동 중 패드 = 나가기(events.restroom.params.padExits) */
+  private restroomPadExit(): boolean {
+    const m = this.activeMission;
+    if (!this.activity || !m || m.def.mechanic !== 'trip_safe_zone') return false;
+    const pe = m.def.params['padExits'];
+    return typeof pe === 'boolean' ? pe : this.controls.restroomPadExits;
+  }
+
+  /** 지금 패드 입력(잠금 적용 전, 표시용) */
+  get padInput(): Dir | null { return this.padRaw; }
+
+  /**
+   * 방향 패드 입력(씬·QA 봇 공용). null = 손 뗌(정지 = 위장).
+   * 화장실 행동 중 누르면 나가기 + 그 방향으로 걷기, 다른 행동 중에는 잠김(1~3일차 첫 1회 안내)
+   */
+  setPad(dir: Dir | null): void {
+    const prev = this.padRaw;
+    this.padRaw = dir;
+    if (dir !== prev) this.padHeldSec = 0;
+    if (dir && dir !== prev && this.activity && this.activeMission && this.phase !== 'ended') {
+      if (this.restroomPadExit()) {
+        this.activityTap(undefined);
+      } else if (this.controls.lockedDuringActivity && this.tutorialDay() && !this.padLockedHinted) {
+        this.padLockedHinted = true;
+        this.push({ t: this.time, type: 'toast', key: 'hud.pad_locked_hint' });
+      }
+    }
+    this.applyPad();
+  }
+
+  /** 잠금·얼음 규칙을 적용해 FloorSim에 전달 */
+  private applyPad(): void {
+    let eff = this.padRaw;
+    if (eff) {
+      if (this.padLocked || this.floor.outcome !== 'playing') eff = null;
+      else if (this.padFreezeGuard && this.floor.player.mode !== 'moving' && this.padHeldSec + 1e-9 < this.controls.freezeStartHoldSec) eff = null;
+    }
+    if (eff !== this.floor.padDir) this.floor.setPad(eff);
+  }
+
+  private tutorialDay(): boolean {
+    const [a, b] = this.controls.mapTapHintDays;
+    return this.content.day >= a && this.content.day <= b;
+  }
+
+  /** 미션 행동 입력(옛 tapWorld의 미션 분기) */
+  private activityTap(pressSec: number | undefined): void {
+    if (!this.activity || !this.activeMission) return;
+    const fx = emptyEffects();
+    const ctx = pressSec !== undefined ? { ...this.activityCtx(), pressSec } : this.activityCtx();
+    if (this.commitRule(this.activeMission) === 'first_input') this.commitMission(this.activeMission);
+    const st = this.activity.tap(ctx, fx);
+    this.applyEffects(fx);
+    this.resolveActivity(st);
+  }
+
+  /** 뗄 때 판정하는 행동인가(간식·수다 judgeOn release, 길게 누름 = 바스락) */
+  private activityJudgesOnRelease(): boolean {
+    const m = this.activeMission;
+    if (!this.activity || !m) return false;
+    const j = m.def.params['judgeOn'];
+    return j === 'release' || (j === undefined && m.def.mechanic === 'rhythm_tap');
+  }
+
+  /** 시작 방식(데이터 없으면 화장실만 auto_on_stop) */
+  private startByOf(m: MissionRuntime): 'action' | 'auto_on_stop' {
+    return m.def.startBy ?? (m.def.mechanic === 'trip_safe_zone' ? 'auto_on_stop' : 'action');
+  }
+
+  /** 자리에서 시작하는 미션(쇼핑·간식·공과금·출력 걸기) */
+  private seatMission(m: MissionRuntime): boolean {
+    return m.def.startsAt === 'chip_tap_at_seat' || (m.def.mechanic === 'remote_start_fetch' && !m.job);
+  }
+
+  /** 미션을 시작하는 칸(자리 미션 = 내 자리, 청소 우회 칸, 드러나기 전 = 구역 입구) */
+  missionStartTile(m: MissionRuntime): Tile {
+    if (this.seatMission(m)) return this.content.playerSeat;
+    const d = this.cleaningDetourFor(m);
+    return d ?? this.missionTarget(m);
+  }
+
+  /** 행동 버튼 순위 7: 사용 칸 1칸 안에 멈춰 있는 사물(위험한 행동 = 버튼 시작) */
+  private usableMission(): { m: MissionRuntime; tile: Tile; dist: number } | null {
+    if (this.phase !== 'day' || this.activity) return null;
+    const p = this.floor.player;
+    if (!p.stoppedAtCenter) return null;
+    const here = p.tile;
+    const r = this.controls.useSpotAssistTiles;
+    let best: { m: MissionRuntime; tile: Tile; dist: number } | null = null;
+    for (const m of this.missions) {
+      if (m.state !== 'open' || m.blocked || this.seatMission(m) || this.startByOf(m) !== 'action') continue;
+      if (m.def.zoneEntry && !m.revealed) continue;
+      if (this.cleaningDetourFor(m) === null) continue;
+      const t = this.missionStartTile(m);
+      const d = Math.abs(t.x - here.x) + Math.abs(t.y - here.y);
+      if (d > r) continue;
+      if (d > 0) { const path = this.floor.pathTo(t); if (!path || path.length > r) continue; }
+      if (!best || d < best.dist) best = { m, tile: t, dist: d };
+    }
+    return best;
+  }
+
+  /** 행동 버튼 순위 8: 자리에 앉아 있고 열린 자리 미션(가장 먼저 열린 것) */
+  private seatStartMission(): MissionRuntime | null {
+    if (this.phase !== 'day' || this.activity || !this.playerAtSeat || !this.floor.player.stoppedAtCenter) return null;
+    let best: MissionRuntime | null = null;
+    for (const m of this.missions) {
+      if (m.state !== 'open' || m.blocked || !this.seatMission(m)) continue;
+      if (!best || m.def.unlockAtSec < best.def.unlockAtSec) best = m;
+    }
+    return best;
+  }
+
+  private activityIcon(m: MissionRuntime): { icon: string; labelKey: string } {
+    const v = this.activity?.view();
+    switch (v?.kind) {
+      case 'pour': return { icon: m.def.id === 'window' ? 'breath' : 'stop', labelKey: 'action.stop' };
+      case 'restroom': return { icon: 'exit', labelKey: 'action.exit' };
+      case 'nap': return { icon: 'head', labelKey: 'action.head' };
+      case 'shop': return { icon: 'switch', labelKey: 'action.switch' };
+      case 'snack': return m.def.id === 'chat' ? { icon: 'nod', labelKey: 'action.chat' } : { icon: 'bite', labelKey: 'action.bite' };
+      case 'fetch': return { icon: 'stop', labelKey: 'action.pause' };
+      case 'remote_start': return { icon: 'start', labelKey: 'action.start' };
+      case 'grab': return v.done ? { icon: 'grab', labelKey: 'action.grab' } : { icon: 'stop', labelKey: 'action.pause' };
+      case 'queue': return v.stage === 'window' ? { icon: 'pickup', labelKey: 'action.pickup' } : { icon: 'stop', labelKey: 'action.pause' };
+      default: return { icon: 'use', labelKey: 'action.use' };
+    }
+  }
+
+  /** 사물 사용 라벨(택배 받기·출력 집기·카페 주문·그 밖 사용) */
+  private useIcon(m: MissionRuntime): { icon: string; labelKey: string } {
+    switch (m.def.mechanic) {
+      case 'fetch_carry': return { icon: 'pickup', labelKey: 'action.pickup' };
+      case 'remote_start_fetch': return { icon: 'grab', labelKey: 'action.grab' };
+      case 'queue_wait_tap': return { icon: 'order', labelKey: 'action.order' };
+      default: return { icon: 'use', labelKey: 'action.use' };
+    }
+  }
+
+  /** 행동 버튼 상태(control-dpad §4-2 우선순위 1~9). 씬이 매 프레임 그림 */
+  actionState(): ActionState {
+    const none: ActionState = { kind: 'none', rank: 9, icon: 'idle', labelKey: null, focus: false, enabled: false };
+    if (this.phase === 'intro' || this.phase === 'ended' || this.floor.outcome !== 'playing') return none;
+    const p = this.floor.player;
+    const focusOn = (k: string) => this.controls.playfieldTapCountsIn.includes(k);
+    if (this.qteActive) return { kind: 'greet', rank: 1, icon: 'greet', labelKey: 'action.greet', focus: focusOn('qte'), enabled: true };
+    if (p.mode === 'talked') {
+      const t = this.floor.talkingNpc?.def.talk;
+      const can = !!t?.nodShortenSec && t.nodShortenSec > 0;
+      return { kind: 'nod', rank: 2, icon: 'nod', labelKey: 'action.nod', focus: focusOn('talk'), enabled: can };
+    }
+    if (this.activity && this.activeMission) {
+      const a = this.activityIcon(this.activeMission);
+      return { kind: 'activity', rank: 3, ...a, missionIcon: this.activeMission.def.iconSprite, missionId: this.activeMission.def.id, focus: focusOn('activity'), enabled: true };
+    }
+    if (this.phase === 'leave') {
+      if (this.leaveStage === 'gate') return { kind: 'gate', rank: 4, icon: 'tag', labelKey: 'action.tag', focus: focusOn('gate'), enabled: true };
+      if (this.leaveStage === 'pack' && this.playerAtSeat && this.floor.playerStill && this.content.leave.packTapPauses) {
+        return { kind: 'pack', rank: 5, icon: 'pack', labelKey: this.packPaused ? 'action.pack_resume' : 'action.pack_pause', focus: focusOn('pack'), enabled: true };
+      }
+      return none;
+    }
+    if (this.offer && this.phase === 'day' && !this.frozenAll) return { kind: 'accept', rank: 6, icon: 'accept', labelKey: 'action.accept', missionId: this.offer.missionId, focus: false, enabled: true };
+    const u = this.usableMission();
+    if (u) {
+      const a = this.useIcon(u.m);
+      return { kind: 'use', rank: 7, ...a, missionIcon: u.m.def.iconSprite, missionId: u.m.def.id, focus: false, enabled: true, useTile: u.m.def.spot };
+    }
+    const sm = this.seatStartMission();
+    if (sm) return { kind: 'start', rank: 8, icon: 'start', labelKey: 'action.start', missionIcon: sm.def.iconSprite, missionId: sm.def.id, focus: false, enabled: true };
+    return none;
+  }
+
+  /** 행동 버튼 누름. 반환: 실행한 행동 종류('none' = 아무 일 없음) */
+  pressAction(source: 'button' | 'playfield' = 'button'): ActionKind {
+    const st = this.actionState();
+    this.actionDown = null;
+    switch (st.kind) {
+      case 'greet': this.pressQte(); this.actionDown = 'qte'; break;
+      case 'nod': if (!this.floor.nod()) return 'none'; break;
+      case 'activity':
+        if (this.activityJudgesOnRelease()) this.actionDown = 'activity';
+        else this.activityTap(undefined);
+        break;
+      case 'gate': this.gateTap(); break;
+      case 'pack': this.packPaused = !this.packPaused; break;
+      case 'accept': if (!this.acceptOffer()) return 'none'; break;
+      case 'use': {
+        const u = this.usableMission();
+        if (!u) return 'none';
+        this.startUse(u.m, u.tile, u.dist);
+        break;
+      }
+      case 'start': { const m = this.seatStartMission(); if (!m) return 'none'; this.startActivity(m); break; }
+      case 'none': return 'none';
+    }
+    this.push({ t: this.time, type: 'action', kind: st.kind, source });
+    return st.kind;
+  }
+
+  /** 행동 버튼 뗌(누른 시간). QTE·뗄 때 판정 행동만 의미 있음 */
+  releaseAction(pressSec: number): void {
+    const d = this.actionDown;
+    this.actionDown = null;
+    if (d === 'qte') this.releaseQte(pressSec);
+    else if (d === 'activity' && this.activity) this.activityTap(pressSec);
+  }
+
+  /** 짧게 톡(QA 봇용) */
+  tapAction(pressSec = 0.1): ActionKind { const k = this.pressAction(); this.releaseAction(pressSec); return k; }
+
+  /** 지금 집중 상황인가(게임 화면 톡 = 행동 버튼) */
+  get playfieldFocus(): boolean { return this.actionState().focus; }
+
+  /**
+   * 게임 화면 누름. 집중 상황이면 행동 버튼과 같고, 아니면 아무 일도 없음(1~3일차 첫 2번 '이동은 아래 패드로' 안내)
+   */
+  pressPlayfield(): ActionKind | 'ignored' {
+    if (this.phase === 'intro' || this.phase === 'ended' || this.floor.outcome !== 'playing') return 'ignored';
+    if (this.playfieldFocus) return this.pressAction('playfield');
+    this.actionDown = null;
+    if (this.phase === 'day' && this.tutorialDay() && this.mapTapHints < this.controls.mapTapHintMaxPerDay) {
+      this.mapTapHints++;
+      this.push({ t: this.time, type: 'toast', key: 'hud.map_tap_hint' });
+    }
+    return 'ignored';
+  }
+
+  releasePlayfield(pressSec: number): void { if (this.actionDown) this.releaseAction(pressSec); }
+
+  tapPlayfield(pressSec = 0.1): ActionKind | 'ignored' { const k = this.pressPlayfield(); this.releasePlayfield(pressSec); return k; }
+
+  /** @deprecated T-170: 옛 화면 탭 API. 게임 화면 톡(tapPlayfield)으로 연결(이동 없음). pressSec가 있으면 누름·뗌 */
+  tapWorld(_tx: number, _ty: number, pressSec?: number): string {
+    if (this.phase === 'intro' || this.phase === 'ended' || this.floor.outcome !== 'playing') return 'ignored';
+    const k = this.pressPlayfield();
+    this.releasePlayfield(pressSec ?? 0.1);
+    return k === 'greet' ? 'qte' : k === 'activity' ? 'mission' : k;
+  }
+
+  /** @deprecated T-170: 옛 칩 API = tapChip */
+  tapMission(id: string): boolean { return this.tapChip(id); }
+
+  /**
+   * 미션 칩 톡(control-dpad §4-5): 길 안내 켜기·끄기·바꾸기. 그 미션 시작 칸에 서 있으면(자리 미션은 앉아 있으면) 시작.
+   * 들고 복귀 중인 미션 = 내 자리로 안내. 'leave' = 퇴근 아이콘(6일차부터 퇴근 안내)
+   */
+  tapChip(id: string): boolean {
+    if (this.phase === 'leave' && id === 'leave') { const g = this.leaveGoal(); return g ? this.setGuide('leave', g, Infinity, 'chip') : false; }
     if (this.phase !== 'day' || this.activity) return false;
     const m = this.missions.find((x) => x.def.id === id);
     if (!m) return false;
-    if (m.state === 'carry') return this.floor.moveTo(this.content.playerSeat);
+    if (m.state === 'carry') return this.setGuide(`carry:${id}`, this.content.playerSeat, this.controls.guideSec, 'chip');
     if (m.state !== 'open' || m.blocked) return false;
-    this.pendingMission = m;
-    this.maybeOffer(m);
     this.routeHintFor(m);
-    if (m.def.startsAt === 'chip_tap_at_seat' || (m.def.mechanic === 'remote_start_fetch' && !m.job)) {
-      if (this.playerAtSeat && this.floor.player.mode !== 'moving') { this.startActivity(m); return true; }
-      return this.floor.moveTo(this.content.playerSeat);
+    const p = this.floor.player;
+    const atStart = (t: Tile) => p.stoppedAtCenter && p.tile.x === t.x && p.tile.y === t.y;
+    if (this.seatMission(m)) {
+      if (this.controls.startIfAtStartSpot && this.playerAtSeat && p.stoppedAtCenter) { this.startActivity(m); this.push({ t: this.time, type: 'action', kind: 'start', source: 'chip' }); return true; }
+      return this.setGuide(id, this.content.playerSeat, this.controls.guideSec, 'chip');
     }
     // T-151 C4: 청소 중이면 내 쪽 탈의실 구석 칸으로 우회(있을 때). 없으면 안내만
     const detour = this.cleaningDetourFor(m);
     if (detour === null) { this.cleaningToast(); return false; }
-    if (!this.playerAtSeat && m.startedAt === null) m.startedAt = this.leftSeatAt ?? this.time;
-    const t = detour ?? this.missionTarget(m);
-    const here = this.floor.player.tile;
-    if (here.x === t.x && here.y === t.y && this.floor.player.mode !== 'moving') {
+    const t = this.missionStartTile(m);
+    if (atStart(t)) {
       if (t === m.def.zoneEntry) return true; // 구역 입구에 이미 있음: 장소가 드러날 때까지 둘러보기
-      this.startActivity(m); return true;
+      if (this.controls.startIfAtStartSpot) { this.startActivity(m); this.push({ t: this.time, type: 'action', kind: 'use', source: 'chip' }); return true; }
     }
-    return this.floor.moveTo(t);
+    return this.setGuide(id, t, this.controls.guideSec, 'chip');
+  }
+
+  /** 사용 칸 보정(§4-3): 0칸이면 바로 시작, 1칸이면 자동으로 한 칸 걷고(이동으로 계산) 도착하면 시작 */
+  private startUse(m: MissionRuntime, t: Tile, dist: number): void {
+    if (dist === 0) { this.startActivity(m); return; }
+    if (this.floor.moveTo(t)) { this.pendingMission = m; this.applyPad(); }
+  }
+
+  // ── 길 안내 ──
+
+  /** 지금 길 안내(표시용) */
+  get guide(): GuideView | null {
+    const g = this.guideState;
+    return g ? { id: g.id, goal: g.goal, trail: g.trail, left: g.left } : null;
+  }
+
+  /** 안내 켜기. 같은 id를 다시 켜면(칩 다시 톡) 끔. 반환: 처리했는가 */
+  private setGuide(id: string, goal: Tile, sec: number, reason: 'chip' | 'auto'): boolean {
+    const cur = this.guideState;
+    if (cur && cur.id === id && reason === 'chip') { this.guideOff('toggle'); return true; }
+    if (cur) this.guideOff('replaced');
+    const here = this.floor.player.tile;
+    if (here.x === goal.x && here.y === goal.y) return true;
+    this.guideState = { id, goal, left: sec, trail: [], at: '' };
+    this.updateGuideTrail();
+    this.push({ t: this.time, type: 'guide', on: true, id, reason });
+    if (reason === 'chip') this.tutorial('chipGuide');
+    return true;
+  }
+
+  private guideOff(reason: 'arrive' | 'timeout' | 'toggle' | 'replaced'): void {
+    const g = this.guideState;
+    if (!g) return;
+    this.guideState = null;
+    this.push({ t: this.time, type: 'guide', on: false, id: g.id, reason });
+  }
+
+  private updateGuideTrail(): void {
+    const g = this.guideState;
+    if (!g) return;
+    const here = this.floor.player.tile;
+    const key = `${here.x},${here.y}`;
+    if (key === g.at) return;
+    g.at = key;
+    const path = this.floor.pathTo(g.goal);
+    g.trail = path ? path.slice(0, Math.max(0, this.controls.guideTrailTiles)) : [];
+  }
+
+  private guideStep(dt: number): void {
+    const g = this.guideState;
+    if (!g) return;
+    const here = this.floor.player.tile;
+    if (here.x === g.goal.x && here.y === g.goal.y) { this.guideOff('arrive'); return; }
+    if (Number.isFinite(g.left)) { g.left -= dt; if (g.left <= 0) { this.guideOff('timeout'); return; } }
+    // 칩 대상 미션이 끝났으면 끔
+    if (!g.id.startsWith('leave') && !g.id.startsWith('carry:') && g.id !== 'seat') {
+      const m = this.missions.find((x) => x.def.id === g.id);
+      if (!m || m.state === 'done' || m.state === 'failed' || m.state === 'active') { this.guideOff('arrive'); return; }
+    }
+    this.updateGuideTrail();
+  }
+
+  /** 퇴근 안내 목표: 가방 전 = 자리, 걷기 = 게이트, 게이트 통과 뒤 = 엘리베이터(로비 출구) */
+  private leaveGoal(): Tile | null {
+    if (this.phase !== 'leave') return null;
+    if (this.leaveStage === 'pack') return this.playerAtSeat ? null : this.content.playerSeat;
+    if (this.leaveStage === 'walk') return this.content.leave.gate.spot;
+    return null;
+  }
+
+  /** 1~5일차(leaveGuideAutoUntilDay) 퇴근 안내 자동 */
+  private autoLeaveGuide(): void {
+    if (this.content.day > this.controls.leaveGuideAutoUntilDay) return;
+    const g = this.leaveGoal();
+    if (g) this.setGuide(`leave:${this.leaveStage}`, g, Infinity, 'auto');
+  }
+
+  /** 디버그·QA: 이동 구간 η(최단 시간 ÷ 실제 이동 시간). 구간이 없으면 null */
+  get padEta(): number | null { const m = this.padMetrics; return m.movingSec > 0 ? m.shortestSec / m.movingSec : null; }
+
+  private tripStep(dt: number): void {
+    const p = this.floor.player;
+    if (p.stoppedAtCenter && !this.trip) this.lastStillTile = p.tile;
+    if (p.mode === 'moving' && !p.onPath) {
+      if (!this.trip) this.trip = { from: this.lastStillTile ?? p.tile, moving: 0 };
+      this.trip.moving += dt;
+    }
+  }
+
+  /** 이동 구간 끝(미션 시작·자리 앉기·게이트 단계) */
+  private tripEnd(): void {
+    const tr = this.trip;
+    this.trip = null;
+    const here = this.floor.player.tile;
+    this.lastStillTile = here;
+    if (!tr || tr.moving <= 0) return;
+    const path = findPath(this.floor.map, tr.from, here);
+    if (!path || path.length === 0) return;
+    this.padMetrics.trips++;
+    this.padMetrics.shortestSec += path.length / this.content.floor.rules.playerSpeedTilesPerSec;
+    this.padMetrics.movingSec += tr.moving;
   }
 
   /** zone_only(gdd-v3 §10): 드러나기 전에는 칩·화살표 목표 = 구역 입구, 드러난 뒤 = 장소 */
@@ -529,12 +940,16 @@ export class DaySim {
 
     const s0 = this.floor.suspicion.value;
     const wasMoving = this.floor.player.mode === 'moving';
+    // T-170: 패드 잠금·얼음 꾹 판정을 매 스텝 다시 적용(행동이 끝나면 누르고 있던 방향으로 출발)
+    if (this.padRaw) this.padHeldSec += dt;
+    this.applyPad();
     this.facilityTalkCancel();
     if (!this.playerOnGate()) this.offGateStill = this.floor.playerStill && !this.floor.player.paused;
     this.floor.step();
     this.collectFloorEvents();
     if (this.floor.outcome === 'caught') { this.end('caught'); return; }
 
+    this.tripStep(dt);
     this.trackSeat();
     if (this.phase === 'day') { this.zoneRevealStep(); this.dayAfterStep(dt); }
     else if (this.phase === 'leave') this.leaveAfterStep(dt);
@@ -549,6 +964,8 @@ export class DaySim {
     this.deferredStep();
     this.tourStep();
     this.scriptWatchers();
+    this.guideStep(dt);
+    if ((this.phase as DayPhase) !== 'ended' && this.actionState().kind === 'use') this.tutorial('useAvailable');
     if (this.ceoState !== 'none' && this.ceoState !== 'pending' && this.ceoState !== 'skipped' && this.ceoState !== 'done' && this.ceoState !== 'cancelled') {
       this.ceoGain += Math.max(0, this.floor.suspicion.value - s0);
     }
@@ -642,6 +1059,14 @@ export class DaySim {
     const p = this.floor.player;
     const g = this.content.leave.gate.spot;
     const here = p.tile;
+    // T-170 직접 조작: 경로가 없으므로 지금 칸에서 게이트 사용 칸까지 최단 걸음 수(같은 스텝 안 캐시)
+    if (!p.onPath) {
+      if (this.gateStepsCache.step !== this.floor.steps) {
+        const path = this.floor.pathTo(g);
+        this.gateStepsCache = { step: this.floor.steps, n: path ? path.length : null };
+      }
+      return this.gateStepsCache.n;
+    }
     let steps = 0, last = `${here.x},${here.y}`;
     for (const v of p.remainingPath()) {
       const t = tileOf(v);
@@ -653,6 +1078,8 @@ export class DaySim {
     }
     return null;
   }
+
+  private gateStepsCache: { step: number; n: number | null } = { step: -1, n: null };
 
   /** D-107: 경비 말걸기 전조를 지금 시작할 수 있는 구역인가 */
   private inTalkZone(z: TalkZoneDef): boolean {
@@ -759,7 +1186,10 @@ export class DaySim {
     this.push({ t: this.time, type: 'leaveStage', stage: 'pack' });
     this.push({ t: this.time, type: 'toast', key: 'hud.leave_start' });
     this.tutorial('leaveStart');
-    if (!this.playerAtSeat) this.floor.moveTo(this.content.playerSeat); // ifAwayWalkToSeatFirst
+    // T-170: 자리로 자동 이동(ifAwayWalkToSeatFirst)은 폐지 — 1~5일차는 자리 → 게이트 길 안내를 자동으로 켬(control-dpad §4-5)
+    this.pendingMission = null;
+    this.guideOff('replaced');
+    this.autoLeaveGuide();
     // 퇴근 방해: on_leave_start 트리거
     for (const int of this.content.interrupts) {
       if (int.phase !== 'leave') continue;
@@ -813,6 +1243,12 @@ export class DaySim {
         m.state = 'open';
         this.push({ t: this.time, type: 'missionUnlocked', id: m.def.id });
         if (m.def.facilityMission) this.tutorial(`unlock:${m.def.id}`);
+        if (!this.firstUnlockSeen) {
+          this.firstUnlockSeen = true;
+          // 1일차 ③(control-dpad §6-1): 첫 미션이 열리면 패드 안내 + 길 안내 자동(도착까지)
+          if (this.content.tutorialIds.includes('tut_pad_move')) { this.tutorial('firstUnlock'); this.setGuide(m.def.id, this.missionStartTile(m), Infinity, 'auto'); }
+        }
+        if (this.offerTriggerOf(m) === 'unlock') this.maybeOffer(m);
         const cl = this.content.facility?.cleaning;
         if (cl && cl.missionId === m.def.id && this.cleaningUntil === null) {
           this.cleaningUntil = this.time + cl.windowSec;
@@ -844,7 +1280,13 @@ export class DaySim {
     if (this.wasAtSeat && !at) {
       this.leftSeatAt = this.time;
       if (this.pendingMission && this.pendingMission.startedAt === null && this.pendingMission.def.awayFromDesk) this.pendingMission.startedAt = this.time;
+      // T-170 공범 제안 시점(control-dpad §4-5): 원정 미션이 열린 뒤 자리에서 처음 일어날 때
+      if (this.phase === 'day') for (const m of this.missions) if (m.state === 'open' && !m.blocked && this.offerTriggerOf(m) === 'leave_seat') { this.maybeOffer(m); break; }
     }
+    // 자리 도착해 앉음 = 이동 구간 끝(η)
+    const still = at && this.floor.player.stoppedAtCenter;
+    if (still && !this.wasAtSeatStill) this.tripEnd();
+    this.wasAtSeatStill = still;
     this.wasAtSeat = at;
   }
 
@@ -864,12 +1306,17 @@ export class DaySim {
         this.applyEffects(fx);
         this.resolveActivity(st);
       }
-    } else if (p.mode === 'idle') {
-      // 도착 → 행동 시작 (칩으로 고른 미션, 또는 열린 미션 장소를 직접 탭해 도착)
+    } else if (p.stoppedAtCenter) {
+      // T-170(control-dpad §4-3): 사용 칸 1칸 보정 도착 → 시작. 그 밖에는 '멈추면 자동'(화장실 칸)만. 위험한 행동은 버튼(pressAction)
       const here = p.tile;
-      const cand = this.pendingMission && this.matchesSpot(this.pendingMission, here) ? this.pendingMission
-        : this.missions.find((m) => m.state === 'open' && !m.blocked && m.def.startsAt === 'arrive_spot' && !(m.def.mechanic === 'remote_start_fetch' && !m.job) && this.matchesSpot(m, here));
-      if (cand && cand.state === 'open' && !cand.blocked) this.startActivity(cand);
+      const pend = this.pendingMission;
+      if (pend && this.matchesSpot(pend, here) && pend.state === 'open' && !pend.blocked) this.startActivity(pend);
+      else {
+        if (pend) this.pendingMission = null;
+        const auto = this.controls.autoStartOnStop.includes('restroom_stall');
+        const cand = auto ? this.missions.find((m) => m.state === 'open' && !m.blocked && !this.seatMission(m) && this.startByOf(m) === 'auto_on_stop' && this.matchesSpot(m, here)) : undefined;
+        if (cand) this.startActivity(cand);
+      }
     }
     // 들고 돌아오기 → 자리 도착하면 완료
     for (const m of this.missions) {
@@ -936,8 +1383,11 @@ export class DaySim {
     // zone_only: 드러나기 전 장소를 직접 톡해 도착해도 정상 시작(찾은 것으로 침)
     if (m.def.zoneEntry && !m.revealed) { m.revealed = true; this.push({ t: this.time, type: 'missionStage', id: m.def.id, stage: 'revealed' }); }
     this.floor.player.halt();
+    // T-170: 칩이 목적지를 정하지 않으므로, 원정 미션 제한 시간은 자리를 뜬 순간부터(옛 tapMission과 같은 기준)
+    if (m.startedAt === null) m.startedAt = m.def.awayFromDesk && !this.playerAtSeat ? (this.leftSeatAt ?? this.time) : this.time;
     m.state = 'active';
-    if (m.startedAt === null) m.startedAt = this.time;
+    if (this.guideState && (this.guideState.id === m.def.id)) this.guideOff('arrive');
+    this.tripEnd();
     this.activeMission = m;
     this.pendingMission = null;
     this.activity = this.makeActivity(m);
@@ -945,6 +1395,7 @@ export class DaySim {
     this.push({ t: this.time, type: 'missionStart', id: m.def.id });
     if (this.commitRule(m) === 'activity_start') this.commitMission(m);
     this.tutorial(`start:${m.def.id}`);
+    if (this.offerTriggerOf(m) === 'start_activity') this.maybeOffer(m);
     if (m.def.mechanic === 'trip_safe_zone') this.fireTrigger('restroom_inside_rest_start');
   }
 
@@ -1002,14 +1453,17 @@ export class DaySim {
       const p = m.def.params;
       m.job = new PrintJob(Math.max(1, Math.round(typeof p['pagesRequired'] === 'number' ? p['pagesRequired'] as number : 4)), typeof p['secPerPage'] === 'number' ? p['secPerPage'] as number : 0.7);
       m.state = 'open';
-      this.pendingMission = m;
       this.push({ t: this.time, type: 'missionStage', id: m.def.id, stage: 'printStart' });
-      this.floor.moveTo(this.missionTarget(m));
+      // T-170: 프린터로 자동 이동 폐지 → 길 안내(집기는 프린터에서 행동 버튼)
+      this.setGuide(m.def.id, this.missionTarget(m), this.controls.guideSec, 'auto');
       return;
     }
     this.push({ t: this.time, type: 'missionSuccess', id: m.def.id });
-    if (m.def.completeAt === 'return_to_seat') m.state = 'carry';
-    else this.completeMission(m);
+    if (m.def.completeAt === 'return_to_seat') {
+      m.state = 'carry';
+      // 1일차 ⑦: 들고 돌아갈 때 '멈추면 앉아요' + 자리로 길 안내 자동
+      if (this.content.tutorialIds.includes('tut_sit')) { this.tutorial('carryStart'); this.setGuide(`carry:${m.def.id}`, this.content.playerSeat, Infinity, 'auto'); }
+    } else this.completeMission(m);
   }
 
   private completeMission(m: MissionRuntime): void {
@@ -1067,12 +1521,13 @@ export class DaySim {
       case 'pack':
         if (this.playerAtSeat && this.floor.playerStill && p.mode !== 'talked' && !this.packPaused) {
           this.packProgress += dt;
-          if (this.packProgress >= L.packSec) this.setLeaveStage('walk');
+          if (this.packProgress >= L.packSec) { this.setLeaveStage('walk'); this.autoLeaveGuide(); }
         }
         break;
       case 'walk': {
         const t = p.tile, g = L.gate.spot;
-        if (p.mode === 'idle' && t.x === g.x && t.y === g.y) { this.setLeaveStage('gate'); this.gateTime = 0; this.tutorial('gateStart'); }
+        // T-170: 게이트 사용 칸에서 멈추거나 게이트 쪽으로 밀면(범프 = 멈춤) 게이트 단계
+        if (p.stoppedAtCenter && t.x === g.x && t.y === g.y) { this.setLeaveStage('gate'); this.gateTime = 0; this.tutorial('gateStart'); this.tripEnd(); }
         break;
       }
       case 'gate': {
@@ -1702,6 +2157,16 @@ export class DaySim {
 
   // ── 공범 동료(INT-12) ────────────────────────────────
 
+  /** T-170 제안 시점(npcs.accomplice.offer.trigger): forced = 열림, 원정 = 자리에서 일어날 때, 자리 미션 = 시작할 때 */
+  private offerTriggerOf(m: MissionRuntime): string | null {
+    const acc = this.content.accomplice;
+    const o = acc?.offers.find((x) => x.eventId === m.def.id);
+    if (!acc || !o) return null;
+    const tr = acc.offerTrigger ?? {};
+    if (o.forced) return tr['forced'] ?? 'unlock';
+    return tr[m.def.id] ?? (m.def.awayFromDesk ? 'leave_seat' : 'start_activity');
+  }
+
   private maybeOffer(m: MissionRuntime): void {
     const acc = this.content.accomplice;
     if (!acc || this.offer || this.follower || this.offered.has(m.def.id) || this.frozenAll) return;
@@ -1719,6 +2184,10 @@ export class DaySim {
 
   private accompliceStep(dt: number): void {
     const acc = this.content.accomplice;
+    // T-170: 강제 제안은 열리는 순간부터 확정 때까지(다른 제안·얼음에 막혔으면 다시 시도)
+    if (acc && !this.offer && !this.follower && this.phase === 'day') {
+      for (const m of this.missions) if (m.state === 'open' && !this.offered.has(m.def.id) && this.offerTriggerOf(m) === 'unlock') { this.maybeOffer(m); break; }
+    }
     if (this.offer) {
       const m = this.missions.find((x) => x.def.id === this.offer!.missionId);
       this.offer.left -= dt;
@@ -2163,7 +2632,11 @@ export class DaySim {
   private collectFloorEvents(): void {
     for (const e of this.floor.drainEvents()) {
       this.floorEvents.push(e);
-      if (e.type === 'closeCall') {
+      if (e.type === 'bump') {
+        // M9: 다른 쪽 시설 문·청소 중인 내 화장실 문에 부딪히면 기존 안내 토스트
+        const [vx, vy] = DIR_VEC[e.dir];
+        this.facilityTapBlocked(e.x + vx, e.y + vy);
+      } else if (e.type === 'closeCall') {
         for (const m of this.missions) if (m.run && m.startedAt !== null && (m.state === 'active' || m.state === 'carry' || m.state === 'open')) m.run.closeCalls++;
         this.addPoints(this.content.scoring.closeCallBonusPoints);
         this.push({ t: this.time, type: 'closeCall', points: this.content.scoring.closeCallBonusPoints });

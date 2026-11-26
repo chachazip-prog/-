@@ -509,7 +509,7 @@ PadDriver(§7-5), 새 지표, 합격선 1~9 재측정, η 보정, 정지 좌표 
 
 ---
 
-## 10. 문구 키 목록 (strings.ko.json 반영 대기)
+## 10. 문구 키 목록 (T-171 strings.ko.json 반영 완료)
 
 톤: 공감 코미디, 한 줄, 이모지 없음(D-047), 특수문자는 `… · — ★`만. 버튼 라벨은 10px로 3자 이내입니다.
 
@@ -568,7 +568,7 @@ PadDriver(§7-5), 새 지표, 합격선 1~9 재측정, η 보정, 정지 좌표 
 
 `tutorial.tut_snack`·`tut_nap`·`tut_shopping`·`tut_bank`·`tut_chat`·`tut_cafe`·`tut_window`·`tut_ceo_elevator`·`tut_accomplice`(말풍선 톡)·`tut_tell`·`tut_cover`·`tut_director`·`tut_callout`·`tut_print`·`tut_work`, `event.*.desc`·`event.restroom.leave_hint`·`event.shopping.checkout`·`event.leave.gate`, `ui.tap_to_start`·`ui.tap_to_retry`.
 
-### 10-4. 폐지 키 (v3 정리 때 삭제, 그때까지는 쓰지 않음)
+### 10-4. 폐지 키 (v3 정리 때 삭제, 그때까지는 쓰지 않음. 문자열은 남기고 `copyRules.deprecatedKeys`에 목록)
 
 `tutorial.tut_tap_move`, `hud.tap_move_hint`, `hud.tap_stop_hint`, `hud.resume_hint`, `hud.unreachable`.
 

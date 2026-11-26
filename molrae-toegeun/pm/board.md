@@ -109,5 +109,5 @@
 | T-167 | mt-game-designer | 방향 패드 조작 사양(REQ-017, D-127): 패드 형태·위치, 칸 단위 이동, 정지=위장 규칙, 행동 버튼, 미션·QTE 조작 재정의, 튜토리얼, 시간 예산·밸런스 영향, 문구 | - | 완료 |
 | T-169 | mt-pixel-artist | 방향 패드·행동 버튼 UI 스프라이트 | T-167 | 완료 |
 | T-170 | mt-client-dev | 방향 패드 조작 구현, 자동 이동·미션 칩 이동 제거, 카메라 추적 | T-164, T-167, T-169 | 진행 |
-| T-171 | mt-game-designer | 패드 데이터 필드(rules.input 등)·문구 31키 반영, T-164 데이터 요청(returnTell, greetHoldMaxSec, tourOneWayTiles, memoDesk·포즈), 회의 길이 단축 검토 | T-167 | 진행 |
+| T-171 | mt-game-designer | 패드 데이터 필드(rules.input 등)·문구 31키 반영, T-164 데이터 요청(returnTell, greetHoldMaxSec, tourOneWayTiles, memoDesk·포즈), 회의 길이 단축 검토 | T-167 | 완료 |
 | T-172 | mt-pixel-artist | 화장실 아이콘 글자 없는 그림으로 교체(D-132), 8px 머리 위 아이콘 greet·switch 판독성 보강 | T-169 | 진행 |

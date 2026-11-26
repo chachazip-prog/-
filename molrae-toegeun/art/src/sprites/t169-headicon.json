@@ -12,9 +12,9 @@
   {
    "name": "greet",
    "rows": [
-    "........",
-    "..OOOO..",
+    "M.OOOO.M",
     ".OHHHHO.",
+    "OHHDDHHO",
     "MOHHHHOM",
     ".OSSSSO.",
     "OPOOOOPO",
@@ -77,14 +77,14 @@
   {
    "name": "switch",
    "rows": [
-    "OOOOO...",
-    "OLLLO...",
-    "OLOOOOO.",
-    "OLOCWCO.",
-    "OOOCCCO.",
-    "..OCWCO.",
-    "..OOOOO.",
-    "........"
+    ".OOOOOO.",
+    "OCCCCWCO",
+    "OWWWWWWO",
+    "OCCCCWCO",
+    "OCWCCCCO",
+    "OWWWWWWO",
+    "OCWCCCCO",
+    ".OOOOOO."
    ]
   },
   {
