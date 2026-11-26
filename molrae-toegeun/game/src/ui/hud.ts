@@ -1,10 +1,12 @@
 /**
- * 게임 HUD (카메라 고정, 라이트 모드). 상단: 시계·의심·업무(할당량 눈금)·간식 / 하단: 미션 칩.
+ * 게임 HUD (카메라 고정, 라이트 모드). 상단: 시계·의심·업무(할당량 눈금)·간식 / 하단 조작대 안: 미션 칩 2×2·상태줄(T-170 control-dpad §2-2).
+ * 조작대 배경·패드·행동 버튼은 ui/dpad.ts(Deck)가 그린다.
  * 미션 칩·HUD 영역 탭은 '화면 탭'으로 치지 않는다(rules.input.hudTapDoesNotStop) → 씬이 hitTest로 먼저 걸러 냄.
  * 색·맥동은 art/palette.json overlay(gauge_danger, border_*), 칩 상태 규격은 style-guide §11-4.
  */
 import Phaser from 'phaser';
-import { HUD_BOTTOM_PX, HUD_TOP_PX, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
+import { HUD_TOP_PX, LOGICAL_HEIGHT, LOGICAL_WIDTH, deckBottomPx } from '../config/display';
+import { inRect, type DeckLayout } from './deckLayout';
 import type { Strings } from '../content/strings';
 import type { DaySim } from '../core/day/daySim';
 import type { MissionDef } from '../core/day/types';
@@ -13,8 +15,8 @@ import { ATLAS_KEY, iconFallback } from '../render/sprites';
 import { addPixelText, fitPanel, placeText, setPixelText, setWrap, type UIText } from './pixelText';
 
 const DEPTH = 10000;
-const CHIP = 24;
-const CHIP_GAP = 4;
+/** 칩 그림 20×20(판정은 deckLayout 22×22) */
+const CHIP = 20;
 const BAR_X = 52;
 
 export type BorderStage = 'calm' | 'alert' | 'finale' | 'danger';
@@ -27,6 +29,9 @@ export class Hud {
   private readonly pct: UIText;
   private readonly snack: UIText;
   private readonly chipIcons: Phaser.GameObjects.Image[] = [];
+  private readonly chipBgs: Phaser.GameObjects.Image[] = [];
+  private readonly leaveBg: Phaser.GameObjects.Image | null;
+  private currentHint: string | null = null;
   private readonly chipDone: Phaser.GameObjects.Image[] = [];
   /** 변형 배지 대체 점(아트 mod/* 전) */
   private readonly modDots: { x: number; y: number }[] = [];
@@ -43,12 +48,15 @@ export class Hud {
   private hintLeft = 0;
   private flash: { color: number; alpha: number; left: number; on: number; off: number } | null = null;
 
-  constructor(scene: Phaser.Scene, private readonly sim: DaySim, private readonly str: Strings) {
+  constructor(scene: Phaser.Scene, private readonly sim: DaySim, private readonly str: Strings, private readonly deck: DeckLayout) {
     this.hasAtlas = scene.textures.exists(ATLAS_KEY);
+    const tex0 = this.hasAtlas ? scene.textures.get(ATLAS_KEY) : null;
+    this.chipFrames = !!tex0 && tex0.has('ui/chip_small');
     const ink = color('outline');
     this.border = scene.add.graphics().setScrollFactor(0).setDepth(DEPTH - 1);
     this.g = scene.add.graphics().setScrollFactor(0).setDepth(DEPTH);
     const fixed = <T extends Phaser.GameObjects.Components.ScrollFactor & Phaser.GameObjects.Components.Depth>(o: T): T => { o.setScrollFactor(0); o.setDepth(DEPTH + 1); return o; };
+    const fixedAt = <T extends Phaser.GameObjects.Components.ScrollFactor & Phaser.GameObjects.Components.Depth>(o: T, d: number): T => { o.setScrollFactor(0); o.setDepth(d); return o; };
     this.clock = fixed(addPixelText(scene, 0, 0, fmtClock(sim.clockMin), { role: 'num', color: ink })); // 데이터 시계(rules.day.clockStart)
     this.rank = fixed(addPixelText(scene, 0, 0, str.t(`rank.${sim.content.rankId}.name`), { role: 'label', color: color('dark') }));
     placeText(fixed(addPixelText(scene, 0, 0, str.t('hud.suspicion'), { role: 'label', color: ink })), 30, 6, 0, 0.5);
@@ -57,8 +65,11 @@ export class Hud {
     this.snack = fixed(addPixelText(scene, 0, 0, '1', { role: 'num', color: ink }));
     if (this.hasAtlas) fixed(scene.add.image(150, 18, ATLAS_KEY, 'icon_snack'));
     sim.missions.forEach((m, i) => {
-      const x = 4 + i * (CHIP + CHIP_GAP) + CHIP / 2, y = LOGICAL_HEIGHT - HUD_BOTTOM_PX / 2;
+      const c = deck.chips[i];
+      if (!c) return;
+      const x = c.cx, y = c.cy;
       if (this.hasAtlas) {
+        if (this.chipFrames) this.chipBgs.push(fixedAt(scene.add.image(x, y, ATLAS_KEY, 'ui/chip_small'), DEPTH - 1));
         // 새 미션 아이콘(T-146 작업 중)이 아직 없으면 기존 아이콘으로 대체
         const tex = scene.textures.get(ATLAS_KEY);
         this.chipIcons.push(fixed(scene.add.image(x, y, ATLAS_KEY, tex.has(m.def.iconSprite) ? m.def.iconSprite : iconFallback(m.def.iconSprite))));
@@ -69,7 +80,9 @@ export class Hud {
         this.chipDone.push(fixed(scene.add.image(x + CHIP / 2 - 3, y - CHIP / 2 + 3, ATLAS_KEY, 'icon_done')).setVisible(false));
       }
     });
-    this.leaveIcon = this.hasAtlas ? fixed(scene.add.image(4 + CHIP / 2, LOGICAL_HEIGHT - HUD_BOTTOM_PX / 2, ATLAS_KEY, 'icon_leave')).setVisible(false) : null;
+    const c0 = deck.chips[0]!;
+    this.leaveBg = this.chipFrames ? fixedAt(scene.add.image(c0.cx, c0.cy, ATLAS_KEY, 'ui/chip_small_guide'), DEPTH - 1).setVisible(false) : null;
+    this.leaveIcon = this.hasAtlas ? fixed(scene.add.image(c0.cx, c0.cy, ATLAS_KEY, 'icon_leave')).setVisible(false) : null;
     this.stageText = fixed(addPixelText(scene, 0, 0, '', { role: 'label', color: ink }));
     this.panelText = fixed(addPixelText(scene, 0, 0, '', { role: 'label', color: ink }));
     this.hintBg = fixed(scene.add.rectangle(0, 0, 1, 1, 0xffffff, 0.94)).setStrokeStyle(1, color('dark'));
@@ -84,6 +97,10 @@ export class Hud {
   }
 
   private readonly cleanText: UIText;
+  private readonly chipFrames: boolean;
+
+  /** 지금 떠 있는 안내 문구 키(튜토리얼 연출 동기화용) */
+  get hintKey(): string | null { return this.hintLeft > 0 ? this.currentHint : null; }
 
   /** 안내 상자가 떠 있으면 그 아래 끝(px), 없으면 null. 같은 줄에 놓이는 배지('자리 비움')가 피해 가는 데 씀(T-155) */
   hintBottomPx(): number | null {
@@ -104,11 +121,14 @@ export class Hud {
       const hb = this.hintBg.getBounds();
       if (hb.contains(x, y)) return 'hint';
     }
-    if (y >= LOGICAL_HEIGHT - HUD_BOTTOM_PX) {
-      const i = Math.floor((x - 4) / (CHIP + CHIP_GAP));
-      const m = this.sim.missions[i];
-      const inChip = m && x - 4 - i * (CHIP + CHIP_GAP) < CHIP;
-      return inChip && this.sim.phase === 'day' ? `chip:${m.def.id}` : 'hud';
+    if (y >= this.deck.top) {
+      if (this.sim.phase === 'leave' && this.deck.chips[0] && inRect(this.deck.chips[0].hit, x, y)) return 'chip:leave';
+      if (this.sim.phase === 'day') {
+        const i = this.deck.chips.findIndex((c) => inRect(c.hit, x, y));
+        const m = i >= 0 ? this.sim.missions[i] : undefined;
+        if (m) return `chip:${m.def.id}`;
+      }
+      return 'hud';
     }
     return null;
   }
@@ -158,26 +178,36 @@ export class Hud {
     setPixelText(this.snack, String(sim.snackStock));
     placeText(this.snack, 158, 18, 0, 0.5);
 
-    // 하단 미션 칩
-    const by = LOGICAL_HEIGHT - HUD_BOTTOM_PX;
-    g.fillStyle(0xffffff, 1).fillRect(0, by, LOGICAL_WIDTH, HUD_BOTTOM_PX);
-    g.fillStyle(color('light'), 1).fillRect(0, by, LOGICAL_WIDTH, 1);
+    // 하단 미션 칩(조작대 안 2×2, 배경은 Deck)
     const leaving = sim.phase === 'leave' || (sim.phase === 'ended' && sim.result?.outcome !== 'caught' && sim.leaveTime > 0);
     this.leaveIcon?.setVisible(leaving);
+    this.leaveBg?.setVisible(leaving);
+    const gid = sim.guide?.id ?? '';
     const cl = sim.content.facility?.cleaning;
     const ci = cl && sim.cleaningActive && !leaving && cl.missionId ? sim.missions.findIndex((m) => m.def.id === cl.missionId) : -1;
     this.cleanText.setVisible(ci >= 0);
-    if (ci >= 0) { setPixelText(this.cleanText, String(Math.ceil(sim.cleaningLeftSec))); placeText(this.cleanText, 4 + ci * (CHIP + CHIP_GAP) + 3, by + 3, 0, 0); }
+    const cc = ci >= 0 ? this.deck.chips[ci] : undefined;
+    if (cc) { setPixelText(this.cleanText, String(Math.ceil(sim.cleaningLeftSec))); placeText(this.cleanText, cc.cx - CHIP / 2 + 2, cc.cy - CHIP / 2 + 2, 0, 0); }
+    if (!leaving) for (const d of this.modDots) g.fillStyle(color('point'), 1).fillRect(d.x - 1, d.y - 1, 3, 3);
     sim.missions.forEach((m, i) => {
-      this.chipIcons[i]?.setVisible(!leaving);
-      if (!leaving) for (const d of this.modDots) g.fillStyle(color('point'), 1).fillRect(d.x - 1, d.y - 1, 3, 3);
-    if (leaving) { this.chipDone[i]?.setVisible(false); return; }
-      const x = 4 + i * (CHIP + CHIP_GAP), y = by + 2;
+      const c = this.deck.chips[i];
+      this.chipIcons[i]?.setVisible(!leaving && !!c);
+      this.chipBgs[i]?.setVisible(!leaving && !!c);
+      if (leaving || !c) { this.chipDone[i]?.setVisible(false); return; }
+      const x = c.cx - CHIP / 2, y = c.cy - CHIP / 2;
       const st = m.state;
       const locked = st === 'locked' || m.blocked || sim.phase !== 'day' && st !== 'done';
-      const border = st === 'done' ? color('green_sh') : st === 'active' || st === 'carry' || sim.pendingMission === m ? color('cool') : locked ? color('light') : color('outline');
-      g.fillStyle(0xffffff, 1).fillRect(x, y, CHIP, CHIP);
-      g.lineStyle(st === 'active' || st === 'carry' || st === 'done' ? 2 : 1, border, 1).strokeRect(x + 0.5, y + 0.5, CHIP - 1, CHIP - 1);
+      const guided = gid === m.def.id || gid === `carry:${m.def.id}`;
+      const bgi = this.chipBgs[i];
+      if (bgi) {
+        // 아트 칩(T-169): 기본 / 잠김 / 완료 / 안내 중(하늘색 테두리). 진행 중·들고 복귀는 하늘색 2px 테두리 덧그림
+        bgi.setFrame(st === 'done' ? 'ui/chip_small_done' : guided ? 'ui/chip_small_guide' : locked || st === 'failed' ? 'ui/chip_small_locked' : 'ui/chip_small');
+        if ((st === 'active' || st === 'carry') && !guided) g.lineStyle(1, color('cool'), 1).strokeRect(x + 0.5, y + 0.5, CHIP - 1, CHIP - 1);
+      } else {
+        const border = st === 'done' ? color('green_sh') : st === 'active' || st === 'carry' || guided ? color('cool') : locked ? color('light') : color('outline');
+        g.fillStyle(0xffffff, 1).fillRect(x, y, CHIP, CHIP);
+        g.lineStyle(st === 'active' || st === 'carry' || st === 'done' || guided ? 2 : 1, border, 1).strokeRect(x + 0.5, y + 0.5, CHIP - 1, CHIP - 1);
+      }
       this.chipDone[i]?.setVisible(st === 'done');
       this.chipIcons[i]?.setAlpha(st === 'failed' ? 0.35 : 1);
       if (locked && st !== 'failed') g.fillStyle(color('light'), 0.5).fillRect(x + 1, y + 1, CHIP - 2, CHIP - 2);
@@ -187,19 +217,22 @@ export class Hud {
         g.fillStyle(left < 0.3 ? color('point2') : color('cool'), 1).fillRect(x + 2, y + CHIP - 3, Math.round((CHIP - 4) * left), 1);
       }
     });
-    if (leaving) {
-      g.fillStyle(0xffffff, 1).fillRect(4, by + 2, CHIP, CHIP);
-      g.lineStyle(2, color('green_sh'), 1).strokeRect(4.5, by + 2.5, CHIP - 1, CHIP - 1);
+    if (leaving && !this.leaveBg && this.deck.chips[0]) {
+      const c0 = this.deck.chips[0];
+      g.fillStyle(0xffffff, 1).fillRect(c0.cx - CHIP / 2, c0.cy - CHIP / 2, CHIP, CHIP);
+      g.lineStyle(2, gid.startsWith('leave') ? color('cool') : color('green_sh'), 1).strokeRect(c0.cx - CHIP / 2 + 0.5, c0.cy - CHIP / 2 + 0.5, CHIP - 1, CHIP - 1);
     }
-    // 단계 문구(하단 칩 오른쪽)
+    // 상태줄(칩 아래, control-dpad §2-2): 퇴근 단계·근태 점검·얼음·회의 중·길 안내
     let stageKey = '';
     if (sim.phase === 'leave') stageKey = sim.leaveStage === 'pack' ? 'event.leave.pack' : sim.leaveStage === 'gate' ? 'event.leave.gate' : sim.leaveStage === 'elevator' ? 'event.leave.elevator' : 'event.leave.name';
     else if (sim.hrCountdown !== null) stageKey = 'hud.seat_countdown';
     else if (sim.ceoState === 'tell' || sim.ceoState === 'freeze') stageKey = 'hud.ceo_freeze';
+    else if (sim.guide && this.str.has('hud.guide_on')) stageKey = 'hud.guide_on';
     const stageStr = stageKey ? this.str.t(stageKey, { n: Math.ceil(sim.hrCountdown ?? 0) }) : '';
     setPixelText(this.stageText, stageStr);
-    const chipsRight = leaving ? 4 + CHIP + 6 : 4 + sim.missions.length * (CHIP + CHIP_GAP) + 2;
-    placeText(this.stageText, chipsRight, by + HUD_BOTTOM_PX / 2, 0, 0.5);
+    const stw = this.stageText.width;
+    const sx = stw > this.deck.status.w ? (this.deck.hand === 'right' ? 2 : LOGICAL_WIDTH - 2 - stw) : this.deck.status.cx - stw / 2;
+    placeText(this.stageText, Math.round(sx), this.deck.status.y + 8, 0, 0.5);
 
     if (sim.phase !== 'ended') this.drawPanel(t); else setPixelText(this.panelText, '');
     this.drawOffer();
@@ -210,7 +243,7 @@ export class Hud {
   /** 미션 행동·가방·게이트 진행 패널(하단 칩 바로 위) */
   private drawPanel(t: number): void {
     const sim = this.sim, g = this.g;
-    const y0 = LOGICAL_HEIGHT - HUD_BOTTOM_PX - 22, x0 = 6, w = LOGICAL_WIDTH - 12;
+    const y0 = LOGICAL_HEIGHT - deckBottomPx() - 22, x0 = 6, w = LOGICAL_WIDTH - 12;
     let label = '';
     const bar = (v: number, col: number, band?: readonly [number, number], mark?: number) => {
       const bx = x0 + 4, bwid = w - 8, bY = y0 + 14;
@@ -276,7 +309,7 @@ export class Hud {
     if (!show || !o) { this.offerBox = null; return; }
     setPixelText(this.offerText, this.str.t(o.textKey));
     const x0 = 6, w = LOGICAL_WIDTH - 12;
-    const y0 = LOGICAL_HEIGHT - HUD_BOTTOM_PX - 22 - 26;
+    const y0 = LOGICAL_HEIGHT - deckBottomPx() - 22 - 26;
     const g = this.g;
     g.fillStyle(0xffffff, 0.96).fillRect(x0, y0, w, 22);
     g.lineStyle(2, color('green_sh'), 1).strokeRect(x0 + 1, y0 + 1, w - 2, 20);
@@ -293,6 +326,7 @@ export class Hud {
   private drawHint(dt: number): void {
     if (this.hintLeft <= 0 && this.hintQueue.length > 0) {
       const key = this.hintQueue.shift()!;
+      this.currentHint = key;
       setPixelText(this.hintText, this.str.t(key));
       this.hintLeft = 4.0;
     }
@@ -314,7 +348,7 @@ export class Hud {
     if (stage !== 'calm' && wpx > 0) {
       const a = pulseAlpha(o, t);
       b.fillStyle(o.color, a);
-      const top = HUD_TOP_PX, bot = LOGICAL_HEIGHT - HUD_BOTTOM_PX;
+      const top = HUD_TOP_PX, bot = LOGICAL_HEIGHT - deckBottomPx();
       b.fillRect(0, top, LOGICAL_WIDTH, wpx).fillRect(0, bot - wpx, LOGICAL_WIDTH, wpx);
       b.fillRect(0, top + wpx, wpx, bot - top - wpx * 2).fillRect(LOGICAL_WIDTH - wpx, top + wpx, wpx, bot - top - wpx * 2);
     }
@@ -322,7 +356,7 @@ export class Hud {
       const f = this.flash;
       const cyc = f.on + f.off;
       const on = cyc <= 0 || (f.left % cyc) > f.off;
-      if (on) b.fillStyle(f.color, f.alpha).fillRect(0, HUD_TOP_PX, LOGICAL_WIDTH, LOGICAL_HEIGHT - HUD_TOP_PX - HUD_BOTTOM_PX);
+      if (on) b.fillStyle(f.color, f.alpha).fillRect(0, HUD_TOP_PX, LOGICAL_WIDTH, LOGICAL_HEIGHT - HUD_TOP_PX - deckBottomPx());
       f.left -= dt;
       if (f.left <= 0) this.flash = null;
     }

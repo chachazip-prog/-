@@ -1,3 +1,4 @@
+import { cssSafeAreaInsets } from './safeArea';
 import type { AdKind, AdResult, AdsAdapter, LeaderboardAdapter, Platform, ShareAdapter, StorageAdapter } from './types';
 
 const PREFIX = 'mt-mock:';
@@ -73,5 +74,6 @@ export function createMockPlatform(opts: MockOptions = {}): Platform {
     ads: new MockAds(opts.adsSupported ?? true, opts.adResult ?? 'reward'),
     leaderboard: new MockLeaderboard(),
     share: new MockShare(),
+    safeAreaInsets: cssSafeAreaInsets,
   };
 }

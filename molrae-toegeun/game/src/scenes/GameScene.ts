@@ -3,9 +3,13 @@ import { AdFlow } from '../ads/adFlow';
 import { audio, bgmHysteresisSec } from '../audio/audio';
 import { buildSoundCues, tellSfxFor, type SoundCues } from '../audio/cues';
 import { DangerStageTracker, stageThresholdsFromCues, type DangerStage } from '../audio/dangerStage';
-import { CAMERA_VIEW, HUD_BOTTOM_PX, HUD_TOP_PX, LOGICAL_HEIGHT, LOGICAL_WIDTH } from '../config/display';
+import { HUD_TOP_PX, LOGICAL_HEIGHT, LOGICAL_WIDTH, cameraViewNow, deckBottomPx, deckLiftPx } from '../config/display';
 import { getStrings, lastAuthoredDay, loadDayContent } from '../content';
 import { DaySim, conePolygon, isGateOnly, zoneAt, type DayEvent, type PatrolNpc, type SimEvent, type Threat } from '../core';
+import type { ActionKind } from '../core/day/daySim';
+import type { PadDir } from '../input/padJudge';
+import { controlHandOr } from '../state/controlHand';
+import { Deck } from '../ui/dpad';
 import { getDataTables } from '../data/loader';
 import { getPlatform } from '../platform';
 import { applyDayResult, loadProgress, saveProgress } from '../state/progress';
@@ -70,7 +74,6 @@ export class GameScene extends Phaser.Scene {
   private cones!: Phaser.GameObjects.Graphics;
   private fx!: Phaser.GameObjects.Graphics;
   private pathDots: Phaser.GameObjects.Image[] = [];
-  private dest!: Phaser.GameObjects.Sprite;
   private arrows: Phaser.GameObjects.Image[] = [];
   private stalls: { img: Phaser.GameObjects.Image; x: number; y: number; base: string; hiding: string }[] = [];
   /** 전높이 칸막이·큐비클(D-080): 플레이어가 뒤(rect)에 서면 알파 0.5 */
@@ -96,7 +99,6 @@ export class GameScene extends Phaser.Scene {
   private t = 0;
   private gateFlash: { key: string; left: number; flashes: number; on: number; off: number; icon: string } | null = null;
   private gateIcon!: Phaser.GameObjects.Image;
-  private unreachableLeft = 0;
   private hasAtlas = false;
   // ── T-133 ──
   private skipCeo = false;
@@ -121,8 +123,24 @@ export class GameScene extends Phaser.Scene {
   private missionArrows: Phaser.GameObjects.Image[] = [];
   /** zone_only 장소 반짝임(fx/zone_hint, 드러난 뒤 그 미션이 끝날 때까지) */
   private zoneHints = new Map<string, Phaser.GameObjects.Sprite>();
-  private qteDownAt: number | null = null;
-  private snackDown: { at: number; tx: number; ty: number } | null = null;
+  // ── T-170 조작대·입력 ──
+  private deck!: Deck;
+  /** 포인터 잡기(control-dpad §1-2): 패드에서 시작한 터치 id, 행동 버튼·게임 화면 터치 id와 누른 시각 */
+  private padPtr: number | null = null;
+  private actPtr: { id: number; at: number } | null = null;
+  private fieldPtr: { id: number; at: number } | null = null;
+  private keyDir: PadDir | null = null;
+  private guideSteps: Phaser.GameObjects.Sprite[] = [];
+  private guidePin!: Phaser.GameObjects.Image;
+  private useHint!: Phaser.GameObjects.Sprite;
+  private bumpFx!: Phaser.GameObjects.Sprite;
+  private headIcon!: Phaser.GameObjects.Image;
+  private headIconLeft = 0;
+  private lastActionIcon = '';
+  private stepBackLeft = 0;
+  private prevPlayerMode = 'idle';
+  private debugText: UIText | null = null;
+  private domCleanup: (() => void) | null = null;
   private prevMode = new Map<PatrolNpc, string>();
 
   private salaryText: UIText | null = null;
@@ -149,7 +167,7 @@ export class GameScene extends Phaser.Scene {
   create(): void {
     const str = getStrings();
     const content = loadDayContent(this.day, this.variant);
-    this.sim = new DaySim(content, { view: CAMERA_VIEW, skipCeoVisit: this.skipCeo, seenHints: this.seenHints }, urlParam('seed') ?? content.seed);
+    this.sim = new DaySim(content, { view: cameraViewNow(), skipCeoVisit: this.skipCeo, seenHints: this.seenHints }, urlParam('seed') ?? content.seed);
     this.cues = buildSoundCues(getDataTables());
     // 위험 단계 임계(rules.visualCues: suspicionHigh.threshold·dangerBorder.alertSuspicionMin, T-136). 없으면 경고 후 단계 상승 없음(적발 1.0만)
     const th = stageThresholdsFromCues(content.visualCues);
@@ -166,8 +184,9 @@ export class GameScene extends Phaser.Scene {
     this.zoneHints = new Map();
     this.follower = null;
     this.demo = null;
-    this.qteDownAt = null;
-    this.snackDown = null;
+    this.padPtr = null; this.actPtr = null; this.fieldPtr = null; this.keyDir = null;
+    this.guideSteps = []; this.headIconLeft = 0; this.lastActionIcon = ''; this.stepBackLeft = 0; this.prevPlayerMode = 'idle';
+    this.debugText = null;
     this.prevMode = new Map();
     this.sayLeft = new Map();
     this.salaryText = null;
@@ -194,8 +213,19 @@ export class GameScene extends Phaser.Scene {
     this.cones = this.add.graphics().setDepth(D.cone);
     this.fx = this.add.graphics().setDepth(D.cover + 1);
     for (let i = 0; i < 64; i++) this.pathDots.push(this.img(0, 0, 'dot/path').setDepth(D.path).setVisible(false));
-    this.dest = this.add.sprite(0, 0, ATLAS_KEY, 'fx/dest_0').setDepth(D.path + 1).setVisible(false);
-    if (this.anims.exists('fx/dest')) this.dest.play('fx/dest');
+    // T-170 길 안내(fx/guide_step 발자국 + fx/guide_pin), 사용 가능 표시(fx/use_hint), 범프 먼지(fx/bump), 머리 위 행동 아이콘
+    const has = (f: string) => this.atlasHas(f);
+    for (let i = 0; i < Math.max(1, content.controls.guideTrailTiles); i++) {
+      const sp = this.add.sprite(0, 0, ATLAS_KEY, has('fx/guide_step_0') ? 'fx/guide_step_0' : 'dot/hint').setDepth(D.path + 1).setVisible(false);
+      if (this.anims.exists('fx/guide_step')) sp.play({ key: 'fx/guide_step', startFrame: i % 2 });
+      this.guideSteps.push(sp);
+    }
+    this.guidePin = this.img(0, 0, has('fx/guide_pin') ? 'fx/guide_pin' : 'fx/dest_0').setOrigin(0.5, has('fx/guide_pin') ? 1 : 0.5).setDepth(D.overhead - 1).setVisible(false);
+    this.useHint = this.add.sprite(0, 0, ATLAS_KEY, has('fx/use_hint_0') ? 'fx/use_hint_0' : 'ui/suspect').setDepth(D.overhead - 1).setVisible(false);
+    if (this.anims.exists('fx/use_hint')) this.useHint.play('fx/use_hint');
+    this.bumpFx = this.add.sprite(0, 0, ATLAS_KEY, has('fx/bump_0') ? 'fx/bump_0' : 'ui/suspect').setDepth(D.overhead - 1).setVisible(false);
+    this.bumpFx.on(Phaser.Animations.Events.ANIMATION_COMPLETE, () => this.bumpFx.setVisible(false));
+    this.headIcon = this.img(0, 0, has('fx/head_icon/idle') ? 'fx/head_icon/idle' : 'ui/suspect').setDepth(D.overhead + 2).setVisible(false);
 
     // T-151: 선택한 외형(content.skins.player). 아틀라스에 없으면 대체 그림(playerSelection.fallbackSprite)
     const sk = content.skins;
@@ -226,7 +256,13 @@ export class GameScene extends Phaser.Scene {
     }
     this.awayBadge = addPixelText(this, 0, 0, str.t('hud.tl_away'), { role: 'label', color: color('outline') }).setScrollFactor(0).setDepth(9002).setVisible(false);
 
-    this.hud = new Hud(this, this.sim, str);
+    // T-170 조작대(오른손·왼손 거울, 세이프 에어리어만큼 올림)
+    this.deck = new Deck(this, {
+      hand: content.controls.handSetting ? controlHandOr(content.controls.defaultHand) : content.controls.defaultHand,
+      lift: deckLiftPx(), chips: this.sim.missions.length,
+      deadZonePx: content.controls.deadZonePx, axisHysteresisDeg: content.controls.axisHysteresisDeg,
+    });
+    this.hud = new Hud(this, this.sim, str, this.deck.layout);
     this.bannerBg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.94).setScrollFactor(0).setDepth(11000).setStrokeStyle(1, color('dark'));
     this.banner = addPixelText(this, 0, 0, '', { role: 'body', color: color('outline'), align: 'center', lineSpacing: 3 }).setScrollFactor(0).setDepth(11001);
     const weekday = str.t(`day.weekday.${content.weekday}`);
@@ -240,8 +276,12 @@ export class GameScene extends Phaser.Scene {
     this.centerText = addPixelText(this, 0, 0, '', { role: 'body', color: color('point'), align: 'center', scale: 2 }).setScrollFactor(0).setDepth(9601).setVisible(false);
 
     this.input.on(Phaser.Input.Events.POINTER_DOWN, this.onPointerDown, this);
+    this.input.on(Phaser.Input.Events.POINTER_MOVE, this.onPointerMove, this);
     this.input.on(Phaser.Input.Events.POINTER_UP, this.onPointerUp, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { audio.stopBgm(); });
+    this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.onPointerUp, this);
+    this.bindDomInput();
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => { audio.stopBgm(); this.domCleanup?.(); this.domCleanup = null; });
+    if (import.meta.env.DEV) this.debugText = addPixelText(this, 2, HUD_TOP_PX + 1, '', { role: 'label', color: color('outline') }).setScrollFactor(0).setDepth(9700);
     audio.startBgm();
     // 개발 빌드 전용: 자동화(스크린샷·수동 디버그) 훅. 프로덕션 번들에서는 제거됨
     if (import.meta.env.DEV) (window as unknown as { __mtDay?: DaySim; __mtScene?: GameScene }).__mtDay = this.sim;
@@ -301,32 +341,95 @@ export class GameScene extends Phaser.Scene {
       return;
     }
     if (sim.phase === 'ended') return;
-    // 인사 QTE: 누름·뗌으로 판정(길게 누름 감지)
-    if (sim.qteActive) { sim.pressQte(); this.qteDownAt = this.time.now; return; }
-    const hit = this.hud.hitTest(pointer.x, pointer.y);
+    const x = pointer.x, y = pointer.y, id = pointer.id;
+    // ① 방향 패드: 이 터치는 뗄 때까지 패드 입력(포인터 잡기, 멀티터치 패드 1 + 행동 1)
+    if (this.padPtr === null && this.deck.hitPad(x, y)) {
+      this.padPtr = id;
+      this.deck.resetJudge();
+      sim.setPad(this.deck.judge(x, y));
+      return;
+    }
+    // ② 행동 버튼
+    if (this.actPtr === null && this.deck.hitAction(x, y)) {
+      this.actPtr = { id, at: this.time.now };
+      this.afterAction(sim.pressAction('button'));
+      return;
+    }
+    // ③ HUD(칩·제안 말풍선·안내 상자)
+    const hit = this.hud.hitTest(x, y);
     if (hit === 'offer') { if (sim.acceptOffer()) audio.sfx('sfx_pop'); return; }
     if (hit === 'hint') { this.hud.dismissHint(); return; }
-    if (hit?.startsWith('chip:')) { if (sim.tapMission(hit.slice(5))) audio.sfx('sfx_tap'); return; }
-    if (hit === 'hud') return; // HUD 탭은 화면 탭이 아님(rules.input.hudTapDoesNotStop)
-    const tx = Math.floor((pointer.worldX - this.offsetX) / TILE);
-    const ty = Math.floor(pointer.worldY / TILE);
-    // 간식: 뗄 때 판정(길게 누름 = '바스락', events.snack.params.maxPressSec)
-    if (sim.activityView()?.kind === 'snack') { this.snackDown = { at: this.time.now, tx, ty }; return; }
-    this.afterTap(sim.tapWorld(tx, ty));
-  }
-
-  private onPointerUp(): void {
-    if (this.qteDownAt !== null) { this.sim.releaseQte((this.time.now - this.qteDownAt) / 1000); this.qteDownAt = null; }
-    if (this.snackDown) {
-      const d = this.snackDown; this.snackDown = null;
-      this.afterTap(this.sim.tapWorld(d.tx, d.ty, (this.time.now - d.at) / 1000));
+    if (hit?.startsWith('chip:')) {
+      const before = sim.guide?.id ?? null;
+      if (sim.tapChip(hit.slice(5))) { const on = sim.guide && sim.guide.id !== before; audio.sfx(on ? 'sfx_pop' : 'sfx_tap', on ? 0.5 : 1); }
+      return;
+    }
+    if (hit === 'hud' || this.deck.inDeck(x, y)) return;
+    // ④ 게임 화면: 집중 상황이면 행동 버튼과 같음(누름·뗌 판정), 아니면 무시(1~3일차 안내)
+    if (this.fieldPtr === null) {
+      this.fieldPtr = { id, at: this.time.now };
+      this.afterAction(sim.pressPlayfield());
     }
   }
 
-  private afterTap(r: string): void {
-    if (r === 'unreachable') this.unreachableLeft = 0.8;
-    else if (r === 'moving') audio.sfx('sfx_tap', 0.6);
-    else if (r === 'stopped') audio.sfx('sfx_pop', 0.7);
+  private onPointerMove(pointer: Phaser.Input.Pointer): void {
+    if (this.padPtr !== pointer.id || !pointer.isDown) return;
+    this.sim.setPad(this.deck.judge(pointer.x, pointer.y));
+  }
+
+  private onPointerUp(pointer: Phaser.Input.Pointer): void {
+    const id = pointer.id;
+    if (this.padPtr === id) { this.padPtr = null; this.deck.resetJudge(); this.sim.setPad(this.keyDir); }
+    if (this.actPtr && this.actPtr.id === id) { const d = this.actPtr; this.actPtr = null; this.sim.releaseAction((this.time.now - d.at) / 1000); }
+    if (this.fieldPtr && this.fieldPtr.id === id) { const d = this.fieldPtr; this.fieldPtr = null; this.sim.releasePlayfield((this.time.now - d.at) / 1000); }
+  }
+
+  /** M10: 입력이 끊기면(pointercancel·앱 전환·visibilitychange·창 blur) 모두 뗀 것으로(정지 = 위장) */
+  private releaseAllInput(): void {
+    if (this.actPtr) { const d = this.actPtr; this.actPtr = null; this.sim.releaseAction((this.time.now - d.at) / 1000); }
+    if (this.fieldPtr) { const d = this.fieldPtr; this.fieldPtr = null; this.sim.releasePlayfield((this.time.now - d.at) / 1000); }
+    this.padPtr = null; this.keyDir = null;
+    this.deck.resetJudge();
+    this.sim.setPad(null);
+  }
+
+  /** WebView 터치 설정(control-dpad §8-4): 끊김 = 떼기, 길게 누름 메뉴 차단. 개발 빌드는 방향키·스페이스도 받음 */
+  private bindDomInput(): void {
+    const canvas = this.game.canvas;
+    const cancel = () => this.releaseAllInput();
+    const vis = () => { if (document.visibilityState !== 'visible') cancel(); };
+    const noMenu = (e: Event) => e.preventDefault();
+    canvas.addEventListener('pointercancel', cancel);
+    canvas.addEventListener('touchcancel', cancel);
+    canvas.addEventListener('contextmenu', noMenu);
+    window.addEventListener('blur', cancel);
+    document.addEventListener('visibilitychange', vis);
+    const KEYS: Record<string, PadDir> = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' };
+    const down = (e: KeyboardEvent) => {
+      const d = KEYS[e.key];
+      if (d) { e.preventDefault(); if (this.keyDir !== d) { this.keyDir = d; if (this.padPtr === null) this.sim.setPad(d); } return; }
+      if ((e.key === ' ' || e.key === 'Enter') && !e.repeat && this.overlay === 'none') { e.preventDefault(); this.actPtr = { id: -1, at: this.time.now }; this.afterAction(this.sim.pressAction('button')); }
+    };
+    const up = (e: KeyboardEvent) => {
+      const d = KEYS[e.key];
+      if (d && this.keyDir === d) { this.keyDir = null; if (this.padPtr === null) this.sim.setPad(null); }
+      if ((e.key === ' ' || e.key === 'Enter') && this.actPtr?.id === -1) { const a = this.actPtr; this.actPtr = null; this.sim.releaseAction((this.time.now - a.at) / 1000); }
+    };
+    if (import.meta.env.DEV) { window.addEventListener('keydown', down); window.addEventListener('keyup', up); }
+    this.domCleanup = () => {
+      canvas.removeEventListener('pointercancel', cancel);
+      canvas.removeEventListener('touchcancel', cancel);
+      canvas.removeEventListener('contextmenu', noMenu);
+      window.removeEventListener('blur', cancel);
+      document.removeEventListener('visibilitychange', vis);
+      window.removeEventListener('keydown', down);
+      window.removeEventListener('keyup', up);
+    };
+  }
+
+  private afterAction(k: ActionKind | 'ignored'): void {
+    if (k === 'none' || k === 'ignored') return;
+    if (k !== 'greet') audio.sfx('sfx_tap', 0.8);
   }
 
   override update(_time: number, delta: number): void {
@@ -471,7 +574,14 @@ export class GameScene extends Phaser.Scene {
       const int = actor?.talkEnabledBy ? this.sim.content.interrupts.find((i) => i.id === actor.talkEnabledBy) : undefined;
       const lineKey = int ? (this.sim.phase === 'leave' && typeof int.effect['leaveLineKey'] === 'string' ? int.effect['leaveLineKey'] : int.effect['talkLineKey']) : undefined;
       if (typeof lineKey === 'string') this.npcSay(npc, str.t(lineKey, { name: str.t('ui.player_default_name') }, Math.floor(this.sim.time)), npc?.def.talk?.durationSec ?? 1.5);
-    } else if (e.type === 'tap' && e.result === 'unreachable') this.unreachableLeft = 0.8;
+    } else if (e.type === 'bump') {
+      // M6 범프: '툭' 먼지(fx/bump, 무음 대응) + sfx_tap −6반음 별칭(sfx_bump, 없으면 sfx_tap 작게)
+      const [vx, vy] = e.dir === 'up' ? [0, -1] : e.dir === 'down' ? [0, 1] : e.dir === 'left' ? [-1, 0] : [1, 0];
+      const w = this.toWorld(e.x + 0.5 + vx! * 0.45, e.y + 0.5 + vy! * 0.45);
+      this.bumpFx.setPosition(Math.round(w.x), Math.round(w.y)).setVisible(true);
+      if (this.anims.exists('fx/bump')) this.bumpFx.play('fx/bump'); else this.time.delayedCall(200, () => this.bumpFx.setVisible(false));
+      if (audio.knows('sfx_bump')) audio.sfx('sfx_bump'); else audio.sfx('sfx_tap', 0.4);
+    }
   }
 
   private sayLeft = new Map<PatrolNpc, number>();
@@ -561,6 +671,14 @@ export class GameScene extends Phaser.Scene {
     // ── 플레이어 ──
     const p = floor.player;
     const pw = this.toWorld(p.x, p.y);
+    // 손을 떼어 뒤쪽 칸 중심으로 붙는 순간(이동 방향 반대로 붙음) = 흠칫 반걸음(carry 중엔 건너뜀)
+    if (this.prevPlayerMode === 'moving' && p.mode === 'disguised' && !p.centered && !sim.carryProp()) {
+      const c = { x: Math.floor(p.x) + 0.5, y: Math.floor(p.y) + 0.5 };
+      const back = Math.cos(p.facing) * (c.x - p.x) + Math.sin(p.facing) * (c.y - p.y) < 0;
+      if (back && this.atlasHas(`${this.playerKey}/disguise_step_back_${facing4(p.facing)}_0`)) this.stepBackLeft = 2 / 14;
+    }
+    if (p.mode === 'moving' || p.mode === 'talked') this.stepBackLeft = 0;
+    this.prevPlayerMode = p.mode;
     const hidden = sim.activity?.mechanic === 'trip_safe_zone';
     this.player.setPosition(Math.round(pw.x), Math.round(pw.y) + FOOT_PX).setDepth(Math.round(pw.y) + FOOT_PX).setVisible(!hidden);
     const pdir = facing4(p.facing);
@@ -575,13 +693,16 @@ export class GameScene extends Phaser.Scene {
       if (!(fsv0 && fsv0.relation === 'same' && fsv0.stage === 'inside')) label = str.t('player.mode.talked');
     }
     else if (sim.activity || sim.seatedWorking || (sim.phase === 'leave' && sim.leaveStage === 'pack' && sim.playerAtSeat)) this.playAnim(this.player, `${pk}/idle_up`);
-    else if (floor.playerStill && !(sim.gateOpen)) {
+    else if (this.stepBackLeft > 0 && floor.playerStill && !sim.gateOpen) {
+      // M3 뒤로 붙기 = '흠칫 반걸음'(player/disguise_step_back_<dir>, 14fps 1회) → 이어서 위장 자세
+      this.stepBackLeft -= dt;
+      this.playAnim(this.player, `${pk}/disguise_step_back_${pdir}`, `${pk}/disguise`);
+    } else if (floor.playerStill && !(sim.gateOpen)) {
       const pose = this.poseId();
       const d2 = pdir === 'up' ? 'down' : pdir;
       this.playAnim(this.player, `${pk}/pose_${pose}_${d2}`, `${pk}/disguise`);
       if (p.mode === 'disguised') label = str.t('player.mode.disguised');
     } else this.playAnim(this.player, `${pk}/idle_${pdir}`);
-    if (this.unreachableLeft > 0) { this.unreachableLeft -= dt; label = str.t('hud.unreachable'); }
     setPixelText(this.playerLabel, label).setVisible(label !== '' && !hidden);
     placeText(this.playerLabel, pw.x, Math.round(pw.y) + FOOT_PX - 22, 0.5, 1);
     fitPanel(this.playerLabelBg, this.playerLabel, 2, 1);
@@ -603,9 +724,7 @@ export class GameScene extends Phaser.Scene {
       d.setVisible(showPath && !!n && i < path.length - 1);
       if (n) { const w = this.toWorld(n.x, n.y); d.setPosition(Math.round(w.x), Math.round(w.y)); }
     });
-    const dest = floor.destination;
-    this.dest.setVisible(showPath && !!dest);
-    if (dest) this.dest.setPosition(this.offsetX + dest.x * TILE + TILE / 2, dest.y * TILE + TILE / 2);
+    this.syncPadExtras(dt, pw);
 
     // ── NPC + 시선 콘 + 그림자 ──
     this.shadows.clear();
@@ -746,7 +865,7 @@ export class GameScene extends Phaser.Scene {
         const edgeTiles = above ? (floor.camera?.visibleTop ?? 0) - npc.y : npc.y - (floor.camera?.visibleBottom ?? 0);
         const size = edgeTiles < 3 ? 3 : edgeTiles < 7 ? 2 : 1;
         const ar = this.arrows[arrowIdx++]!;
-        const ay = above ? HUD_TOP_PX + ARROW_MARGIN : LOGICAL_HEIGHT - HUD_BOTTOM_PX - ARROW_MARGIN;
+        const ay = above ? HUD_TOP_PX + ARROW_MARGIN : LOGICAL_HEIGHT - deckBottomPx() - ARROW_MARGIN;
         ar.setFrame(`${ak}/down_${size}`).setVisible(true).setAngle(above ? 180 : 0)
           .setPosition(Math.round(Phaser.Math.Clamp(sx, ARROW_MARGIN, LOGICAL_WIDTH - ARROW_MARGIN)), ay);
       }
@@ -797,6 +916,60 @@ export class GameScene extends Phaser.Scene {
   }
 
   /** T-133 표시: 공범, 얼음 비네트, 중앙 문구, 경로 힌트, 화면 밖 미션 장소 화살표 */
+  /** T-170 조작대·길 안내·사용 표시·머리 위 행동 아이콘·디버그 오버레이 */
+  private syncPadExtras(dt: number, pw: { x: number; y: number }): void {
+    const sim = this.sim, str = getStrings();
+    const playing = sim.phase !== 'ended' && this.overlay === 'none';
+    const act = sim.actionState();
+    const hk = this.hud.hintKey;
+    const label = act.labelKey && str.has(act.labelKey) ? str.t(act.labelKey) : '';
+    const fz = sim.padFreezeProgress;
+    this.deck.update(this.t, {
+      padInput: playing ? sim.padInput : null,
+      locked: sim.padLocked && sim.phase !== 'intro',
+      freeze: fz,
+      action: act,
+      actionPressed: this.actPtr !== null,
+      pulseAction: playing && (hk === 'tutorial.tut_use' || hk === 'tutorial.tut_gate' || hk === 'tutorial.tut_coffee' || (act.kind === 'use' && sim.content.tutorialIds.includes('tut_use'))),
+      pulsePad: playing && hk === 'tutorial.tut_pad_move',
+      handRelease: playing && hk === 'tutorial.tut_pad_release',
+      padText: playing && fz !== null && str.has('hud.pad_frozen') ? str.t('hud.pad_frozen') : '',
+      actionLabel: label,
+    });
+    // 길 안내: 앞 N칸 발자국(진행 방향으로 회전) + 목적지 핀(칸 중심 4px 아래). 화면 밖 목적지는 흰 화살표(syncExtras)
+    const g = playing ? sim.guide : null;
+    const trail = g?.trail ?? [];
+    let prev = sim.floor.player.tile;
+    this.guideSteps.forEach((sp, i) => {
+      const tt = trail[i];
+      sp.setVisible(!!tt);
+      if (!tt) return;
+      const ang = tt.x > prev.x ? 90 : tt.x < prev.x ? -90 : tt.y > prev.y ? 180 : 0;
+      sp.setAngle(ang).setPosition(this.offsetX + tt.x * TILE + TILE / 2, tt.y * TILE + TILE / 2);
+      prev = tt;
+    });
+    this.guidePin.setVisible(!!g);
+    if (g) this.guidePin.setPosition(this.offsetX + g.goal.x * TILE + TILE / 2, g.goal.y * TILE + TILE / 2 + 4).setDepth(g.goal.y * TILE + TILE + 2);
+    // 사용 가능한 사물 위 작은 흰 화살표(fx/use_hint)
+    const ut = playing && act.kind === 'use' ? act.useTile : undefined;
+    this.useHint.setVisible(!!ut);
+    if (ut) this.useHint.setPosition(this.offsetX + ut.x * TILE + TILE / 2, ut.y * TILE - 4);
+    // 행동 아이콘이 바뀌면 머리 위에도 0.6초(엄지에 버튼이 가려도 알 수 있게, §8-2)
+    const iconKey = act.kind === 'none' ? '' : act.icon;
+    if (iconKey !== this.lastActionIcon) { this.lastActionIcon = iconKey; if (iconKey) this.headIconLeft = 0.6; }
+    if (this.headIconLeft > 0) this.headIconLeft -= dt;
+    const hf = `fx/head_icon/${iconKey}`;
+    const showHead = playing && this.headIconLeft > 0 && !!iconKey && this.atlasHas(hf) && this.player.visible;
+    this.headIcon.setVisible(showHead);
+    if (showHead) this.headIcon.setFrame(hf).setPosition(Math.round(pw.x), Math.round(pw.y) - 18);
+    // 개발 빌드 전용: 이동 구간 η·범프·코너 보정(control-dpad §9-3 #12)
+    if (this.debugText) {
+      const eta = sim.padEta;
+      const ps = sim.floor.padStats;
+      setPixelText(this.debugText, `eta ${eta === null ? '-' : eta.toFixed(2)} trip ${sim.padMetrics.trips} bump ${ps.bumps} assist ${ps.cornerAssists}`);
+    }
+  }
+
   private atlasHas(frame: string): boolean { return this.hasAtlas && this.textures.get(ATLAS_KEY).has(frame); }
 
   /**
@@ -902,7 +1075,7 @@ export class GameScene extends Phaser.Scene {
     const vg = this.vignette;
     vg.clear();
     if (sim.frozen) {
-      const top = HUD_TOP_PX, bot = LOGICAL_HEIGHT - HUD_BOTTOM_PX, h = bot - top;
+      const top = HUD_TOP_PX, bot = LOGICAL_HEIGHT - deckBottomPx(), h = bot - top;
       // 화면 전체를 살짝 어둡게 + 가장자리 4단 띠(바깥일수록 진함). 깜빡임 없음
       vg.fillStyle(color('dark'), 0.16).fillRect(0, top, LOGICAL_WIDTH, h);
       for (let i = 0; i < 4; i++) {
@@ -936,12 +1109,15 @@ export class GameScene extends Phaser.Scene {
     // 화면 밖 미션 장소(흰 화살표, offscreenWarning.missionMarkerArrows)
     let ai = 0;
     const cam = floor.camera;
-    if (cam && sim.phase === 'day') {
+    if (cam && (sim.phase === 'day' || (sim.phase === 'leave' && !!sim.guide))) {
       const targets: { x: number; y: number }[] = [];
       for (const m of sim.missions) {
         if (m.state === 'carry') targets.push(sim.content.playerSeat);
         else if ((m.state === 'open' && !m.blocked && m.def.startsAt === 'arrive_spot') || sim.pendingMission === m) targets.push(sim.missionTarget(m));
       }
+      // T-170: 길 안내 목적지(핀)가 화면 밖이면 기존 흰 화살표
+      const gg = sim.guide?.goal;
+      if (gg && !targets.some((q) => q.x === gg.x && q.y === gg.y)) targets.unshift(gg);
       for (const tg of targets) {
         if (ai >= this.missionArrows.length) break;
         const cy = tg.y + 0.5;
@@ -949,7 +1125,7 @@ export class GameScene extends Phaser.Scene {
         const above = cy < cam.visibleTop;
         const ar = this.missionArrows[ai++]!;
         const x = Phaser.Math.Clamp(this.offsetX + tg.x * TILE + TILE / 2, ARROW_MARGIN, LOGICAL_WIDTH - ARROW_MARGIN);
-        ar.setVisible(true).setAngle(above ? 180 : 0).setPosition(Math.round(x), above ? HUD_TOP_PX + ARROW_MARGIN + 10 : LOGICAL_HEIGHT - HUD_BOTTOM_PX - ARROW_MARGIN - 10);
+        ar.setVisible(true).setAngle(above ? 180 : 0).setPosition(Math.round(x), above ? HUD_TOP_PX + ARROW_MARGIN + 10 : LOGICAL_HEIGHT - deckBottomPx() - ARROW_MARGIN - 10);
       }
     }
     for (let k = ai; k < this.missionArrows.length; k++) this.missionArrows[k]!.setVisible(false);
@@ -1025,6 +1201,7 @@ export class GameScene extends Phaser.Scene {
   private onResult(): void {
     const r = this.sim.result;
     if (!r) return;
+    this.releaseAllInput();
     audio.loop('sfx_suspicion_loop', false);
     if (r.outcome === 'caught') {
       // 컷인(rules.caughtCutin.durationSec): 잡은 사람의 리액션. 이 동안은 플레이 상태라 광고·광고 제안 없음(ads.global.playStates caught_cutin, D-023·D-050 ①)
@@ -1139,6 +1316,8 @@ export class GameScene extends Phaser.Scene {
       str.t('result.slack_points', { n: r.slackPoints }),
       str.t('result.play_time', { n: r.timeSec.toFixed(1) }),
       r.continued ? str.t('result.leaderboard_skipped_continue') : '',
+      // T-170 §6-1 ⑩: 1일차 결과 화면 한 줄 '설정에서 조작 위치를 바꿀 수 있어요'(한 번만)
+      this.handSettingLine(),
     ].filter((l) => l !== '');
     const bottom = this.panel(lines.join('\n'), LOGICAL_HEIGHT * 0.36, 86);
     // 월급(닢, D-061)은 따로 크게
@@ -1160,6 +1339,15 @@ export class GameScene extends Phaser.Scene {
     // '오늘 광고 끝'(D-031·D-066): 하루 보상형 상한이면 보상형 버튼은 canOffer에서 숨겨지고, 안내 토스트는 하루 1회
     void this.notifyDailyCap();
     y += 0;
+  }
+
+  private handSettingLine(): string {
+    const key = 'tutorial.tut_hand_setting';
+    const str = getStrings();
+    if (!this.sim.content.tutorialIds.includes('tut_hand_setting') || !str.has(key) || this.seenHints.has(key)) return '';
+    this.seenHints.add(key);
+    this.saveSeenHints();
+    return str.t(key);
   }
 
   private async watchSalaryDouble(): Promise<void> {

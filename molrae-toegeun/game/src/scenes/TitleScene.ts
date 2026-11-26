@@ -6,6 +6,8 @@ import { getPlatform } from '../platform';
 import { color } from '../render/palette';
 import { loadPlayerVariant } from '../state/playerVariant';
 import { loadProgress } from '../state/progress';
+import { controlHandOr, saveControlHand, type ControlHand } from '../state/controlHand';
+import { getDataTables } from '../data/loader';
 import { UiButton } from '../ui/button';
 import { addPixelText, fitPanel, placeText, setPixelText, setWrap } from '../ui/pixelText';
 import type { CharSelectData } from './CharSelectScene';
@@ -47,7 +49,18 @@ export class TitleScene extends Phaser.Scene {
         placeText(start, cx, LOGICAL_HEIGHT * 0.65, 0.5, 0.5);
       }
       if (v) settings = new UiButton(this, 40, LOGICAL_HEIGHT - 44, LOGICAL_WIDTH - 80, 22, str.t('settings.character'), { depth: 10, style: 'normal', role: 'label' });
+      // T-170 설정 '조작 위치'(오른손/왼손, control-dpad §1-4·Q8 A): 톡할 때마다 바꾸고 바로 저장. 문구 키가 없으면 버튼 없음
+      if (handSetting && str.has('settings.control_hand') && str.has('settings.control_hand.right')) {
+        const label = () => `${str.t('settings.control_hand')}: ${str.t(`settings.control_hand.${hand}`)}`;
+        handBtn = new UiButton(this, 40, LOGICAL_HEIGHT - (v ? 72 : 44), LOGICAL_WIDTH - 80, 22, label(), { depth: 10, style: 'normal', role: 'label' });
+        toggleHand = () => { hand = hand === 'right' ? 'left' : 'right'; handBtn?.setText(label()); void saveControlHand(storage, hand); };
+      }
     });
+    const layoutRules = ((getDataTables()['rules'] as { input?: { layout?: { defaultHand?: string; handSetting?: boolean } } } | undefined)?.input?.layout) ?? {};
+    const handSetting = layoutRules.handSetting !== false;
+    let hand: ControlHand = controlHandOr(layoutRules.defaultHand === 'left' ? 'left' : 'right');
+    let handBtn: UiButton | null = null;
+    let toggleHand: (() => void) | null = null;
     if (this.toastKey && str.has(this.toastKey)) {
       const bg = this.add.rectangle(0, 0, 1, 1, 0xffffff, 0.95).setStrokeStyle(1, color('dark'));
       const t = addPixelText(this, 0, 0, str.t(this.toastKey), { role: 'label', color: color('outline'), align: 'center' });
@@ -56,6 +69,7 @@ export class TitleScene extends Phaser.Scene {
     }
     this.input.on(Phaser.Input.Events.POINTER_UP, (ptr: Phaser.Input.Pointer) => {
       if (!this.ready) return;
+      if (handBtn && toggleHand && handBtn.contains(ptr.x, ptr.y)) { toggleHand(); return; }
       if (settings && settings.contains(ptr.x, ptr.y)) {
         this.scene.start(SceneKey.CharSelect, { mode: 'change', current: this.variant } satisfies CharSelectData);
         return;

@@ -3,8 +3,9 @@
  * API 시그니처 출처: npm 패키지 dist/index.d.ts (상세: game/docs/platform-integration.md)
  * 이 모듈은 platform/index.ts에서 동적 import로만 불러와 mock 환경 번들 진입 경로에서 분리한다.
  */
-import { Game, Share, Storage, loadFullScreenAd, showFullScreenAd } from '@apps-in-toss/web-framework';
-import type { AdKind, AdResult, AdUnitConfig, AdsAdapter, LeaderboardAdapter, LeaderboardSubmitResult, Platform, ShareAdapter, StorageAdapter } from './types';
+import { Game, SafeArea, Share, Storage, loadFullScreenAd, showFullScreenAd } from '@apps-in-toss/web-framework';
+import { cssSafeAreaInsets } from './safeArea';
+import type { SafeAreaInsets, AdKind, AdResult, AdUnitConfig, AdsAdapter, LeaderboardAdapter, LeaderboardSubmitResult, Platform, ShareAdapter, StorageAdapter } from './types';
 
 class TossStorage implements StorageAdapter {
   getItem(key: string) { return Storage.getItem(key); }
@@ -105,5 +106,10 @@ export function createTossPlatform(units: AdUnitConfig): Platform {
     ads: new TossAds(units),
     leaderboard: new TossLeaderboard(),
     share: new TossShare(),
+    // SDK 3.10 SafeArea.get()(getSafeAreaInsets는 deprecated). [추측] 값 단위를 CSS px로 가정 — 실기기 확인 필요. 실패하면 CSS env
+    safeAreaInsets: (): SafeAreaInsets => {
+      try { const v = SafeArea.get(); if (v && typeof v.bottom === 'number') return { top: v.top, bottom: v.bottom, left: v.left, right: v.right }; } catch { /* 미지원 */ }
+      return cssSafeAreaInsets();
+    },
   };
 }

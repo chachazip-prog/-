@@ -8,10 +8,12 @@
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b22; overflow: hidden; overscroll-behavior: none; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
       #game { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
       #game canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
+      /* T-170(control-dpad §8-4): 패드는 늘 길게 누르는 입력 — 스크롤·확대·길게 누름 메뉴·텍스트 선택·확대경 차단 */
+      #game, #game canvas { touch-action: none; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
     </style>
   </head>
   <body>
-    <div id="game"></div>
+    <div id="game" oncontextmenu="return false"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

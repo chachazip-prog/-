@@ -46,8 +46,16 @@ export interface ShareAdapter {
   shareText(message: string): Promise<boolean>;
 }
 
+/** 세이프 에어리어 여백(CSS px) */
+export interface SafeAreaInsets { readonly top: number; readonly bottom: number; readonly left: number; readonly right: number }
+
 export interface Platform {
   readonly name: 'mock' | 'toss';
+  /**
+   * T-170(control-dpad §8-4): 세이프 에어리어 여백. 토스 = SDK SafeArea.get(), 로컬 = CSS env(safe-area-inset-*).
+   * 알 수 없으면 0. 조작대를 홈 표시줄·제스처 영역 위로 올리는 데 쓴다
+   */
+  safeAreaInsets(): SafeAreaInsets;
   readonly storage: StorageAdapter;
   readonly ads: AdsAdapter;
   readonly leaderboard: LeaderboardAdapter;

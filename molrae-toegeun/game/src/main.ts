@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import { LOGICAL_HEIGHT, LOGICAL_WIDTH, integerZoomFor } from './config/display';
+import { LOGICAL_HEIGHT, LOGICAL_WIDTH, integerZoomFor, setDeckLiftPx } from './config/display';
+import { loadControlHand } from './state/controlHand';
 import { audio } from './audio/audio';
 import { initPlatform } from './platform';
 import { loadProgress } from './state/progress';
@@ -18,6 +19,16 @@ async function start(): Promise<void> {
   console.info(`[platform] ${platform.name}`);
 
   const parent = document.getElementById(PARENT_ID) ?? document.body;
+  // T-170 조작대 손잡이 설정(저장값) + 세이프 에어리어: 캔버스 아래 레터박스가 홈 표시줄보다 좁으면 그 차이만큼 조작대를 올림(control-dpad §8-4)
+  await loadControlHand(platform.storage).catch(() => null);
+  {
+    const pw = parent.clientWidth || window.innerWidth, ph = parent.clientHeight || window.innerHeight;
+    const z = integerZoomFor(pw, ph);
+    const letterbox = Math.max(0, (ph - LOGICAL_HEIGHT * z) / 2);
+    const inset = platform.safeAreaInsets().bottom;
+    const lift = Math.ceil(Math.max(0, inset - letterbox) / z);
+    setDeckLiftPx(new URLSearchParams(location.search).has('deckLift') ? Number(new URLSearchParams(location.search).get('deckLift')) || 0 : lift);
+  }
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent,
@@ -28,7 +39,8 @@ async function start(): Promise<void> {
     roundPixels: true,
     antialias: false,
     disableContextMenu: true,
-    input: { activePointers: 1 },
+    // T-170 멀티터치: 패드 1 + 행동 버튼 1(+여유 1). 포인터 이벤트 기반(click 300ms 지연 없음)
+    input: { activePointers: 3 },
     scale: {
       mode: Phaser.Scale.NONE,
       autoCenter: Phaser.Scale.CENTER_BOTH,

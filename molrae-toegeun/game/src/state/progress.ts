@@ -15,6 +15,8 @@ export interface Progress {
   seenHints: string[];
   /** 소리 켜짐(설정). 꺼도 시각 신호는 그대로(rules.visualCues.alwaysOn) */
   soundOn: boolean;
+  /** T-170 설정 '조작 위치'(control-dpad §1-4): 오른손(기본) / 왼손 = 조작대 좌우 거울 */
+  controlHand?: 'right' | 'left';
 }
 
 const PROGRESS_KEY = 'mt.progress.v1';
@@ -28,6 +30,7 @@ export async function loadProgress(s: StorageAdapter): Promise<Progress> {
       return {
         unlockedDay: Math.max(1, p.unlockedDay ?? 1), bestStars: p.bestStars ?? {}, wallet: p.wallet ?? 0,
         seenHints: Array.isArray(p.seenHints) ? p.seenHints : [], soundOn: p.soundOn !== false,
+        ...(p.controlHand === 'left' || p.controlHand === 'right' ? { controlHand: p.controlHand } : {}),
       };
     }
   } catch (e) { console.warn('[progress] 읽기 실패', e); }
