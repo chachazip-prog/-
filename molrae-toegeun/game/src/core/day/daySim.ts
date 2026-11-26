@@ -145,9 +145,10 @@ const TUTORIAL_ON: Readonly<Record<string, string>> = {
   // tutorialId → 트리거 이름 (트리거가 오면 tutorial.<id> 문구를 한 번 띄움)
   // T-170: tut_tap_move(폐지 키, control-dpad §10-4)는 띄우지 않음. 패드 튜토리얼(§6-1)
   tut_tap_move: 'never',
-  tut_pad_move: 'firstUnlock',
+  // T-171 days[1] _t171Note: tut_pad_move = 하루 첫 순간, tut_sit = 자리를 떠났다가 처음 자리 칸에서 멈춰 앉음, tut_use = 처음 사용 가능한 사물 옆
+  tut_pad_move: 'dayStart',
   tut_use: 'useAvailable',
-  tut_sit: 'carryStart',
+  tut_sit: 'seatArrive',
   tut_guide: 'chipGuide',
   tut_hand_setting: 'never', // 결과 화면에서 씬이 띄움
   tut_work: 'firstSeatedWork',
@@ -1246,7 +1247,7 @@ export class DaySim {
         if (!this.firstUnlockSeen) {
           this.firstUnlockSeen = true;
           // 1일차 ③(control-dpad §6-1): 첫 미션이 열리면 패드 안내 + 길 안내 자동(도착까지)
-          if (this.content.tutorialIds.includes('tut_pad_move')) { this.tutorial('firstUnlock'); this.setGuide(m.def.id, this.missionStartTile(m), Infinity, 'auto'); }
+          if (this.content.tutorialIds.includes('tut_pad_move')) this.setGuide(m.def.id, this.missionStartTile(m), Infinity, 'auto');
         }
         if (this.offerTriggerOf(m) === 'unlock') this.maybeOffer(m);
         const cl = this.content.facility?.cleaning;
@@ -1285,7 +1286,7 @@ export class DaySim {
     }
     // 자리 도착해 앉음 = 이동 구간 끝(η)
     const still = at && this.floor.player.stoppedAtCenter;
-    if (still && !this.wasAtSeatStill) this.tripEnd();
+    if (still && !this.wasAtSeatStill) { this.tripEnd(); if (this.leftSeatAt !== null) this.tutorial('seatArrive'); }
     this.wasAtSeatStill = still;
     this.wasAtSeat = at;
   }
@@ -1462,7 +1463,7 @@ export class DaySim {
     if (m.def.completeAt === 'return_to_seat') {
       m.state = 'carry';
       // 1일차 ⑦: 들고 돌아갈 때 '멈추면 앉아요' + 자리로 길 안내 자동
-      if (this.content.tutorialIds.includes('tut_sit')) { this.tutorial('carryStart'); this.setGuide(`carry:${m.def.id}`, this.content.playerSeat, Infinity, 'auto'); }
+      if (this.content.tutorialIds.includes('tut_sit')) { this.setGuide(`carry:${m.def.id}`, this.content.playerSeat, Infinity, 'auto'); }
     } else this.completeMission(m);
   }
 

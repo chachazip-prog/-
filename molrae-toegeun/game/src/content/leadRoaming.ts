@@ -138,7 +138,8 @@ export function buildLeadTour(inp: LeadTourInput): BossTourDef | null {
       lookChance: num(d.d['lookChance'], 0),
       ...(typeof d.d['bubbleIcon'] === 'string' ? { bubbleIcon: d.d['bubbleIcon'] as string } : {}),
       ...(typeof d.d['lineKey'] === 'string' ? { lineKey: d.d['lineKey'] as string } : {}),
-      ...(typeof d.d['pose'] === 'string' ? { pose: d.d['pose'] as string } : {}),
+      // T-171: poseByFacing[스팟 facing]이 있으면 pose보다 우선(프린터실 = 옆모습), 없는 방향은 pose
+      ...((() => { const pf = d.facing ? obj(d.d['poseByFacing'])[d.facing] : undefined; const pose = typeof pf === 'string' ? pf : d.d['pose']; return typeof pose === 'string' ? { pose } : {}; })()),
       ...(typeof d.d['floorMark'] === 'string' ? { floorMark: d.d['floorMark'] as string } : {}),
       ...(d.d['endTell'] ? { endTell: { sec: Math.max(inp.tellMinSec, num(et['sec'], 1)), ...(sfx.length ? { sfx } : {}), ...(typeof et['lineKey'] === 'string' ? { lineKey: et['lineKey'] as string } : {}) } } : {}),
       ...(Array.isArray(d.d['locksMissions']) ? { locksMissions: arr(d.d['locksMissions']).map((x) => str(x)) } : {}),
