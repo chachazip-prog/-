@@ -207,7 +207,7 @@ python3 art/tools/pixelgen.py --preview-tag t130   # 미리보기 파일 접두�
 | | `furn/chair_s` | 16×16 | 남쪽을 보는 의자(좌석 윗면이 보임). 테이블 북쪽에 `dy:5`로 겹침 |
 | | `tall/whiteboard` | 16×24 | 이동식 화이트보드(일반 꺾은선·막대 그래프) |
 | 화장실 | `tile/floor_rest` | 16×16 | 4px 모자이크 타일 |
-| | `tile/wall_rest_sign` | 16×16 | 'WC' 글자 표지(성별 픽토그램 없음) |
+| | `tile/wall_rest_sign` | 16×16 | 변기 그림 표지(흰 판 + 진한 하늘색 변기 + 하늘색 물, 글자·성별 픽토그램 없음. T-172/D-132에서 'WC' 글자 교체) |
 | | `tile/wall_mirror` | 16×16 | 벽 거울(세면대 위) |
 | | `furn/sink` | 16×16 | 세면대(수전 + 세면볼 + 하부장) |
 | | `tall/stall` | 16×24 | 칸막이 문(사용 표시는 **초록**만. 빨강 '사용 중' 표시는 쓰지 않음) |
@@ -290,7 +290,7 @@ python3 art/tools/pixelgen.py --preview-tag t130   # 미리보기 파일 접두�
 | `fx/cover_glint_0~3` (anim `fx/cover_glint`) | 16×16, 중앙 | 엄폐 칸 반짝임(초록 모서리 숨쉬기 + 별) |
 | `fx/dest_0/1` (anim `fx/dest`) | 16×16, 중앙 | 목적지 마커(흰 바닥 링 + 하늘색 화살표 통통) |
 | `dot/path`, `dot/hint`, `dot/caution` | 4×4, 중앙 | 경로 점선(흰), 안전 우회 힌트(초록), 지름길 주의(노랑). 6px 간격 권장 |
-| `icon_coffee`, `icon_restroom`, `icon_nap`, `icon_shopping`, `icon_snack`, `icon_leave`, `icon_done`, `ui_icon_megaphone` | 12×12, 중앙 | 미션 칩·UI 아이콘(flat 키 = 데이터 값). 화장실은 성별 픽토그램 대신 'WC', 쇼핑은 로고 없는 가방 |
+| `icon_coffee`, `icon_restroom`, `icon_nap`, `icon_shopping`, `icon_snack`, `icon_leave`, `icon_done`, `ui_icon_megaphone` | 12×12, 중앙 | 미션 칩·UI 아이콘(flat 키 = 데이터 값). 화장실은 변기 그림(물탱크 + 흰 테두리 + 하늘색 물, 글자·성별 픽토그램 없음. T-172/D-132에서 'WC' 글자 교체), 쇼핑은 로고 없는 가방 |
 
 ### 11-4. 코드 드로잉 규격(`palette.json` `overlay`, T-130 추가)
 | 키 | 기준색 | 규격 | 용도 |
@@ -650,3 +650,10 @@ python3 art/tools/pixelgen.py --preview-tag t130   # 미리보기 파일 접두�
 | `fx/bump_0·1` | 8×8, 중앙 | '툭' 먼지, anim 10fps 한 번 |
 | `player[_m\|_f]/disguise_step_back_<dir>_<0\|1>` | 16×20, (0.5, 1) | 흠칫 반걸음: _0 = 1px 웅크림 + 땀방울 + 손 번쩍(옆은 뒷발 반걸음), _1 = 서류 올라오는 중(정면·옆)/어깨 움츠림(뒤). anim 14fps 한 번 |
 | `tutorial/hand_release_0·1` | 16×16, (0.4375, 0.0625) = 손끝 | 오른손. 왼손 배치는 flipX(원점 x 0.5625) |
+
+## T-172 글자 없는 화장실 그림 + 머리 위 아이콘 보강 (D-132)
+
+- `icon_restroom`(12×12, flat, 미션 칩): 'WC' 글자 판 → 앞에서 본 변기(뒤 물탱크 연회색 뚜껑, 흰 테두리, 하늘색 물). 미션 칩은 성별과 관계없이 모든 플레이어에게 같은 그림이므로 성별 픽토그램은 쓰지 않습니다. 성별 픽토그램은 D-087 시설 문 표지(`tile2/wall_door_restroom_*`)에만 둡니다.
+- `tile/wall_rest_sign`(16×16, 견본 장면 벽 표지): 같은 변기 그림을 흰 판에 진한 하늘색으로 그렸습니다.
+- `fx/head_icon/greet`(8×8): 머리를 6칸으로 키우고, 정수리 가르마(진한 남색)와 네 귀퉁이 움직임 줄을 넣었습니다. `fx/head_icon/switch`(8×8): 겹친 두 창 → 하늘색 화면 + 흰 ⇄ 화살표 2개(화살촉 3칸).
+- 키 이름·크기·원점·아틀라스 위치는 그대로이고, 다른 프레임은 픽셀 하나도 바뀌지 않았습니다. 원본은 `art/tools/t172_src.py`(t169_src.py의 HEAD_FIX도 같은 값), 비교 미리보기는 `art/tools/t172_preview.py` → `preview/t172-compare(-1x).png`.
