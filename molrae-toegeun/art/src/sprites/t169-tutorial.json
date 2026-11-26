@@ -1,0 +1,72 @@
+{
+ "name": "t169-tutorial",
+ "prefix": "tutorial",
+ "group": "ui",
+ "lean": true,
+ "size": [
+  16,
+  16
+ ],
+ "origin": [
+  0.4375,
+  0.0625
+ ],
+ "note": "T-169 방향 패드 조작 UI(D-131, design/control-dpad.md §9-1). 원본 생성: art/tools/t169_src.py. 빨강·글자·로고 없음. 1일차 ④ '손 떼기' 손가락(오른손). _0 = 손끝이 패드에 닿음(하늘색 접촉 표시), _1 = 손이 아래로 떨어지고 손끝 위에 떼기 줄. 원점 = 손끝(x 7, y 1). 왼손 배치에서는 setFlipX(true)로 거울(원점 x는 1-0.4375)",
+ "frames": [
+  {
+   "name": "hand_release_0",
+   "rows": [
+    "....CC..CC......",
+    "...C......C.....",
+    "......OO........",
+    ".....OSSO.......",
+    ".....OSSO.......",
+    ".....OSSO.......",
+    ".....OSSOOO.....",
+    ".....OSSOSSOOO..",
+    "..OO.OSSOSSOSSO.",
+    ".OSSOOSSSSSSSSO.",
+    ".OSSSOSSSSSSSSO.",
+    "..OSSSSSSSSSSSO.",
+    "..OSSSSSSSSSSsO.",
+    "...OSSSSSSSSsO..",
+    "....OSSSSSSsO...",
+    "....OsssssssO..."
+   ]
+  },
+  {
+   "name": "hand_release_1",
+   "rows": [
+    ".....M....M.....",
+    ".....M....M.....",
+    "................",
+    "................",
+    ".......OO.......",
+    "......OSSO......",
+    "......OSSO......",
+    "......OSSO......",
+    "......OSSOOO....",
+    "......OSSOSSOOO.",
+    "...OO.OSSOSSOSSO",
+    "..OSSOOSSSSSSSSO",
+    "..OSSSOSSSSSSSSO",
+    "...OSSSSSSSSSSSO",
+    "...OSSSSSSSSSSsO",
+    "....OSSSSSSSSsO."
+   ]
+  }
+ ],
+ "anims": [
+  {
+   "key": "hand_release",
+   "frames": [
+    "hand_release_0",
+    "hand_release_0",
+    "hand_release_1",
+    "hand_release_1"
+   ],
+   "frameRate": 4,
+   "repeat": -1
+  }
+ ]
+}

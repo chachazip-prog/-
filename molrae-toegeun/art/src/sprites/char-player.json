@@ -2,7 +2,7 @@
  "name": "player",
  "group": "character",
  "base": "body-a",
- "note": "플레이어. 바디 A + 파랑 셔츠 + 하늘색(cool) 사원증 줄(T-125: 공범 동료 초록과 겹쳐 변경) + 정수리 삐침머리(오른쪽 위로 튀는 갈고리 + 왼쪽 옆머리 1px 삐침 + 가운데 앞머리 한 가닥). 눈은 세로 2px 동그란 눈(팀장은 눈썹 있음, 플레이어는 없음). disguise = 서류 보는 척 위장, caught = 들킴(놀람) 1프레임: 머리카락 곤두섬·흰자 눈·벌린 입·두 손 번쩍. T-130: 위장 포즈 5종(rules.disguise.poseByZone id와 같은 이름) pose_<id>_<down|right|left>[_0|_1]. read_document 정면은 disguise 프레임 재사용. 정면·옆 2방향(왼쪽은 반전), 뒷모습 위장은 없음(뒷모습이면 정면 포즈로 돌려 세움)",
+ "note": "플레이어. 바디 A + 파랑 셔츠 + 하늘색(cool) 사원증 줄(T-125: 공범 동료 초록과 겹쳐 변경) + 정수리 삐침머리(오른쪽 위로 튀는 갈고리 + 왼쪽 옆머리 1px 삐침 + 가운데 앞머리 한 가닥). 눈은 세로 2px 동그란 눈(팀장은 눈썹 있음, 플레이어는 없음). disguise = 서류 보는 척 위장, caught = 들킴(놀람) 1프레임: 머리카락 곤두섬·흰자 눈·벌린 입·두 손 번쩍. T-130: 위장 포즈 5종(rules.disguise.poseByZone id와 같은 이름) pose_<id>_<down|right|left>[_0|_1]. read_document 정면은 disguise 프레임 재사용. 정면·옆 2방향(왼쪽은 반전), 뒷모습 위장은 없음(뒷모습이면 정면 포즈로 돌려 세움) T-169: 흠칫 반걸음 disguise_step_back_<down|up|right|left>_<0|1>(M3 뒤로 붙기, 2장 14fps 한 번 = 0.14초 ≤ 붙기 0.15초). _0 = 1px 웅크림 + 땀방울 + 손 번쩍(옆은 뒷발 반걸음), _1 = 서류가 올라오는 중(정면·옆) / 어깨 움츠림(뒷모습). 이어서 기존 disguise(정면)·pose_read_document_<dir>(옆)로 바꿉니다. 왼쪽은 오른쪽 반전",
  "swap": {
   "$lanyard": "cool"
  },
@@ -164,6 +164,50 @@
   {
    "name": "pose_check_phone_left_1",
    "flip": "pose_check_phone_right_1"
+  },
+  {
+   "name": "disguise_step_back_down_0",
+   "from": "idle_down",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "disguise_step_back_down_1",
+   "from": "idle_down"
+  },
+  {
+   "name": "disguise_step_back_up_0",
+   "from": "idle_up",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "disguise_step_back_up_1",
+   "from": "idle_up"
+  },
+  {
+   "name": "disguise_step_back_right_0",
+   "from": "idle_right",
+   "bob": [
+    1,
+    16
+   ]
+  },
+  {
+   "name": "disguise_step_back_right_1",
+   "from": "idle_right"
+  },
+  {
+   "name": "disguise_step_back_left_0",
+   "flip": "disguise_step_back_right_0"
+  },
+  {
+   "name": "disguise_step_back_left_1",
+   "flip": "disguise_step_back_right_1"
   }
  ],
  "stamps": [
@@ -661,6 +705,193 @@
     "SDO",
     "POO"
    ]
+  },
+  {
+   "frames": [
+    "disguise_step_back_down_0",
+    "disguise_step_back_up_0",
+    "disguise_step_back_right_0"
+   ],
+   "x": 13,
+   "y": 0,
+   "rows": [
+    ".O.",
+    "OCO",
+    "OWO",
+    ".O."
+   ],
+   "_note": "T-169 흠칫: 머리 오른쪽 위 땀방울(하늘색 + 흰 반사)"
+  },
+  {
+   "frames": [
+    "disguise_step_back_down_1",
+    "disguise_step_back_up_1",
+    "disguise_step_back_right_1"
+   ],
+   "x": 13,
+   "y": 1,
+   "rows": [
+    ".O.",
+    "OCO",
+    "OWO",
+    ".O."
+   ],
+   "_note": "T-169 땀방울이 1px 흘러내림"
+  },
+  {
+   "frames": [
+    "disguise_step_back_down_0"
+   ],
+   "x": 1,
+   "y": 12,
+   "rows": [
+    "OS..........SO",
+    ".O..........O."
+   ],
+   "_note": "T-169 흠칫(정면): 두 손이 어깨 옆으로 번쩍(1px 웅크림은 bob)"
+  },
+  {
+   "frames": [
+    "disguise_step_back_down_0"
+   ],
+   "x": 3,
+   "y": 14,
+   "rows": [
+    "Op"
+   ],
+   "_note": "왼손 자리 비움"
+  },
+  {
+   "frames": [
+    "disguise_step_back_down_0"
+   ],
+   "x": 11,
+   "y": 14,
+   "rows": [
+    "pO"
+   ],
+   "_note": "오른손 자리 비움"
+  },
+  {
+   "frames": [
+    "disguise_step_back_down_1"
+   ],
+   "x": 0,
+   "y": 12,
+   "rows": [
+    ".OOOOOOOOOOOOOO.",
+    "OSOWWWWWWWWWWOSO",
+    "OSOWGGGGWWWWWOSO",
+    ".OOWWWWWWWWWWOO."
+   ],
+   "_note": "T-169 정면 2장: 서류가 허리에서 올라오는 중(다음은 기존 disguise = 얼굴 아래까지)"
+  },
+  {
+   "frames": [
+    "disguise_step_back_up_0"
+   ],
+   "x": 1,
+   "y": 12,
+   "rows": [
+    "OS..........SO",
+    ".O..........O."
+   ],
+   "_note": "T-169 흠칫(뒷모습): 두 손 번쩍 + 1px 웅크림"
+  },
+  {
+   "frames": [
+    "disguise_step_back_up_0"
+   ],
+   "x": 3,
+   "y": 14,
+   "rows": [
+    "Op"
+   ]
+  },
+  {
+   "frames": [
+    "disguise_step_back_up_0"
+   ],
+   "x": 11,
+   "y": 14,
+   "rows": [
+    "pO"
+   ]
+  },
+  {
+   "frames": [
+    "disguise_step_back_up_1"
+   ],
+   "x": 3,
+   "y": 13,
+   "rows": [
+    "OSp",
+    "Op."
+   ],
+   "_note": "T-169 뒷모습 2장: 어깨 움츠림(손이 1px 위)"
+  },
+  {
+   "frames": [
+    "disguise_step_back_up_1"
+   ],
+   "x": 10,
+   "y": 13,
+   "rows": [
+    "pSO",
+    ".pO"
+   ]
+  },
+  {
+   "frames": [
+    "disguise_step_back_right_0"
+   ],
+   "x": 2,
+   "y": 16,
+   "rows": [
+    "..ODDDDDDO",
+    ".ODDOODDDO",
+    "ODDO.ODDDO",
+    "OOOO.OOOOOO"
+   ],
+   "_note": "T-169 흠칫(옆): 뒷발이 뒤(왼쪽)로 반걸음 + 1px 웅크림"
+  },
+  {
+   "frames": [
+    "disguise_step_back_right_0"
+   ],
+   "x": 10,
+   "y": 12,
+   "rows": [
+    "OS",
+    "O."
+   ],
+   "_note": "앞손이 가슴 앞으로 번쩍"
+  },
+  {
+   "frames": [
+    "disguise_step_back_right_1"
+   ],
+   "x": 11,
+   "y": 7,
+   "rows": [
+    ".OOOO",
+    ".OWWO",
+    ".OWMO",
+    ".OWWO",
+    "PSWWO",
+    ".OOOO"
+   ],
+   "_note": "T-169 옆 2장: 서류가 가슴 높이로 올라오는 중(다음은 기존 pose_read_document_<dir>)"
+  },
+  {
+   "frames": [
+    "disguise_step_back_right_1"
+   ],
+   "x": 7,
+   "y": 14,
+   "rows": [
+    "P"
+   ]
   }
  ],
  "anims": [
@@ -811,6 +1042,42 @@
    ],
    "frameRate": 2,
    "repeat": -1
+  },
+  {
+   "key": "disguise_step_back_down",
+   "frames": [
+    "disguise_step_back_down_0",
+    "disguise_step_back_down_1"
+   ],
+   "frameRate": 14,
+   "repeat": 0
+  },
+  {
+   "key": "disguise_step_back_up",
+   "frames": [
+    "disguise_step_back_up_0",
+    "disguise_step_back_up_1"
+   ],
+   "frameRate": 14,
+   "repeat": 0
+  },
+  {
+   "key": "disguise_step_back_right",
+   "frames": [
+    "disguise_step_back_right_0",
+    "disguise_step_back_right_1"
+   ],
+   "frameRate": 14,
+   "repeat": 0
+  },
+  {
+   "key": "disguise_step_back_left",
+   "frames": [
+    "disguise_step_back_left_0",
+    "disguise_step_back_left_1"
+   ],
+   "frameRate": 14,
+   "repeat": 0
   }
  ]
 }

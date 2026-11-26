@@ -1,0 +1,34 @@
+{
+ "name": "t169-pin",
+ "prefix": "fx",
+ "group": "ui",
+ "lean": true,
+ "size": [
+  8,
+  12
+ ],
+ "origin": [
+  0.5,
+  1
+ ],
+ "note": "T-169 방향 패드 조작 UI(D-131, design/control-dpad.md §9-1). 원본 생성: art/tools/t169_src.py. 빨강·글자·로고 없음. 길 안내 목적지 핀(하늘색 + 흰 점, 아래 바닥 그림자). 원점 = 아래 가운데 → 사용 칸 중심 아래쪽 4px에 두면 핀 끝이 칸 가운데",
+ "frames": [
+  {
+   "name": "guide_pin",
+   "rows": [
+    "..OOOO..",
+    ".OCCCCO.",
+    "OCCWWCcO",
+    "OCWWWWcO",
+    "OCWWWWcO",
+    "OCCWWccO",
+    ".OCCccO.",
+    "..OCcO..",
+    "..OCcO..",
+    "...OO...",
+    "..qOOq..",
+    "...qq..."
+   ]
+  }
+ ]
+}

@@ -51,7 +51,9 @@
     "pose_hold_cup_down_0",
     "pose_hold_cup_down_1",
     "pose_nap_on_sofa_down_0",
-    "pose_nap_on_sofa_down_1"
+    "pose_nap_on_sofa_down_1",
+    "disguise_step_back_down_0",
+    "disguise_step_back_down_1"
    ],
    "x": 0,
    "y": 11,
@@ -95,7 +97,9 @@
     "carry_cup_up_0",
     "carry_cup_up_1",
     "pose_nod_up_0",
-    "pose_nod_up_1"
+    "pose_nod_up_1",
+    "disguise_step_back_up_0",
+    "disguise_step_back_up_1"
    ],
    "x": 0,
    "y": 11,
@@ -154,7 +158,9 @@
     "pose_hold_cup_right_0",
     "pose_hold_cup_right_1",
     "pose_breath_right_0",
-    "pose_breath_right_1"
+    "pose_breath_right_1",
+    "disguise_step_back_right_0",
+    "disguise_step_back_right_1"
    ],
    "x": 0,
    "y": 11,

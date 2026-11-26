@@ -1,0 +1,234 @@
+{
+ "name": "t169-headicon",
+ "prefix": "fx/head_icon",
+ "group": "ui",
+ "lean": true,
+ "size": [
+  8,
+  8
+ ],
+ "note": "T-169 방향 패드 조작 UI(D-131, design/control-dpad.md §9-1). 원본 생성: art/tools/t169_src.py. 빨강·글자·로고 없음. 머리 위 행동 아이콘(§8-2, 버튼 아이콘이 바뀌면 0.6초). ui/action_icon/<name> 과 같은 이름·색의 8x8 축소판(직접 손질)",
+ "frames": [
+  {
+   "name": "greet",
+   "rows": [
+    "........",
+    "..OOOO..",
+    ".OHHHHO.",
+    "MOHHHHOM",
+    ".OSSSSO.",
+    "OPOOOOPO",
+    "OPPSSPPO",
+    ".OOOOOO."
+   ]
+  },
+  {
+   "name": "nod",
+   "rows": [
+    ".OOOOOO.",
+    "OHHHHHHO",
+    "OSOSSOSO",
+    "OSSSSSSO",
+    ".OSOOSO.",
+    "..OOOO..",
+    "M......M",
+    "........"
+   ]
+  },
+  {
+   "name": "stop",
+   "rows": [
+    "....OOOO",
+    "....ODDO",
+    "OOOOOOOO",
+    "OTTTTOWO",
+    "OWWWWOO.",
+    "OWWWWO..",
+    ".OOOO...",
+    "........"
+   ]
+  },
+  {
+   "name": "exit",
+   "rows": [
+    "OOOOO...",
+    "OTTTO.O.",
+    "OTTTOOGO",
+    "OTTYGGGO",
+    "OTTTOOGO",
+    "OTTTO.O.",
+    "OOOOO...",
+    "........"
+   ]
+  },
+  {
+   "name": "head",
+   "rows": [
+    "...OO...",
+    "..ODDO..",
+    ".OOOOOO.",
+    "OHHHHHHO",
+    "OSOOSOOO",
+    "OSSSSSSO",
+    ".OSSSSO.",
+    "..OOOO.."
+   ]
+  },
+  {
+   "name": "switch",
+   "rows": [
+    "OOOOO...",
+    "OLLLO...",
+    "OLOOOOO.",
+    "OLOCWCO.",
+    "OOOCCCO.",
+    "..OCWCO.",
+    "..OOOOO.",
+    "........"
+   ]
+  },
+  {
+   "name": "bite",
+   "rows": [
+    "..OOO...",
+    ".OTTTO.T",
+    "OTDTTO..",
+    "OTTTTTO.",
+    "OTTDTtO.",
+    ".OTttO..",
+    "..OOO...",
+    "........"
+   ]
+  },
+  {
+   "name": "tag",
+   "rows": [
+    ".O....O.",
+    "..O..O..",
+    "OOOOOOO.",
+    "OHWMMWO.",
+    "OPWWWWOC",
+    "OCCCCCO.",
+    "OOOOOOO.",
+    "........"
+   ]
+  },
+  {
+   "name": "pack",
+   "rows": [
+    "..OOOO..",
+    "..O..O..",
+    "OOOOOOOO",
+    "OTTTTTTO",
+    "OttYYttO",
+    "OTTTTTTO",
+    "OOOOOOOO",
+    "........"
+   ]
+  },
+  {
+   "name": "accept",
+   "rows": [
+    ".OO..OO.",
+    "OSSOOSSO",
+    ".OO..OO.",
+    "OPPOOGGO",
+    "OPPSSGGO",
+    "ODDOODDO",
+    "OOO..OOO",
+    "........"
+   ]
+  },
+  {
+   "name": "use",
+   "rows": [
+    "..OO....",
+    "..OSO...",
+    "..OSOOO.",
+    "OOOSSSSO",
+    "OSSSSSSO",
+    ".OSSSSO.",
+    ".OsssO..",
+    ".OOOOO.."
+   ]
+  },
+  {
+   "name": "start",
+   "rows": [
+    "...OO...",
+    "..OYYO..",
+    "OOOYYOOO",
+    "OYYYYYYO",
+    ".OYYYYO.",
+    ".OYOOYO.",
+    ".OO..OO.",
+    "........"
+   ]
+  },
+  {
+   "name": "pickup",
+   "rows": [
+    "..OGGO..",
+    ".OOGGOO.",
+    "..OGGO..",
+    "...OO...",
+    "OOOOOOOO",
+    "OTTtTTTO",
+    "OttttttO",
+    "OOOOOOOO"
+   ]
+  },
+  {
+   "name": "grab",
+   "rows": [
+    "..O..O..",
+    ".OSOOSO.",
+    "OOSOOSOO",
+    "OWOWWOWO",
+    "OWMMMMWO",
+    "OWMMMWWO",
+    "OWWWWWWO",
+    "OOOOOOOO"
+   ]
+  },
+  {
+   "name": "order",
+   "rows": [
+    "OOOOOOOO",
+    "OWOOOOWO",
+    "OWOTTOOO",
+    "OWOWWOWO",
+    "OWWOOWWO",
+    "OOWOOOOO",
+    ".OO.....",
+    "........"
+   ]
+  },
+  {
+   "name": "breath",
+   "rows": [
+    ".....OO.",
+    "OOOOOOCO",
+    "CCCCCCO.",
+    "OOOOOOO.",
+    "..OOOOOO",
+    ".OCCCCCC",
+    "..OOOOOO",
+    "........"
+   ]
+  },
+  {
+   "name": "idle",
+   "rows": [
+    "..MM....",
+    "..MLM...",
+    "..MLMMM.",
+    "MMMLLLLM",
+    "MLLLLLLM",
+    ".MLLLLM.",
+    ".MMMMM..",
+    ".MMMMM.."
+   ]
+  }
+ ]
+}

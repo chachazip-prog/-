@@ -630,3 +630,23 @@ python3 art/tools/pixelgen.py --preview-tag t130   # 미리보기 파일 접두�
 | anim `teamlead[_m\|_f]/wait_side_right`, `_left` | 3fps 반복 | `idle · idle · _1 · idle · _1`(`wait_up`과 같은 리듬) |
 
 - 8px 축소(최근접·면적 평균) 비교에서 컵 대 물방울, 서류 대 메모지 모두 색과 실루엣으로 갈립니다(`preview/t166-icons.png`).
+
+## 18. T-169 방향 패드 조작대 (D-131, design/control-dpad.md §9-1)
+
+빨강·글자·로고 없음(`--check` 통과). 기존 1,101프레임은 픽셀·원점 그대로이고 키만 더했습니다(1,189프레임 + 556애니메이션). 원본은 `art/tools/t169_src.py`(결정적, 원은 거리식), 미리보기는 `art/tools/t169_preview.py` → `preview/t169-mock-right·mock-left·states·stepback(-1x).png`.
+
+| 키 | 크기·원점 | 내용 |
+|---|---|---|
+| `ui/deck_bg` | 180×72 | 벽색(wall) 판 + 위 1px 외곽선 + 흰 턱 + 아래 그림자 + 모서리 나사. 좌우 대칭(왼손 배치 그대로) |
+| `ui/dpad_base` · `_locked` · `_frozen` | 64×64 | 흰 원판 + 아래 턱 + 십자 홈 + 데드존 링(반경 6) + 중심 점. 판 면 중심은 프레임 (32, 30.5). 잠김 = 회색(알파 0.4 함께), 얼음 = 하늘색 테두리·금·반짝이·고드름 |
+| `ui/dpad_arrow_{up,down,left,right}[_pressed]` | 16×16 | 남색 화살 + 아래 1px 그림자 / 눌림 = 1px 내려감 + 진한 파랑. 패드 중심 기준 오프셋 위 (0,−21)·아래 (0,19)·왼 (−20,−1)·오른 (20,−1) |
+| `ui/action_btn[_pressed\|_dim\|_pulse_0\|_pulse_1]` | 40×40 | 흰 면 + 파랑 테두리 + 아래 턱. 아이콘은 면 중심(기본 (20,19), 눌림 (20,20)). anim `ui/action_btn_pulse`(2fps, 노랑 테두리 교대) |
+| `ui/action_icon/<name>` | 16×16 | greet·nod·stop·exit·head·switch·bite·tag·pack·accept·use·start·pickup·grab·order·breath + idle(흐린 손) |
+| `fx/head_icon/<name>` | 8×8 | 위 17종의 머리 위 축소판(직접 손질) |
+| `ui/chip_small[_locked\|_done\|_guide]` | 20×20 | 흰 칩 / 회색 / 아래 초록 턱 / 하늘색 2px 테두리 |
+| `fx/guide_step_0·1` | 8×8, 중앙 | 하늘색 발자국(위로 걷는 모양, 진행 방향으로 90° 회전), anim 2fps |
+| `fx/guide_pin` | 8×12, (0.5, 1) | 하늘색 핀 + 흰 점 + 바닥 그림자 |
+| `fx/use_hint_0·1` | 8×8, 중앙 | 흰 아래 화살표 1px 통통, anim 3fps |
+| `fx/bump_0·1` | 8×8, 중앙 | '툭' 먼지, anim 10fps 한 번 |
+| `player[_m\|_f]/disguise_step_back_<dir>_<0\|1>` | 16×20, (0.5, 1) | 흠칫 반걸음: _0 = 1px 웅크림 + 땀방울 + 손 번쩍(옆은 뒷발 반걸음), _1 = 서류 올라오는 중(정면·옆)/어깨 움츠림(뒤). anim 14fps 한 번 |
+| `tutorial/hand_release_0·1` | 16×16, (0.4375, 0.0625) = 손끝 | 오른손. 왼손 배치는 flipX(원점 x 0.5625) |
