@@ -10,13 +10,16 @@
       "mapId": "office_floor_1",
       "titleKey": "day.1.title",
       "tutorialIds": [
-        "tut_tap_move",
-        "tut_stop_disguise",
+        "tut_pad_move",
+        "tut_pad_release",
         "tut_tell",
         "tut_work",
+        "tut_sit",
         "tut_coffee",
+        "tut_use",
         "tut_leave",
-        "tut_gate"
+        "tut_gate",
+        "tut_hand_setting"
       ],
       "dayPhaseSec": 34,
       "missions": [
@@ -55,7 +58,7 @@
           "tellSec": 1.2,
           "gazeMultiplierScale": 0.5,
           "slowMo": 0.5,
-          "hintKey": "tutorial.tut_stop_disguise",
+          "hintKey": "tutorial.tut_pad_release",
           "maxTimes": 1
         },
         {
@@ -71,7 +74,8 @@
         "snitch",
         "accomplice"
       ],
-      "_designNote": "1일차: 탭 이동 → 첫 전조에서 탭 정지·위장(슬로모) → 자리 업무 → 커피 → 퇴근·게이트. 미션 1개, 할당량 0.35(자리 8.75초)."
+      "_designNote": "1일차: 탭 이동 → 첫 전조에서 탭 정지·위장(슬로모) → 자리 업무 → 커피 → 퇴근·게이트. 미션 1개, 할당량 0.35(자리 8.75초).",
+      "_t171Note": "T-171(D-131, control-dpad.md §6-1): 탭 이동 튜토리얼 → 패드. tut_tap_move → tut_pad_move(첫 순간), tut_stop_disguise → tut_pad_release(첫 전조 슬로모, boss_look_when hintKey), tut_sit(처음 자리 칸에서 멈춰 앉음), tut_use(처음 커피 머신 옆), tut_hand_setting(1일차 결과 화면). 근무 34 → 37초는 밸런스 보정이라 QA 실측 뒤(Q7 B)"
     },
     {
       "day": 2,
@@ -83,7 +87,8 @@
       "tutorialIds": [
         "tut_restroom",
         "tut_route",
-        "tut_offscreen"
+        "tut_offscreen",
+        "tut_guide"
       ],
       "dayPhaseSec": 44,
       "_t139DayPhaseNote": "T-139: 40 → 44초. 커피(13) + 화장실(17.5) + 할당량 10초 = 40.5초로 40초 근무 구간을 넘어 T-140 코드 기준 캐주얼 봇 칼퇴 7%(화장실 미착수 92%). 2일차는 화장실·경로 튜토리얼이라 화장실을 빼지 않고 시간을 늘림. 실측 칼퇴 89%, 길이 평균 66.3초(튜토리얼 50~75초 안)",
@@ -134,7 +139,8 @@
         "snitch",
         "accomplice"
       ],
-      "_designNote": "경로 선택 첫 학습: 화장실 최단 경로는 선배 시선 콘을 지나고 왼쪽 우회는 +6타일. 화장실에 있을 때 화면 밖 선배 화살표 시연."
+      "_designNote": "경로 선택 첫 학습: 화장실 최단 경로는 선배 시선 콘을 지나고 왼쪽 우회는 +6타일. 화장실에 있을 때 화면 밖 선배 화살표 시연.",
+      "_t171Note": "T-171: tut_guide(처음 미션 칩이 열릴 때 길 안내 설명) 추가"
     },
     {
       "day": 3,

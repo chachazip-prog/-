@@ -30,7 +30,7 @@ import { mergedStrings } from './strings';
 import { castRelation, dayCasting, genderDayCtx, genderFacilityConfig, renderSkins, type GenderDayCtx, type PlayerVariant } from './gender';
 import { facilityTiles } from './levelV3';
 import { genderModifierLib, isFacilityMission } from './missionsV3';
-import type { FacilityDef, FacilitySideDef, FacilityStopDef, TalkZoneDef } from '../core/day/types';
+import type { ControlsDef, FacilityDef, FacilitySideDef, FacilityStopDef, TalkZoneDef } from '../core/day/types';
 
 /** 데이터 미정 기본값 (D-054). 데이터에 같은 이름의 값이 생기면 그쪽이 우선 */
 export const DEFAULTS = {
@@ -57,6 +57,46 @@ const range2 = (v: unknown): [number, number] | undefined =>
 const tile2 = (v: unknown): Tile => (Array.isArray(v) ? { x: num(v[0], 0), y: num(v[1], 0) } : { x: num(obj(v)['x'], 0), y: num(obj(v)['y'], 0) });
 
 const commitRule = (v: unknown): 'activity_start' | 'first_input' => (v === 'first_input' ? 'first_input' : 'activity_start');
+
+/**
+ * T-170 방향 패드 조작 기본값(design/control-dpad.md 추천안, D-131). 데이터(rules.input.dpad·action·chips·layout,
+ * maps.camera.lookAhead*)가 들어오면 그 값이 우선한다. 기획 T-171 반영 전 안전망
+ */
+export const CONTROL_DEFAULTS = {
+  deadZonePx: 6, axisHysteresisDeg: 10, freezeStartHoldSec: 0.3,
+  playfieldTapCountsIn: ['qte', 'talk', 'activity', 'gate', 'pack'] as readonly string[],
+  useSpotAssistTiles: 1, autoStartOnStop: ['seat', 'restroom_stall', 'gate'] as readonly string[],
+  mapTapHintDays: [1, 3] as const, mapTapHintMaxPerDay: 2,
+  guideTrailTiles: 5, guideSec: 8, leaveGuideAutoUntilDay: 5,
+  lookAheadTiles: 1.5, lookAheadAfterSec: 0.3, lookAheadLerpPerFrame: 0.06,
+} as const;
+
+function controlsOf(rules: O, tables: Tables): ControlsDef {
+  const input = obj(rules['input']);
+  const dp = obj(input['dpad']), ac = obj(input['action']), ch = obj(input['chips']), ly = obj(input['layout']);
+  const D = CONTROL_DEFAULTS;
+  const strs = (v: unknown, d: readonly string[]): readonly string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : d);
+  const rp = obj(obj(arr(obj(tables['events'])['events']).map(obj).find((e) => e['id'] === 'restroom'))['params']);
+  return {
+    deadZonePx: num(dp['deadZonePx'], D.deadZonePx),
+    axisHysteresisDeg: num(dp['axisHysteresisDeg'], D.axisHysteresisDeg),
+    freezeStartHoldSec: num(dp['freezeStartHoldSec'], D.freezeStartHoldSec),
+    lockedDuringActivity: dp['lockedDuringActivity'] !== false,
+    restroomPadExits: rp['padExits'] !== false,
+    playfieldTapCountsIn: strs(ac['playfieldTapCountsIn'], D.playfieldTapCountsIn),
+    useSpotAssistTiles: num(ac['useSpotAssistTiles'], D.useSpotAssistTiles),
+    autoStartOnStop: strs(ac['autoStartOnStop'], D.autoStartOnStop),
+    mapTapHintDays: range2(ac['mapTapHintDays']) ?? [D.mapTapHintDays[0], D.mapTapHintDays[1]],
+    mapTapHintMaxPerDay: num(ac['mapTapHintMaxPerDay'], D.mapTapHintMaxPerDay),
+    chipTapAction: 'guide',
+    startIfAtStartSpot: ch['startIfAtStartSpot'] !== false,
+    guideTrailTiles: num(ch['guideTrailTiles'], D.guideTrailTiles),
+    guideSec: num(ch['guideSec'], D.guideSec),
+    leaveGuideAutoUntilDay: num(ch['leaveGuideAutoUntilDay'], D.leaveGuideAutoUntilDay),
+    defaultHand: ly['defaultHand'] === 'left' ? 'left' : 'right',
+    handSetting: ly['handSetting'] !== false,
+  };
+}
 function accompliceEffectOf(e: O): NonNullable<MissionDef['accompliceEffect']> {
   return {
     ...(typeof e['cupsRequired'] === 'number' ? { cupsRequired: e['cupsRequired'] as number } : {}),
@@ -546,7 +586,8 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
     tapSnapRadius: num(rules['tapSnapRadius'], 2),
     suspicion: obj(rules['suspicion']) as unknown as FloorRules['suspicion'],
     threat: threat as unknown as FloorRules['threat'],
-    input: obj(rules['input']) as FloorRules['input'] & object,
+    // T-170: 패드 조작이 기본(data-schema §12-1 inputScheme 'dpad'). 데이터가 없어도 dpad
+    input: { ...obj(rules['input']), inputScheme: str(obj(rules['input'])['inputScheme'], 'dpad') } as FloorRules['input'] & object,
     movement: obj(rules['movement']) as FloorRules['movement'] & object,
     disguise: {
       closeCallWindowSec: range2(disguise['closeCallWindowSec']) ?? [-0.3, 0.12],
@@ -966,6 +1007,9 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
       id: str(e['id']), nameKey: str(e['nameKey']), descKey: str(e['descKey']), iconSprite: str(e['iconSprite']),
       mechanic: str(e['mechanic']) as Mechanic, unlockAtSec: num(m['unlockAtSec'], 0), spot,
       startsAt: e['startsAt'] === 'chip_tap_at_seat' ? 'chip_tap_at_seat' : 'arrive_spot',
+      // T-170(data-schema §12-3): 데이터에 없으면 화장실 피신(trip_safe_zone)만 '멈추면 자동', 나머지는 행동 버튼
+      startBy: e['startBy'] === 'auto_on_stop' || e['startBy'] === 'action' ? e['startBy'] as 'action' | 'auto_on_stop'
+        : str(e['mechanic']) === 'trip_safe_zone' ? 'auto_on_stop' : 'action',
       completeAt: e['completeAt'] === 'on_success' ? 'on_success' : 'return_to_seat',
       awayFromDesk: e['awayFromDesk'] === true, timeLimitSec: Math.round((num(e['timeLimitSec'], 30) + (e['awayFromDesk'] === true ? restroomBonusAt(id, spot) : 0)) * 10) / 10,
       reward: {
@@ -1124,6 +1168,7 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
           awayFromDesk: commitRule(obj(offer['missionCommit'])['awayFromDesk']), atDesk: commitRule(obj(offer['missionCommit'])['atDesk']),
         } } : {}),
         ...(offer['endsAtMissionCommit'] === true || offer['forcedHoldsUntil'] === 'mission_commit' ? { endsAtMissionCommit: true } : {}),
+        ...(offer['trigger'] && typeof offer['trigger'] === 'object' ? { offerTrigger: Object.fromEntries(Object.entries(obj(offer['trigger'])).filter(([k, v]) => !k.startsWith('_') && typeof v === 'string')) as Record<string, string> } : {}),
       };
     }
   }
@@ -1171,11 +1216,16 @@ export function buildDayContent(tables: Tables, day: number, warn: BuildWarnings
   const snack = obj(rules['snackStock']);
   return {
     day, seed: str(plan['seed'], `day-${day}`), rankId, t, weekday: num(plan['weekday'], (day - 1) % 5),
+    controls: controlsOf(rules, tables),
     titleKey: str(plan['titleKey']),
     floor: { level, rules: floorRules },
     camera: {
       visibleAboveTiles: num(camera['visibleAboveTiles'], 11), visibleBelowTiles: num(camera['visibleBelowTiles'], 8),
       deadZoneTiles: num(camera['deadZoneTiles'], 2), lerpPerFrame: num(camera['lerpPerFrame'], 0.15), clampToMap: camera['clampToMap'] !== false,
+      // T-170 진행 방향 선행(maps.camera, data-schema §12-2). 데이터가 없으면 control-dpad §2-3 값
+      lookAheadTiles: num(camera['lookAheadTiles'], CONTROL_DEFAULTS.lookAheadTiles),
+      lookAheadAfterSec: num(camera['lookAheadAfterSec'], CONTROL_DEFAULTS.lookAheadAfterSec),
+      lookAheadLerpPerFrame: num(camera['lookAheadLerpPerFrame'], CONTROL_DEFAULTS.lookAheadLerpPerFrame),
     },
     spots,
     zones: map.zones,

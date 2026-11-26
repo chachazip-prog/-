@@ -345,6 +345,12 @@
         "offerSec": 2.5,
         "maxPerDay": 1,
         "acceptInput": "tap_bubble",
+        "trigger": {
+          "coffee": "leave_seat",
+          "snack": "start_activity",
+          "forced": "unlock",
+          "_note": "T-171(D-131, control-dpad.md §4-5): 칩 톡이 더는 이동이 아니라서 제안 시점을 옮김. coffee = 커피가 열린 뒤 자리에서 처음 일어날 때, snack = 간식을 시작할 때(첫 입 전까지만 받음, T-136 ①), forced(7·10·12·14일차 수작업 강제 제안) = 그 미션이 열리는 순간부터 확정 때까지. 수락은 말풍선 톡 또는 행동 버튼(action.accept, 우선순위 6). 제안 여부·효과는 결정적(offerRollStream)"
+        },
         "startsInterrupt": "INT-12",
       "forcedHoldsUntil": "mission_commit",
       "endsAtMissionCommit": true,

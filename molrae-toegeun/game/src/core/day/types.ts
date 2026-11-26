@@ -23,6 +23,11 @@ export interface MissionDef {
   /** 행동 위치(타일) */
   readonly spot: Tile;
   readonly startsAt: 'arrive_spot' | 'chip_tap_at_seat';
+  /**
+   * T-170 시작 방식(control-dpad §4-3, data-schema §12-3 events[].startBy): 'action' = 행동 버튼(사용 칸 1칸 보정),
+   * 'auto_on_stop' = 시작 칸에서 멈추면 자동(화장실 칸). 데이터에 없으면 trip_safe_zone만 auto_on_stop
+   */
+  readonly startBy?: 'action' | 'auto_on_stop';
   readonly completeAt: 'return_to_seat' | 'on_success';
   readonly awayFromDesk: boolean;
   readonly timeLimitSec: number;
@@ -345,6 +350,43 @@ export interface AccompliceDef {
   readonly missionCommit?: { readonly awayFromDesk: 'activity_start' | 'first_input'; readonly atDesk: 'activity_start' | 'first_input' };
   /** 확정 순간 제안 종료(forced 포함). false면 forced는 활동 시작(원정)·완료/실패까지 유지(T-133 동작) */
   readonly endsAtMissionCommit?: boolean;
+  /**
+   * T-170 제안 시점(control-dpad §4-5, npcs.accomplice.offer.trigger). 미션 id 또는 'forced' → 'leave_seat' | 'start_activity' | 'unlock'.
+   * 없으면: forced = unlock, 원정 미션 = leave_seat, 자리 미션 = start_activity
+   */
+  readonly offerTrigger?: Readonly<Record<string, string>>;
+}
+
+/**
+ * T-170 방향 패드 조작 설정(rules.input.dpad·action·chips·layout, design/data-schema.md §12-1).
+ * 데이터가 없으면 design/control-dpad.md 추천안(D-131) 값을 기본으로 쓴다(buildDay)
+ */
+export interface ControlsDef {
+  readonly deadZonePx: number;
+  readonly axisHysteresisDeg: number;
+  /** §3-4 얼음 중 출발에 필요한 누름 시간 */
+  readonly freezeStartHoldSec: number;
+  /** §4-4 행동 중 패드 잠김(화장실은 restroomPadExits) */
+  readonly lockedDuringActivity: boolean;
+  /** events.restroom.params.padExits: 화장실 행동 중 패드 아무 방향 = 나가기 + 걷기 */
+  readonly restroomPadExits: boolean;
+  /** §4-1 ③ 집중 상황(화면 톡 = 행동 버튼) */
+  readonly playfieldTapCountsIn: readonly string[];
+  /** §4-3 사용 칸 보정(맨해튼) */
+  readonly useSpotAssistTiles: number;
+  /** §4-3 멈추면 자동 시작 */
+  readonly autoStartOnStop: readonly string[];
+  /** 1~3일차 '이동은 아래 패드로' 안내(일차 범위, 하루 횟수) */
+  readonly mapTapHintDays: readonly [number, number];
+  readonly mapTapHintMaxPerDay: number;
+  /** §4-5 칩 = 길 안내 */
+  readonly chipTapAction: 'guide';
+  readonly startIfAtStartSpot: boolean;
+  readonly guideTrailTiles: number;
+  readonly guideSec: number;
+  readonly leaveGuideAutoUntilDay: number;
+  readonly defaultHand: 'right' | 'left';
+  readonly handSetting: boolean;
 }
 
 /** 위계 연쇄 H1·H2: 본부장이 구역에 들어오면 팀장이 나와 인사(INT-10 effect.teamLeadGreeting) */
@@ -439,6 +481,8 @@ export interface FacilityDef {
 
 export interface DayContent {
   readonly day: number;
+  /** T-170 방향 패드 조작 설정 */
+  readonly controls: ControlsDef;
   readonly seed: string;
   readonly rankId: string;
   /** 직급 내 진행도(0~1) */

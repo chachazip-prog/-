@@ -246,7 +246,9 @@
           "lookSec": 2.5,
           "coneRange": 7,
           "aimAtPlayer": true
-        }
+        },
+        "greetHoldMaxSec": 3.0,
+        "_greetHoldNote": "T-171(D-124): 본부장 순찰(INT-10) 때 팀장 인사 hold 상한 3초. 본부장이 팀 구역을 늦게 떠나도 3초가 지나면 resumeDelaySec(1.0) 뒤 하던 일(순회) 계속. QA T-141: 순회 skipped의 20%가 hold 원인. INT-10 effect.teamLeadGreeting.holdMaxSec가 있으면 그 값이 우선(개발 T-164 로더 순서)"
       },
       "reactionKeys": [
         "react.team_lead.caught",

@@ -24,7 +24,7 @@
           11.25,
           20
         ],
-        "visibleAboveTiles": 11,
+        "visibleAboveTiles": 9.5,
         "visibleBelowTiles": 8,
         "followAxis": "y",
         "deadZoneTiles": 2,
@@ -33,7 +33,11 @@
         "clampIncludesHudInset": true,
         "hudCoveredRowsAreOffscreen": true,
         "_t134Note": "T-134 확정: 맵 위·아래 끝에서 clamp할 때 HUD 높이만큼 여유를 둬서 끝 행(출구·탕비실)이 HUD에 가리지 않게 함. HUD가 가리는 행에 있는 사람은 '화면 밖'(offscreenSourceNoGain·가장자리 화살표 대상). 화살표는 HUD 경계 안쪽(보이는 영역 끝)에 그림. '보이는 것 = 판정' 원칙(§5-5)",
-        "_designNote": "T-123 실측: 플레이어 위 약 11타일, 아래 약 8타일 보임(출구가 위쪽이라 위를 더 보여 줌). 가로는 맵 전체가 보이므로 스크롤하지 않음."
+        "_designNote": "T-123 실측: 플레이어 위 약 11타일, 아래 약 8타일 보임(출구가 위쪽이라 위를 더 보여 줌). 가로는 맵 전체가 보이므로 스크롤하지 않음.",
+        "lookAheadTiles": 1.5,
+        "lookAheadAfterSec": 0.3,
+        "lookAheadLerpPerFrame": 0.06,
+        "_t171Note": "T-171(D-131, control-dpad.md §2-3): 조작대 72px(4.5칸)가 아래를 가려 visibleAboveTiles 11 → 9.5(멈춰 있을 때 보이는 위 8칸 / 아래 6칸, 기존 위 9.5 / 아래 7.25칸). 진행 방향 선행: 세로로 lookAheadAfterSec(0.3초) 넘게 걸으면 초점을 진행 방향으로 lookAheadTiles(1.5칸) 옮김, 보간 lookAheadLerpPerFrame 0.06(1/60초 기준, 느리게 = 멀미 없음), 멈추거나 가로로 걸으면 천천히 0. 아래로 걸을 때 아래쪽 6 → 7.5칸(기존 7.25와 비슷). deadZoneTiles·lerpPerFrame 그대로. visibleAboveTiles는 지금 코드(buildDay → camera)가 바로 읽음: 조작대(T-170)와 같은 시점에 바뀌는 값. 선행 3필드는 T-170이 읽음"
       },
       "legend": {
         "#": {

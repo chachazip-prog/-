@@ -10,7 +10,8 @@ import {
 import { distanceField, findPath } from './pathfinding';
 import { CameraModel, type CameraRules, type CameraView } from './camera';
 import { PatrolNpc, type NpcDef, type StepContext } from './patrol';
-import { PlayerMover } from './player';
+import { PlayerMover, type ManualMoveRules } from './player';
+import type { Dir } from './vision';
 import { createRng, type Rng } from './rng';
 import { createSuspicion, exposureRate, updateSuspicionRate, type SuspicionRules, type SuspicionState } from './suspicion';
 import { canSee, hasLineOfSight, inCone } from './vision';
@@ -46,7 +47,19 @@ export interface FloorRules {
     readonly approachPathMustBeDecreasing?: boolean;
   };
   // ── v2 확장(rules.json). 없으면 T-127 동작 ──
-  readonly input?: { readonly tapOnSelfWhileStopped?: string };
+  readonly input?: {
+    readonly tapOnSelfWhileStopped?: string;
+    /** T-170: 'dpad'(방향 패드 직접 조작) | 'tap_to_move'(T-123 프로토). 데이터에 없으면 FloorSim은 패드를 처음 쓸 때 켠다 */
+    readonly inputScheme?: string;
+    /** T-170 rules.input.dpad(design/data-schema.md §12-1). 없으면 control-dpad.md 기본값 */
+    readonly dpad?: {
+      readonly firstTileCommit?: boolean;
+      readonly releaseSnapMaxSec?: number;
+      readonly turnAssistAheadTiles?: number;
+      readonly playerPassesThreatNpc?: boolean;
+      readonly heldResumeAfterTalkSec?: number;
+    };
+  };
   readonly movement?: {
     readonly blockedWaitSec?: number;
     readonly rerouteMaxExtraTiles?: number;
@@ -122,6 +135,12 @@ export type SimEvent =
   | { t: number; type: 'talkEnd'; npc: string }
   | { t: number; type: 'closeCall' }
   | { t: number; type: 'blocked' }
+  /** T-170 M6: 막힌 쪽으로 누름(그 칸 중심에 서서 그쪽을 봄 = 위장) */
+  | { t: number; type: 'bump'; dir: Dir; x: number; y: number }
+  /** T-170 M5: 코너 보정 발동(back = 뒤 칸 중심으로 붙어 꺾음, ahead = 앞 1칸 더 가서 꺾음) */
+  | { t: number; type: 'cornerAssist'; kind: 'back' | 'ahead' }
+  /** T-170: 패드 정지(release = 손 뗌, arrive = 첫 칸 보장 끝, bump = 막혀서 섬). 아슬아슬 판정 기준 시각 */
+  | { t: number; type: 'padStop'; reason: 'release' | 'arrive' | 'bump' }
   | { t: number; type: 'npcEnded'; npc: string; patrol: string }
   | { t: number; type: 'escaped' }
   | { t: number; type: 'caught' };
@@ -168,6 +187,8 @@ export class FloorSim {
   private pathDist = new Map<PatrolNpc, { cur: number; prev: number }>();
   private distField: Int32Array | null = null;
   private distFieldStep = -1;
+  /** T-170 패드 통계(디버그 오버레이·QA): 범프 수, 코너 보정 수 */
+  readonly padStats = { bumps: 0, cornerAssists: 0 };
 
   constructor(content: FloorContent, seed: string | number, opts: FloorOptions = {}) {
     this.level = content.level;
@@ -182,6 +203,67 @@ export class FloorSim {
     this.npcs = content.level.npcs.map((d) => new PatrolNpc(d, this.map, this.rng));
     this.seeing = this.npcs.map(() => false);
     this.camera = opts.camera ? new CameraModel(opts.camera.rules, opts.camera.view, this.map.height, this.player.y) : null;
+    this.player.canEnter = (x, y) => this.playerCanEnter(x, y);
+    if (this.rules.input?.inputScheme === 'dpad') this.enableManual();
+  }
+
+  // ── 방향 패드(T-170, design/control-dpad.md §1-3) ──
+
+  /** 직접 조작 규칙(rules.input.dpad, 없으면 사양서 기본값) */
+  private enableManual(): void {
+    if (this.player.manual) return;
+    const d = this.rules.input?.dpad ?? {};
+    const m: ManualMoveRules = {
+      speedTilesPerSec: this.rules.playerSpeedTilesPerSec,
+      firstTileCommit: d.firstTileCommit !== false,
+      releaseSnapMaxSec: d.releaseSnapMaxSec ?? this.rules.suspicion.disguiseSettleSec ?? 0.15,
+      turnAssistAheadTiles: d.turnAssistAheadTiles ?? 1,
+      heldResumeAfterTalkSec: d.heldResumeAfterTalkSec ?? this.rules.movement?.postTalkHoldSec ?? 0.5,
+    };
+    this.player.manual = m;
+  }
+
+  /**
+   * 플레이어가 직접 걸어 들어갈 수 있는 칸: 지도 통행 + 동적 차단(앉은 사람·서 있는 사람·게이트·다른 쪽 시설 문).
+   * M7: 위협 NPC(passable 아님)는 걷는 중이어도 뚫고 지나가지 못함(배경 동료는 passable이라 겹쳐 지나감)
+   */
+  playerCanEnter(x: number, y: number): boolean {
+    if (!isWalkable(this.map, x, y) || this.blockedForPlayer(x, y)) return false;
+    if (this.rules.input?.dpad?.playerPassesThreatNpc === true || !this.rules.movement) return true;
+    for (const n of this.npcs) {
+      if (n.def.passable || n.mode === 'spawn') continue;
+      const t = tileOf(n);
+      if (t.x === x && t.y === y) return false;
+    }
+    return true;
+  }
+
+  /** 지금 패드 방향(DaySim이 잠금 규칙을 적용한 값) */
+  get padDir(): Dir | null { return this.player.heldDir; }
+
+  /**
+   * 패드 입력(씬·QA 봇 공용). null = 손 뗌 → 즉시 정지·위장(M3). 판 종료 뒤에는 무시.
+   * 정지 시각 = 이 호출 시각(아슬아슬 판정 기준, control-dpad §3-1)
+   */
+  setPad(dir: Dir | null): void {
+    this.enableManual();
+    if (this.outcome !== 'playing') { this.player.heldDir = null; return; }
+    const stopped = this.player.setHeldDir(dir);
+    this.drainManual();
+    if (stopped) this.destination = null;
+  }
+
+  private drainManual(): void {
+    for (const e of this.player.drainManualEvents()) {
+      if (e.type === 'bump') { this.padStats.bumps++; this.events.push({ t: this.time, type: 'bump', dir: e.dir, x: e.tile.x, y: e.tile.y }); }
+      else if (e.type === 'cornerAssist') { this.padStats.cornerAssists++; this.events.push({ t: this.time, type: 'cornerAssist', kind: e.kind }); }
+      else {
+        this.lastStopAt = this.time;
+        this.checkCloseCallOnStop();
+        this.blockTimer = -1;
+        this.events.push({ t: this.time, type: 'padStop', reason: e.reason });
+      }
+    }
   }
 
   /** 쌓인 이벤트를 꺼낸다 (QA 로그·사운드 트리거용) */
@@ -297,8 +379,8 @@ export class FloorSim {
     return result;
   }
 
-  /** 말걸기 중 맞장구 */
-  private nod(): boolean {
+  /** 말걸기 중 맞장구(행동 버튼·화면 톡, control-dpad §4-2 순위 2) */
+  nod(): boolean {
     const npc = this.talkingNpc;
     const t = npc?.def.talk;
     if (!npc || !t || !t.nodShortenSec || t.nodShortenSec <= 0) return false;
@@ -337,6 +419,7 @@ export class FloorSim {
     const wasTalked = p.mode === 'talked';
     this.handleBlocking(dt);
     p.step(dt, this.rules.playerSpeedTilesPerSec);
+    this.drainManual();
     // 말걸기 중에는 목적지를 지우지 않는다(D-039: 종료 후 같은 목적지로 자동 재개)
     if (p.mode !== 'moving' && p.mode !== 'talked' && !p.paused) this.destination = null;
     if (wasTalked && p.mode !== 'talked') {
@@ -395,7 +478,7 @@ export class FloorSim {
       }
     }
 
-    if (this.camera) this.camera.step(p.y, dt * 60);
+    if (this.camera) this.camera.step(p.y, dt * 60, p.mode === 'moving' ? p.moveDy : 0);
 
     // 시선 판정: 동시 시선은 배율 최댓값 하나만. 말걸기 중·보내 준 직후 NPC의 시선은 제외(D-043). 화면 밖 콘 주인 제외(X10)
     let mult = 0;

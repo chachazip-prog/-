@@ -1294,9 +1294,10 @@
           "facing": "left",
           "memoDesk": [
             4,
-            8
+            7
           ],
-          "_note": "T-165(D-120): 빈 팀원 자리(4,8) 의자 옆 통로. 내 자리·정의로운 동료·공범 자리 아님. 편도 6, 내 자리(4,5) 옆 통로(5,5~5,7)를 지남"
+          "_note": "T-165(D-120): 빈 팀원 자리(4,8) 의자 옆 통로. 내 자리·정의로운 동료·공범 자리 아님. 편도 6, 내 자리(4,5) 옆 통로(5,5~5,7)를 지남",
+          "_t171Note": "T-171(개발 T-164 요청): memoDesk [4,8]은 의자(h) 칸이었음 → 그 자리의 책상(D) [4,7]. 스팟(5,8)은 그대로(위로 옮기면 편도 5 < V09 하한 6). 메모는 의자 위 책상에 붙음(렌더 보정 memoFix 없이 바로 맞음)"
         }
       },
       "routeNodes": {
@@ -3013,7 +3014,12 @@
         "code": "lead_cannot_see_seat",
         "hard": true,
         "prototyped": true,
-        "rule": "tl_seat의 lookDirs 콘(5타일·30°, 가림 반영)이 player_seat를 덮음. 순회 목적지마다 tl_seat에서 편도 6~22타일, 그 경로가 player_seat 칸을 지나지 않음"
+        "rule": "tl_seat의 lookDirs 콘(5타일·30°, 가림 반영)이 player_seat를 덮음. 순회 목적지마다 tl_seat에서 편도 6~22타일, 그 경로가 player_seat 칸을 지나지 않음",
+        "tourOneWayTiles": [
+          6,
+          22
+        ],
+        "_t171Note": "T-171(개발 T-165 선택 7): 편도 범위 [하한, 상한] 데이터화, 값은 기존 코드 고정값 6~22 그대로(맵 해시 변화 없음). 하한 6 = 팀 안 짧은 목적지가 '공짜 시간'이 되지 않게, 상한 22 = 사원 awayMaxSec 22초 안에 왕복이 들어가게"
       },
       {
         "id": "V10_gate",
@@ -3269,7 +3275,13 @@
         "lineKey": "tour.tl.printer",
         "pose": "teamlead/wait_up",
         "floorMark": "tile2/floor_print_mark",
-        "_note": "출력물 가지러. 프린터실이 있으면 거기, 없으면 팀 복사기. 짧고 잦은 기회. 프린터 몰래 출력 미션과 충돌 가능(그날의 사건)"
+        "_note": "출력물 가지러. 프린터실이 있으면 거기, 없으면 팀 복사기. 짧고 잦은 기회. 프린터 몰래 출력 미션과 충돌 가능(그날의 사건)",
+        "poseByFacing": {
+          "up": "teamlead/wait_up",
+          "left": "teamlead/wait_side_left",
+          "right": "teamlead/wait_side_right"
+        },
+        "_t171PoseNote": "T-171: 팀 복사기(tour_copier, facing up)는 wait_up(뒷모습 서류 대기)이 맞지만 프린터실(tour_printer, facing left)은 옆을 보는데 wait_up이 나옴. 🔧 개발: poseByFacing[스팟 facing(반전 반영)]이 있으면 pose보다 우선, 없는 방향은 pose. 반영 전까지는 pose(wait_up) 그대로"
       },
       {
         "id": "pantry",
@@ -3294,8 +3306,8 @@
           "meeting_inside"
         ],
         "waitSecRange": [
-          6.0,
-          8.0
+          4.0,
+          5.0
         ],
         "lookChance": 0.0,
         "weight": 0.9,
@@ -3312,7 +3324,8 @@
         },
         "meetingRoomDoor": "busy_while_inside",
         "_note": "기존 INT-08 근무판과 같음(9일차 데뷔 유지). 회의 중 낮잠 잠김, 회의실 문 표시 '사용 중'(tile2/wall_door_busy 그림, 통행은 유지)",
-        "_t156Note": "T-156: 8~10초 → 6~8초. 근무 INT-08 흡수 회차는 awayMax 검사를 받지 않아 최대 약 34초(근무 구간의 60%)까지 비었음. 회의 중 낮잠 잠김도 그만큼 짧아져 낮잠 미션과의 충돌이 줄어듦"
+        "_t156Note": "T-156: 8~10초 → 6~8초. 근무 INT-08 흡수 회차는 awayMax 검사를 받지 않아 최대 약 34초(근무 구간의 60%)까지 비었음. 회의 중 낮잠 잠김도 그만큼 짧아져 낮잠 미션과의 충돌이 줄어듦",
+        "_t171Note": "T-171(D-130): 6~8초 → 4~5초(탕비실과 같은 값, 직급 waitMul 곱함). 회의 회차 자리 비움의 대부분은 회의실까지 걷기(편도 약 20~29칸)라 대기 단축 효과는 회차당 약 2.5초. 실측(6~200일, 앉아만 있는 봇, 기획 T-171): 근무 INT-08 흡수 27 → 30회, 계획 대비 목적지 도착 98.4% → 98.4%(변화 없음), 일반 회차 awayMaxSec 검사는 그대로. 사원·대리 회의 날을 더 열려면 규칙 변경이 필요(PM 질문, data-schema.md §11 T-171)"
       },
       {
         "id": "next_team",
@@ -3406,7 +3419,8 @@
         "lineKey": "tour.tl.desk_memo",
         "teamShort": true,
         "_note": "T-165(D-120): 외근 중인 팀원 빈 책상에 메모지를 붙이고 돌아옴. 사람을 추가로 세우지 않음(V11·H6). 메모 내용은 보이지 않음. 대기 3~4초(제안서 4~5초에서 낮춤: team_back 스팟이 편도 7이 되어 임원 상한 11초 여유 확보)",
-        "_poseNote": "T-165: 전용 포즈 없음(스팟 facing의 기본 서기). team_front는 left, team_back은 down"
+        "_poseNote": "T-171(개발 T-164 확인 요청): 의도 = 빈 책상 옆에 서서 메모를 붙이는 옆모습. pose 'teamlead/wait_side'는 아트 키가 없어 개발 poseAnim이 스팟 facing 접미를 붙여 찾음 → team_front(facing left) wait_side_left, 반전 모듈(right) wait_side_right, team_back(facing down, 책상이 바로 아래) 대기 애니가 없어 idle_down(정면 서기). 코드 변경 없이 동작. 이전 값(pose 없음 = idle)은 대기 리듬이 없어 '서 있기만 함'으로 보였음",
+        "pose": "teamlead/wait_side"
       }
     ],
     "byRank": {
@@ -3538,7 +3552,12 @@
       "hudBadgeKey": "hud.tl_away",
       "_note": "남은 시간은 보여 주지 않음(읽는 재미)"
     },
-    "_t165Note": "T-165(D-120·D-126): 팀 모듈 안 짧은 목적지 3종(whiteboard·water·desk_memo, minDay 28 = 과장 첫날). teamShort: true = 검사기 경고 대상(임원 추정 자리 비움 ∈ [8, awayMaxSec]). 스팟은 V09 편도 하한 6을 지키려고 제안서 좌표(편도 4~5)를 편도 6~7로 옮김(design/tour-destinations-proposal.md §9). 순회 로직 변경 없음(목적지 데이터 기반). 생성 맵 해시 변경은 D-120 승인. fitToWindow '가장 가까운 목적지'도 이 3종을 포함(meeting·exec_report만 제외) → 고직급 축소 회차가 복사기 반복 대신 이 3종으로 감"
+    "_t165Note": "T-165(D-120·D-126): 팀 모듈 안 짧은 목적지 3종(whiteboard·water·desk_memo, minDay 28 = 과장 첫날). teamShort: true = 검사기 경고 대상(임원 추정 자리 비움 ∈ [8, awayMaxSec]). 스팟은 V09 편도 하한 6을 지키려고 제안서 좌표(편도 4~5)를 편도 6~7로 옮김(design/tour-destinations-proposal.md §9). 순회 로직 변경 없음(목적지 데이터 기반). 생성 맵 해시 변경은 D-120 승인. fitToWindow '가장 가까운 목적지'도 이 3종을 포함(meeting·exec_report만 제외) → 고직급 축소 회차가 복사기 반복 대신 이 3종으로 감",
+    "returnTell": {
+      "sec": 1.0,
+      "lineKey": "tour.tl.return",
+      "_note": "T-171(BUG-018, 개발 T-164 요청): endTell이 없는 목적지에서 대기가 끝나 몸을 돌릴 때의 복귀 전조. sec 1.0 = standTell.sec와 같은 값(GDD v3 §3-1 '복귀 전조 1.0초', 지금 코드 기본값과 같아 길이 변화 없음), tell.minSec 0.4 이상. 대기와 겹침(대기가 더 짧으면 늘어남). lineKey = 혼잣말 말풍선(missions.stringsKo, 1.2초). meeting·exec_report는 각자 endTell 문구를 씀"
+    }
   },
   "genderFacilities": {
     "enabled": false,
